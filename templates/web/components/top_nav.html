@@ -1,6 +1,12 @@
+{% load static %}
 <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
+        <a class="navbar-item" href="{% url 'web:home' %}">
+          <img src="{% static 'images/commcare-flower.png' %}" width="28" height="28">
+          <span class="mx-2">{{project_meta.NAME}}</span>
+        </a>
+
         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="nav-menu">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -9,9 +15,6 @@
       </div>
       <div class="navbar-menu" id="nav-menu">
         <div class="navbar-start">
-            <a class="navbar-item {% if request.path == '/' %}is-active{% endif %}" href="{% url 'web:home' %}">
-                {{project_meta.NAME}}
-            </a>
             {% if user.is_superuser and user.is_staff %}
               <a class="navbar-item" href="{% url 'admin:index' %}">
                 Admin Site
