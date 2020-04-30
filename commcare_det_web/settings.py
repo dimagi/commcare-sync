@@ -52,10 +52,6 @@ THIRD_PARTY_APPS = [
 
 ]
 
-PEGASUS_APPS = [
-    'pegasus.apps.components.apps.PegasusComponentsConfig',
-
-]
 
 # Put your project-specific apps here
 PROJECT_APPS = [
@@ -65,7 +61,7 @@ PROJECT_APPS = [
 
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PEGASUS_APPS + PROJECT_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -233,15 +229,14 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
-# Pegasus config
+# Project config
 
-# replace any values below with specifics for your project
 PROJECT_METADATA = {
     'NAME': 'CommCare Insights',
     'URL': 'http://localhost:8000',
     'DESCRIPTION': 'Management Interface for the CommCare Data Export Tool',
-    'IMAGE': 'https://upload.wikimedia.org/wikipedia/commons/2/20/PEO-pegasus_black.svg',
-    'KEYWORDS': 'SaaS, django',
+    # 'IMAGE': 'https://upload.wikimedia.org/wikipedia/commons/2/20/PEO-pegasus_black.svg',
+    'KEYWORDS': 'CommCare, Export',
     'CONTACT_EMAIL': 'czue+det@dimagi.com',
 }
 
