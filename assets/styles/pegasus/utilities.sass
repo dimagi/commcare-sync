@@ -1,0 +1,22 @@
+
+// spacing utilities
+$margin-1: .5rem
+$margin-2: 1rem
+
+.my-1
+  margin-top: $margin-1
+  margin-bottom: $margin-1
+
+.my-2
+  margin-top: $margin-2
+  margin-bottom: $margin-2
+
+.muted-link
+  color: hsl(0, 0%, 71%)
+  &:hover
+    color: hsl(0, 0%, 48%)
+    text-decoration: underline
+
+// this is the default class assigned to errors by django forms
+.errorlist
+  color: $danger

@@ -1,0 +1,10 @@
+attrs
+Django
+django-allauth
+psycopg2-binary
+djangorestframework
+coreapi  # DRF schemas and docs
+django-anymail[mailgun]  # email services
+celery-progress
+celery
+celery[redis]
