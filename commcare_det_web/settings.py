@@ -147,7 +147,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Allauth setup
 
-ACCOUNT_ADAPTER = 'pegasus.apps.users.adapter.EmailAsUsernameAdapter'
+# swap these two lines to enable public sign ups
+# ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
+ACCOUNT_ADAPTER = 'apps.users.account_adapter.NoNewUsersAccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
