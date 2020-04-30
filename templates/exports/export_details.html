@@ -1,0 +1,26 @@
+{% extends "pegasus/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">{{ export.name }} - Details</h1>
+
+</section>
+<section class="section app-card">
+  <h1 class="title">Run History</h1>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Run Time</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for export_run in export.runs.all %}
+      <tr>
+        <td>{{ export_run.created_at }}</td>
+        <td>{{ export_run.status }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock app %}

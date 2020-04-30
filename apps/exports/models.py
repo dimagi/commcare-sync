@@ -56,6 +56,10 @@ class ExportConfig(BaseModel):
     def __str__(self):
         return f'{self.name} - {self.project}'
 
+    @property
+    def last_run(self):
+        return self.runs.order_by('-created_at')[0] if self.runs.exists() else None
+
 
 class ExportRun(BaseModel):
 
@@ -64,7 +68,7 @@ class ExportRun(BaseModel):
         ('completed', 'completed'),
         ('failed', 'failed'),
     )
-    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE)
+    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
     completed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
 

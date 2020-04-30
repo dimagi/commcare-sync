@@ -1,0 +1,26 @@
+{% extends "pegasus/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">Export Configurations</h1>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Export</th>
+      <th>Project</th>
+      <th>Last Run</th>
+      <th>Last Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for export in exports %}
+      <tr>
+        <td><a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a></td>
+        <td>{{ export.project.domain }}</td>
+        <td>{{ export.last_run.created_at }}</td>
+        <td>{{ export.last_run.status }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock app %}

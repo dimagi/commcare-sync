@@ -26,9 +26,8 @@ schemajs_view = get_schemajs_view(title="API")
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('exports/', include('apps.exports.urls')),
     path('users/', include('apps.users.urls')),
-
-
 
     path('', include('apps.web.urls')),
     path('celery-progress/', include('celery_progress.urls')),
