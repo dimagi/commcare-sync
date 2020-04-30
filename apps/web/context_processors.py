@@ -1,6 +1,6 @@
 from copy import copy
 from django.conf import settings
-from pegasus.meta import absolute_url
+from .meta import absolute_url
 
 
 def project_meta(request):

@@ -1,6 +1,6 @@
 from django import template
 from django.templatetags.static import static
-from pegasus.meta import absolute_url
+from ..meta import absolute_url
 
 register = template.Library()
 
