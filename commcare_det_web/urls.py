@@ -20,7 +20,7 @@ from django.urls import path, include
 from rest_framework.documentation import include_docs_urls, get_schemajs_view
 
 
-schemajs_view = get_schemajs_view(title="Pegasus API")
+schemajs_view = get_schemajs_view(title="API")
 
 
 urlpatterns = [
@@ -34,7 +34,7 @@ urlpatterns = [
     path('celery-progress/', include('celery_progress.urls')),
     # API docs
     # these are needed for schema.js
-    path('docs/', include_docs_urls(title='Pegasus API Docs')),
+    path('docs/', include_docs_urls(title='API Docs')),
     path('schemajs/', schemajs_view, name='api_schemajs'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
