@@ -88,8 +88,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.web.context_processors.project_meta',
-                 # this line can be removed if not using google analytics
-                'pegasus.context_processors.google_analytics_id',
+                'apps.web.context_processors.google_analytics_id',
             ],
         },
     },
