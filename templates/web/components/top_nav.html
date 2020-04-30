@@ -12,6 +12,11 @@
             <a class="navbar-item {% if request.path == '/' %}is-active{% endif %}" href="{% url 'web:home' %}">
                 {{project_meta.NAME}}
             </a>
+            {% if user.is_superuser and user.is_staff %}
+              <a class="navbar-item" href="{% url 'admin:index' %}">
+                Admin Site
+              </a>
+            {% endif %}
         </div>
         <div class="navbar-end">
           {% if user.is_authenticated %}
