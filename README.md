@@ -1,6 +1,8 @@
 # CommCare Data Export Tool Management Interface
 
-Management Interface for the CommCare Data Export Tool
+Management Interface for the CommCare Data Export Tool.
+
+Some additional context on this project can be [found here](https://docs.google.com/document/d/1r8ZQAjCGbxX8pXWtIq0ODJOpqqI27YqPDN4vuR_CLGw/edit) (Dimagi Internal).
 
 ## Installation
 
@@ -42,7 +44,7 @@ celery -A commcare_det_web worker -l info
 
 ## Running Tests
 
-To run tests simply run:
+To run tests:
 
 ```bash
 ./manage.py test
