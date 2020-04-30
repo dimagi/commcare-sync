@@ -234,7 +234,7 @@ COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
 # Project config
 
 PROJECT_METADATA = {
-    'NAME': 'CommCare Insights',
+    'NAME': 'CommCare Sync',
     'URL': 'http://localhost:8000',
     'DESCRIPTION': 'Management Interface for the CommCare Data Export Tool',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
