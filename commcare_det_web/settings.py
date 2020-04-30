@@ -235,7 +235,7 @@ COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
 PROJECT_METADATA = {
     'NAME': 'CommCare Sync',
     'URL': 'http://localhost:8000',
-    'DESCRIPTION': 'Management Interface for the CommCare Data Export Tool',
+    'DESCRIPTION': 'A Management Interface for the CommCare Data Export Tool',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export',
     'CONTACT_EMAIL': 'czue+det@dimagi.com',
