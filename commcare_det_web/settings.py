@@ -55,10 +55,9 @@ THIRD_PARTY_APPS = [
 
 # Put your project-specific apps here
 PROJECT_APPS = [
-
+    'apps.exports.apps.ExportsConfig',
     'apps.users.apps.UserConfig',
     'apps.web',
-
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
@@ -228,6 +227,9 @@ REST_FRAMEWORK = {
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
+# CommCare Config
+
+COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
 
 # Project config
 
