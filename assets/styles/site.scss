@@ -2,11 +2,22 @@
 // any customizations you want to make to bulma should go here
 // see https://bulma.io/documentation/customize/ for more information
 
-$primary: hsl(217, 71%, 53%);  // make link-blue the primary color
-$bg-grey: hsl(0, 0%, 98%);
+$COMMCARE_BLUE: #004EBC;
+$COMMCARE_GREY: #685C53;
+
+// use commcare color palette and fonts
+$family-sans-serif:  "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$primary: #5C6AC5;
+$link: $COMMCARE_BLUE;
+$info: #00BDC5;
+$warning: #EEC200;
+$success: #4ABA32;
+$danger: #E73C27;
+$bg-grey: #F2F2F1;
 $default-shadow: 0 2px 4px rgba(55, 63, 67, 0.3);
 $body-background-color: $bg-grey;
-$navbar-item-active-color: $primary;
+$navbar-item-active-color: $link;
+$menu-item-active-background-color: $link;
 
 @import "~bulma/bulma";
 @import "pegasus/_all";
