@@ -235,7 +235,7 @@ PROJECT_METADATA = {
     'NAME': 'CommCare Insights',
     'URL': 'http://localhost:8000',
     'DESCRIPTION': 'Management Interface for the CommCare Data Export Tool',
-    # 'IMAGE': 'https://upload.wikimedia.org/wikipedia/commons/2/20/PEO-pegasus_black.svg',
+    'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export',
     'CONTACT_EMAIL': 'czue+det@dimagi.com',
 }
