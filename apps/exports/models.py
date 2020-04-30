@@ -55,3 +55,18 @@ class ExportConfig(BaseModel):
 
     def __str__(self):
         return f'{self.name} - {self.project}'
+
+
+class ExportRun(BaseModel):
+
+    STATUS_CHOICES = (
+        ('started', 'started'),
+        ('completed', 'completed'),
+        ('failed', 'failed'),
+    )
+    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
+
+    def __str__(self):
+        return f'{self.export_config.name} ({self.created_at})'

@@ -1,10 +1,12 @@
 import subprocess
 
-from .models import ExportConfig
+from django.utils import timezone
+
+from .models import ExportConfig, ExportRun
 
 
 def run_export(export_config: ExportConfig):
-
+    export_record = ExportRun.objects.create(export_config=export_config)
     command = [
         'commcare-export',
         '--project', export_config.project.domain,
@@ -18,3 +20,6 @@ def run_export(export_config: ExportConfig):
         '--query', export_config.config_file.path,
     ]
     subprocess.run(command)
+    export_record.completed_at = timezone.now()
+    export_record.status = 'completed'
+    export_record.save()
