@@ -2,6 +2,13 @@
 {% block app %}
 <section class="section app-card">
   <h1 class="title">Export Configurations</h1>
+  <a class="button is-primary is-rounded is-small" href="{% url 'exports:create_export_config' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>New Export</span>
+  </a>
+
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
