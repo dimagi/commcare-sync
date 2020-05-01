@@ -51,7 +51,7 @@ class ExportConfig(BaseModel):
     project = models.ForeignKey(CommCareProject, on_delete=models.CASCADE)
     account = models.ForeignKey(CommCareAccount, on_delete=models.CASCADE)
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
-    config_file = models.FileField(upload_to='export-configs/', null=True, blank=True)
+    config_file = models.FileField(upload_to='export-configs/')
 
     def __str__(self):
         return f'{self.name} - {self.project}'
