@@ -35,10 +35,16 @@ npm run dev-watch
 
 ## Running Celery
 
-Celery can be used to run background tasks. To run it you can use:
+Celery is used to run background tasks. To run it you can use:
 
 ```bash
 celery -A commcare_det_web worker -l info
+```
+
+Or to also include periodic tasks:
+
+```bash
+celery -A commcare_det_web worker -l info -B
 ```
 
 
