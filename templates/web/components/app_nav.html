@@ -3,11 +3,16 @@
     Export Management
   </p>
   <ul class="menu-list">
-      <li>
-        <a href="{% url 'exports:home' %}" {% if active_tab == 'exports' %}class="is-active"{% endif %}>
-          <span class="icon"><i class="fa fa-home"></i></span><span class="is-hidden-tablet-only">Exports</span>
-        </a>
-      </li>
+    <li>
+      <a href="{% url 'exports:home' %}" {% if active_tab == 'exports' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-home"></i></span><span class="is-hidden-tablet-only">Exports</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'exports:create_export_config' %}" {% if active_tab == 'create_export' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">Create Export</span>
+      </a>
+    </li>
   </ul>
   <p class="menu-label is-hidden-tablet-only">
     My Account
