@@ -7166,11 +7166,11 @@ img.socialicon {
     border-radius: 50%;
     max-height: 32px; }
 
-.pegasus-two-column {
+.app-two-column {
   display: flex;
   flex-direction: column; }
   @media screen and (min-width: 769px) {
-    .pegasus-two-column {
+    .app-two-column {
       flex-direction: row; } }
 
 @media screen and (min-width: 1024px) {
@@ -7206,10 +7206,8 @@ img.socialicon {
 
 .notification {
   transition: padding 300ms ease; }
-  .notification.pegasus-message {
+  .notification.app-message {
     margin-bottom: .5rem; }
-  .notification.pegasus-notice {
-    margin-bottom: 0; }
   .notification.sticky {
     position: fixed;
     width: 100%;
