@@ -25,6 +25,7 @@
       <th>Run Start</th>
       <th>Duration</th>
       <th>Status</th>
+      <th>Log</th>
     </tr>
     </thead>
     <tbody>
@@ -33,6 +34,16 @@
         <td>{{ export_run.created_at }}</td>
         <td>{{ export_run.duration|readable_timedelta }}</td>
         <td>{{ export_run.status }}</td>
+        <td>
+          <a class="log-trigger" data-open-status="closed" data-export-run-id="{{ export_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
+            View log
+          </a>
+        </td>
+      </tr>
+      <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
+        <td colspan="4">
+          {{ export_run.log }}
+        </td>
       </tr>
     {% endfor %}
     </tbody>
@@ -47,7 +58,6 @@
     var progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
     const Pegasus = SiteJS.Pegasus;
 
-    console.log(apiUrl, progressUrl);
     document.addEventListener("DOMContentLoaded", function () {
         var trigger = document.getElementById('run-export-button');
         trigger.addEventListener('click', function (e) {
@@ -70,7 +80,6 @@
                           progressBarElement.style.width = progress.percent + "%";
                           progressBarElement.style.backgroundColor = '#3273dc';
                           progressBarMessageElement.innerHTML = progress.current + ' of ' + progress.total + ' processed.';
-                        console.log(progress);
                       },
                       onResult: function (resultElement, result) {
                           console.log(result);
@@ -85,4 +94,29 @@
         }, false);
     });
     </script>
+  <script type="application/javascript">
+  document.addEventListener('DOMContentLoaded', () => {
+      let releaseNotesTriggers = document.getElementsByClassName('log-trigger');
+      for (let i = 0; i < releaseNotesTriggers.length; i++) {
+          releaseNotesTriggers[i].addEventListener("click", function (event) {
+              let trigger = event.target.closest('a');
+              let selectorId = 'export-log-' + trigger.dataset.exportRunId;
+              let notes = document.getElementById(selectorId);
+              let icon = trigger.querySelector(".fa");
+              if (trigger.dataset.openStatus === 'closed') {
+                  notes.style.display = '';
+                  trigger.dataset.openStatus = 'open';
+                  icon.classList.remove('fa-chevron-down');
+                  icon.classList.add('fa-chevron-up');
+              } else {
+                  notes.style.display = 'none';
+                  trigger.dataset.openStatus = 'closed';
+                  icon.classList.remove('fa-chevron-up');
+                  icon.classList.add('fa-chevron-down');
+              }
+          });
+      }
+  });
+</script>
+
 {% endblock %}
