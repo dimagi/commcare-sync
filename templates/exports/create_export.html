@@ -1,0 +1,59 @@
+{% extends "pegasus/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">Create Export Configuration</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="field">
+      <label class="label">Name</label>
+      <div class="control">
+        {{ form.name }}
+      </div>
+      {{ form.name.errors }}
+    </div>
+    <div class="field">
+      <label class="label">Project</label>
+      <div class="select">
+        {{ form.project }}
+      </div>
+      {{ form.project.errors }}
+    </div>
+    <div class="field">
+      <label class="label">Account</label>
+      <div class="select">
+        {{ form.account }}
+      </div>
+      {{ form.account.errors }}
+    </div>
+    <div class="field">
+      <label class="label">Database</label>
+      <div class="select">
+        {{ form.database }}
+      </div>
+      {{ form.database.errors }}
+    </div>
+    <div class="field">
+      <div class="file">
+        <label class="file-label">
+          <input class="file-input" type="file" name="config_file" required_id="id_config_file">
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fa fa-upload"></i>
+            </span>
+            <span class="file-label">
+              Upload Config File
+            </span>
+          </span>
+        </label>
+      </div>
+      {{ form.config_file.errors }}
+    </div>
+    <div class="field is-grouped">
+        <div class="control">
+            <input class="button is-primary" type="submit" value="Create">
+        </div>
+    </div>
+  </form>
+</section>
+{% endblock app %}

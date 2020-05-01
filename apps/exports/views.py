@@ -1,8 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from .forms import ExportConfigForm
 from .models import ExportConfig
 from .tasks import run_export_task
 
@@ -13,6 +16,23 @@ def home(request):
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
         'exports': exports,
+    })
+
+
+@login_required
+def create_export_config(request):
+    if request.method == 'POST':
+        form = ExportConfigForm(request.POST, request.FILES)
+        if form.is_valid():
+            export = form.save()
+            messages.success(request, f'Export {export.name} was successfully created.')
+            return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
+    else:
+        form = ExportConfigForm()
+
+    return render(request, 'exports/create_export.html', {
+        'active_tab': 'create_export',
+        'form': form,
     })
 
 
