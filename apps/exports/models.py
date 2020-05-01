@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils.safestring import mark_safe
 
 
 class BaseModel(models.Model):
@@ -84,3 +85,7 @@ class ExportRun(BaseModel):
             return self.completed_at - self.created_at
         else:
             return None
+
+    def get_log_html(self):
+        formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
+        return mark_safe(formatted_log)

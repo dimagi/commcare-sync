@@ -42,7 +42,7 @@
       </tr>
       <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
         <td colspan="4">
-          {{ export_run.log }}
+          {{ export_run.get_log_html }}
         </td>
       </tr>
     {% endfor %}
