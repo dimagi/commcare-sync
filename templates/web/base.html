@@ -7,13 +7,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <!--Mobile friendly-->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{% include 'pegasus/components/meta.html' %}
-{% include 'pegasus/components/favicon.html' %}
+{% include 'web/components/meta.html' %}
+{% include 'web/components/favicon.html' %}
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:100,300,400,500,700,800" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
     <script src="https://use.fontawesome.com/72135c02f1.js"></script>
     {% if GOOGLE_ANALYTICS_ID %}
-        {% include 'pegasus/components/google_analytics.html' %}
+        {% include 'web/components/google_analytics.html' %}
     {% endif %}
     {% block page_head %}
     {% endblock %}
@@ -23,7 +23,7 @@
 {% include 'web/components/top_nav.html' %}
 {% endblock %}
 {% block messages %}
-{% include 'pegasus/components/messages.html' %}
+{% include 'web/components/messages.html' %}
 {% endblock %}
 {% block body %}
 {% endblock %}
@@ -32,7 +32,7 @@
 {% endblock %}
 {% block page_js %}
 {% endblock %}
-{% include 'pegasus/components/messages-js.html' %}
-{% include 'pegasus/components/navbar-js.html' %}
+{% include 'web/components/messages-js.html' %}
+{% include 'web/components/navbar-js.html' %}
 </body>
 </html>
