@@ -1,5 +1,6 @@
 {% extends "pegasus/app/app_base.html" %}
 {% load static %}
+{% load dateformat_tags %}
 {% block app %}
 <section class="section app-card">
   <h1 class="title">{{ export.name }} - Details</h1>
@@ -21,7 +22,8 @@
   <table class="table is-striped is-fullwidth my-2">
     <thead>
     <tr>
-      <th>Run Time</th>
+      <th>Run Start</th>
+      <th>Duration</th>
       <th>Status</th>
     </tr>
     </thead>
@@ -29,6 +31,7 @@
     {% for export_run in runs %}
       <tr>
         <td>{{ export_run.created_at }}</td>
+        <td>{{ export_run.duration|readable_timedelta }}</td>
         <td>{{ export_run.status }}</td>
       </tr>
     {% endfor %}

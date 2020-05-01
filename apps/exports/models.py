@@ -77,3 +77,10 @@ class ExportRun(BaseModel):
 
     def __str__(self):
         return f'{self.export_config.name} ({self.created_at})'
+
+    @property
+    def duration(self):
+        if self.completed_at:
+            return self.completed_at - self.created_at
+        else:
+            return None
