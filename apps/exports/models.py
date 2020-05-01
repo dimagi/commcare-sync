@@ -71,6 +71,7 @@ class ExportRun(BaseModel):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
     completed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
+    log = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.export_config.name} ({self.created_at})'

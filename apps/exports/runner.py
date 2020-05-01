@@ -19,8 +19,9 @@ def run_export(export_config: ExportConfig):
         '--verbose',
         '--query', export_config.config_file.path,
     ]
-    subprocess.run(command)
+    result = subprocess.run(command, capture_output=True)
     export_record.completed_at = timezone.now()
     export_record.status = 'completed'
+    export_record.log = result.stderr  # commcare-export seems to use only stderr for logging
     export_record.save()
     return export_record
