@@ -14,15 +14,13 @@
         </a>
       </div>
       <div class="navbar-menu" id="nav-menu">
-        <div class="navbar-start">
+        <div class="navbar-end">
+          {% if user.is_authenticated %}
             {% if user.is_superuser and user.is_staff %}
               <a class="navbar-item" href="{% url 'admin:index' %}">
                 Admin Site
               </a>
             {% endif %}
-        </div>
-        <div class="navbar-end">
-          {% if user.is_authenticated %}
             <div class="navbar-item has-dropdown is-hoverable">
               <a class="navbar-link">
                 <img class="avatar is-hidden-touch" src="{{ user.avatar_url}}">
