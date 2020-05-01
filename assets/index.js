@@ -1,2 +1,2 @@
 require('./styles/site.scss');
-require('./javascript/pegasus/Pegasus.js');
+require('./javascript/App.js');

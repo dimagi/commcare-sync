@@ -4,7 +4,7 @@ const ExtractTextPlugin = require("extract-text-webpack-plugin");
 module.exports = {
   entry: {
     index: './assets/index.js',
-    Pegasus: './assets/javascript/pegasus/Pegasus.js',
+    App: './assets/javascript/App.js',
   },
   output: {
     path: path.resolve(__dirname, './static'),

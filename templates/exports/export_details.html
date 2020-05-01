@@ -52,11 +52,11 @@
 {% endblock app %}
 {% block page_js %}
     <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-    <script src="{% static 'js/Pegasus-bundle.js' %}"></script>
+    <script src="{% static 'js/App-bundle.js' %}"></script>
     <script>
     var apiUrl = "{% url 'exports:run_export' export.id %}";
     var progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
-    const Pegasus = SiteJS.Pegasus;
+    const Cookies = SiteJS.App.Cookies;
 
     document.addEventListener("DOMContentLoaded", function () {
         var trigger = document.getElementById('run-export-button');
@@ -68,7 +68,7 @@
                 method: 'post',
                 credentials: 'same-origin',
                 headers: {
-                  'X-CSRFToken': Pegasus.Cookies.get('csrftoken'),
+                  'X-CSRFToken': Cookies.get('csrftoken'),
                 }
             }).then(
                 function (response) {

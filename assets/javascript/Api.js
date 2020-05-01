@@ -2,7 +2,7 @@
 
 // if your API lives at a namespace you can add it here
 // e.g. API_ROOT = ["myapp", "api"];
-export const API_ROOT = ["pegasus", "api"];
+export const API_ROOT = ["app", "api"];
 
 
 export function getAction(apiRoot, action) {
