@@ -22,7 +22,7 @@ def export_details(request, export_id):
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at'),
+        'runs': export.runs.order_by('-created_at')[:25],
     })
 
 
