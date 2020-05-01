@@ -62,11 +62,13 @@ class ExportConfig(BaseModel):
 
 
 class ExportRun(BaseModel):
-
+    COMPLETED = 'completed'
+    STARTED = 'started'
+    FAILED = 'failed'
     STATUS_CHOICES = (
-        ('started', 'started'),
-        ('completed', 'completed'),
-        ('failed', 'failed'),
+        (STARTED, 'started'),
+        (COMPLETED, 'completed'),
+        (FAILED, 'failed'),
     )
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
     completed_at = models.DateTimeField(null=True, blank=True)
