@@ -1,12 +1,24 @@
 {% extends "pegasus/app/app_base.html" %}
+{% load static %}
 {% block app %}
 <section class="section app-card">
   <h1 class="title">{{ export.name }} - Details</h1>
-
 </section>
 <section class="section app-card">
   <h1 class="title">Run History</h1>
-  <table class="table is-striped is-fullwidth">
+  <button class="button is-primary is-rounded is-small" id="run-export-button">
+    <span class="icon">
+      <i class="fa fa-play"></i>
+    </span>
+    <span>Run Now</span>
+  </button>
+  <div class="progress-bar-demo my-2" >
+    <div class='progress-wrapper'>
+      <div id="progress-bar" class='progress-bar'>&nbsp;</div>
+    </div>
+    <div id="progress-bar-message" style="color: grey;">Waiting for progress to start...</div>
+  </div>
+  <table class="table is-striped is-fullwidth my-2">
     <thead>
     <tr>
       <th>Run Time</th>
@@ -14,7 +26,7 @@
     </tr>
     </thead>
     <tbody>
-    {% for export_run in export.runs.all %}
+    {% for export_run in runs %}
       <tr>
         <td>{{ export_run.created_at }}</td>
         <td>{{ export_run.status }}</td>
@@ -24,3 +36,50 @@
   </table>
 </section>
 {% endblock app %}
+{% block page_js %}
+    <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+    <script src="{% static 'js/Pegasus-bundle.js' %}"></script>
+    <script>
+    var apiUrl = "{% url 'exports:run_export' export.id %}";
+    var progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
+    const Pegasus = SiteJS.Pegasus;
+
+    console.log(apiUrl, progressUrl);
+    document.addEventListener("DOMContentLoaded", function () {
+        var trigger = document.getElementById('run-export-button');
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            var pb = document.getElementById('progress-bar');
+            pb.style.display = 'inherit';
+            fetch(apiUrl, {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {
+                  'X-CSRFToken': Pegasus.Cookies.get('csrftoken'),
+                }
+            }).then(
+                function (response) {
+                    return response.text();
+                }).then(function (text) {
+                    var taskUrl = progressUrl.replace('task-id-stub', text);
+                    CeleryProgressBar.initProgressBar(taskUrl, {
+                      onProgress: function (progressBarElement, progressBarMessageElement, progress) {
+                          progressBarElement.style.width = progress.percent + "%";
+                          progressBarElement.style.backgroundColor = '#3273dc';
+                          progressBarMessageElement.innerHTML = progress.current + ' of ' + progress.total + ' processed.';
+                        console.log(progress);
+                      },
+                      onResult: function (resultElement, result) {
+                          console.log(result);
+
+                      }
+                    });
+                  })
+                  .catch(function (error) {
+                    console.error('Request failed', error);
+                });
+                e.preventDefault();
+        }, false);
+    });
+    </script>
+{% endblock %}

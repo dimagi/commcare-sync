@@ -23,3 +23,4 @@ def run_export(export_config: ExportConfig):
     export_record.completed_at = timezone.now()
     export_record.status = 'completed'
     export_record.save()
+    return export_record
