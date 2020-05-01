@@ -5,6 +5,12 @@ from .runner import run_export
 
 
 @shared_task(bind=True)
+def run_all_exports_task(self):
+    for export in ExportConfig.objects.all():
+        run_export(export)
+
+
+@shared_task(bind=True)
 def run_export_task(self, export_id):
     export = ExportConfig.objects.get(id=export_id)
     export_run = run_export(export)

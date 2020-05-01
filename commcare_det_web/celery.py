@@ -6,6 +6,19 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'commcare_det_web.settings')
 
 app = Celery('commcare_det_web')
 
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    periodicity_in_seconds = 60 * 60 * 12  # 12 hours
+    sender.add_periodic_task(periodicity_in_seconds, run_all_exports_task_wrapper.s(),
+                             name='Import all pro chats.')
+
+
+@app.task
+def run_all_exports_task_wrapper():
+    from apps.exports.tasks import run_all_exports_task
+    run_all_exports_task()
+
+
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
