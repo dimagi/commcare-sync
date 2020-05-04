@@ -3,7 +3,26 @@
 {% load dateformat_tags %}
 {% block app %}
 <section class="section app-card">
-  <h1 class="title">{{ export.name }} - Details</h1>
+  <div class="level">
+    <!-- Left side -->
+    <div class="level-left">
+      <h1 class="title">{{ export.name }} - Details</h1>
+    </div>
+    <div class="level-right">
+      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_export_config' export.id %}">
+        <span class="icon">
+          <i class="fa fa-edit"></i>
+        </span>
+        <span>Edit Details</span>
+      </a>
+    </div>
+  </div>
+  <a class="button is-primary is-rounded is-small" href="{{ export.config_file.url }}">
+    <span class="icon">
+      <i class="fa fa-download"></i>
+    </span>
+    <span>Download Config File</span>
+  </a>
 </section>
 <section class="section app-card">
   <h1 class="title">Run History</h1>

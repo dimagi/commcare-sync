@@ -37,6 +37,24 @@ def create_export_config(request):
 
 
 @login_required
+def edit_export_config(request, export_id):
+    export = get_object_or_404(ExportConfig, id=export_id)
+    if request.method == 'POST':
+        form = ExportConfigForm(request.POST, request.FILES, instance=export)
+        if form.is_valid():
+            export = form.save()
+            messages.success(request, f'Export {export.name} was successfully saved.')
+            return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
+    else:
+        form = ExportConfigForm(instance=export)
+
+    return render(request, 'exports/edit_export.html', {
+        'active_tab': 'create_export',
+        'form': form,
+    })
+
+
+@login_required
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     return render(request, 'exports/export_details.html', {
