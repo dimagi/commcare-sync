@@ -1,7 +1,7 @@
 {% extends "web/app/app_base.html" %}
 {% block app %}
 <section class="section app-card">
-  <h1 class="title">Edit Export Configuration</h1>
+  <h1 class="title">Edit {{ export.name }}</h1>
   <form method="post" enctype="multipart/form-data">
     {% include 'exports/partials/export_form.html' %}
     <div class="field is-grouped">

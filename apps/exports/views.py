@@ -49,8 +49,9 @@ def edit_export_config(request, export_id):
         form = ExportConfigForm(instance=export)
 
     return render(request, 'exports/edit_export.html', {
-        'active_tab': 'create_export',
+        'active_tab': 'exports',
         'form': form,
+        'export': export,
     })
 
 
