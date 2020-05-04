@@ -12,7 +12,7 @@ from .models import CommCareProject
 def home(request):
     projects = CommCareProject.objects.order_by('domain')
     return render(request, 'commcare/commcare_home.html', {
-        'active_tab': 'commcare_home',
+        'active_tab': 'commcare',
         'projects': projects,
     })
 
@@ -36,18 +36,18 @@ def create_project(request):
 
 @login_required
 def edit_project(request, project_id):
-    export = get_object_or_404(CommCareProject, id=project_id)
+    project = get_object_or_404(CommCareProject, id=project_id)
     if request.method == 'POST':
-        form = CommCareProjectForm(request.POST, request.FILES, instance=export)
+        form = CommCareProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
-            export = form.save()
-            messages.success(request, f'Export {export.name} was successfully saved.')
-            return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
+            project = form.save()
+            messages.success(request, f'Project {project} was successfully saved.')
+            return HttpResponseRedirect(reverse('commcare:home'))
     else:
-        form = CommCareProjectForm(instance=export)
+        form = CommCareProjectForm(instance=project)
 
-    return render(request, 'exports/edit_export.html', {
-        'active_tab': 'exports',
+    return render(request, 'commcare/edit_project.html', {
+        'active_tab': 'commcare',
         'form': form,
-        'export': export,
+        'project': project,
     })
