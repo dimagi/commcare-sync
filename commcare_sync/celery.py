@@ -2,9 +2,9 @@ import os
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'commcare_det_web.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'commcare_sync.settings')
 
-app = Celery('commcare_det_web')
+app = Celery('commcare_sync')
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):

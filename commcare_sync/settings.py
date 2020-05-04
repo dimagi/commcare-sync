@@ -72,7 +72,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'commcare_det_web.urls'
+ROOT_URLCONF = 'commcare_sync.urls'
 
 TEMPLATES = [
     {
@@ -94,7 +94,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'commcare_det_web.wsgi.application'
+WSGI_APPLICATION = 'commcare_sync.wsgi.application'
 
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
@@ -104,7 +104,7 @@ FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'commcare_det_web',
+        'NAME': 'commcare_sync',
         'USER': 'commcarehq',
         'PASSWORD': 'commcarehq',
         'HOST': 'localhost',

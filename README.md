@@ -1,6 +1,6 @@
-# CommCare Data Export Tool Management Interface
+# CommCare Sync
 
-Management Interface for the CommCare Data Export Tool.
+A Management Interface for the CommCare Data Export Tool.
 
 Some additional context on this project can be [found here](https://docs.google.com/document/d/1r8ZQAjCGbxX8pXWtIq0ODJOpqqI27YqPDN4vuR_CLGw/edit) (Dimagi Internal).
 

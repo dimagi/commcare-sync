@@ -7,7 +7,7 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'commcare_det_web',
+        'NAME': 'commcare_sync',
         'USER': 'postgres',
         'PASSWORD': '*****',
         'HOST': 'localhost',
@@ -36,13 +36,6 @@ DEFAULT_FROM_EMAIL = 'czue+det@dimagi.com'
 ADMINS = [('Your Name', 'czue+det@dimagi.com'),]
 
 GOOGLE_ANALYTICS_ID = ''  # replace with your google analytics ID to connect to Google Analytics
-
-
-# Mailchimp setup
-
-# set these values if you want to subscribe people to a mailchimp list after they sign up.
-MAILCHIMP_API_KEY = ''
-MAILCHIMP_LIST_ID = ''
 
 
 # Sentry setup
