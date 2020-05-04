@@ -18,13 +18,22 @@
     <tr>
       <th>Project</th>
       <th>View</th>
+      <th>Edit</th>
     </tr>
     </thead>
     <tbody>
     {% for project in projects %}
       <tr>
         <td>{{ project.domain }}</td>
-        <td><a href="{{ project.url }}" target="_blank">View in CommCare</a></td>
+        <td><a href="{{ project.url }}" target="_blank">View in CommCare <i class="fa fa-external-link"></i></a></td>
+        <td>
+          <a class="button is-small is-primary is-rounded is-outlined" href="{% url 'commcare:edit_project' project.id %}">
+            <span class="icon">
+              <i class="fa fa-edit"></i>
+            </span>
+            <span>Edit</span>
+          </a>
+        </td>
       </tr>
     {% endfor %}
     </tbody>
