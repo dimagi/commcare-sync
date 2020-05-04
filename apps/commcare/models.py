@@ -26,6 +26,9 @@ class CommCareProject(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
     domain = models.CharField(max_length=100)
 
+    class Meta:
+        unique_together = ('server', 'domain')
+
     def __str__(self):
         return f'{self.domain} ({self.server.name})'
 
