@@ -9,60 +9,47 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('commcare', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExportConfig',
+            name='CommCareServer',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=100)),
-                ('config_file', models.FileField(upload_to='export-configs/')),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='commcare.CommCareAccount')),
+                ('name', models.CharField(default='CommCare HQ', max_length=100)),
+                ('url', models.CharField(default='https://www.commcarehq.org/', max_length=100)),
             ],
             options={
                 'abstract': False,
             },
         ),
         migrations.CreateModel(
-            name='ExportDatabase',
+            name='CommCareProject',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=100)),
-                ('connection_string', models.CharField(max_length=100)),
+                ('domain', models.CharField(max_length=100)),
+                ('server', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='commcare.CommCareServer')),
             ],
             options={
                 'abstract': False,
             },
         ),
         migrations.CreateModel(
-            name='ExportRun',
+            name='CommCareAccount',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('started', 'started'), ('completed', 'completed'), ('failed', 'failed')], default='started', max_length=10)),
-                ('log', models.TextField(blank=True, null=True)),
-                ('export_config', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='runs', to='exports.ExportConfig')),
+                ('username', models.CharField(max_length=100)),
+                ('api_key', models.CharField(max_length=40)),
+                ('server', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='commcare.CommCareServer')),
             ],
             options={
                 'abstract': False,
             },
-        ),
-        migrations.AddField(
-            model_name='exportconfig',
-            name='database',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='exports.ExportDatabase'),
-        ),
-        migrations.AddField(
-            model_name='exportconfig',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='commcare.CommCareProject'),
         ),
     ]

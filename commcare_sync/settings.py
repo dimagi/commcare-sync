@@ -55,6 +55,7 @@ THIRD_PARTY_APPS = [
 
 # Put your project-specific apps here
 PROJECT_APPS = [
+    'apps.commcare.apps.CommCareConfig',
     'apps.exports.apps.ExportsConfig',
     'apps.users.apps.UserConfig',
     'apps.web',
