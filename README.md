@@ -9,7 +9,7 @@ Some additional context on this project can be [found here](https://docs.google.
 Setup a virtualenv and install requirements:
 
 ```bash
-mkvirtualenv --no-site-packages commcare_det_web -p python3.8
+mkvirtualenv --no-site-packages commcare_sync -p python3.8
 pip install -r requirements.txt
 ```
 
@@ -38,13 +38,13 @@ npm run dev-watch
 Celery is used to run background tasks. To run it you can use:
 
 ```bash
-celery -A commcare_det_web worker -l info
+celery -A commcare_sync worker -l info
 ```
 
 Or to also include periodic tasks:
 
 ```bash
-celery -A commcare_det_web worker -l info -B
+celery -A commcare_sync worker -l info -B
 ```
 
 
