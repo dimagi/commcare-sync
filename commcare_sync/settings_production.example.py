@@ -20,6 +20,10 @@ ALLOWED_HOSTS = [
     'localhost:8000',
 ]
 
+# disallow account creation with NoNewUsersAccountAdapter
+# ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
+ACCOUNT_ADAPTER = 'apps.users.account_adapter.NoNewUsersAccountAdapter'
+
 
 # Your email config goes here.
 # see https://github.com/anymail/django-anymail for more details / examples
