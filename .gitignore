@@ -8,3 +8,4 @@ node_modules/
 media/
 docs/_build
 _dist/
+commcare_sync/local.py
