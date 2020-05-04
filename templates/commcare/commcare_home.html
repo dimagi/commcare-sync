@@ -6,13 +6,12 @@
 </section>
 <section class="section app-card">
   <h1 class="title">Projects</h1>
-  <a class="button is-primary is-rounded is-small" href="{% url 'commcare:create_project' %}">
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'commcare:create_project' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
     </span>
     <span>New Project</span>
   </a>
-
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
@@ -34,6 +33,31 @@
             <span>Edit</span>
           </a>
         </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<section class="section app-card">
+  <h1 class="title">Accounts</h1>
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'commcare:create_account' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>New Account</span>
+  </a>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Username</th>
+      <th>Created</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for account in accounts %}
+      <tr>
+        <td>{{ account.username }}</td>
+        <td>{{ account.created_at }}</td>
       </tr>
     {% endfor %}
     </tbody>

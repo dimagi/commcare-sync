@@ -4,16 +4,18 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
-from .forms import CommCareProjectForm
-from .models import CommCareProject
+from .forms import CommCareProjectForm, CommCareAccountForm
+from .models import CommCareProject, CommCareAccount
 
 
 @login_required
 def home(request):
     projects = CommCareProject.objects.order_by('domain')
+    accounts = CommCareAccount.objects.order_by('username')
     return render(request, 'commcare/commcare_home.html', {
         'active_tab': 'commcare',
         'projects': projects,
+        'accounts': accounts,
     })
 
 
@@ -50,4 +52,22 @@ def edit_project(request, project_id):
         'active_tab': 'commcare',
         'form': form,
         'project': project,
+    })
+
+
+
+@login_required
+def create_account(request):
+    if request.method == 'POST':
+        form = CommCareAccountForm(request.POST, request.FILES)
+        if form.is_valid():
+            account = form.save()
+            messages.success(request, f'Account {account.username} was successfully added.')
+            return HttpResponseRedirect(reverse('commcare:home'))
+    else:
+        form = CommCareAccountForm()
+
+    return render(request, 'commcare/create_account.html', {
+        'active_tab': 'create_account',
+        'form': form,
     })

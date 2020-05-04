@@ -1,0 +1,23 @@
+{% csrf_token %}
+{{ form.non_field_errors }}
+<div class="field">
+  <label class="label">Server</label>
+  <div class="select">
+    {{ form.server }}
+  </div>
+  {{ form.server.errors }}
+</div>
+<div class="field">
+  <label class="label">Username</label>
+  <div class="control">
+    {{ form.username }}
+  </div>
+  {{ form.username.errors }}
+</div>
+<div class="field">
+  <label class="label">API Key</label>
+  <div class="control">
+    {{ form.api_key }}
+  </div>
+  {{ form.api_key.errors }}
+</div>

@@ -28,6 +28,11 @@
         <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">New Project</span>
       </a>
     </li>
+    <li>
+      <a href="{% url 'commcare:create_account' %}" {% if active_tab == 'create_account' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-user-plus"></i></span><span class="is-hidden-tablet-only">New Account</span>
+      </a>
+    </li>
   </ul>
   <p class="menu-label is-hidden-tablet-only">
     My Account
