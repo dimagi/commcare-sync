@@ -41,5 +41,8 @@ class CommCareAccount(BaseModel):
     username = models.CharField(max_length=100)
     api_key = models.CharField(max_length=40)
 
+    class Meta:
+        unique_together = ('server', 'username')
+
     def __str__(self):
         return f'{self.username} ({self.server.name})'
