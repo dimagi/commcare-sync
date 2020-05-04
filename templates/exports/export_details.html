@@ -17,6 +17,28 @@
       </a>
     </div>
   </div>
+  <div class="columns">
+    <div class="column">
+      <span class="heading">Project Space</span>
+      <h2>
+        <a href="{{ export.project.url }}" target="_blank">{{ export.project.domain }}
+          <i class="fa fa-external-link"></i>
+        </a>
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Account</span>
+      <h2>
+        {{ export.account.username }}
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Database</span>
+      <h2>
+        {{ export.database.name }}
+      </h2>
+    </div>
+  </div>
   <a class="button is-primary is-rounded is-small" href="{{ export.config_file.url }}">
     <span class="icon">
       <i class="fa fa-download"></i>

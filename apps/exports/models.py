@@ -29,6 +29,9 @@ class CommCareProject(BaseModel):
     def __str__(self):
         return f'{self.domain} ({self.server.name})'
 
+    @property
+    def url(self):
+        return f'{self.server.url}a/{self.domain}/'
 
 class CommCareAccount(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
