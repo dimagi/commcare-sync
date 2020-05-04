@@ -12,7 +12,7 @@ from .tasks import run_export_task
 
 @login_required
 def home(request):
-    exports = ExportConfig.objects.all()
+    exports = ExportConfig.objects.order_by('-updated_at')
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
         'exports': exports,
