@@ -15,6 +15,21 @@
     </li>
   </ul>
   <p class="menu-label is-hidden-tablet-only">
+    CommCare Management
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'commcare:home' %}" {% if active_tab == 'commcare_home' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fcc fcc-flower"></i></span><span class="is-hidden-tablet-only">Projects</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'commcare:create_project' %}" {% if active_tab == 'create_project' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">New Project</span>
+      </a>
+    </li>
+  </ul>
+  <p class="menu-label is-hidden-tablet-only">
     My Account
   </p>
   <ul class="menu-list">

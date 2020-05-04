@@ -1,0 +1,33 @@
+{% extends "web/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">CommCare Home</h1>
+  <h2 class="subtitle">View and manage your CommCare connections</h2>
+</section>
+<section class="section app-card">
+  <h1 class="title">Projects</h1>
+  <a class="button is-primary is-rounded is-small" href="{% url 'commcare:create_project' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>New Project</span>
+  </a>
+
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Project</th>
+      <th>View</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for project in projects %}
+      <tr>
+        <td>{{ project.domain }}</td>
+        <td><a href="{{ project.url }}" target="_blank">View in CommCare</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock app %}

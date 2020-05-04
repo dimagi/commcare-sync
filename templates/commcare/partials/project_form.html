@@ -1,0 +1,17 @@
+{% csrf_token %}
+{{ form.non_field_errors }}
+<div class="field">
+  <label class="label">Server</label>
+  <div class="select">
+    {{ form.server }}
+  </div>
+  {{ form.server.errors }}
+</div>
+<div class="field">
+  <label class="label">Domain</label>
+  <div class="control">
+    {{ form.domain }}
+  </div>
+  {{ form.domain.errors }}
+</div>
+
