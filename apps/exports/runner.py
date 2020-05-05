@@ -1,5 +1,6 @@
 import subprocess
 
+from django.conf import settings
 from django.utils import timezone
 
 from .models import ExportConfig, ExportRun
@@ -8,7 +9,7 @@ from .models import ExportConfig, ExportRun
 def run_export(export_config: ExportConfig):
     export_record = ExportRun.objects.create(export_config=export_config)
     command = [
-        'commcare-export',
+        settings.COMMCARE_EXPORT,
         '--project', export_config.project.domain,
         '--username', export_config.account.username,
         '--auth-mode', 'apikey',

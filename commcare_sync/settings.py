@@ -230,6 +230,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 # CommCare Config
 
 COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
+COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 
 # Project config
 

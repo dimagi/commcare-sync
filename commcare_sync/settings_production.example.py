@@ -24,6 +24,8 @@ ALLOWED_HOSTS = [
 # ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
 ACCOUNT_ADAPTER = 'apps.users.account_adapter.NoNewUsersAccountAdapter'
 
+COMMCARE_EXPORT = '/home/ubuntu/.virtualenvs/commcare-sync/bin/commcare-export'
+
 
 # Your email config goes here.
 # see https://github.com/anymail/django-anymail for more details / examples
