@@ -61,7 +61,9 @@ def create_account(request):
     if request.method == 'POST':
         form = CommCareAccountForm(request.POST, request.FILES)
         if form.is_valid():
-            account = form.save()
+            account = form.save(commit=False)
+            account.owner = request.user
+            account.save()
             messages.success(request, f'Account {account.username} was successfully added.')
             return HttpResponseRedirect(reverse('commcare:home'))
     else:

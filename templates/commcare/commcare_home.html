@@ -6,7 +6,7 @@
 </section>
 <section class="section app-card">
   <h1 class="title">Projects</h1>
-  <h2 class="subtitle">Manage the CommCare project spaces you'll connect to here.</h2>
+  <h2 class="subtitle">Manage the CommCare project spaces you'll connect to here</h2>
 {% if projects.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'commcare:create_project' %}">
     <span class="icon">
@@ -53,6 +53,8 @@
 </section>
 <section class="section app-card">
   <h1 class="title">Accounts</h1>
+  <h2 class="subtitle">Manage the CommCare accounts used to sync your data</h2>
+{% if accounts.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'commcare:create_account' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
@@ -64,6 +66,7 @@
     <tr>
       <th>Username</th>
       <th>Created</th>
+      <th>Owner</th>
     </tr>
     </thead>
     <tbody>
@@ -71,9 +74,21 @@
       <tr>
         <td>{{ account.username }}</td>
         <td>{{ account.created_at }}</td>
+        <td>{% if request.user == account.owner %}You{% else %}account.owner.username{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+{% else %}
+  <section class="notification is-warning is-light">
+    No accounts found!
+  </section>
+  <a class="button is-primary " href="{% url 'commcare:create_account' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>Add Your First Account</span>
+  </a>
+{% endif %}
 </section>
 {% endblock app %}
