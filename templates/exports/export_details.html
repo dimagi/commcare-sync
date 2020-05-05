@@ -38,6 +38,12 @@
         {{ export.database.name }}
       </h2>
     </div>
+    <div class="column">
+      <span class="heading">Created By</span>
+      <h2>
+        {% if request.user == export.created_by %}You{% else %}{{ export.created_by.username}}{% endif %}
+      </h2>
+    </div>
   </div>
   <a class="button is-primary is-rounded is-small" href="{{ export.config_file.url }}">
     <span class="icon">

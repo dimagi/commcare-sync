@@ -24,7 +24,9 @@ def create_export_config(request):
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            export = form.save()
+            export = form.save(commit=False)
+            export.created_by = request.user
+            export.save()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:

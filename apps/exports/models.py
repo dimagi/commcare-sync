@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
@@ -6,6 +7,7 @@ from apps.commcare.models import BaseModel
 class ExportDatabase(BaseModel):
     name = models.CharField(max_length=100)
     connection_string = models.CharField(max_length=100)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -17,6 +19,8 @@ class ExportConfig(BaseModel):
     account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
 
     def __str__(self):
         return f'{self.name} - {self.project}'
