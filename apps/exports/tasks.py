@@ -23,4 +23,6 @@ def run_export_task(self, export_id):
     return {
         'run_time': export_run.created_at.isoformat(),
         'status': export_run.status,
+        'duration': export_run.get_duration_display(),
+        'log': export_run.log,
     }

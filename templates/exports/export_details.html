@@ -60,13 +60,13 @@
     </span>
     <span>Run Now</span>
   </button>
-  <div class="progress-bar-demo my-2" >
+  <div id="export-status-progress" class="progress-bar-demo my-2" style="display: none;">
     <div class='progress-wrapper'>
-      <div id="progress-bar" class='progress-bar'>&nbsp;</div>
+      <progress id="progress-bar" class="progress is-small is-primary" max="100"></progress>
     </div>
-    <div id="progress-bar-message" style="color: grey;">Waiting for progress to start...</div>
+    <div id="progress-bar-message" style="color: grey;">Waiting for task to start...</div>
   </div>
-  <table class="table is-striped is-fullwidth my-2">
+  <table id="export-run-table" class="table is-fullwidth my-2">
     <thead>
     <tr>
       <th>Run Start</th>
@@ -101,16 +101,30 @@
     <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
     <script src="{% static 'js/App-bundle.js' %}"></script>
     <script>
-    var apiUrl = "{% url 'exports:run_export' export.id %}";
-    var progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
+    const apiUrl = "{% url 'exports:run_export' export.id %}";
+    const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
     const Cookies = SiteJS.App.Cookies;
+    const addRecordToTable = function () {
+      // ht: https://stackoverflow.com/a/18333693/8207
+      const exportRunTable = document.getElementById('export-run-table').getElementsByTagName('tbody')[0];
+      const recordRow = exportRunTable.insertRow(0);
+
+      // Populate the cell with initial data
+      recordRow.insertCell(0).appendChild(document.createTextNode('Just now'));
+      recordRow.insertCell(1).appendChild(document.createTextNode('TBD'));
+      recordRow.insertCell(2).appendChild(document.createTextNode('started'));
+      recordRow.insertCell(3).appendChild(document.createTextNode('waiting for log...'));
+      return recordRow;
+    };
 
     document.addEventListener("DOMContentLoaded", function () {
         var trigger = document.getElementById('run-export-button');
         trigger.addEventListener('click', function (e) {
             e.preventDefault();
-            var pb = document.getElementById('progress-bar');
-            pb.style.display = 'inherit';
+            const progressWrapper = document.getElementById('export-status-progress');
+            progressWrapper.style.display = 'inherit';
+            const progressBar = document.getElementById('progress-bar');
+            const progressMessage = document.getElementById('progress-bar-message');
             fetch(apiUrl, {
                 method: 'post',
                 credentials: 'same-origin',
@@ -121,16 +135,26 @@
                 function (response) {
                     return response.text();
                 }).then(function (text) {
-                    var taskUrl = progressUrl.replace('task-id-stub', text);
+                    const taskUrl = progressUrl.replace('task-id-stub', text);
+                    const recordRow = addRecordToTable();
                     CeleryProgressBar.initProgressBar(taskUrl, {
-                      onProgress: function (progressBarElement, progressBarMessageElement, progress) {
-                          progressBarElement.style.width = progress.percent + "%";
-                          progressBarElement.style.backgroundColor = '#3273dc';
-                          progressBarMessageElement.innerHTML = progress.current + ' of ' + progress.total + ' processed.';
+                      onProgress: function () {
+                        progressMessage.innerHTML = 'Running Export...'
+                      },
+                      onSuccess: function () {
+                        progressBar.setAttribute('value', '100');
+                        progressMessage.innerHTML = 'Complete!'
                       },
                       onResult: function (resultElement, result) {
-                          console.log(result);
-
+                        recordRow.cells[1].innerText = result.duration;
+                        recordRow.cells[2].innerText = result.status;
+                        if (result.status === "completed") {
+                          progressBar.classList.add('is-success');
+                        } else if (result.status === "failed") {
+                          progressBar.classList.add('is-danger');
+                          progressMessage.innerText = 'Failed!'
+                        }
+                        recordRow.cells[3].innerHTML = '<a onclick=location.reload()>Refresh for log</a>';
                       }
                     });
                   })

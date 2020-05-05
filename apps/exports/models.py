@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
+from apps.exports.templatetags.dateformat_tags import readable_timedelta
 
 
 class ExportDatabase(BaseModel):
@@ -53,6 +54,9 @@ class ExportRun(BaseModel):
             return self.completed_at - self.created_at
         else:
             return None
+
+    def get_duration_display(self):
+        return readable_timedelta(self.duration)
 
     def get_log_html(self):
         formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
