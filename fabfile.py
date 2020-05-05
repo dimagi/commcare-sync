@@ -16,7 +16,7 @@ def deploy(c):
     update_code(c)
     update_virtualenv(c)
     django_stuff(c)
-    # services_restart(c)
+    services_restart(c)
 
 
 def update_code(c):
@@ -51,7 +51,6 @@ def django_stuff(c):
             c.run('{}/bin/python manage.py collectstatic --noinput'.format(VIRTUALENV_ROOT), env=env)
 
 
-# todo: supervisor managed
-# def services_restart(c):
-#     c.sudo('sudo supervisorctl restart commcare-sync-django')
-#     c.sudo('sudo supervisorctl restart commcare-sync-celery')
+def services_restart(c):
+    c.sudo('sudo supervisorctl restart commcare-sync-django')
+    c.sudo('sudo supervisorctl restart commcare-sync-celery')
