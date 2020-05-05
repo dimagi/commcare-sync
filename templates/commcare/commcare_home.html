@@ -6,6 +6,8 @@
 </section>
 <section class="section app-card">
   <h1 class="title">Projects</h1>
+  <h2 class="subtitle">Manage the CommCare project spaces you'll connect to here.</h2>
+{% if projects.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'commcare:create_project' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
@@ -37,6 +39,17 @@
     {% endfor %}
     </tbody>
   </table>
+{% else %}
+  <section class="notification is-warning is-light">
+    No projects found!
+  </section>
+  <a class="button is-primary " href="{% url 'commcare:create_project' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>Add Your First Project</span>
+  </a>
+{% endif %}
 </section>
 <section class="section app-card">
   <h1 class="title">Accounts</h1>
