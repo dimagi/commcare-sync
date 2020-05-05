@@ -110,7 +110,7 @@
       const recordRow = exportRunTable.insertRow(0);
 
       // Populate the cell with initial data
-      recordRow.insertCell(0).appendChild(document.createTextNode('Just now'));
+      recordRow.insertCell(0).appendChild(document.createTextNode('Now'));
       recordRow.insertCell(1).appendChild(document.createTextNode('TBD'));
       recordRow.insertCell(2).appendChild(document.createTextNode('started'));
       recordRow.insertCell(3).appendChild(document.createTextNode('waiting for log...'));
@@ -118,9 +118,10 @@
     };
 
     document.addEventListener("DOMContentLoaded", function () {
-        var trigger = document.getElementById('run-export-button');
-        trigger.addEventListener('click', function (e) {
+        const runExportButton = document.getElementById('run-export-button');
+        runExportButton.addEventListener('click', function (e) {
             e.preventDefault();
+            runExportButton.classList.add('is-loading', 'is-disabled');
             const progressWrapper = document.getElementById('export-status-progress');
             progressWrapper.style.display = 'inherit';
             const progressBar = document.getElementById('progress-bar');
@@ -155,6 +156,7 @@
                           progressMessage.innerText = 'Failed!'
                         }
                         recordRow.cells[3].innerHTML = '<a onclick=location.reload()>Refresh for log</a>';
+                        runExportButton.classList.remove('is-loading', 'is-disabled');
                       }
                     });
                   })
