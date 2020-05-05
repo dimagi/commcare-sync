@@ -2,6 +2,7 @@
 {% block app %}
 <section class="section app-card">
   <h1 class="title">Export Configurations</h1>
+{% if exports.exists %}
   <a class="button is-primary is-rounded is-small" href="{% url 'exports:create_export_config' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
@@ -28,5 +29,15 @@
     {% endfor %}
     </tbody>
   </table>
+{% endif  %}
+  <section class="notification is-warning is-light">
+    No export configurations found!
+  </section>
+  <a class="button is-primary " href="{% url 'exports:create_export_config' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>Add Your First Export</span>
+  </a>
 </section>
 {% endblock app %}
