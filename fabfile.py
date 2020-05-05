@@ -33,7 +33,7 @@ def update_virtualenv(c):
     """
     files = (
         posixpath.join(CODE_ROOT, 'requirements.txt'),
-        # posixpath.join(CODE_ROOT, 'requirements', 'prod-requirements.txt'),
+        posixpath.join(CODE_ROOT, 'requirements', 'prod-requirements.txt'),
     )
     with c.prefix('source {}/bin/activate'.format(VIRTUALENV_ROOT)):
         for req_file in files:
