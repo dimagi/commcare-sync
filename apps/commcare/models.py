@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 
 class BaseModel(models.Model):
@@ -27,7 +28,10 @@ class CommCareServer(BaseModel):
 
 class CommCareProject(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
-    domain = models.CharField(max_length=100)
+    domain = models.CharField(
+        max_length=100,
+        help_text=_("Your CommCare domain (available from the URL)")
+    )
 
     class Meta:
         unique_together = ('server', 'domain')
