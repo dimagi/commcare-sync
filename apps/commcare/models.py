@@ -45,7 +45,7 @@ class CommCareProject(BaseModel):
 
 class CommCareAccount(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
-    username = models.CharField(max_length=100)
+    username = models.EmailField(max_length=100)
     api_key = models.CharField(max_length=40)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
