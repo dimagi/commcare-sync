@@ -16,7 +16,10 @@ class BaseModel(models.Model):
 
 class CommCareServer(BaseModel):
     name = models.CharField(max_length=100, default='CommCare HQ')
-    url = models.CharField(max_length=100, default=settings.COMMCARE_DEFAULT_SERVER)
+    url = models.CharField(
+        max_length=100, default=settings.COMMCARE_DEFAULT_SERVER,
+        unique=True,
+    )
 
     def __str__(self):
         return f'{self.name} ({self.url})'
