@@ -1,19 +1,6 @@
 {% csrf_token %}
 {{ form.non_field_errors }}
-<div class="field">
-  <label class="label">Server</label>
-  {% if form.server.field.queryset.count == 1 %}
-    {% with form.server.field.queryset.0 as default_server %}
-      <input class="input is-static" type="text" value="{{ default_server }}" readonly />
-      <input type="hidden" name="server" value="{{ default_server.pk }}" />
-    {% endwith %}
-  {% else %}
-    <div class="select">
-      {{ form.server }}
-    </div>
-  {% endif %}
-  {{ form.server.errors }}
-</div>
+{% include 'commcare/partials/commcare_server_field.html' %}
 <div class="field">
   <label class="label">Domain</label>
   <div class="control">

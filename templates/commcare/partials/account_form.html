@@ -1,12 +1,6 @@
 {% csrf_token %}
 {{ form.non_field_errors }}
-<div class="field">
-  <label class="label">Server</label>
-  <div class="select">
-    {{ form.server }}
-  </div>
-  {{ form.server.errors }}
-</div>
+{% include 'commcare/partials/commcare_server_field.html' %}
 <div class="field">
   <label class="label">Username</label>
   <div class="control">
