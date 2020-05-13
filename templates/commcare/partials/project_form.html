@@ -2,9 +2,16 @@
 {{ form.non_field_errors }}
 <div class="field">
   <label class="label">Server</label>
-  <div class="select">
-    {{ form.server }}
-  </div>
+  {% if form.server.field.queryset.count == 1 %}
+    {% with form.server.field.queryset.0 as default_server %}
+      <input class="input is-static" type="text" value="{{ default_server }}" readonly />
+      <input type="hidden" name="server" value="{{ default_server.pk }}" />
+    {% endwith %}
+  {% else %}
+    <div class="select">
+      {{ form.server }}
+    </div>
+  {% endif %}
   {{ form.server.errors }}
 </div>
 <div class="field">
@@ -12,6 +19,6 @@
   <div class="control">
     {{ form.domain }}
   </div>
+  <p class="help">{{ form.domain.help_text }}</p>
   {{ form.domain.errors }}
 </div>
-
