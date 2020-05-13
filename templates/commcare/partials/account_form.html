@@ -6,6 +6,7 @@
   <div class="control">
     {{ form.username }}
   </div>
+  <p class="help">{{ form.username.help_text }}</p>
   {{ form.username.errors }}
 </div>
 <div class="field">
@@ -13,5 +14,6 @@
   <div class="control">
     {{ form.api_key }}
   </div>
+  <p class="help">{{ form.api_key.help_text }}</p>
   {{ form.api_key.errors }}
 </div>

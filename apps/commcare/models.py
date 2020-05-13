@@ -45,8 +45,14 @@ class CommCareProject(BaseModel):
 
 class CommCareAccount(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
-    username = models.EmailField(max_length=100)
-    api_key = models.CharField(max_length=40)
+    username = models.EmailField(
+        max_length=100,
+        help_text=_("The email address you use to sign into CommCare HQ")
+    )
+    api_key = models.CharField(
+        max_length=40,
+        help_text=_('Your API key is available under "My Account Settings" in CommCare.')
+    )
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
