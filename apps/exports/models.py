@@ -49,6 +49,7 @@ class MultiProjectExportConfig(ExportConfigBase):
         else:
             return mark_safe('<br>'.join(p.domain for p in self.projects.all()))
 
+
 class ExportRunBase(BaseModel):
     COMPLETED = 'completed'
     STARTED = 'started'
@@ -85,3 +86,8 @@ class ExportRunBase(BaseModel):
 
 class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
+
+
+class MultiProjectExportRun(ExportRunBase):
+    export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
+    project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
