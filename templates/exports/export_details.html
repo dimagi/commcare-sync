@@ -61,18 +61,7 @@
     const apiUrl = "{% url 'exports:run_export' export.id %}";
     const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
     const Cookies = SiteJS.app.Cookies;
-    const addRecordToTable = function () {
-      // ht: https://stackoverflow.com/a/18333693/8207
-      const exportRunTable = document.getElementById('export-run-table').getElementsByTagName('tbody')[0];
-      const recordRow = exportRunTable.insertRow(0);
-
-      // Populate the cell with initial data
-      recordRow.insertCell(0).appendChild(document.createTextNode('Now'));
-      recordRow.insertCell(1).appendChild(document.createTextNode('TBD'));
-      recordRow.insertCell(2).appendChild(document.createTextNode('started'));
-      recordRow.insertCell(3).appendChild(document.createTextNode('waiting for log...'));
-      return recordRow;
-    };
+    const Exports = SiteJS.app.Exports;
 
     document.addEventListener("DOMContentLoaded", function () {
         const runExportButton = document.getElementById('run-export-button');
@@ -93,8 +82,9 @@
                 function (response) {
                     return response.text();
                 }).then(function (text) {
+
                     const taskUrl = progressUrl.replace('task-id-stub', text);
-                    const recordRow = addRecordToTable();
+                    const recordRow = Exports.addLogStubToTable();
                     CeleryProgressBar.initProgressBar(taskUrl, {
                       onProgress: function () {
                         progressMessage.innerHTML = 'Running Export...'
@@ -123,9 +113,7 @@
                 e.preventDefault();
         }, false);
     });
-    </script>
-<script type="application/javascript">
-  document.addEventListener('DOMContentLoaded', SiteJS.app.Exports.setupLogTriggers);
-</script>
 
+    document.addEventListener('DOMContentLoaded', Exports.setupLogTriggers);
+</script>
 {% endblock %}

@@ -1,5 +1,19 @@
 
 
+const addLogStubToTable = function () {
+  // ht: https://stackoverflow.com/a/18333693/8207
+  const exportRunTable = document.getElementById('export-run-table').getElementsByTagName('tbody')[0];
+  const recordRow = exportRunTable.insertRow(0);
+
+  // Populate the cell with initial data
+  recordRow.insertCell(0).appendChild(document.createTextNode('Now'));
+  recordRow.insertCell(1).appendChild(document.createTextNode('TBD'));
+  recordRow.insertCell(2).appendChild(document.createTextNode('started'));
+  recordRow.insertCell(3).appendChild(document.createTextNode('waiting for log...'));
+  return recordRow;
+};
+
+
 const setupLogTriggers = function () {
   let releaseNotesTriggers = document.getElementsByClassName('log-trigger');
   for (let i = 0; i < releaseNotesTriggers.length; i++) {
@@ -26,4 +40,5 @@ const setupLogTriggers = function () {
 
 export const Exports = {
   setupLogTriggers: setupLogTriggers,
+  addLogStubToTable: addLogStubToTable,
 };
