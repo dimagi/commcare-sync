@@ -3,8 +3,12 @@ import subprocess
 from django.conf import settings
 from django.utils import timezone
 
-from .models import ExportConfig, ExportRun
+from .models import ExportConfig, ExportRun, MultiProjectExportConfig
 
+
+def run_multi_project_export(multi_export_config: MultiProjectExportConfig):
+    print(multi_export_config)
+    return ExportRun.objects.all()[0]
 
 def run_export(export_config: ExportConfig):
     export_record = ExportRun.objects.create(export_config=export_config)

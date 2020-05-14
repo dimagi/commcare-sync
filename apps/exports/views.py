@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import ExportConfigForm, MultiProjectExportConfigForm
 from .models import ExportConfig, MultiProjectExportConfig
-from .tasks import run_export_task
+from .tasks import run_export_task, run_multi_project_export_task
 
 
 @login_required
@@ -125,4 +125,13 @@ def run_export(request, export_id):
     # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(ExportConfig, id=export_id)
     result = run_export_task.delay(export_id)
+    return HttpResponse(result.task_id)
+
+
+@login_required
+@require_POST
+def run_multi_export(request, export_id):
+    # just to validate the export exists so we can send feedback to the UI
+    export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    result = run_multi_project_export_task.delay(export_id)
     return HttpResponse(result.task_id)

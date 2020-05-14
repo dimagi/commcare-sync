@@ -1,6 +1,5 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
-{% load dateformat_tags %}
 {% block app %}
 <section class="section app-card">
   <div class="level">
@@ -55,4 +54,18 @@
     <span>Download Config File</span>
   </a>
 </section>
+{% include 'exports/partials/run_history.html' %}
 {% endblock app %}
+{% block page_js %}
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+<script src="{% static 'js/app-bundle.js' %}"></script>
+<script>
+    const apiUrl = "{% url 'exports:run_multi_export' export.id %}";
+    const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
+    const Exports = SiteJS.app.Exports;
+    document.addEventListener("DOMContentLoaded", function () {
+      Exports.initializeExportRunButton(apiUrl, progressUrl);
+    });
+    document.addEventListener('DOMContentLoaded', Exports.setupLogTriggers);
+</script>
+{% endblock page_js %}
