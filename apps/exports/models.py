@@ -36,7 +36,7 @@ class ExportConfig(ExportConfigBase):
         return f'{self.name} - {self.project}'
 
 
-class ExportRun(BaseModel):
+class ExportRunBase(BaseModel):
     COMPLETED = 'completed'
     STARTED = 'started'
     FAILED = 'failed'
@@ -45,10 +45,12 @@ class ExportRun(BaseModel):
         (COMPLETED, 'completed'),
         (FAILED, 'failed'),
     )
-    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
     completed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
     log = models.TextField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return f'{self.export_config.name} ({self.created_at})'
@@ -66,3 +68,7 @@ class ExportRun(BaseModel):
     def get_log_html(self):
         formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
         return mark_safe(formatted_log)
+
+
+class ExportRun(ExportRunBase):
+    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
