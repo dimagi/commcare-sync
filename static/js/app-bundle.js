@@ -91,11 +91,23 @@ var SiteJS = typeof SiteJS === "object" ? SiteJS : {}; SiteJS["app"] =
 /*!**********************************!*\
   !*** ./assets/javascript/app.js ***!
   \**********************************/
-/*! exports provided: Cookies */
+/*! exports provided: Exports, Cookies */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Cookies\", function() { return Cookies; });\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ \"./node_modules/js-cookie/src/js.cookie.js\");\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);\n // pass-through for Cookies API\n\nvar Cookies = {\n  get: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"get\"],\n  set: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"set\"]\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/app.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Cookies\", function() { return Cookies; });\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ \"./node_modules/js-cookie/src/js.cookie.js\");\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _exports__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./exports */ \"./assets/javascript/exports.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Exports\", function() { return _exports__WEBPACK_IMPORTED_MODULE_1__[\"Exports\"]; });\n\n\n // pass-through for Cookies API\n\nvar Cookies = {\n  get: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"get\"],\n  set: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"set\"]\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/app.js?");
+
+/***/ }),
+
+/***/ "./assets/javascript/exports.js":
+/*!**************************************!*\
+  !*** ./assets/javascript/exports.js ***!
+  \**************************************/
+/*! exports provided: Exports */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Exports\", function() { return Exports; });\nvar setupLogTriggers = function setupLogTriggers() {\n  var releaseNotesTriggers = document.getElementsByClassName('log-trigger');\n\n  for (var i = 0; i < releaseNotesTriggers.length; i++) {\n    releaseNotesTriggers[i].addEventListener(\"click\", function (event) {\n      var trigger = event.target.closest('a');\n      var selectorId = 'export-log-' + trigger.dataset.exportRunId;\n      var notes = document.getElementById(selectorId);\n      var icon = trigger.querySelector(\".fa\");\n\n      if (trigger.dataset.openStatus === 'closed') {\n        notes.style.display = '';\n        trigger.dataset.openStatus = 'open';\n        icon.classList.remove('fa-chevron-down');\n        icon.classList.add('fa-chevron-up');\n      } else {\n        notes.style.display = 'none';\n        trigger.dataset.openStatus = 'closed';\n        icon.classList.remove('fa-chevron-up');\n        icon.classList.add('fa-chevron-down');\n      }\n    });\n  }\n};\n\nvar Exports = {\n  setupLogTriggers: setupLogTriggers\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/exports.js?");
 
 /***/ }),
 
