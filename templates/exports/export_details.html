@@ -52,50 +52,7 @@
     <span>Download Config File</span>
   </a>
 </section>
-<section class="section app-card">
-  <h1 class="title">Run History</h1>
-  <button class="button is-primary is-rounded is-small" id="run-export-button">
-    <span class="icon">
-      <i class="fa fa-play"></i>
-    </span>
-    <span>Run Now</span>
-  </button>
-  <div id="export-status-progress" class="progress-bar-demo my-2" style="display: none;">
-    <div class='progress-wrapper'>
-      <progress id="progress-bar" class="progress is-small is-primary" max="100"></progress>
-    </div>
-    <div id="progress-bar-message" style="color: grey;">Waiting for task to start...</div>
-  </div>
-  <table id="export-run-table" class="table is-fullwidth my-2">
-    <thead>
-    <tr>
-      <th>Run Start</th>
-      <th>Duration</th>
-      <th>Status</th>
-      <th>Log</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for export_run in runs %}
-      <tr>
-        <td>{{ export_run.created_at }}</td>
-        <td>{{ export_run.duration|readable_timedelta }}</td>
-        <td>{{ export_run.status }}</td>
-        <td>
-          <a class="log-trigger" data-open-status="closed" data-export-run-id="{{ export_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
-            View log
-          </a>
-        </td>
-      </tr>
-      <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
-        <td colspan="4">
-          {{ export_run.get_log_html }}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+{% include 'exports/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
     <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
