@@ -74,7 +74,7 @@
       <tr>
         <td>{{ account.username }}</td>
         <td>{{ account.created_at }}</td>
-        <td>{% if request.user == account.owner %}You{% else %}account.owner.username{% endif %}</td>
+        <td>{% if request.user == account.owner %}You{% else %}{{ account.owner.get_display_name }}{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
