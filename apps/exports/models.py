@@ -14,21 +14,26 @@ class ExportDatabase(BaseModel):
         return self.name
 
 
-class ExportConfig(BaseModel):
+class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
-    project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
     account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-
-    def __str__(self):
-        return f'{self.name} - {self.project}'
+    class Meta:
+        abstract = True
 
     @property
     def last_run(self):
         return self.runs.order_by('-created_at')[0] if self.runs.exists() else None
+
+
+class ExportConfig(ExportConfigBase):
+    project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.name} - {self.project}'
 
 
 class ExportRun(BaseModel):
