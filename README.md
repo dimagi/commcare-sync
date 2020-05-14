@@ -4,7 +4,9 @@ A Management Interface for the CommCare Data Export Tool.
 
 Some additional context on this project can be [found here](https://docs.google.com/document/d/1r8ZQAjCGbxX8pXWtIq0ODJOpqqI27YqPDN4vuR_CLGw/edit) (Dimagi Internal).
 
-## Installation
+For deploying this tool to a production server, see [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
+
+## Developer Setup
 
 Setup a virtualenv and install requirements:
 
@@ -13,13 +15,13 @@ mkvirtualenv --no-site-packages commcare_sync -p python3.8
 pip install -r requirements.txt
 ```
 
-## Running server
+### Running server
 
 ```bash
 ./manage.py runserver
 ```
 
-## Building front-end
+### Building front-end
 
 To build JavaScript and CSS files, first install npm packages:
 
@@ -33,22 +35,22 @@ Then to build (and watch for changes locally) just run:
 npm run dev-watch
 ```
 
-## Running Celery
+### Running Celery
 
-Celery is used to run background tasks. To run it you can use:
+Celery is used to run background tasks, including all the commcare-export runs as well as 
+the scheduled tasks. To run it you can use:
 
 ```bash
 celery -A commcare_sync worker -l info
 ```
 
-Or to also include periodic tasks:
+Or to also include periodic tasks to run all exports on a schedule:
 
 ```bash
 celery -A commcare_sync worker -l info -B
 ```
 
-
-## Running Tests
+### Running Tests
 
 To run tests:
 
@@ -58,7 +60,11 @@ To run tests:
 
 ## Deployment
 
-To deploy you need `fabric`:
+To set up a production server, see [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
+
+### Deploying with Fabric
+
+For incremental deploys you can also use `fabric`. First install it:
 
 ```bash
 pip install -r requirements/dev-requirements.txt
