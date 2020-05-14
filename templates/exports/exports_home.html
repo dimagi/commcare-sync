@@ -43,4 +43,37 @@
   </a>
 {% endif  %}
 </section>
+{% if multi_project_exports.exists %}
+<section class="section app-card">
+  <h1 class="title">Multi-Project Export Configurations</h1>
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_export_config' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>New Export</span>
+  </a>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Export</th>
+      <th>Project</th>
+      <th>Created By</th>
+{#      <th>Last Run</th>#}
+{#      <th>Last Status</th>#}
+    </tr>
+    </thead>
+    <tbody>
+    {% for export in multi_project_exports %}
+      <tr>
+        <td><a href="{% url 'exports:multi_export_details' export.id %}">{{ export.name }}</a></td>
+        <td>{{ export.project.domain }}</td>
+        <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
+{#        <td>{{ export.last_run.created_at }}</td>#}
+{#        <td>{{ export.last_run.status }}</td>#}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
 {% endblock app %}
