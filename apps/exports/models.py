@@ -36,6 +36,13 @@ class ExportConfig(ExportConfigBase):
         return f'{self.name} - {self.project}'
 
 
+class MultiProjectExportConfig(ExportConfigBase):
+    projects = models.ManyToManyField('commcare.CommCareProject')
+
+    def __str__(self):
+        return f'{self.name} - {self.projects.count()} projects'
+
+
 class ExportRunBase(BaseModel):
     COMPLETED = 'completed'
     STARTED = 'started'
