@@ -14,6 +14,7 @@
     <tr>
       <th>Export</th>
       <th>Project</th>
+      <th>Created By</th>
       <th>Last Run</th>
       <th>Last Status</th>
     </tr>
@@ -23,6 +24,7 @@
       <tr>
         <td><a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a></td>
         <td>{{ export.project.domain }}</td>
+        <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
         <td>{{ export.last_run.created_at }}</td>
         <td>{{ export.last_run.status }}</td>
       </tr>
