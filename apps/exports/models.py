@@ -42,6 +42,12 @@ class MultiProjectExportConfig(ExportConfigBase):
     def __str__(self):
         return f'{self.name} - {self.projects.count()} projects'
 
+    def get_projects_display_short(self):
+        project_count = self.projects.count()
+        if project_count > 2:
+            return mark_safe(f'{self.projects.all()[0].domain}<br>+ {project_count - 1} more')
+        else:
+            return mark_safe('<br>'.join(p.domain for p in self.projects.all()))
 
 class ExportRunBase(BaseModel):
     COMPLETED = 'completed'
