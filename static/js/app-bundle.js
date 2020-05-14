@@ -1,4 +1,4 @@
-var SiteJS = typeof SiteJS === "object" ? SiteJS : {}; SiteJS["App"] =
+var SiteJS = typeof SiteJS === "object" ? SiteJS : {}; SiteJS["app"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -82,32 +82,20 @@ var SiteJS = typeof SiteJS === "object" ? SiteJS : {}; SiteJS["App"] =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./assets/javascript/App.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./assets/javascript/app.js");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./assets/javascript/Api.js":
+/***/ "./assets/javascript/app.js":
 /*!**********************************!*\
-  !*** ./assets/javascript/Api.js ***!
+  !*** ./assets/javascript/app.js ***!
   \**********************************/
-/*! exports provided: API_ROOT, getAction, Api */
+/*! exports provided: Cookies */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"API_ROOT\", function() { return API_ROOT; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"getAction\", function() { return getAction; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Api\", function() { return Api; });\n// if your API lives at a namespace you can add it here\n// e.g. API_ROOT = [\"myapp\", \"api\"];\nvar API_ROOT = [\"app\", \"api\"];\nfunction getAction(apiRoot, action) {\n  // DRF dynamically sets the apiRoot based on the common shared prefix, so we attempt\n  // to inspect window.schema for the action - first searching for the namespaced version,\n  // then trying the action directly\n  var namespacedAction = apiRoot.concat(action);\n\n  if (!window.schema) {\n    console.error(\"window.schema not found. Did you forget to load your schemajs?\");\n  } else if (pathExistsInObject(action, window.schema.content)) {\n    return action;\n  } else if (pathExistsInObject(namespacedAction, window.schema.content)) {\n    return namespacedAction;\n  } else {\n    // fall back to default, even though it may not be valid\n    console.error('action ' + namespacedAction + 'not found in API schema. Some functionality may not work.');\n  }\n\n  return apiRoot.concat(action);\n}\n\nfunction pathExistsInObject(path, schema) {\n  var currentSchema = schema;\n  var _iteratorNormalCompletion = true;\n  var _didIteratorError = false;\n  var _iteratorError = undefined;\n\n  try {\n    for (var _iterator = path[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {\n      var pathPart = _step.value;\n\n      if (currentSchema) {\n        currentSchema = currentSchema[pathPart];\n      } else {\n        return false;\n      }\n    }\n  } catch (err) {\n    _didIteratorError = true;\n    _iteratorError = err;\n  } finally {\n    try {\n      if (!_iteratorNormalCompletion && _iterator[\"return\"] != null) {\n        _iterator[\"return\"]();\n      }\n    } finally {\n      if (_didIteratorError) {\n        throw _iteratorError;\n      }\n    }\n  }\n\n  return Boolean(currentSchema);\n}\n\nvar Api = {\n  getAction: getAction\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/Api.js?");
-
-/***/ }),
-
-/***/ "./assets/javascript/App.js":
-/*!**********************************!*\
-  !*** ./assets/javascript/App.js ***!
-  \**********************************/
-/*! exports provided: Api, Cookies */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Cookies\", function() { return Cookies; });\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ \"./node_modules/js-cookie/src/js.cookie.js\");\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _Api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Api */ \"./assets/javascript/Api.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Api\", function() { return _Api__WEBPACK_IMPORTED_MODULE_1__[\"Api\"]; });\n\n\n // pass-through for Cookies API\n\nvar Cookies = {\n  get: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"get\"],\n  set: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"set\"]\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/App.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Cookies\", function() { return Cookies; });\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! js-cookie */ \"./node_modules/js-cookie/src/js.cookie.js\");\n/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_0__);\n // pass-through for Cookies API\n\nvar Cookies = {\n  get: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"get\"],\n  set: js_cookie__WEBPACK_IMPORTED_MODULE_0__[\"set\"]\n};\n\n//# sourceURL=webpack://SiteJS.%5Bname%5D/./assets/javascript/app.js?");
 
 /***/ }),
 
