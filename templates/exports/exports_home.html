@@ -58,8 +58,8 @@
       <th>Export</th>
       <th>Projects</th>
       <th>Created By</th>
-{#      <th>Last Run</th>#}
-{#      <th>Last Status</th>#}
+      <th>Last Run</th>
+      <th>Last Status</th>
     </tr>
     </thead>
     <tbody>
@@ -68,8 +68,8 @@
         <td><a href="{% url 'exports:multi_export_details' export.id %}">{{ export.name }}</a></td>
         <td>{{ export.get_projects_display_short }}</td>
         <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
-{#        <td>{{ export.last_run.created_at }}</td>#}
-{#        <td>{{ export.last_run.status }}</td>#}
+        <td>{{ export.last_run.created_at }}</td>
+        <td>{{ export.last_run.status }}</td>
       </tr>
     {% endfor %}
     </tbody>
