@@ -3,18 +3,26 @@ import subprocess
 from django.conf import settings
 from django.utils import timezone
 
-from .models import ExportConfig, ExportRun, MultiProjectExportConfig
+from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectExportRun
 
 
 def run_multi_project_export(multi_export_config: MultiProjectExportConfig):
-    print(multi_export_config)
-    return ExportRun.objects.all()[0]
+    runs = []
+    for project in multi_export_config.projects.all():
+        export_record = MultiProjectExportRun.objects.create(export_config=multi_export_config, project=project)
+        _run_export_for_project(multi_export_config, project, export_record)
+        runs.append(export_record)
+    return runs
+
 
 def run_export(export_config: ExportConfig):
     export_record = ExportRun.objects.create(export_config=export_config)
+
+
+def _run_export_for_project(export_config, project, export_record):
     command = [
         settings.COMMCARE_EXPORT,
-        '--project', export_config.project.domain,
+        '--project', project.domain,
         '--username', export_config.account.username,
         '--auth-mode', 'apikey',
         '--password', export_config.account.api_key,
