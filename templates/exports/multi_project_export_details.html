@@ -54,7 +54,9 @@
     <span>Download Config File</span>
   </a>
 </section>
-{% include 'exports/partials/run_history.html' %}
+{% with True as is_multi_project %}
+  {% include 'exports/partials/run_history.html' %}
+{% endwith %}
 {% endblock app %}
 {% block page_js %}
 <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
