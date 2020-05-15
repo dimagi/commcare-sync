@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
@@ -124,7 +126,9 @@ def multi_export_details(request, export_id):
 def run_export(request, export_id):
     # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(ExportConfig, id=export_id)
-    result = run_export_task.delay(export_id)
+    options = json.loads(request.body)
+    force_sync = options.get('forceSync', False)
+    result = run_export_task.delay(export_id, force_sync)
     return HttpResponse(result.task_id)
 
 
@@ -133,5 +137,7 @@ def run_export(request, export_id):
 def run_multi_export(request, export_id):
     # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
-    result = run_multi_project_export_task.delay(export_id)
+    options = json.loads(request.body)
+    force_sync = options.get('forceSync', False)
+    result = run_multi_project_export_task.delay(export_id, force_sync)
     return HttpResponse(result.task_id)

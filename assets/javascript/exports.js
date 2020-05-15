@@ -41,19 +41,26 @@ const setupLogTriggers = function () {
 
 const initializeExportRunButton = function (apiUrl, progressUrl) {
   const runExportButton = document.getElementById('run-export-button');
+  const forceSyncCheckbox = document.getElementById('force-sync-checkbox');
   runExportButton.addEventListener('click', function (e) {
     e.preventDefault();
+    const forceSync = forceSyncCheckbox.checked;
     runExportButton.classList.add('is-loading', 'is-disabled');
     const progressWrapper = document.getElementById('export-status-progress');
     progressWrapper.style.display = 'inherit';
     const progressBar = document.getElementById('progress-bar');
     const progressMessage = document.getElementById('progress-bar-message');
+    const formData = {
+      'forceSync': forceSync,
+    };
     fetch(apiUrl, {
       method: 'post',
       credentials: 'same-origin',
       headers: {
+        'Content-Type': 'application/json',
         'X-CSRFToken': Cookies.get('csrftoken'),
-      }
+      },
+      body: JSON.stringify(formData),
     }).then(
       function (response) {
         return response.text();

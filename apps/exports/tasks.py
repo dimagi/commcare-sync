@@ -16,9 +16,9 @@ def run_all_exports_task(self):
 
 
 @shared_task(bind=True)
-def run_export_task(self, export_id):
+def run_export_task(self, export_id, force):
     export = ExportConfig.objects.get(id=export_id)
-    export_run = run_export(export)
+    export_run = run_export(export, force)
     return {
         'run_time': export_run.created_at.isoformat(),
         'status': export_run.status,
@@ -28,11 +28,11 @@ def run_export_task(self, export_id):
 
 
 @shared_task(bind=True)
-def run_multi_project_export_task(self, export_id):
+def run_multi_project_export_task(self, export_id, force):
     run_start = timezone.now()
     export = MultiProjectExportConfig.objects.get(id=export_id)
     # todo: consolidate runs with more info
-    export_run = run_multi_project_export(export)[-1]
+    export_run = run_multi_project_export(export, force)[-1]
     run_end = timezone.now()
     return {
         'run_time': export_run.created_at.isoformat(),

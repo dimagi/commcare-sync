@@ -6,21 +6,21 @@ from django.utils import timezone
 from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectExportRun
 
 
-def run_multi_project_export(multi_export_config: MultiProjectExportConfig):
+def run_multi_project_export(multi_export_config: MultiProjectExportConfig, force=False):
     runs = []
     for project in multi_export_config.projects.all():
         export_record = MultiProjectExportRun.objects.create(export_config=multi_export_config, project=project)
-        _run_export_for_project(multi_export_config, project, export_record)
+        _run_export_for_project(multi_export_config, project, export_record, force)
         runs.append(export_record)
     return runs
 
 
-def run_export(export_config: ExportConfig):
+def run_export(export_config: ExportConfig, force=False):
     export_record = ExportRun.objects.create(export_config=export_config)
-    return _run_export_for_project(export_config, export_config.project, export_record)
+    return _run_export_for_project(export_config, export_config.project, export_record, force)
 
 
-def _run_export_for_project(export_config, project, export_record):
+def _run_export_for_project(export_config, project, export_record, force):
     command = [
         settings.COMMCARE_EXPORT,
         '--project', project.domain,
@@ -33,6 +33,9 @@ def _run_export_for_project(export_config, project, export_record):
         '--verbose',
         '--query', export_config.config_file.path,
     ]
+    if force:
+        command.append('--start-over')
+
     try:
         result = subprocess.run(command, capture_output=True)
     except Exception as e:
