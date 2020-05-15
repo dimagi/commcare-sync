@@ -17,6 +17,7 @@ def run_multi_project_export(multi_export_config: MultiProjectExportConfig):
 
 def run_export(export_config: ExportConfig):
     export_record = ExportRun.objects.create(export_config=export_config)
+    return _run_export_for_project(export_config, export_config.project, export_record)
 
 
 def _run_export_for_project(export_config, project, export_record):
