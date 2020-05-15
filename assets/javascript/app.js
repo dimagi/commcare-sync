@@ -1,5 +1,6 @@
 import { get, set } from 'js-cookie';
-export { Api } from './Api';
+
+export { Exports } from './exports';
 
 // pass-through for Cookies API
 export const Cookies = {

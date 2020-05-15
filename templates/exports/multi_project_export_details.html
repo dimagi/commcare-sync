@@ -1,6 +1,5 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
-{% load dateformat_tags %}
 {% block app %}
 <section class="section app-card">
   <div class="level">
@@ -9,7 +8,7 @@
       <h1 class="title">{{ export.name }} - Details</h1>
     </div>
     <div class="level-right">
-      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_export_config' export.id %}">
+      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
         <span class="icon">
           <i class="fa fa-edit"></i>
         </span>
@@ -19,11 +18,14 @@
   </div>
   <div class="columns">
     <div class="column">
-      <span class="heading">Project Space</span>
+      <span class="heading">Project Spaces</span>
       <h2>
-        <a href="{{ export.project.url }}" target="_blank">{{ export.project.domain }}
-          <i class="fa fa-external-link"></i>
-        </a>
+        {% for project in export.projects.all %}
+          <a href="{{ project.url }}" target="_blank" style="white-space: nowrap;">{{ project.domain }}
+            <i class="fa fa-external-link"></i>
+          </a>
+          {% if not forloop.last %}<br>{% endif %}
+        {% endfor %}
       </h2>
     </div>
     <div class="column">
@@ -52,13 +54,15 @@
     <span>Download Config File</span>
   </a>
 </section>
-{% include 'exports/partials/run_history.html' %}
+{% with True as is_multi_project %}
+  {% include 'exports/partials/run_history.html' %}
+{% endwith %}
 {% endblock app %}
 {% block page_js %}
 <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
 <script src="{% static 'js/app-bundle.js' %}"></script>
 <script>
-    const apiUrl = "{% url 'exports:run_export' export.id %}";
+    const apiUrl = "{% url 'exports:run_multi_export' export.id %}";
     const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
     const Exports = SiteJS.app.Exports;
     document.addEventListener("DOMContentLoaded", function () {
