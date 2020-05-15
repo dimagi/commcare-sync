@@ -11,6 +11,8 @@ from .runner import run_export, run_multi_project_export
 def run_all_exports_task(self):
     for export in ExportConfig.objects.all():
         run_export(export)
+    for multi_export in MultiProjectExportConfig.objects.all():
+        run_multi_project_export(multi_export)
 
 
 @shared_task(bind=True)
