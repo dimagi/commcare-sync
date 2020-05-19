@@ -10,7 +10,7 @@ app = Celery('commcare_sync')
 def setup_periodic_tasks(sender, **kwargs):
     periodicity_in_seconds = 60 * 60 * 12  # 12 hours
     sender.add_periodic_task(periodicity_in_seconds, run_all_exports_task_wrapper.s(),
-                             name='Import all pro chats.')
+                             name='Run all Exports')
 
 
 @app.task
