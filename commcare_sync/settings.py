@@ -232,6 +232,8 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
 COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 
+COMMCARE_SYNC_EXPORT_PERIODICITY = 60 * 60 * 12  # run everything every 12 hours by default
+
 # Project config
 
 PROJECT_METADATA = {
