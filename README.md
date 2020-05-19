@@ -73,7 +73,7 @@ pip install -r requirements/dev-requirements.txt
 Then:
 
 ```bash
-fab -H commcare-sync-demo.dimagi.com deploy
+fab -H commcare-sync-demo.dimagi.com -f deploy/environments/demo.yml deploy
 ```
 
 You'll have to set up authentication using something like [this guide](https://stackoverflow.com/a/5071823/8207).

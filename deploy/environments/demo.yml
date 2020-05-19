@@ -1,0 +1,9 @@
+---
+
+CODE_ROOT: '/home/ubuntu/code/commcare-sync'
+VIRTUALENV_ROOT: '/home/ubuntu/.virtualenvs/commcare-sync'
+DJANGO_SETTINGS_MODULE: 'commcare_sync.local'
+DJANGO_PROCESS: 'commcare_sync'
+CELERY_PROCESS: 'commcare_sync_celery_default'
+
+...
