@@ -37,14 +37,19 @@ def _run_export_for_project(export_config, project, export_record, force):
         command.append('--start-over')
 
     try:
-        result = subprocess.run(command, capture_output=True)
+        # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
     except Exception as e:
         export_record.status = ExportRun.FAILED
         export_record.log = str(e)
     else:
         export_record.status = _process_status_to_status_field(result.returncode)
-        # commcare-export seems to use only stderr for logging
-        export_record.log = result.stderr.decode('utf-8')
+        export_record.log = result.stdout
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
