@@ -20,6 +20,7 @@ class ExportConfigBase(BaseModel):
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    extra_args = models.TextField(null=True, blank=True)
 
     class Meta:
         abstract = True
