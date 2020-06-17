@@ -36,6 +36,9 @@ def _run_export_for_project(export_config, project, export_record, force):
     if force:
         command.append('--start-over')
 
+    if export_config.extra_args:
+        command.append(export_config.extra_args)
+
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         result = subprocess.run(
