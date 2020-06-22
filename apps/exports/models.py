@@ -20,6 +20,9 @@ class ExportConfigBase(BaseModel):
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    is_paused = models.BooleanField(default=False,
+                                    help_text='Pausing an export will disable automatic syncing. '
+                                              'You can still manually run it.')
     extra_args = models.TextField(null=True, blank=True)
 
     class Meta:

@@ -9,9 +9,9 @@ from .runner import run_export, run_multi_project_export
 
 @shared_task(bind=True)
 def run_all_exports_task(self):
-    for export in ExportConfig.objects.all():
+    for export in ExportConfig.objects.filter(is_paused=False):
         run_export_task.delay(export.id, force=False)
-    for multi_export in MultiProjectExportConfig.objects.all():
+    for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
         run_multi_project_export.delay(multi_export.id, force=False)
 
 

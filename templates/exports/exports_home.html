@@ -23,7 +23,12 @@
     <tbody>
     {% for export in exports %}
       <tr>
-        <td><a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a></td>
+        <td>
+          <a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a>
+          {% if export.is_paused %}
+            <i title="This export is paused." class="fa fa-pause-circle has-text-grey-light"></i>
+          {% endif %}
+        </td>
         <td>{{ export.project.domain }}</td>
         <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
         <td>{{ export.last_run.status|to_status_icon }} {{ export.last_run.created_at|naturaltime }}</td>
@@ -64,7 +69,12 @@
     <tbody>
     {% for export in multi_project_exports %}
       <tr>
-        <td><a href="{% url 'exports:multi_export_details' export.id %}">{{ export.name }}</a></td>
+        <td>
+          <a href="{% url 'exports:multi_export_details' export.id %}">{{ export.name }}</a>
+          {% if export.is_paused %}
+            <i title="paused" class="fa fa-pause-circle"></i>
+          {% endif %}
+        </td>
         <td>{{ export.get_projects_display_short }}</td>
         <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
         <td>{{ export.last_run.status|to_status_icon }} {{ export.last_run.created_at|naturaltime }}</td>

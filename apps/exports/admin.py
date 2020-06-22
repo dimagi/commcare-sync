@@ -4,8 +4,12 @@ from . import models
 
 
 admin.site.register(models.ExportDatabase)
-admin.site.register(models.ExportConfig)
 admin.site.register(models.MultiProjectExportConfig)
+
+@admin.register(models.ExportConfig)
+class ExportConfigAdmin(admin.ModelAdmin):
+    list_display = ['name', 'project', 'account', 'database', 'created_by', 'is_paused']
+    list_filter = ['project', 'database', 'is_paused']
 
 @admin.register(models.ExportRun)
 class ExportRunAdmin(admin.ModelAdmin):
