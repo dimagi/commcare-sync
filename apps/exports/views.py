@@ -102,6 +102,19 @@ def edit_multi_export_config(request, export_id):
 
 
 @login_required
+def delete_export_config(request, export_id):
+    export = get_object_or_404(ExportConfig, id=export_id)
+    if request.method == 'POST':
+        export.delete()
+        messages.success(request, f'Export file "{export.name}" was successfully deleted.')
+        return HttpResponseRedirect(reverse('exports:home'))
+    return render(request, 'exports/delete_export.html', {
+        'active_tab': 'exports',
+        'export': export,
+    })
+
+
+@login_required
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     return render(request, 'exports/export_details.html', {

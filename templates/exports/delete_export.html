@@ -1,0 +1,29 @@
+{% extends "web/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">Delete {{ export.name }}?</h1>
+  <h2 class="subtitle">Are you sure you want to delete this export? This operation is not reversible.</h2>
+  <div class="content">
+    <p>After deleting, the following items will be deleted and the export will stop syncing data.</p>
+    <ul>
+      <li>The Export and its configuration file.</li>
+      <li>All {{ export.runs.count }} records of the export's individual runs and associated logs.</li>
+    </ul>
+{#    <p>#}
+{#      If you aren't sure, you can also pause this export, which will discontinue syncing, but preserve all data.#}
+{#    </p>#}
+    <p><strong>Note: the underlying data associated with the export must be deleted separately.</strong></p>
+  </div>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="field is-grouped">
+      <div class="control">
+        <input class="button is-danger" type="submit" value="Delete Export">
+      </div>
+      <div class="control">
+        <a class="button is-primary is-outlined" href="{% url 'exports:export_details' export.id %}">Cancel</a>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock app %}
