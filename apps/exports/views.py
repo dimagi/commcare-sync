@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import ExportConfigForm, MultiProjectExportConfigForm, ExportDatabaseForm
+from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
 from .tasks import run_export_task, run_multi_project_export_task
 
@@ -168,7 +168,7 @@ def databases(request):
 @login_required
 def create_database(request):
     if request.method == 'POST':
-        form = ExportDatabaseForm(request.POST, request.FILES)
+        form = CreateExportDatabaseForm(request.POST, request.FILES)
         if form.is_valid():
             db = form.save(commit=False)
             db.owner = request.user
@@ -176,7 +176,7 @@ def create_database(request):
             messages.success(request, f'Database {db.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:databases'))
     else:
-        form = ExportDatabaseForm()
+        form = CreateExportDatabaseForm()
 
     return render(request, 'exports/create_database.html', {
         'active_tab': 'create_export',
@@ -184,3 +184,19 @@ def create_database(request):
     })
 
 
+@login_required
+def edit_database(request, database_id):
+    db = get_object_or_404(ExportDatabase, id=database_id)
+    if request.method == 'POST':
+        form = EditExportDatabaseForm(request.POST, instance=db)
+        if form.is_valid():
+            db = form.save()
+            messages.success(request, f'Database {db.name} was successfully updated.')
+            return HttpResponseRedirect(reverse('exports:databases'))
+    else:
+        form = EditExportDatabaseForm(instance=db)
+
+    return render(request, 'exports/edit_database.html', {
+        'active_tab': 'create_export',
+        'form': form,
+    })

@@ -1,0 +1,22 @@
+{% extends "web/app/app_base.html" %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">Edit Database</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="field">
+      <label class="label">Name</label>
+      <div class="control">
+        {{ form.name }}
+      </div>
+      {{ form.name.errors }}
+    </div>
+    <div class="field is-grouped">
+        <div class="control">
+            <input class="button is-primary" type="submit" value="Save">
+        </div>
+    </div>
+  </form>
+</section>
+{% endblock app %}

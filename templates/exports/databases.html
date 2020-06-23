@@ -22,7 +22,9 @@
     {% for database in databases %}
       <tr>
         <td>
+          <a href="{% url 'exports:edit_database' database.id %}">
             {{ database.name }}
+          </a>
         </td>
         <td>{% if request.user == database.owner %}You{% else %}{{ database.owner.get_display_name }}{% endif %}</td>
       </tr>

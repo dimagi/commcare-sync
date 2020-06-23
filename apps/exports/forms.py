@@ -22,8 +22,15 @@ class MultiProjectExportConfigForm(forms.ModelForm):
         fields = ('name', 'projects', 'account', 'database', 'is_paused', 'config_file', 'extra_args')
 
 
-class ExportDatabaseForm(forms.ModelForm):
+class CreateExportDatabaseForm(forms.ModelForm):
 
     class Meta:
         model = ExportDatabase
         fields = ('name', 'connection_string')
+
+
+class EditExportDatabaseForm(forms.ModelForm):
+
+    class Meta:
+        model = ExportDatabase
+        fields = ('name',)
