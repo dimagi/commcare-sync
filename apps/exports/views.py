@@ -32,7 +32,7 @@ def create_export_config(request):
             export = form.save(commit=False)
             export.created_by = request.user
             export.save()
-            messages.success(request, f'Export {export.name} was successfully created.')
+            messages.success(request, f'Export "{export.name}" was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
         form = ExportConfigForm()
@@ -191,7 +191,7 @@ def edit_database(request, database_id):
         form = EditExportDatabaseForm(request.POST, instance=db)
         if form.is_valid():
             db = form.save()
-            messages.success(request, f'Database {db.name} was successfully updated.')
+            messages.success(request, f'Database "{db.name}" was successfully updated.')
             return HttpResponseRedirect(reverse('exports:databases'))
     else:
         form = EditExportDatabaseForm(instance=db)

@@ -5,10 +5,10 @@
 <section class="section app-card">
   <h1 class="title">Database Connections</h1>
   <h2 class="subtitle">Manage the databases that you export data to here</h2>
+{% if databases.exists %}
   <p class="notification is-info is-light">
     Note: databases that are added here must exist! This app will not create new databases for you.
   </p>
-{% if databases.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
