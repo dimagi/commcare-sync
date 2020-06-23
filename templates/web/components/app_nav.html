@@ -40,6 +40,16 @@
     </li>
   </ul>
   <p class="menu-label is-hidden-tablet-only">
+    Database Management
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'exports:databases' %}" {% if active_tab == 'databases' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-database"></i></span><span class="is-hidden-tablet-only">Databases</span>
+      </a>
+    </li>
+  </ul>
+  <p class="menu-label is-hidden-tablet-only">
     My Account
   </p>
   <ul class="menu-list">

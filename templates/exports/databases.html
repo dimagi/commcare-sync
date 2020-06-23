@@ -1,0 +1,44 @@
+{% extends "web/app/app_base.html" %}
+{% block app %}
+{% load exports_tags %}
+{% load humanize %}
+<section class="section app-card">
+  <h1 class="title">Databases</h1>
+{% if databases.exists %}
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>New Database</span>
+  </a>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>Database</th>
+      <th>Owner</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for database in databases %}
+      <tr>
+        <td>
+            {{ database.name }}
+        </td>
+        <td>{% if request.user == database.owner %}You{% else %}{{ database.owner.get_display_name }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <section class="notification is-warning is-light">
+    No database connections found!
+  </section>
+  <a class="button is-primary " href="{% url 'exports:create_database' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>Add Your First Database Connection</span>
+  </a>
+{% endif  %}
+</section>
+{% endblock app %}

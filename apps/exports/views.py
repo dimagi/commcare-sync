@@ -7,8 +7,8 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import ExportConfigForm, MultiProjectExportConfigForm
-from .models import ExportConfig, MultiProjectExportConfig
+from .forms import ExportConfigForm, MultiProjectExportConfigForm, ExportDatabaseForm
+from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
 from .tasks import run_export_task, run_multi_project_export_task
 
 
@@ -154,3 +154,33 @@ def run_multi_export(request, export_id):
     force_sync = options.get('forceSync', False)
     result = run_multi_project_export_task.delay(export_id, force_sync)
     return HttpResponse(result.task_id)
+
+
+@login_required
+def databases(request):
+    databases = ExportDatabase.objects.order_by('name')
+    return render(request, 'exports/databases.html', {
+        'active_tab': 'databases',
+        'databases': databases,
+    })
+
+
+@login_required
+def create_database(request):
+    if request.method == 'POST':
+        form = ExportDatabaseForm(request.POST, request.FILES)
+        if form.is_valid():
+            db = form.save(commit=False)
+            db.owner = request.user
+            db.save()
+            messages.success(request, f'Database {db.name} was successfully created.')
+            return HttpResponseRedirect(reverse('exports:databases'))
+    else:
+        form = ExportDatabaseForm()
+
+    return render(request, 'exports/create_database.html', {
+        'active_tab': 'create_export',
+        'form': form,
+    })
+
+
