@@ -14,7 +14,6 @@ class ExportDatabase(BaseModel):
     def __str__(self):
         return self.name
 
-
 class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
@@ -53,6 +52,9 @@ class MultiProjectExportConfig(ExportConfigBase):
 
     def __str__(self):
         return f'{self.name} - {self.projects.count()} projects'
+
+    def get_last_run_for_project(self, project):
+        return self.runs.filter(project=project).order_by('-created_at')[0]
 
     def get_projects_display_short(self):
         project_count = self.projects.count()
