@@ -21,7 +21,7 @@ class ExportConfigBase(BaseModel):
     config_file = models.FileField(upload_to='export-configs/')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     time_between_runs = models.PositiveIntegerField(
-        default=settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60,
+        default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
         help_text='How regularly to sync this export, in minutes.',
     )
     is_paused = models.BooleanField(default=False,
