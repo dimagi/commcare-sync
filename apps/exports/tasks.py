@@ -12,7 +12,7 @@ def run_all_exports_task(self):
     for export in ExportConfig.objects.filter(is_paused=False):
         run_export_task.delay(export.id, force=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
-        run_multi_project_export.delay(multi_export.id, force=False)
+        run_multi_project_export_task.delay(multi_export.id, force=False)
 
 
 @shared_task(bind=True)
