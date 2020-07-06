@@ -29,6 +29,22 @@
   {{ form.database.errors }}
 </div>
 <div class="field">
+  <label class="label">Is Paused?</label>
+  <div class="control">
+    {{ form.is_paused }}
+  </div>
+  <p class="help">{{ form.is_paused.help_text }}</p>
+  {{ form.is_paused.errors }}
+</div>
+<div class="field">
+  <label class="label">Time Between Runs</label>
+  <div class="control">
+    {{ form.time_between_runs }}
+  </div>
+  <p class="help">{{ form.time_between_runs.help_text }}</p>
+  {{ form.time_between_runs.errors }}
+</div>
+<div class="field">
   <div class="file">
     <label class="file-label">
       <input class="file-input" type="file" name="config_file" required_id="id_config_file">
