@@ -9,7 +9,7 @@ app = Celery('commcare_sync')
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    periodicity_in_seconds = settings.COMMCARE_SYNC_EXPORT_PERIODICITY
+    periodicity_in_seconds = 60  # run this check every minute
     sender.add_periodic_task(periodicity_in_seconds, run_all_exports_task_wrapper.s(),
                              name='Run all Exports')
 

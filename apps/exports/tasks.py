@@ -18,13 +18,14 @@ def run_all_exports_task(self):
 @shared_task(bind=True)
 def run_export_task(self, export_id, force):
     export = ExportConfig.objects.get(id=export_id)
-    export_run = run_export(export, force)
-    return {
-        'run_time': export_run.created_at.isoformat(),
-        'status': export_run.status,
-        'duration': export_run.get_duration_display(),
-        'log': export_run.log,
-    }
+    if export.is_scheduled_to_run():
+        export_run = run_export(export, force)
+        return {
+            'run_time': export_run.created_at.isoformat(),
+            'status': export_run.status,
+            'duration': export_run.get_duration_display(),
+            'log': export_run.log,
+        }
 
 
 @shared_task(bind=True)
