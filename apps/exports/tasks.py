@@ -12,7 +12,7 @@ def run_all_exports_task(self):
     for export in ExportConfig.objects.filter(is_paused=False):
         run_export_task.delay(export.id, force=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
-        run_multi_project_export_task.delay(multi_export.id, force=False)
+        run_multi_project_export_task.delay(multi_export.id, force_sync_all_data=False)
 
 
 @shared_task(bind=True)
@@ -29,15 +29,16 @@ def run_export_task(self, export_id, force):
 
 
 @shared_task(bind=True)
-def run_multi_project_export_task(self, export_id, force):
+def run_multi_project_export_task(self, export_id, force_sync_all_data, ignore_schedule_checks=False):
     run_start = timezone.now()
     export = MultiProjectExportConfig.objects.get(id=export_id)
     # todo: consolidate runs with more info
-    export_run = run_multi_project_export(export, force)[-1]
-    run_end = timezone.now()
-    return {
-        'run_time': export_run.created_at.isoformat(),
-        'status': export_run.status,
-        'duration': readable_timedelta(run_end - run_start),
-        'log': export_run.log,
-    }
+    export_runs = run_multi_project_export(export, force_sync_all_data, ignore_schedule_checks)
+    export_run = export_runs[-1] if export_runs else None
+    if export_run:
+        return {
+            'run_time': export_run.created_at.isoformat(),
+            'status': export_run.status,
+            'duration': readable_timedelta(timezone.now() - run_start),
+            'log': export_run.log,
+        }
