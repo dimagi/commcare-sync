@@ -16,10 +16,10 @@ def run_all_exports_task(self):
 
 
 @shared_task(bind=True)
-def run_export_task(self, export_id, force_sync_all_data):
+def run_export_task(self, export_id, force_sync_all_data, ignore_schedule_checks=False):
     export = ExportConfig.objects.get(id=export_id)
-    if export.is_scheduled_to_run():
-        export_run = run_export(export, force)
+    if ignore_schedule_checks or export.is_scheduled_to_run():
+        export_run = run_export(export, force_sync_all_data)
         return {
             'run_time': export_run.created_at.isoformat(),
             'status': export_run.status,
