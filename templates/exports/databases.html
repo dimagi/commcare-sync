@@ -7,7 +7,7 @@
   <h2 class="subtitle">Manage the databases that you export data to here</h2>
 {% if databases.exists %}
   <p class="notification is-info is-light">
-    Note: databases that are added here must exist! This app will not create new databases for you.
+    Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases.
   </p>
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
     <span class="icon">

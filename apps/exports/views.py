@@ -141,7 +141,7 @@ def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    result = run_export_task.delay(export_id, force_sync)
+    result = run_export_task.delay(export_id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
 
@@ -152,7 +152,9 @@ def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    result = run_multi_project_export_task.delay(export_id, force_sync)
+    result = run_multi_project_export_task.delay(
+        export_id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
+    )
     return HttpResponse(result.task_id)
 
 

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
+from apps.exports.scheduling import export_is_scheduled_to_run
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 
 
@@ -13,13 +14,16 @@ class ExportDatabase(BaseModel):
     def __str__(self):
         return self.name
 
-
 class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    time_between_runs = models.PositiveIntegerField(
+        default=settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60,
+        help_text='How regularly to sync this export, in minutes.',
+    )
     is_paused = models.BooleanField(default=False,
                                     help_text='Pausing an export will disable automatic syncing. '
                                               'You can still manually run it.')
@@ -31,6 +35,9 @@ class ExportConfigBase(BaseModel):
     @property
     def last_run(self):
         return self.runs.order_by('-created_at')[0] if self.runs.exists() else None
+
+    def is_scheduled_to_run(self):
+        return export_is_scheduled_to_run(self, self.last_run)
 
 
 class ExportConfig(ExportConfigBase):
@@ -45,6 +52,12 @@ class MultiProjectExportConfig(ExportConfigBase):
 
     def __str__(self):
         return f'{self.name} - {self.projects.count()} projects'
+
+    def get_last_run_for_project(self, project):
+        try:
+            return self.runs.filter(project=project).order_by('-created_at')[0]
+        except IndexError:
+            return None
 
     def get_projects_display_short(self):
         project_count = self.projects.count()
