@@ -54,7 +54,10 @@ class MultiProjectExportConfig(ExportConfigBase):
         return f'{self.name} - {self.projects.count()} projects'
 
     def get_last_run_for_project(self, project):
-        return self.runs.filter(project=project).order_by('-created_at')[0]
+        try:
+            return self.runs.filter(project=project).order_by('-created_at')[0]
+        except IndexError:
+            return None
 
     def get_projects_display_short(self):
         project_count = self.projects.count()
