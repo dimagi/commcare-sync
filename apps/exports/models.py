@@ -1,9 +1,8 @@
-import datetime
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
+from apps.exports.scheduling import export_is_scheduled_to_run
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 
 
@@ -39,17 +38,7 @@ class ExportConfigBase(BaseModel):
         return self.runs.order_by('-created_at')[0] if self.runs.exists() else None
 
     def is_scheduled_to_run(self):
-        last_run = self.last_run
-        # first time running
-        if not last_run:
-            return True
-        # last run still active
-        if not last_run.completed_at:
-            return False
-        else:
-            # run if last run completed before the scheduled time between runs
-            next_scheduled_run_time = last_run.completed_at + datetime.timedelta(minutes=self.time_between_runs)
-            return timezone.now() > next_scheduled_run_time
+        return export_is_scheduled_to_run(self, self.last_run)
 
 
 class ExportConfig(ExportConfigBase):
