@@ -7,12 +7,12 @@ from apps.exports.scheduling import export_is_scheduled_to_run
 from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectExportRun
 
 
-def run_multi_project_export(multi_export_config: MultiProjectExportConfig, force=False):
+def run_multi_project_export(multi_export_config: MultiProjectExportConfig, force_sync_all_data=False):
     runs = []
     for project in multi_export_config.projects.all():
         if export_is_scheduled_to_run(multi_export_config, multi_export_config.get_last_run_for_project(project)):
             export_record = MultiProjectExportRun.objects.create(export_config=multi_export_config, project=project)
-            _run_export_for_project(multi_export_config, project, export_record, force)
+            _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
             runs.append(export_record)
     return runs
 
