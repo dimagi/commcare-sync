@@ -59,4 +59,4 @@ class CommCareAccount(BaseModel):
         unique_together = ('server', 'username')
 
     def __str__(self):
-        return f'{self.username} ({self.server.name})'
+        return self.username
