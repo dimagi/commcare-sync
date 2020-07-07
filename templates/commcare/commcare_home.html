@@ -67,6 +67,7 @@
       <th>Username</th>
       <th>Created</th>
       <th>Owner</th>
+      <th>Edit</th>
     </tr>
     </thead>
     <tbody>
@@ -75,6 +76,18 @@
         <td>{{ account.username }}</td>
         <td>{{ account.created_at }}</td>
         <td>{% if request.user == account.owner %}You{% else %}{{ account.owner.get_display_name }}{% endif %}</td>
+        <td>
+          {% if request.user == account.owner %}
+          <a class="button is-small is-primary is-rounded is-outlined" href="{% url 'commcare:edit_account' account.id %}">
+            <span class="icon">
+              <i class="fa fa-edit"></i>
+            </span>
+            <span>Edit</span>
+          </a>
+          {% else %}
+            &mdash;
+          {% endif %}
+        </td>
       </tr>
     {% endfor %}
     </tbody>
