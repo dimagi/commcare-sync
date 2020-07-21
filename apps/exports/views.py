@@ -138,7 +138,7 @@ def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
     if export_run.export_config.id != export_id:
         raise Http404(f'Export id {export_id} did not match run value of {export_run.export_config.id }!')
-    return render(request, 'exports/multi_project_export_details.html', {
+    return render(request, 'exports/multi_project_export_run_details.html', {
         'active_tab': 'exports',
         'export_run': export_run,
         'export': export_run.export_config,

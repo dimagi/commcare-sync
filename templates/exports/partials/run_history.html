@@ -23,7 +23,7 @@
     <tr>
       <th>Queued</th>
       <th>Started</th>
-{% if is_multi_project  %}
+{% if is_partial_list  %}
       <th>Project</th>
 {% endif  %}
       <th>Duration</th>
@@ -38,7 +38,7 @@
           {% if is_multi_project  %}<a href="{% url 'exports:multi_export_run_details' export.id export_run.id %}">{{ export_run.created_at }}</a>{% else %}{{ export_run.created_at }}{% endif %}
         </td>
         <td>{{ export_run.started_at|default:'-' }}</td>
-        {% if is_multi_project  %}
+        {% if is_partial_list  %}
           <td>{{ export_run.project.domain }}</td>
         {% endif  %}
         <td>{{ export_run.duration|readable_timedelta }}</td>
