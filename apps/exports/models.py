@@ -68,16 +68,23 @@ class MultiProjectExportConfig(ExportConfigBase):
 
 
 class ExportRunBase(BaseModel):
-    COMPLETED = 'completed'
+    QUEUED = 'queued'
     STARTED = 'started'
+    COMPLETED = 'completed'
     FAILED = 'failed'
+    SKIPPED  = 'skipped'
     STATUS_CHOICES = (
+        (QUEUED, 'queued'),
         (STARTED, 'started'),
         (COMPLETED, 'completed'),
         (FAILED, 'failed'),
+        (SKIPPED, 'skipped'),
     )
+    started_at = models.DateTimeField(null=True, blank=True, help_text="When the export actually started running. "
+                                                                       "It may have been created/queued earlier.")
     completed_at = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
+    triggered_from_ui = models.NullBooleanField(default=None)
+    status = models.CharField(max_length=10, default=QUEUED, choices=STATUS_CHOICES)
     log = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -107,4 +114,9 @@ class ExportRun(ExportRunBase):
 
 class MultiProjectExportRun(ExportRunBase):
     export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
+
+
+class MultiProjectPartialExportRun(ExportRunBase):
+    parent_run = models.ForeignKey(MultiProjectExportRun, null=True, blank=True, on_delete=models.CASCADE,
+                                   related_name='partial_runs')
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)

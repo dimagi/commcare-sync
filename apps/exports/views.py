@@ -2,13 +2,13 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
-from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
+from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
 
 
@@ -133,27 +133,38 @@ def multi_export_details(request, export_id):
         'runs': export.runs.order_by('-created_at')[:25],
     })
 
+@login_required
+def multi_export_run_details(request, export_id, run_id):
+    export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
+    if export_run.export_config.id != export_id:
+        raise Http404(f'Export id {export_id} did not match run value of {export_run.export_config.id }!')
+    return render(request, 'exports/multi_project_export_run_details.html', {
+        'active_tab': 'exports',
+        'export_run': export_run,
+        'export': export_run.export_config,
+        'runs': export_run.partial_runs.order_by('-created_at')[:25],
+    })
 
 @login_required
 @require_POST
 def run_export(request, export_id):
-    # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(ExportConfig, id=export_id)
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    result = run_export_task.delay(export_id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
+    export_record = ExportRun.objects.create(export_config=export, triggered_from_ui=True)
+    result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
 
 @login_required
 @require_POST
 def run_multi_export(request, export_id):
-    # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
+    export_record = MultiProjectExportRun.objects.create(export_config=export, triggered_from_ui=True)
     result = run_multi_project_export_task.delay(
-        export_id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
+        export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
     )
     return HttpResponse(result.task_id)
 

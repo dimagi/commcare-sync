@@ -1,0 +1,35 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load dateformat_tags %}
+{% load exports_tags %}
+{% block app %}
+{% with True as show_back_button %}
+{% include 'exports/partials/multi_export_details.html' %}
+{% endwith %}
+<section class="section app-card">
+  <h1 class="title">Run Details</h1>
+  <div class="columns">
+    <div class="column">
+      <span class="heading">Queued</span>
+      <p>{{ export_run.created_at }}</p>
+    </div>
+    <div class="column">
+      <span class="heading">Started</span>
+      <p>{{ export_run.started_at|default:"---" }}</p>
+    </div>
+    <div class="column">
+      <span class="heading">Duration</span>
+      <p>{{ export_run.duration|readable_timedelta }}</p>
+    </div>
+    <div class="column">
+      <span class="heading">Status</span>
+      <p>{{ export_run.status|to_status_icon }} {{ export_run.status }}</p>
+    </div>
+  </div>
+</section>
+<section class="section app-card">
+  <h1 class="title">Project-Level Runs</h1>
+{% with True as is_partial_list %}
+  {% include 'exports/partials/run_history_table.html' %}
+{% endwith %}
+{% endblock app %}

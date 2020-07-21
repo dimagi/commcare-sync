@@ -1,5 +1,3 @@
-{% load dateformat_tags %}
-{% load exports_tags %}
 <section class="section app-card">
   <h1 class="title">Run History</h1>
   <button class="button is-primary is-rounded is-small" id="run-export-button">
@@ -18,39 +16,5 @@
     </div>
     <div id="progress-bar-message" style="color: grey;">Waiting for task to start...</div>
   </div>
-  <table id="export-run-table" class="table is-fullwidth my-2">
-    <thead>
-    <tr>
-      <th>Run Start</th>
-{% if is_multi_project  %}
-      <th>Project</th>
-{% endif  %}
-      <th>Duration</th>
-      <th>Status</th>
-      <th>Log</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for export_run in runs %}
-      <tr>
-        <td>{{ export_run.created_at }}</td>
-        {% if is_multi_project  %}
-          <td>{{ export_run.project.domain }}</td>
-        {% endif  %}
-        <td>{{ export_run.duration|readable_timedelta }}</td>
-        <td>{{ export_run.status|to_status_icon }} {{ export_run.status }}</td>
-        <td>
-          <a class="log-trigger" data-open-status="closed" data-export-run-id="{{ export_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
-            View log
-          </a>
-        </td>
-      </tr>
-      <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
-        <td colspan="{% if is_multi_project  %}5{% else %}4{% endif %}">
-          {{ export_run.get_log_html }}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+{% include 'exports/partials/run_history_table.html' %}
 </section>

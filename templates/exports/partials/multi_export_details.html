@@ -1,0 +1,61 @@
+<section class="section app-card">
+  <div class="level">
+    <!-- Left side -->
+    <div class="level-left">
+      <h1 class="title">{{ export.name }} - Details</h1>
+    </div>
+    <div class="level-right">
+      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
+        <span class="icon">
+          <i class="fa fa-edit"></i>
+        </span>
+        <span>Edit</span>
+      </a>
+    </div>
+  </div>
+  <div class="columns">
+    <div class="column">
+      <span class="heading">Project Spaces</span>
+      <h2>
+        {% for project in export.projects.all %}
+          <a href="{{ project.url }}" target="_blank" style="white-space: nowrap;">{{ project.domain }}
+            <i class="fa fa-external-link"></i>
+          </a>
+          {% if not forloop.last %}<br>{% endif %}
+        {% endfor %}
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Account</span>
+      <h2>
+        {{ export.account.username }}
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Database</span>
+      <h2>
+        {{ export.database.name }}
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Created By</span>
+      <h2>
+        {% if request.user == export.created_by %}You{% else %}{{ export.created_by.username}}{% endif %}
+      </h2>
+    </div>
+  </div>
+{% if show_back_button %}
+  <a class="button is-primary is-rounded is-small" href="{% url 'exports:multi_export_details' export.id %}">
+    <span class="icon">
+      <i class="fa fa-arrow-left"></i>
+    </span>
+    <span>Back</span>
+  </a>
+{% endif %}
+  <a class="button is-primary is-rounded is-small is-outlined" href="{{ export.config_file.url }}">
+    <span class="icon">
+      <i class="fa fa-download"></i>
+    </span>
+    <span>Download Config File</span>
+  </a>
+</section>

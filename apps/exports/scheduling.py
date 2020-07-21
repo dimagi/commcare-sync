@@ -3,6 +3,9 @@ from django.utils import timezone
 
 
 def export_is_scheduled_to_run(export_config, last_run):
+    # paused exports are never scheduled
+    if export_config.is_paused:
+        return False
     # first time running
     if not last_run:
         return True

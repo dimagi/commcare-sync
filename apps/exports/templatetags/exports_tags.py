@@ -11,11 +11,15 @@ def to_status_icon(export_status):
         ExportRunBase.COMPLETED: 'has-text-success',
         ExportRunBase.FAILED: 'has-text-danger',
         ExportRunBase.STARTED: 'has-text-primary',
+        ExportRunBase.QUEUED: 'has-text-grey',
+        ExportRunBase.SKIPPED: 'has-text-grey',
     }
     icons = {
         ExportRunBase.COMPLETED: 'fa-check-circle',
         ExportRunBase.FAILED: 'fa-exclamation-circle',
-        ExportRunBase.STARTED: 'fa-ellipsis-h',
+        ExportRunBase.STARTED: 'fa-play-circle',
+        ExportRunBase.QUEUED: 'fa-ellipsis-h',
+        ExportRunBase.SKIPPED: 'fa-ban',
     }
     return mark_safe(f'<span class="icon {text_modifiers.get(export_status)}"><i title="{export_status}" class="fa {icons.get(export_status)}"></i></span>')
 
