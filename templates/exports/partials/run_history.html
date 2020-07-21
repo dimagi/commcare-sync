@@ -21,6 +21,7 @@
   <table id="export-run-table" class="table is-fullwidth my-2">
     <thead>
     <tr>
+      <th>Run Queued</th>
       <th>Run Start</th>
 {% if is_multi_project  %}
       <th>Project</th>
@@ -34,6 +35,7 @@
     {% for export_run in runs %}
       <tr>
         <td>{{ export_run.created_at }}</td>
+        <td>{{ export_run.started_at }}</td>
         {% if is_multi_project  %}
           <td>{{ export_run.project.domain }}</td>
         {% endif  %}
