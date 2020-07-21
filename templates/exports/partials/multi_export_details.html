@@ -44,7 +44,15 @@
       </h2>
     </div>
   </div>
-  <a class="button is-primary is-rounded is-small" href="{{ export.config_file.url }}">
+{% if show_back_button %}
+  <a class="button is-primary is-rounded is-small" href="{% url 'exports:multi_export_details' export.id %}">
+    <span class="icon">
+      <i class="fa fa-arrow-left"></i>
+    </span>
+    <span>Back to Export Page</span>
+  </a>
+{% endif %}
+  <a class="button is-primary is-rounded is-small is-outlined" href="{{ export.config_file.url }}">
     <span class="icon">
       <i class="fa fa-download"></i>
     </span>

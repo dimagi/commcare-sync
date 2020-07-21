@@ -1,7 +1,9 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% block app %}
+{% with True as show_back_button %}
 {% include 'exports/partials/multi_export_details.html' %}
+{% endwith %}
 {% with True as is_partial_list %}
   {% include 'exports/partials/run_history.html' %}
 {% endwith %}
