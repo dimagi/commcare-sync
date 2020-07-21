@@ -18,7 +18,11 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
         if ignore_schedule_checks or (
                 export_is_scheduled_to_run(multi_export_config,
                                            multi_export_config.get_last_run_for_project(project))):
-            export_record = MultiProjectPartialExportRun.objects.create(export_config=multi_export_config, project=project)
+            export_record = MultiProjectPartialExportRun.objects.create(
+                parent_run=multi_export_run,
+                export_config=multi_export_config,
+                project=project
+            )
             _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
             runs.append(export_record)
 
