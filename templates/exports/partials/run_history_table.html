@@ -10,7 +10,9 @@
 {% endif  %}
     <th>Duration</th>
     <th>Status</th>
+  {% if not is_multi_project %}
     <th>Log</th>
+  {% endif %}
   </tr>
   </thead>
   <tbody>
@@ -25,17 +27,21 @@
       {% endif  %}
       <td>{{ export_run.duration|readable_timedelta }}</td>
       <td>{{ export_run.status|to_status_icon }} {{ export_run.status }}</td>
+      {% if not is_multi_project %}
       <td>
         <a class="log-trigger" data-open-status="closed" data-export-run-id="{{ export_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
           View log
         </a>
       </td>
+      {% endif %}
     </tr>
+    {% if not is_multi_project %}
     <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
       <td colspan="{% if is_multi_project  %}5{% else %}4{% endif %}">
         {{ export_run.get_log_html }}
       </td>
     </tr>
+    {% endif %}
   {% endfor %}
   </tbody>
 </table>
