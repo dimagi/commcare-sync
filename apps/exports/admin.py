@@ -24,5 +24,5 @@ class MultiProjectExportRunAdmin(admin.ModelAdmin):
 
 @admin.register(models.MultiProjectPartialExportRun)
 class MultiProjectPartialExportRunAdmin(admin.ModelAdmin):
-    list_display = ['export_config', 'project', 'created_at', 'completed_at', 'status']
-    list_filter = ['export_config', 'project', 'created_at', 'completed_at', 'status']
+    list_display = ['parent_run', 'project', 'created_at', 'completed_at', 'status']
+    list_filter = ['parent_run__export_config', 'created_at', 'completed_at', 'status']
