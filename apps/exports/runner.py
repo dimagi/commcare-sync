@@ -4,11 +4,15 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.exports.scheduling import export_is_scheduled_to_run
-from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectPartialExportRun
+from .models import ExportRun, MultiProjectPartialExportRun, MultiProjectExportRun
 
 
-def run_multi_project_export(multi_export_config: MultiProjectExportConfig, force_sync_all_data=False,
+def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync_all_data=False,
                              ignore_schedule_checks=False):
+    multi_export_config = multi_export_run.export_config
+    multi_export_run.status = MultiProjectExportRun.STARTED
+    multi_export_run.started_at = timezone.now()
+    multi_export_run.save()
     runs = []
     for project in multi_export_config.projects.all():
         if ignore_schedule_checks or (
@@ -17,6 +21,10 @@ def run_multi_project_export(multi_export_config: MultiProjectExportConfig, forc
             export_record = MultiProjectPartialExportRun.objects.create(export_config=multi_export_config, project=project)
             _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
             runs.append(export_record)
+
+    multi_export_run.status = MultiProjectExportRun.COMPLETED
+    multi_export_run.completed_at = timezone.now()
+    multi_export_run.save()
     return runs
 
 
