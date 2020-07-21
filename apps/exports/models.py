@@ -77,6 +77,7 @@ class ExportRunBase(BaseModel):
         (FAILED, 'failed'),
     )
     completed_at = models.DateTimeField(null=True, blank=True)
+    triggered_from_ui = models.NullBooleanField(default=None)
     status = models.CharField(max_length=10, default='started', choices=STATUS_CHOICES)
     log = models.TextField(null=True, blank=True)
 
