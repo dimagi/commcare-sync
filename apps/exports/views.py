@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
-from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
+from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun
 from .tasks import run_export_task, run_multi_project_export_task
 
 
@@ -137,11 +137,11 @@ def multi_export_details(request, export_id):
 @login_required
 @require_POST
 def run_export(request, export_id):
-    # just to validate the export exists so we can send feedback to the UI
     export = get_object_or_404(ExportConfig, id=export_id)
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    result = run_export_task.delay(export_id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
+    export_record = ExportRun.objects.create(export_config=export, triggered_from_ui=True)
+    result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
 

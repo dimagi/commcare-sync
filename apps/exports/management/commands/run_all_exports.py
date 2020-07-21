@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from apps.exports.models import ExportConfig
+from apps.exports.models import ExportConfig, ExportRun
 from apps.exports.runner import run_export
 
 
@@ -9,4 +9,5 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         for export_config in ExportConfig.objects.all():
-            run_export(export_config)
+            export_run = ExportRun.objects.create(export_config=export_config)
+            run_export(export_run)

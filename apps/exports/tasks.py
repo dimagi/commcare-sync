@@ -3,7 +3,7 @@ from django.utils import timezone
 from celery import shared_task
 
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
-from .models import ExportConfig, MultiProjectExportConfig
+from .models import ExportConfig, MultiProjectExportConfig, ExportRun
 from .runner import run_export, run_multi_project_export
 
 
@@ -16,10 +16,11 @@ def run_all_exports_task(self):
 
 
 @shared_task(bind=True)
-def run_export_task(self, export_id, force_sync_all_data, ignore_schedule_checks=False):
-    export = ExportConfig.objects.get(id=export_id)
+def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_checks=False):
+    export_run = ExportRun.objects.select_related('export_config').get(id=export_run_id)
+    export = export_run.export_config
     if ignore_schedule_checks or export.is_scheduled_to_run():
-        export_run = run_export(export, force_sync_all_data)
+        export_run = run_export(export_run, force_sync_all_data)
         return {
             'run_time': export_run.created_at.isoformat(),
             'status': export_run.status,
