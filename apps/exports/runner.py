@@ -45,6 +45,7 @@ def _run_export_for_project(export_config, project, export_record, force):
         command.append(export_config.extra_args)
 
     export_record.status = ExportRun.STARTED
+    export_record.started_at = timezone.now()
     export_record.save()
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207

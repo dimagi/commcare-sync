@@ -78,6 +78,8 @@ class ExportRunBase(BaseModel):
         (COMPLETED, 'completed'),
         (FAILED, 'failed'),
     )
+    started_at = models.DateTimeField(null=True, blank=True, help_text="When the export actually started running. "
+                                                                       "It may have been created/queued earlier.")
     completed_at = models.DateTimeField(null=True, blank=True)
     triggered_from_ui = models.NullBooleanField(default=None)
     status = models.CharField(max_length=10, default=QUEUED, choices=STATUS_CHOICES)
