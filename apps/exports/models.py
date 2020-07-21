@@ -106,6 +106,6 @@ class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
 
 
-class MultiProjectExportRun(ExportRunBase):
+class MultiProjectPartialExportRun(ExportRunBase):
     export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)

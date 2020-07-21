@@ -4,7 +4,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.exports.scheduling import export_is_scheduled_to_run
-from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectExportRun
+from .models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectPartialExportRun
 
 
 def run_multi_project_export(multi_export_config: MultiProjectExportConfig, force_sync_all_data=False,
@@ -14,7 +14,7 @@ def run_multi_project_export(multi_export_config: MultiProjectExportConfig, forc
         if ignore_schedule_checks or (
                 export_is_scheduled_to_run(multi_export_config,
                                            multi_export_config.get_last_run_for_project(project))):
-            export_record = MultiProjectExportRun.objects.create(export_config=multi_export_config, project=project)
+            export_record = MultiProjectPartialExportRun.objects.create(export_config=multi_export_config, project=project)
             _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
             runs.append(export_record)
     return runs
