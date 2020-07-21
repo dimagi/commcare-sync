@@ -72,11 +72,13 @@ class ExportRunBase(BaseModel):
     STARTED = 'started'
     COMPLETED = 'completed'
     FAILED = 'failed'
+    SKIPPED  = 'skipped'
     STATUS_CHOICES = (
         (QUEUED, 'queued'),
         (STARTED, 'started'),
         (COMPLETED, 'completed'),
         (FAILED, 'failed'),
+        (SKIPPED, 'skipped'),
     )
     started_at = models.DateTimeField(null=True, blank=True, help_text="When the export actually started running. "
                                                                        "It may have been created/queued earlier.")

@@ -31,6 +31,9 @@ def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_ch
             'duration': export_run.get_duration_display(),
             'log': export_run.log,
         }
+    else:
+        export_run.status = ExportRun.SKIPPED
+        export_run.save()
 
 
 @shared_task(bind=True)
