@@ -10,9 +10,11 @@ from .runner import run_export, run_multi_project_export
 @shared_task(bind=True)
 def run_all_exports_task(self):
     for export in ExportConfig.objects.filter(is_paused=False):
-        run_export_task.delay(export.id, force_sync_all_data=False)
+        export_record = ExportRun.objects.create(export_config=export, triggered_from_ui=False)
+        run_export_task.delay(export_record.id, force_sync_all_data=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
-        run_multi_project_export_task.delay(multi_export.id, force_sync_all_data=False)
+        multi_export_record = MultiProjectExportRun.objects.create(export_config=multi_export, triggered_from_ui=False)
+        run_multi_project_export_task.delay(multi_export_record.id, force_sync_all_data=False)
 
 
 @shared_task(bind=True)
