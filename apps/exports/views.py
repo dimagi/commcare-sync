@@ -2,7 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -133,6 +133,17 @@ def multi_export_details(request, export_id):
         'runs': export.runs.order_by('-created_at')[:25],
     })
 
+@login_required
+def multi_export_run_details(request, export_id, run_id):
+    export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
+    if export_run.export_config.id != export_id:
+        raise Http404(f'Export id {export_id} did not match run value of {export_run.export_config.id }!')
+    return render(request, 'exports/multi_project_export_details.html', {
+        'active_tab': 'exports',
+        'export_run': export_run,
+        'export': export_run.export_config,
+        'runs': export_run.partial_runs.order_by('-created_at')[:25],
+    })
 
 @login_required
 @require_POST

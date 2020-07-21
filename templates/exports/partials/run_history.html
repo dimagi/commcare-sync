@@ -21,8 +21,8 @@
   <table id="export-run-table" class="table is-fullwidth my-2">
     <thead>
     <tr>
-      <th>Run Queued</th>
-      <th>Run Start</th>
+      <th>Queued</th>
+      <th>Started</th>
 {% if is_multi_project  %}
       <th>Project</th>
 {% endif  %}
@@ -34,8 +34,10 @@
     <tbody>
     {% for export_run in runs %}
       <tr>
-        <td>{{ export_run.created_at }}</td>
-        <td>{{ export_run.started_at }}</td>
+        <td>
+          {% if is_multi_project  %}<a href="{% url 'exports:multi_export_run_details' export.id export_run.id %}">{{ export_run.created_at }}</a>{% else %}{{ export_run.created_at }}{% endif %}
+        </td>
+        <td>{{ export_run.started_at|default:'-' }}</td>
         {% if is_multi_project  %}
           <td>{{ export_run.project.domain }}</td>
         {% endif  %}
