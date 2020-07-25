@@ -56,7 +56,10 @@ class MultiProjectExportConfig(ExportConfigBase):
 
     def get_last_run_for_project(self, project):
         try:
-            return self.runs.filter(project=project).order_by('-created_at')[0]
+            return MultiProjectPartialExportRun.objects.filter(
+                parent_run__export_config=self,
+                project=project
+            ).order_by('-created_at')[0]
         except IndexError:
             return None
 
