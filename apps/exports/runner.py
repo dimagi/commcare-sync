@@ -20,7 +20,8 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
                                            multi_export_config.get_last_run_for_project(project))):
             export_record = MultiProjectPartialExportRun.objects.create(
                 parent_run=multi_export_run,
-                project=project
+                project=project,
+                triggered_from_ui=multi_export_run.triggered_from_ui,
             )
             _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
             runs.append(export_record)
