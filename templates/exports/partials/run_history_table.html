@@ -19,6 +19,16 @@
   {% for export_run in runs %}
     <tr>
       <td>
+      <span class="icon" >
+      {% if export_run.triggered_from_ui %}
+        <i class="fa fa-user" title="Triggered from UI"></i>
+      {% elif export_run.triggered_from_ui == False %}
+        <i class="fa fa-clock-o has-text-grey-light" title="Scheduled Run"></i>
+      {% else %}
+        <i class="fa fa-question has-text-grey-light" title="Unknown"></i>
+      {% endif %}
+      </span>
+
         {% if is_multi_project  %}<a href="{% url 'exports:multi_export_run_details' export.id export_run.id %}">{{ export_run.created_at }}</a>{% else %}{{ export_run.created_at }}{% endif %}
       </td>
       <td>{{ export_run.started_at|default:'-' }}</td>
