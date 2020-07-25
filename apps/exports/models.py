@@ -34,7 +34,8 @@ class ExportConfigBase(BaseModel):
 
     @property
     def last_run(self):
-        return self.runs.order_by('-created_at')[0] if self.runs.exists() else None
+        runs = self.runs.exclude(status=ExportRun.QUEUED)
+        return runs.order_by('-created_at')[0] if runs.exists() else None
 
     def is_scheduled_to_run(self):
         return export_is_scheduled_to_run(self, self.last_run)
