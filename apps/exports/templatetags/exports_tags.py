@@ -11,6 +11,7 @@ def to_status_icon(export_status):
         ExportRunBase.COMPLETED: 'has-text-success',
         ExportRunBase.FAILED: 'has-text-danger',
         ExportRunBase.STARTED: 'has-text-primary',
+        ExportRunBase.MULTIPLE: 'has-text-warning',
         ExportRunBase.QUEUED: 'has-text-grey',
         ExportRunBase.SKIPPED: 'has-text-grey',
     }
@@ -18,6 +19,7 @@ def to_status_icon(export_status):
         ExportRunBase.COMPLETED: 'fa-check-circle',
         ExportRunBase.FAILED: 'fa-exclamation-circle',
         ExportRunBase.STARTED: 'fa-play-circle',
+        ExportRunBase.MULTIPLE: 'fa-exclamation-triangle',
         ExportRunBase.QUEUED: 'fa-ellipsis-h',
         ExportRunBase.SKIPPED: 'fa-ban',
     }

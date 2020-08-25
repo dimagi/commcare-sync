@@ -74,6 +74,7 @@ class MultiProjectExportConfig(ExportConfigBase):
 class ExportRunBase(BaseModel):
     QUEUED = 'queued'
     STARTED = 'started'
+    MULTIPLE = 'multiple'
     COMPLETED = 'completed'
     FAILED = 'failed'
     SKIPPED  = 'skipped'
@@ -82,6 +83,7 @@ class ExportRunBase(BaseModel):
         (STARTED, 'started'),
         (COMPLETED, 'completed'),
         (FAILED, 'failed'),
+        (MULTIPLE, 'multiple statuses'),  # MultiExport only
         (SKIPPED, 'skipped'),
     )
     started_at = models.DateTimeField(null=True, blank=True, help_text="When the export actually started running. "
