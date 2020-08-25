@@ -28,7 +28,7 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
 
     run_statuses = set([run.status for run in runs])
     if len(run_statuses) == 1:
-        multi_export_run.status = run_statuses[0]
+        multi_export_run.status = list(run_statuses)[0]
     else:
         multi_export_run.status = MultiProjectExportRun.MULTIPLE
     multi_export_run.completed_at = timezone.now()
