@@ -13,7 +13,7 @@ class ExportConfigForm(forms.ModelForm):
     class Meta:
         model = ExportConfig
         fields = ('name', 'project', 'account', 'database', 'is_paused', 'time_between_runs',
-                  'config_file', 'extra_args')
+                  'config_file', 'batch_size', 'extra_args')
 
 
 class MultiProjectExportConfigForm(forms.ModelForm):
@@ -21,7 +21,7 @@ class MultiProjectExportConfigForm(forms.ModelForm):
     class Meta:
         model = MultiProjectExportConfig
         fields = ('name', 'projects', 'account', 'database', 'is_paused', 'time_between_runs',
-                  'config_file', 'extra_args')
+                  'config_file', 'batch_size', 'extra_args')
 
 
 class CreateExportDatabaseForm(forms.ModelForm):
