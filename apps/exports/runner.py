@@ -50,7 +50,7 @@ def _run_export_for_project(export_config, project, export_record, force):
         '--password', export_config.account.api_key,
         '--output-format', 'sql',
         '--output', export_config.database.connection_string,
-        '--batch-size', '500',
+        '--batch-size', str(export_config.batch_size),
         '--verbose',
         '--query', export_config.config_file.path,
     ]
