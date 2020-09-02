@@ -37,7 +37,7 @@
   {{ form.batch_size.errors }}
 </div>
 <div class="field">
-  <div class="file">
+  <div id="export-file" class="file has-name">
     <label class="file-label">
       <input class="file-input" type="file" name="config_file" required_id="id_config_file">
       <span class="file-cta">
@@ -48,10 +48,22 @@
           Upload Config File
         </span>
       </span>
+      <span class="file-name">
+        Choose a file...
+      </span>
     </label>
   </div>
   {{ form.config_file.errors }}
 </div>
+<script>
+  const fileInput = document.querySelector('#export-file input[type=file]');
+  fileInput.onchange = () => {
+    if (fileInput.files.length > 0) {
+      const fileName = document.querySelector('#export-file .file-name');
+      fileName.textContent = fileInput.files[0].name;
+    }
+  }
+</script>
 <div class="field">
   <label class="label">Extra Arguments</label>
   <div class="control">
