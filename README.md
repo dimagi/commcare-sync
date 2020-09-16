@@ -15,6 +15,15 @@ mkvirtualenv --no-site-packages commcare_sync -p python3.8
 pip install -r requirements.txt
 ```
 
+Create a database:
+
+```bash
+psql -U <dbuser> -h localhost -p 5432
+CREATE DATABASE commcare_sync;
+\q
+./manage.py migrate
+```
+
 ### Running server
 
 ```bash
