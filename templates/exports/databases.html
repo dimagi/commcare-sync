@@ -9,12 +9,14 @@
   <p class="notification is-info is-light">
     Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases.
   </p>
+  {% if user.is_staff %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
     </span>
     <span>New Database Connection</span>
   </a>
+  {% endif %}
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
@@ -26,9 +28,13 @@
     {% for database in databases %}
       <tr>
         <td>
+          {% if user.is_staff %}
           <a href="{% url 'exports:edit_database' database.id %}">
             {{ database.name }}
           </a>
+          {% else %}
+          {{ database.name }}
+          {% endif %}
         </td>
         <td>{% if request.user == database.owner %}You{% else %}{{ database.owner.get_display_name }}{% endif %}</td>
       </tr>

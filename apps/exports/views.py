@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from .decorators import staff_required
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
@@ -178,7 +179,7 @@ def databases(request):
     })
 
 
-@login_required
+@staff_required
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
@@ -197,7 +198,7 @@ def create_database(request):
     })
 
 
-@login_required
+@staff_required
 def edit_database(request, database_id):
     db = get_object_or_404(ExportDatabase, id=database_id)
     if request.method == 'POST':
