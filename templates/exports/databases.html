@@ -9,7 +9,7 @@
   <p class="notification is-info is-light">
     Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases.
   </p>
-  {% if user.is_staff %}
+  {% if user.is_superuser %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
@@ -28,7 +28,7 @@
     {% for database in databases %}
       <tr>
         <td>
-          {% if user.is_staff %}
+          {% if user.is_superuser %}
           <a href="{% url 'exports:edit_database' database.id %}">
             {{ database.name }}
           </a>

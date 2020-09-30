@@ -1,13 +1,12 @@
 import json
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .decorators import staff_required
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
@@ -179,7 +178,7 @@ def databases(request):
     })
 
 
-@staff_required
+@user_passes_test(lambda u: u.is_superuser)
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
@@ -198,7 +197,7 @@ def create_database(request):
     })
 
 
-@staff_required
+@user_passes_test(lambda u: u.is_superuser)
 def edit_database(request, database_id):
     db = get_object_or_404(ExportDatabase, id=database_id)
     if request.method == 'POST':
