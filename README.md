@@ -8,10 +8,18 @@ For deploying this tool to a production server, see [commcare-sync-ansible](http
 
 ## Developer Setup
 
+### Prerequisites
+- Python 3.8
+    On Ubuntu:
+    ```bash
+    sudo apt-get install python3.8 python3.8-dev
+    ```
+- Postgres
+
 Setup a virtualenv and install requirements:
 
 ```bash
-mkvirtualenv --no-site-packages commcare_sync -p python3.8
+mkvirtualenv --no-site-packages commcare_sync -p $(which python3.8)
 pip install -r requirements.txt
 ```
 
