@@ -14,7 +14,7 @@ For deploying this tool to a production server, see [commcare-sync-ansible](http
     ```bash
     sudo apt-get install python3.8 python3.8-dev
     ```
-- Postgres
+- Postgres (or other SQL DB, but you'll have to edit the settings if not postgres)
 - Redis
 
 Setup a virtualenv and install requirements:
