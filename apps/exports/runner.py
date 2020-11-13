@@ -57,8 +57,9 @@ def _run_export_for_project(export_config, project, export_record, force):
     if force:
         command.append('--start-over')
 
-    if export_config.extra_args:
-        command.append(export_config.extra_args)
+    for extra_arg in export_config.extra_args.split(" "):
+        if extra_arg:
+            command.append(extra_arg)
 
     export_record.status = ExportRun.STARTED
     export_record.started_at = timezone.now()
