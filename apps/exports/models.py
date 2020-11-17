@@ -112,8 +112,8 @@ class ExportRunBase(BaseModel):
 
     @property
     def duration(self):
-        if self.completed_at:
-            return self.completed_at - self.created_at
+        if self.completed_at and self.started_at:
+            return self.completed_at - self.started_at
         else:
             return None
 
