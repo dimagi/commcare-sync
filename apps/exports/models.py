@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
@@ -45,6 +46,11 @@ class ExportConfigBase(BaseModel):
     def is_scheduled_to_run(self):
         return export_is_scheduled_to_run(self, self.last_run)
 
+    def has_queued_runs(self):
+        if self.runs.exists():
+            # queued runs that aren't the latest should be ignored so just check the latest one
+            return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
+        return False
 
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
@@ -106,8 +112,8 @@ class ExportRunBase(BaseModel):
 
     @property
     def duration(self):
-        if self.completed_at:
-            return self.completed_at - self.created_at
+        if self.completed_at and self.started_at:
+            return self.completed_at - self.started_at
         else:
             return None
 
@@ -118,6 +124,12 @@ class ExportRunBase(BaseModel):
         formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
         return mark_safe(formatted_log)
 
+    def mark_skipped(self):
+        if not self.status == ExportRun.QUEUED:
+            raise Exception("Can't mark a run that has been started skipped!")
+        self.status = ExportRun.SKIPPED
+        self.completed_at = timezone.now()
+        self.save()
 
 class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')

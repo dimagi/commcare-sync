@@ -1,15 +1,31 @@
 <section class="section app-card">
   <h1 class="title">Run History</h1>
-  <button class="button is-primary is-rounded is-small" id="run-export-button">
-    <span class="icon">
-      <i class="fa fa-play"></i>
-    </span>
-    <span>Run Now</span>
-  </button>
-  <label class="checkbox mx-2 my-1">
-    <input type="checkbox" id="force-sync-checkbox">
-    Force sync of all data
-  </label>
+  <div class="level">
+    <div class="level-left">
+      <button class="button is-primary is-rounded is-small" id="run-export-button">
+        <span class="icon">
+          <i class="fa fa-play"></i>
+        </span>
+        <span>Run Now</span>
+      </button>
+      <label class="checkbox mx-2 my-1">
+        <input type="checkbox" id="force-sync-checkbox">
+        Force sync of all data
+      </label>
+    </div>
+    <div class="level-right">
+      <label>Filter</label>
+      {% if hide_skipped %}
+        <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=n">
+          <span>Show Queued and Skipped Items</span>
+        </a>
+      {% else %}
+      <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=y">
+        <span>Hide Queued and Skipped Items</span>
+      </a>
+      {% endif %}
+    </div>
+  </div>
   <div id="export-status-progress" class="progress-bar-demo my-2" style="display: none;">
     <div class='progress-wrapper'>
       <progress id="progress-bar" class="progress is-small is-primary" max="100"></progress>

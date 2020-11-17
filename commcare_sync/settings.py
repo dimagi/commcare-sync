@@ -234,6 +234,7 @@ COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
 COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 
 COMMCARE_SYNC_EXPORT_PERIODICITY = 60 * 60 * 12  # run everything every 12 hours by default
+COMMCARE_SYNC_UI_PAGE_SIZE = 25
 
 # Project config
 

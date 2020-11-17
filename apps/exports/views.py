@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -117,20 +118,33 @@ def delete_export_config(request, export_id):
 @login_required
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
+    runs = export.runs
+    hide_skipped = _get_hide_skipped_from_request(request)
+    if hide_skipped:
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:25],
+        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'hide_skipped': hide_skipped,
     })
 
 
 @login_required
 def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    runs = export.runs
+    hide_skipped = _get_hide_skipped_from_request(request)
+    if hide_skipped:
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:25],
+        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'hide_skipped': hide_skipped,
+
     })
 
 @login_required
@@ -142,7 +156,7 @@ def multi_export_run_details(request, export_id, run_id):
         'active_tab': 'exports',
         'export_run': export_run,
         'export': export_run.export_config,
-        'runs': export_run.partial_runs.order_by('-created_at')[:25],
+        'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 @login_required
@@ -213,3 +227,19 @@ def edit_database(request, database_id):
         'active_tab': 'create_export',
         'form': form,
     })
+
+
+def _get_ui_page_size(request):
+    limit = settings.COMMCARE_SYNC_UI_PAGE_SIZE
+    if 'limit' in request.GET:
+        try:
+            limit = int(request.GET['limit'])
+        except ValueError:
+            pass
+    return limit
+
+
+def _get_hide_skipped_from_request(request):
+    if 'hide_skipped' in request.GET:
+        return request.GET['hide_skipped'] == 'y'
+    return False
