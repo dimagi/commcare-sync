@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -120,7 +121,7 @@ def export_details(request, export_id):
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:25],
+        'runs': export.runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
     })
 
 
@@ -130,7 +131,7 @@ def multi_export_details(request, export_id):
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:25],
+        'runs': export.runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
     })
 
 @login_required
@@ -142,7 +143,7 @@ def multi_export_run_details(request, export_id, run_id):
         'active_tab': 'exports',
         'export_run': export_run,
         'export': export_run.export_config,
-        'runs': export_run.partial_runs.order_by('-created_at')[:25],
+        'runs': export_run.partial_runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
     })
 
 @login_required
