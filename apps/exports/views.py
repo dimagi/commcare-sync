@@ -1,3 +1,4 @@
+import distutils
 import json
 
 from django.conf import settings
@@ -118,20 +119,28 @@ def delete_export_config(request, export_id):
 @login_required
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
+    runs = export.runs
+    if _get_hide_skipped_from_request(request):
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 
 @login_required
 def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    runs = export.runs
+    if _get_hide_skipped_from_request(request):
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 @login_required
@@ -224,3 +233,9 @@ def _get_ui_page_size(request):
         except ValueError:
             pass
     return limit
+
+
+def _get_hide_skipped_from_request(request):
+    if 'hide_skipped' in request.GET:
+        return bool(distutils.util.strtobool(request.GET['hide_skipped']))
+    return False
