@@ -18,11 +18,13 @@ def run_all_exports_task(self):
             multi_export_record = MultiProjectExportRun.objects.create(export_config=multi_export, triggered_from_ui=False)
             run_multi_project_export_task.delay(multi_export_record.id, force_sync_all_data=False)
 
-
 @shared_task(bind=True)
 def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_checks=False):
     export_run = ExportRun.objects.select_related('export_config').get(id=export_run_id)
     export = export_run.export_config
+    if export_run.status != ExportRun.QUEUED:
+        # this export has already been run, ignore
+        return
     if ignore_schedule_checks or export.is_scheduled_to_run():
         export_run = run_export(export_run, force_sync_all_data)
         return {
