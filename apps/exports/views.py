@@ -121,7 +121,7 @@ def export_details(request, export_id):
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
+        'runs': export.runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 
@@ -131,7 +131,7 @@ def multi_export_details(request, export_id):
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': export.runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
+        'runs': export.runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 @login_required
@@ -143,7 +143,7 @@ def multi_export_run_details(request, export_id, run_id):
         'active_tab': 'exports',
         'export_run': export_run,
         'export': export_run.export_config,
-        'runs': export_run.partial_runs.order_by('-created_at')[:settings.COMMCARE_SYNC_UI_PAGE_SIZE],
+        'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
 @login_required
@@ -214,3 +214,13 @@ def edit_database(request, database_id):
         'active_tab': 'create_export',
         'form': form,
     })
+
+
+def _get_ui_page_size(request):
+    limit = settings.COMMCARE_SYNC_UI_PAGE_SIZE
+    if 'limit' in request.GET:
+        try:
+            limit = int(request.GET['limit'])
+        except ValueError:
+            pass
+    return limit
