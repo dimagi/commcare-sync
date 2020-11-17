@@ -45,6 +45,11 @@ class ExportConfigBase(BaseModel):
     def is_scheduled_to_run(self):
         return export_is_scheduled_to_run(self, self.last_run)
 
+    def has_queued_runs(self):
+        if self.runs.exists():
+            # queued runs that aren't the latest should be ignored so just check the latest one
+            return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
+        return False
 
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
