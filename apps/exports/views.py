@@ -1,4 +1,3 @@
-import distutils
 import json
 
 from django.conf import settings
@@ -145,6 +144,7 @@ def multi_export_details(request, export_id):
         'export': export,
         'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
+
     })
 
 @login_required
@@ -241,5 +241,5 @@ def _get_ui_page_size(request):
 
 def _get_hide_skipped_from_request(request):
     if 'hide_skipped' in request.GET:
-        return bool(distutils.util.strtobool(request.GET['hide_skipped']))
+        return request.GET['hide_skipped'] == 'y'
     return False
