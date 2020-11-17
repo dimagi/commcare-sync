@@ -120,13 +120,15 @@ def delete_export_config(request, export_id):
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     runs = export.runs
-    if _get_hide_skipped_from_request(request):
+    hide_skipped = _get_hide_skipped_from_request(request)
+    if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
 
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
         'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'hide_skipped': hide_skipped,
     })
 
 
@@ -134,13 +136,15 @@ def export_details(request, export_id):
 def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     runs = export.runs
-    if _get_hide_skipped_from_request(request):
+    hide_skipped = _get_hide_skipped_from_request(request)
+    if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
 
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
         'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'hide_skipped': hide_skipped,
     })
 
 @login_required

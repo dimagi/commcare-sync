@@ -15,9 +15,15 @@
     </div>
     <div class="level-right">
       <label>Filter</label>
-      <a class="button is-primary is-outlined is-small mx-2" href="?hide_skipped=y">
+      {% if hide_skipped %}
+        <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=n">
+          <span>Show Queued and Skipped Items</span>
+        </a>
+      {% else %}
+      <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=y">
         <span>Hide Queued and Skipped Items</span>
       </a>
+      {% endif %}
     </div>
   </div>
   <div id="export-status-progress" class="progress-bar-demo my-2" style="display: none;">
