@@ -34,9 +34,7 @@ def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_ch
             'log': export_run.log,
         }
     else:
-        export_run.status = ExportRun.SKIPPED
-        export_run.completed_at = timezone.now()
-        export_run.save()
+        export_run.mark_skipped()
 
 
 @shared_task(bind=True)

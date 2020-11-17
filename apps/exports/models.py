@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from apps.commcare.models import BaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
@@ -123,6 +124,12 @@ class ExportRunBase(BaseModel):
         formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
         return mark_safe(formatted_log)
 
+    def mark_skipped(self):
+        if not self.status == ExportRun.QUEUED:
+            raise Exception("Can't mark a run that has been started skipped!")
+        self.status = ExportRun.SKIPPED
+        self.completed_at = timezone.now()
+        self.save()
 
 class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
