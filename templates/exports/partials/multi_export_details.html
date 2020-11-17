@@ -1,3 +1,4 @@
+{% load humanize %}
 <section class="section app-card">
   <div class="level">
     <!-- Left side -->
@@ -41,6 +42,12 @@
       <span class="heading">Created By</span>
       <h2>
         {% if request.user == export.created_by %}You{% else %}{{ export.created_by.username}}{% endif %}
+      </h2>
+    </div>
+    <div class="column">
+      <span class="heading">Last Modified</span>
+      <h2>
+        {{ export.updated_at|naturaltime }}
       </h2>
     </div>
   </div>
