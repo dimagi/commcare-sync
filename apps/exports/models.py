@@ -48,7 +48,8 @@ class ExportConfigBase(BaseModel):
 
     def has_queued_runs(self):
         if self.runs.exists():
-            # queued runs that aren't the latest should be ignored so just check the latest one
+            # Each run will ingest all new data when it is available, so we only need run at a time.
+            # We can therefore ignore all but the latest queued run.
             return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
         return False
 
