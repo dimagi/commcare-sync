@@ -134,10 +134,12 @@ class ExportRunBase(BaseModel):
 
 class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
+    run_config_file = models.FileField(null=True, upload_to='export-configs/')
 
 
 class MultiProjectExportRun(ExportRunBase):
     export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
+    run_config_file = models.FileField(null=True, upload_to='export-configs/')
 
 
 class MultiProjectPartialExportRun(ExportRunBase):
