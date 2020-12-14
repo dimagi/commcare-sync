@@ -75,6 +75,10 @@ const initializeExportRunButton = function (apiUrl, progressUrl) {
         progressBar.setAttribute('value', '100');
         progressMessage.innerText = errorMessage;
         return;
+      } else {  // Initialize progressbar
+          progressBar.removeAttribute('value');
+          progressBar.classList.remove('is-danger');
+          progressBar.classList.remove('is-success');
       }
       CeleryProgressBar.initProgressBar(taskUrl, {
         onProgress: function () {
