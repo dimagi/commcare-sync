@@ -8,4 +8,4 @@ django-anymail[mailgun]  # email services
 celery-progress
 celery
 celery[redis]
-commcare-export
+commcare-export~=1.4
