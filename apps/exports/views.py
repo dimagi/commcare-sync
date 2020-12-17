@@ -11,7 +11,8 @@ from django.views.decorators.http import require_POST
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
-
+import reversion
+from reversion.models import Version
 
 @login_required
 def home(request):
@@ -27,12 +28,14 @@ def home(request):
 
 @login_required
 def create_export_config(request):
+
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            export = form.save(commit=False)
-            export.created_by = request.user
-            export.save()
+            with reversion.create_revision():
+                export = form.save(commit=False)
+                export.created_by = request.user
+                export.save()
             messages.success(request, f'Export "{export.name}" was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
@@ -49,10 +52,11 @@ def create_multi_export_config(request):
     if request.method == 'POST':
         form = MultiProjectExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            export = form.save(commit=False)
-            export.created_by = request.user
-            export.save()
-            form.save_m2m()
+            with reversion.create_revision():
+                export = form.save(commit=False)
+                export.created_by = request.user
+                export.save()
+                form.save_m2m()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
@@ -70,7 +74,8 @@ def edit_export_config(request, export_id):
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
-            export = form.save()
+            with reversion.create_revision():
+                export = form.save()
             messages.success(request, f'Export {export.name} was successfully saved.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
@@ -89,7 +94,8 @@ def edit_multi_export_config(request, export_id):
     if request.method == 'POST':
         form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
-            export = form.save()
+            with reversion.create_revision():
+                export = form.save()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
@@ -150,12 +156,12 @@ def multi_export_details(request, export_id):
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
-    if export_run.export_config.id != export_id:
-        raise Http404(f'Export id {export_id} did not match run value of {export_run.export_config.id }!')
+    if export_run.base_export_config.id != export_id:
+        raise Http404(f'Export id {export_id} did not match run value of {export_run.base_export_config.id }!')
     return render(request, 'exports/multi_project_export_run_details.html', {
         'active_tab': 'exports',
         'export_run': export_run,
-        'export': export_run.export_config,
+        'export': export_run.base_export_config,
         'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
@@ -163,10 +169,13 @@ def multi_export_run_details(request, export_id, run_id):
 @require_POST
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
+    export_versions = Version.objects.get_for_object(export)
+    latest_export_version = export_versions[0]
+
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = ExportRun.objects.create(export_config=export, triggered_from_ui=True,
-                                             run_config_file=export.config_file)
+    export_record = ExportRun.objects.create(base_export_config=export, export_config_version=latest_export_version,
+                                             triggered_from_ui=True)
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
@@ -175,10 +184,13 @@ def run_export(request, export_id):
 @require_POST
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    export_versions = Version.objects.get_for_object(export)
+    latest_export_version = export_versions[0]
+
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = MultiProjectExportRun.objects.create(export_config=export, triggered_from_ui=True,
-                                                         run_config_file=export.config_file)
+    export_record = MultiProjectExportRun.objects.create(base_export_config=export, export_config_version=latest_export_version,
+                                                         triggered_from_ui=True)
     result = run_multi_project_export_task.delay(
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
     )
