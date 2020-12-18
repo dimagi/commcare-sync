@@ -1,4 +1,5 @@
 from django.contrib import admin
+from reversion.admin import VersionAdmin
 
 from . import models
 
@@ -6,7 +7,7 @@ from . import models
 admin.site.register(models.ExportDatabase)
 
 @admin.register(models.ExportConfig)
-class ExportConfigAdmin(admin.ModelAdmin):
+class ExportConfigAdmin(VersionAdmin):
     list_display = ['name', 'project', 'account', 'database', 'created_by', 'is_paused', 'created_at', 'updated_at']
     list_filter = ['project', 'database', 'is_paused', 'created_at', 'updated_at']
 
@@ -17,7 +18,7 @@ class ExportRunAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.MultiProjectExportConfig)
-class MultiProjectExportConfigAdmin(admin.ModelAdmin):
+class MultiProjectExportConfigAdmin(VersionAdmin):
     list_display = ['name', 'account', 'database', 'created_by', 'is_paused', 'created_at', 'updated_at']
     list_filter = ['database', 'is_paused', 'created_at', 'updated_at']
 
