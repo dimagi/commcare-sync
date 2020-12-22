@@ -56,6 +56,15 @@ class ExportConfigBase(BaseModel):
             return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
         return False
 
+    @property
+    def latest_version(self):
+        export_versions = Version.objects.get_for_object(self)
+        return export_versions[0]
+
+    def save(self):
+        with reversion.create_revision():
+            super().save()
+
 @reversion.register()
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)

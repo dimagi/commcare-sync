@@ -32,10 +32,9 @@ def create_export_config(request):
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            with reversion.create_revision():
-                export = form.save(commit=False)
-                export.created_by = request.user
-                export.save()
+            export = form.save(commit=False)
+            export.created_by = request.user
+            export.save()
             messages.success(request, f'Export "{export.name}" was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
@@ -52,11 +51,10 @@ def create_multi_export_config(request):
     if request.method == 'POST':
         form = MultiProjectExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            with reversion.create_revision():
-                export = form.save(commit=False)
-                export.created_by = request.user
-                export.save()
-                form.save_m2m()
+            export = form.save(commit=False)
+            export.created_by = request.user
+            export.save()
+            form.save_m2m()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
@@ -74,8 +72,7 @@ def edit_export_config(request, export_id):
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
-            with reversion.create_revision():
-                export = form.save()
+            export = form.save()
             messages.success(request, f'Export {export.name} was successfully saved.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
@@ -94,8 +91,7 @@ def edit_multi_export_config(request, export_id):
     if request.method == 'POST':
         form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
-            with reversion.create_revision():
-                export = form.save()
+            export = form.save()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
@@ -169,12 +165,10 @@ def multi_export_run_details(request, export_id, run_id):
 @require_POST
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
-    export_versions = Version.objects.get_for_object(export)
-    latest_export_version = export_versions[0]
 
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = ExportRun.objects.create(base_export_config=export, export_config_version=latest_export_version,
+    export_record = ExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
                                              triggered_from_ui=True)
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
@@ -184,12 +178,10 @@ def run_export(request, export_id):
 @require_POST
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
-    export_versions = Version.objects.get_for_object(export)
-    latest_export_version = export_versions[0]
 
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = MultiProjectExportRun.objects.create(base_export_config=export, export_config_version=latest_export_version,
+    export_record = MultiProjectExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
                                                          triggered_from_ui=True)
     result = run_multi_project_export_task.delay(
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,

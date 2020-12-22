@@ -37,7 +37,7 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
 
 
 def run_export(export_run: ExportRun, force=False):
-    export_config =  export_run.base_export_config
+    export_config = export_run.base_export_config
     return _run_export_for_project(export_config, export_config.project, export_run, force)
 
 

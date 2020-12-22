@@ -12,16 +12,14 @@ from reversion.models import Version
 def run_all_exports_task(self):
     for export in ExportConfig.objects.filter(is_paused=False):
         if export.is_scheduled_to_run() and not export.has_queued_runs():
-            latest_export_config_version = Version.objects.get_for_object(export)[0]
             export_record = ExportRun.objects.create(base_export_config=export,
-                                                     export_config_version=latest_export_config_version,
+                                                     export_config_version=export.latest_version,
                                                      triggered_from_ui=False)
             run_export_task.delay(export_record.id, force_sync_all_data=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
         if multi_export.is_scheduled_to_run() and not multi_export.has_queued_runs():
-            latest_export_config_version = Version.objects.get_for_object(multi_export)[0]
             multi_export_record = MultiProjectExportRun.objects.create(base_export_config=multi_export,
-                                                                       export_config_version=latest_export_config_version,
+                                                                       export_config_version=export.latest_version,
                                                                        triggered_from_ui=False)
             run_multi_project_export_task.delay(multi_export_record.id, force_sync_all_data=False)
 
