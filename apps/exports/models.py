@@ -61,9 +61,9 @@ class ExportConfigBase(BaseModel):
         export_versions = Version.objects.get_for_object(self)
         return export_versions[0]
 
-    def save(self):
+    def save(self, **kwargs):
         with reversion.create_revision():
-            super().save()
+            super().save(**kwargs)
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):

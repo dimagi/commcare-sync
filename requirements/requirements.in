@@ -9,3 +9,4 @@ celery-progress
 celery
 celery[redis]
 commcare-export
+django-reversion==3.0.8
