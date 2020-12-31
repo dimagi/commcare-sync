@@ -8,5 +8,5 @@ django-anymail[mailgun]  # email services
 celery-progress
 celery
 celery[redis]
-commcare-export
 django-reversion==3.0.8
+commcare-export~=1.4
