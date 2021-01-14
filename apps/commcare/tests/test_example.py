@@ -1,3 +1,5 @@
+from unittest import skip
+
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 
@@ -8,9 +10,6 @@ class ExampleTest(SimpleTestCase):
 
     def test_success(self):
         self.assertEqual(1, 1)
-
-    def test_fail(self):
-        self.assertEqual(1, 0)
 
 
 class ExampleDbTest(TestCase):
