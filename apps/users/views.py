@@ -1,8 +1,11 @@
+import mimetypes
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
+from apps.users.models import CustomUser
 from .forms import CustomUserChangeForm, UploadAvatarForm
 
 
@@ -29,3 +32,16 @@ def upload_profile_image(request):
         user.avatar = request.FILES['avatar']
         user.save()
     return HttpResponse('Success!')
+
+
+@login_required
+def avatar(request, user_id):
+    user = CustomUser.objects.get(id=user_id)
+    if user.avatar:
+        # copied / modified from django.views.static.serve
+        content_type, encoding = mimetypes.guess_type(user.avatar.path)
+        content_type = content_type or 'application/octet-stream'
+        return FileResponse(user.avatar.open('rb'), content_type=content_type)
+    else:
+        # should this be a harder error?
+        return HttpResponse('No avatar set')
