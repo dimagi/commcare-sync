@@ -59,7 +59,7 @@
     <span>Back</span>
   </a>
 {% endif %}
-  <a class="button is-primary is-rounded is-small is-outlined" href="{{ export.config_file.url }}">
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_multi_export_file' export.id %}">
     <span class="icon">
       <i class="fa fa-download"></i>
     </span>

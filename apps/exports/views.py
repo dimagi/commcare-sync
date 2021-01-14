@@ -138,6 +138,12 @@ def download_export_file(request, export_id):
     return _download_config_file(export)
 
 
+@login_required
+def download_multi_export_file(request, export_id):
+    export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    return _download_config_file(export)
+
+
 def _download_config_file(export):
     response = HttpResponse(export.config_file.read(), content_type='application/force-download')
     response['Content-Disposition'] = f'attachment; filename={os.path.basename(export.config_file.name)}'

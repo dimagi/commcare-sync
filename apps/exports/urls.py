@@ -14,6 +14,8 @@ urlpatterns = [
     path(r'view/multi-project/<int:export_id>/', views.multi_export_details, name='multi_export_details'),
     path(r'view/multi-project/<int:export_id>/run/<int:run_id>/', views.multi_export_run_details, name='multi_export_run_details'),
     path(r'view/multi-project/<int:export_id>/edit/', views.edit_multi_export_config, name='edit_multi_export_config'),
+    path(r'view/multi-project/<int:export_id>/download/', views.download_multi_export_file,
+         name='download_multi_export_file'),
     path(r'api/run/<int:export_id>/', views.run_export, name='run_export'),
     path(r'api/run/multi-project/<int:export_id>/', views.run_multi_export, name='run_multi_export'),
     path(r'databases/', views.databases, name='databases'),
