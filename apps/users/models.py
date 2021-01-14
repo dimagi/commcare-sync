@@ -2,6 +2,7 @@ import hashlib
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.urls import reverse
 
 
 class CustomUser(AbstractUser):
@@ -25,7 +26,7 @@ class CustomUser(AbstractUser):
     def avatar_url(self):
         default_avatar_image = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/512px-User_font_awesome.svg.png'
         if self.avatar:
-            return self.avatar.url
+            return reverse('users:avatar', args=[self.id])
         else:
             return 'https://www.gravatar.com/avatar/{}?s=128&d={}'.format(self.gravatar_id, default_avatar_image)
 
