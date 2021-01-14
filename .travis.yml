@@ -1,0 +1,23 @@
+language: python
+sudo: required
+dist: xenial
+python:
+ - "3.7"
+ - "3.8"
+services:
+  - postgresql
+jobs:
+  include:
+    - name: "Linter"
+      before_script:
+        - pip install -q flake8
+      script:
+        - "flake8"
+    - name: "Django Test"
+      language: python
+      python:
+        - "3.8"
+      install:
+        - pip install -r requirements/requirements.txt
+      script:
+        - python manage.py test
