@@ -15,8 +15,10 @@ def run_all_exports_task(self):
             run_export_task.delay(export_record.id, force_sync_all_data=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
         if multi_export.is_scheduled_to_run() and not multi_export.has_queued_runs():
-            multi_export_record = MultiProjectExportRun.objects.create(export_config=multi_export, triggered_from_ui=False)
+            multi_export_record = MultiProjectExportRun.objects.create(export_config=multi_export,
+                                                                       triggered_from_ui=False)
             run_multi_project_export_task.delay(multi_export_record.id, force_sync_all_data=False)
+
 
 @shared_task(bind=True)
 def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_checks=False):

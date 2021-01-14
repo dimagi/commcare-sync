@@ -14,7 +14,6 @@ class BaseModel(models.Model):
         abstract = True
 
 
-
 class CommCareServer(BaseModel):
     name = models.CharField(max_length=100, default='CommCare HQ')
     url = models.CharField(
@@ -42,6 +41,7 @@ class CommCareProject(BaseModel):
     @property
     def url(self):
         return f'{self.server.url}a/{self.domain}/'
+
 
 class CommCareAccount(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)

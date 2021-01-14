@@ -101,7 +101,6 @@ def edit_multi_export_config(request, export_id):
     })
 
 
-
 @login_required
 def delete_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
@@ -147,6 +146,7 @@ def multi_export_details(request, export_id):
 
     })
 
+
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
@@ -158,6 +158,7 @@ def multi_export_run_details(request, export_id, run_id):
         'export': export_run.export_config,
         'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
+
 
 @login_required
 @require_POST

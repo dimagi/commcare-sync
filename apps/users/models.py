@@ -23,7 +23,7 @@ class CustomUser(AbstractUser):
 
     @property
     def avatar_url(self):
-        default_avatar_image = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/512px-User_font_awesome.svg.png'
+        default_avatar_image = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/512px-User_font_awesome.svg.png'  # noqa
         if self.avatar:
             return self.avatar.url
         else:

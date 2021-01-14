@@ -1,5 +1,3 @@
-from unittest import skip
-
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 

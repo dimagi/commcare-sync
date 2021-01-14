@@ -15,6 +15,7 @@ class ExportDatabase(BaseModel):
     def __str__(self):
         return self.name
 
+
 class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
@@ -53,6 +54,7 @@ class ExportConfigBase(BaseModel):
             return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
         return False
 
+
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
 
@@ -89,7 +91,7 @@ class ExportRunBase(BaseModel):
     MULTIPLE = 'multiple'
     COMPLETED = 'completed'
     FAILED = 'failed'
-    SKIPPED  = 'skipped'
+    SKIPPED = 'skipped'
     STATUS_CHOICES = (
         (QUEUED, 'queued'),
         (STARTED, 'started'),
@@ -131,6 +133,7 @@ class ExportRunBase(BaseModel):
         self.status = ExportRun.SKIPPED
         self.completed_at = timezone.now()
         self.save()
+
 
 class ExportRun(ExportRunBase):
     export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
