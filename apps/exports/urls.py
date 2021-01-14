@@ -10,6 +10,7 @@ urlpatterns = [
     path(r'view/<int:export_id>/', views.export_details, name='export_details'),
     path(r'view/<int:export_id>/edit/', views.edit_export_config, name='edit_export_config'),
     path(r'view/<int:export_id>/delete/', views.delete_export_config, name='delete_export_config'),
+    path(r'view/<int:export_id>/download/', views.download_export_file, name='download_export_file'),
     path(r'view/multi-project/<int:export_id>/', views.multi_export_details, name='multi_export_details'),
     path(r'view/multi-project/<int:export_id>/run/<int:run_id>/', views.multi_export_run_details, name='multi_export_run_details'),
     path(r'view/multi-project/<int:export_id>/edit/', views.edit_multi_export_config, name='edit_multi_export_config'),

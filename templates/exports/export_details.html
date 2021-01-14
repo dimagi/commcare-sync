@@ -55,7 +55,7 @@
     </div>
   </div>
   <div class="buttons">
-    <a class="button is-primary is-rounded is-small" href="{{ export.config_file.url }}">
+    <a class="button is-primary is-rounded is-small" href="{% url 'exports:download_export_file' export.id %}">
       <span class="icon">
         <i class="fa fa-download"></i>
       </span>

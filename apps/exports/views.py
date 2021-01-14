@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.conf import settings
 from django.contrib import messages
@@ -129,6 +130,18 @@ def export_details(request, export_id):
         'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
     })
+
+
+@login_required
+def download_export_file(request, export_id):
+    export = get_object_or_404(ExportConfig, id=export_id)
+    return _download_config_file(export)
+
+
+def _download_config_file(export):
+    response = HttpResponse(export.config_file.read(), content_type='application/force-download')
+    response['Content-Disposition'] = f'attachment; filename={os.path.basename(export.config_file.name)}'
+    return response
 
 
 @login_required
