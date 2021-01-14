@@ -23,11 +23,10 @@ class CustomUser(AbstractUser):
 
     @property
     def avatar_url(self):
-        default_avatar_image = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/512px-User_font_awesome.svg.png'  # noqa
         if self.avatar:
             return self.avatar.url
         else:
-            return 'https://www.gravatar.com/avatar/{}?s=128&d={}'.format(self.gravatar_id, default_avatar_image)
+            return 'https://www.gravatar.com/avatar/{}?s=128&d=identicon'.format(self.gravatar_id)
 
     @property
     def gravatar_id(self):
