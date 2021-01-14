@@ -2,7 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -192,7 +192,7 @@ def databases(request):
     })
 
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
@@ -211,7 +211,7 @@ def create_database(request):
     })
 
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def edit_database(request, database_id):
     db = get_object_or_404(ExportDatabase, id=database_id)
     if request.method == 'POST':
