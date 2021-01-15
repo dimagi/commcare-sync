@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('reversion', '0001_squashed_0004_auto_20160611_1202'),
-        ('exports', '0014_auto_20200902_1357'),
+        ('exports', '0015_auto_20210114_1338'),
     ]
 
     operations = [
