@@ -23,7 +23,9 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
                 project=project,
                 triggered_from_ui=multi_export_run.triggered_from_ui,
             )
-            export_record = _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
+            export_record = _run_export_for_project(
+                multi_export_config, project, export_record, force_sync_all_data
+            )
             runs.append(export_record)
 
     run_statuses = set([run.status for run in runs])

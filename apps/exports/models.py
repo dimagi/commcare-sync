@@ -104,7 +104,7 @@ class ExportRunBase(BaseModel):
     MULTIPLE = 'multiple'
     COMPLETED = 'completed'
     FAILED = 'failed'
-    SKIPPED  = 'skipped'
+    SKIPPED = 'skipped'
     STATUS_CHOICES = (
         (QUEUED, 'queued'),
         (STARTED, 'started'),
@@ -117,6 +117,8 @@ class ExportRunBase(BaseModel):
                                                                        "It may have been created/queued earlier.")
     completed_at = models.DateTimeField(null=True, blank=True)
     triggered_from_ui = models.NullBooleanField(default=None)
+    triggering_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                        on_delete=models.SET_NULL)
     status = models.CharField(max_length=10, default=QUEUED, choices=STATUS_CHOICES)
     log = models.TextField(null=True, blank=True)
 

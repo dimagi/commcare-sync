@@ -22,6 +22,7 @@ def run_all_exports_task(self):
                                                                        triggered_from_ui=False)
             run_multi_project_export_task.delay(multi_export_record.id, force_sync_all_data=False)
 
+
 @shared_task(bind=True)
 def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_checks=False):
     export_run = ExportRun.objects.select_related('base_export_config').get(id=export_run_id)

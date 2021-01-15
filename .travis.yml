@@ -1,0 +1,27 @@
+dist: xenial
+language: python
+python:
+ - "3.8"
+services:
+  - postgresql
+env:
+  global:
+  - DJANGO_SETTINGS_MODULE=commcare_sync.settings_travis
+jobs:
+  include:
+    - name: "Linter"
+      before_script:
+        - pip install -q flake8
+      script:
+        - "flake8"
+    - name: "Django Test"
+      language: python
+      python:
+        - "3.8"
+      before_script:
+        - psql -c 'create database commcare_sync_test;' -U postgres
+        - cp .travis/settings_travis.py commcare_sync
+      install:
+        - pip install -r requirements/requirements.txt
+      script:
+        - python manage.py test

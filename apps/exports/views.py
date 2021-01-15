@@ -2,7 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -102,7 +102,6 @@ def edit_multi_export_config(request, export_id):
     })
 
 
-
 @login_required
 def delete_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
@@ -148,6 +147,7 @@ def multi_export_details(request, export_id):
 
     })
 
+
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
@@ -160,6 +160,7 @@ def multi_export_run_details(request, export_id, run_id):
         'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
+
 @login_required
 @require_POST
 def run_export(request, export_id):
@@ -168,7 +169,8 @@ def run_export(request, export_id):
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
     export_record = ExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
-                                             triggered_from_ui=True)
+                                             triggered_from_ui=True, triggering_user=request.user)
+
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
@@ -181,7 +183,8 @@ def run_multi_export(request, export_id):
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
     export_record = MultiProjectExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
-                                                         triggered_from_ui=True)
+                                                         triggered_from_ui=True, triggering_user=request.user)
+
     result = run_multi_project_export_task.delay(
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
     )
@@ -197,7 +200,7 @@ def databases(request):
     })
 
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
@@ -216,7 +219,7 @@ def create_database(request):
     })
 
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def edit_database(request, database_id):
     db = get_object_or_404(ExportDatabase, id=database_id)
     if request.method == 'POST':

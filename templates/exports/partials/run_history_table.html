@@ -24,7 +24,7 @@
       <td>
       <span class="icon" >
       {% if export_run.triggered_from_ui %}
-        <i class="fa fa-user" title="Triggered from UI"></i>
+        <i class="fa fa-user" title="Triggered from UI by {{ export_run.triggering_user|default:'unknown'}}"></i>
       {% elif export_run.triggered_from_ui == False %}
         <i class="fa fa-clock-o has-text-grey-light" title="Scheduled Run"></i>
       {% else %}

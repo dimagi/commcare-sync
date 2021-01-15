@@ -14,5 +14,6 @@ def export_is_scheduled_to_run(export_config, last_run):
         return False
     else:
         # run if last run completed before the scheduled time between runs
-        next_scheduled_run_time = last_run.completed_at + datetime.timedelta(minutes=export_config.time_between_runs)
+        next_scheduled_run_time = last_run.completed_at + datetime.timedelta(
+            minutes=export_config.time_between_runs)
         return timezone.now() > next_scheduled_run_time
