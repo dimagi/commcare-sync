@@ -241,10 +241,10 @@ PROJECT_METADATA = {
     'DESCRIPTION': 'A Management Interface for the CommCare Data Export Tool',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export',
-    'CONTACT_EMAIL': 'czue+det@dimagi.com',
 }
 
 
-ADMINS = [('Dimagi', 'czue+det@dimagi.com')]
+# this should be overridden in project-specific settings
+ADMINS = [('Dimagi', 'devops+commcare-sync@dimagi.com')]
 
 GOOGLE_ANALYTICS_ID = ''  # replace with your google analytics ID to connect to Google Analytics
