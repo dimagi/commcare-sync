@@ -1,10 +1,7 @@
-import reversion
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.safestring import mark_safe
-from reversion.models import Version
-
 from apps.commcare.models import BaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
@@ -57,16 +54,7 @@ class ExportConfigBase(BaseModel):
             return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
         return False
 
-    @property
-    def latest_version(self):
-        return Version.objects.get_for_object(self).first()
 
-    def save(self, **kwargs):
-        with reversion.create_revision():
-            super().save(**kwargs)
-
-
-@reversion.register()
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
 
@@ -74,7 +62,6 @@ class ExportConfig(ExportConfigBase):
         return f'{self.name} - {self.project}'
 
 
-@reversion.register()
 class MultiProjectExportConfig(ExportConfigBase):
     projects = models.ManyToManyField('commcare.CommCareProject')
 
@@ -84,7 +71,7 @@ class MultiProjectExportConfig(ExportConfigBase):
     def get_last_run_for_project(self, project):
         try:
             return MultiProjectPartialExportRun.objects.filter(
-                parent_run__base_export_config=self,
+                parent_run__export_config=self,
                 project=project
             ).order_by('-created_at')[0]
         except IndexError:
@@ -126,7 +113,7 @@ class ExportRunBase(BaseModel):
         abstract = True
 
     def __str__(self):
-        return f'{self.base_export_config.name} ({self.created_at})'
+        return f'{self.export_config.name} ({self.created_at})'
 
     @property
     def duration(self):
@@ -151,14 +138,11 @@ class ExportRunBase(BaseModel):
 
 
 class ExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs', null=True)
-    export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
+    export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE,
-                                           related_name='runs', null=True)
-    export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
+    export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
 
 
 class MultiProjectPartialExportRun(ExportRunBase):

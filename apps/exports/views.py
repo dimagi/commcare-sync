@@ -27,7 +27,6 @@ def home(request):
 
 @login_required
 def create_export_config(request):
-
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
@@ -151,12 +150,12 @@ def multi_export_details(request, export_id):
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
-    if export_run.base_export_config.id != export_id:
-        raise Http404(f'Export id {export_id} did not match run value of {export_run.base_export_config.id }!')
+    if export_run.export_config.id != export_id:
+        raise Http404(f'Export id {export_id} did not match run value of {export_run.export_config.id }!')
     return render(request, 'exports/multi_project_export_run_details.html', {
         'active_tab': 'exports',
         'export_run': export_run,
-        'export': export_run.base_export_config,
+        'export': export_run.export_config,
         'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
     })
 
@@ -165,16 +164,10 @@ def multi_export_run_details(request, export_id, run_id):
 @require_POST
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
-
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = ExportRun.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
-        triggered_from_ui=True,
-        triggering_user=request.user,
-    )
-
+    export_record = ExportRun.objects.create(export_config=export, triggered_from_ui=True,
+                                             triggering_user=request.user)
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
 
@@ -183,16 +176,10 @@ def run_export(request, export_id):
 @require_POST
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
-
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = MultiProjectExportRun.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
-        triggered_from_ui=True,
-        triggering_user=request.user
-    )
-
+    export_record = MultiProjectExportRun.objects.create(export_config=export, triggered_from_ui=True,
+                                                         triggering_user=request.user)
     result = run_multi_project_export_task.delay(
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
     )
