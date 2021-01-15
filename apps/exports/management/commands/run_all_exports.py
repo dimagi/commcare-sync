@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 
 from apps.exports.models import ExportConfig, ExportRun
 from apps.exports.runner import run_export
-from reversion.models import Version
 
 
 class Command(BaseCommand):
