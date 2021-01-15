@@ -122,7 +122,6 @@ class ExportRunBase(BaseModel):
     status = models.CharField(max_length=10, default=QUEUED, choices=STATUS_CHOICES)
     log = models.TextField(null=True, blank=True)
 
-
     class Meta:
         abstract = True
 
@@ -157,7 +156,8 @@ class ExportRun(ExportRunBase):
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs', null=True)
+    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE,
+                                           related_name='runs', null=True)
     export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
 
 

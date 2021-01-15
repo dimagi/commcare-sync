@@ -4,7 +4,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from apps.exports.scheduling import export_is_scheduled_to_run
-from .models import ExportRun, MultiProjectPartialExportRun, MultiProjectExportRun, ExportConfig, MultiProjectExportConfig
+from .models import ExportRun, MultiProjectPartialExportRun, MultiProjectExportRun
 
 
 def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync_all_data=False,

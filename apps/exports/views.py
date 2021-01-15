@@ -168,8 +168,12 @@ def run_export(request, export_id):
 
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = ExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
-                                             triggered_from_ui=True, triggering_user=request.user)
+    export_record = ExportRun.objects.create(
+        base_export_config=export,
+        export_config_version=export.latest_version,
+        triggered_from_ui=True,
+        triggering_user=request.user,
+    )
 
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
     return HttpResponse(result.task_id)
@@ -182,8 +186,12 @@ def run_multi_export(request, export_id):
 
     options = json.loads(request.body)
     force_sync = options.get('forceSync', False)
-    export_record = MultiProjectExportRun.objects.create(base_export_config=export, export_config_version=export.latest_version,
-                                                         triggered_from_ui=True, triggering_user=request.user)
+    export_record = MultiProjectExportRun.objects.create(
+        base_export_config=export,
+        export_config_version=export.latest_version,
+        triggered_from_ui=True,
+        triggering_user=request.user
+    )
 
     result = run_multi_project_export_task.delay(
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
