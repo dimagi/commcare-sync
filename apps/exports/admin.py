@@ -5,10 +5,13 @@ from . import models
 
 admin.site.register(models.ExportDatabase)
 
+
 @admin.register(models.ExportConfig)
 class ExportConfigAdmin(admin.ModelAdmin):
-    list_display = ['name', 'project', 'account', 'database', 'created_by', 'is_paused', 'created_at', 'updated_at']
+    list_display = ['name', 'project', 'account', 'database', 'created_by', 'is_paused', 'created_at',
+                    'updated_at']
     list_filter = ['project', 'database', 'is_paused', 'created_at', 'updated_at']
+
 
 @admin.register(models.ExportRun)
 class ExportRunAdmin(admin.ModelAdmin):
@@ -26,6 +29,7 @@ class MultiProjectExportConfigAdmin(admin.ModelAdmin):
 class MultiProjectExportRunAdmin(admin.ModelAdmin):
     list_display = ['export_config', 'created_at', 'started_at', 'completed_at', 'status']
     list_filter = ['export_config', 'created_at', 'started_at', 'completed_at', 'status']
+
 
 @admin.register(models.MultiProjectPartialExportRun)
 class MultiProjectPartialExportRunAdmin(admin.ModelAdmin):
