@@ -1,12 +1,13 @@
+import reversion
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from reversion.models import Version
+
 from apps.commcare.models import BaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
-import reversion
-from reversion.models import Version
 
 
 class ExportDatabase(BaseModel):
@@ -151,6 +152,7 @@ class ExportRunBase(BaseModel):
 class ExportRun(ExportRunBase):
     base_export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs', null=True)
     export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
+
 
 class MultiProjectExportRun(ExportRunBase):
     base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs', null=True)

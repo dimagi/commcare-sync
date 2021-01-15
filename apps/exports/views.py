@@ -11,8 +11,7 @@ from django.views.decorators.http import require_POST
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
-import reversion
-from reversion.models import Version
+
 
 @login_required
 def home(request):
