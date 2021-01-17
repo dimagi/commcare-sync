@@ -44,32 +44,13 @@ def run_export(export_run: ExportRun, force=False):
 
 
 def _run_export_for_project(export_config, project, export_record, force):
-    command = [
-        settings.COMMCARE_EXPORT,
-        '--project', project.domain,
-        '--username', export_config.account.username,
-        '--auth-mode', 'apikey',
-        '--password', export_config.account.api_key,
-        '--output-format', 'sql',
-        '--output', export_config.database.connection_string,
-        '--batch-size', str(export_config.batch_size),
-        '--verbose',
-        '--query', export_config.config_file.path,
-    ]
-    if force:
-        command.append('--start-over')
-
-    for extra_arg in export_config.extra_args.split(" "):
-        if extra_arg:
-            command.append(extra_arg)
-
     export_record.status = ExportRun.STARTED
     export_record.started_at = timezone.now()
     export_record.save()
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         result = subprocess.run(
-            command,
+            _compile_export_command(export_config, project, force),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -83,6 +64,30 @@ def _run_export_for_project(export_config, project, export_record, force):
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
+
+
+def _compile_export_command(export_config, project, force):
+    command = [
+        settings.COMMCARE_EXPORT,
+        '--project', project.domain,
+        '--username', export_config.account.username,
+        '--auth-mode', 'apikey',
+        '--password', export_config.account.api_key,
+        '--output-format', 'sql',
+        '--output', export_config.database.connection_string,
+        '--batch-size', str(export_config.batch_size),
+        '--verbose',
+        '--query', export_config.config_file.path,
+        '--commcare-hq', project.server.url,
+    ]
+    if force:
+        command.append('--start-over')
+
+    for extra_arg in export_config.extra_args.split(" "):
+        if extra_arg:
+            command.append(extra_arg)
+
+    return command
 
 
 def _process_status_to_status_field(process_status):
