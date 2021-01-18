@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='commcareserver',
             name='url',
-            field=models.CharField(default='https://www.commcarehq.org/', max_length=100, unique=True),
+            field=models.CharField(default='https://www.commcarehq.org', max_length=100, unique=True),
         ),
     ]
