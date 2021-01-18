@@ -151,13 +151,12 @@ class ExportRunBase(BaseModel):
 
 
 class ExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs', null=True)
+    base_export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
     export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE,
-                                           related_name='runs', null=True)
+    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
     export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
 
 

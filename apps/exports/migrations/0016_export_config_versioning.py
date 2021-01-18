@@ -12,28 +12,20 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        migrations.RenameField(
             model_name='exportrun',
-            name='export_config',
+            old_name='export_config',
+            new_name='base_export_config',
         ),
-        migrations.RemoveField(
+        migrations.RenameField(
             model_name='multiprojectexportrun',
-            name='export_config',
-        ),
-        migrations.AddField(
-            model_name='exportrun',
-            name='base_export_config',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='runs', to='exports.ExportConfig'),
+            old_name='export_config',
+            new_name='base_export_config',
         ),
         migrations.AddField(
             model_name='exportrun',
             name='export_config_version',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='reversion.Version'),
-        ),
-        migrations.AddField(
-            model_name='multiprojectexportrun',
-            name='base_export_config',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='runs', to='exports.MultiProjectExportConfig'),
         ),
         migrations.AddField(
             model_name='multiprojectexportrun',
