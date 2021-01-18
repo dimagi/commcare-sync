@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('name', models.CharField(default='CommCare HQ', max_length=100)),
-                ('url', models.CharField(default='https://www.commcarehq.org/', max_length=100)),
+                ('url', models.CharField(default='https://www.commcarehq.org', max_length=100)),
             ],
             options={
                 'abstract': False,
