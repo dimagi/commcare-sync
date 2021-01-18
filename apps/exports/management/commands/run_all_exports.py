@@ -9,5 +9,6 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         for export_config in ExportConfig.objects.all():
-            export_run = ExportRun.objects.create(export_config=export_config)
+            export_run = ExportRun.objects.create(base_export_config=export_config,
+                                                  export_config_version=export_config.latest_version)
             run_export(export_run)

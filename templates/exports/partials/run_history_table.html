@@ -13,6 +13,9 @@
   {% if not is_multi_project %}
     <th>Log</th>
   {% endif %}
+  {% if not is_partial_list %}
+    <th>Config File</th>
+  {% endif %}
   </tr>
   </thead>
   <tbody>
@@ -44,6 +47,21 @@
         </a>
       </td>
       {% endif %}
+
+      {% if not is_partial_list %}
+      <td>
+        {% if export_run.export_config_version.field_dict.config_file %}
+        <a class="button is-primary is-rounded is-small is-outlined" href="{{ export_run.export_config_version.field_dict.config_file.url }}">
+        <span class="icon">
+          <i class="fa fa-download"></i>
+        </span>
+        </a>
+        {% else %}
+          <span class="has-text-grey">Not available</span>
+        {% endif %}
+      </td>
+      {% endif %}
+
     </tr>
     {% if not is_multi_project %}
     <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
