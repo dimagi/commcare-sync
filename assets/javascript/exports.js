@@ -8,8 +8,10 @@ const addLogStubToTable = function () {
   // Populate the cell with initial data
   recordRow.insertCell(0).appendChild(document.createTextNode('Now'));
   recordRow.insertCell(1).appendChild(document.createTextNode('TBD'));
-  recordRow.insertCell(2).appendChild(document.createTextNode('started'));
-  recordRow.insertCell(3).appendChild(document.createTextNode('waiting for log...'));
+  recordRow.insertCell(2).appendChild(document.createTextNode('TBD'));
+  recordRow.insertCell(3).appendChild(document.createTextNode('started'));
+  recordRow.insertCell(4).appendChild(document.createTextNode('waiting for log...'));
+  recordRow.insertCell(5).appendChild(document.createTextNode(''));
   return recordRow;
 };
 
@@ -89,8 +91,8 @@ const initializeExportRunButton = function (apiUrl, progressUrl) {
           progressMessage.innerHTML = 'Complete!';
         },
         onResult: function (resultElement, result) {
-          recordRow.cells[1].innerText = result.duration;
-          recordRow.cells[2].innerText = result.status;
+          recordRow.cells[2].innerText = result.duration;
+          recordRow.cells[3].innerText = result.status;
           if (result.status === "completed") {
             progressBar.classList.add('is-success');
           } else if (result.status === "failed") {
@@ -98,7 +100,7 @@ const initializeExportRunButton = function (apiUrl, progressUrl) {
             progressBar.setAttribute('value', '100');
             progressMessage.innerText = 'Failed!';
           }
-          recordRow.cells[3].innerHTML = '<a onclick=location.reload()>Refresh for log</a>';
+          recordRow.cells[4].innerHTML = '<a onclick=location.reload()>Refresh for log</a>';
           runExportButton.classList.remove('is-loading', 'is-disabled');
         }
       });
