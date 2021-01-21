@@ -8,7 +8,6 @@ alembic==1.4.2            # via commcare-export
 amqp==2.5.2               # via kombu
 argparse==1.4.0           # via commcare-export
 asgiref==3.3.1            # via django
-attrs==19.3.0             # via -r requirements/requirements.in
 backoff==1.10.0           # via commcare-export
 billiard==3.6.1.0         # via celery
 celery-progress==0.0.9    # via -r requirements/requirements.in

@@ -1,4 +1,3 @@
-attrs
 Django
 django-allauth
 psycopg2-binary
