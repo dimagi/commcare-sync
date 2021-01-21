@@ -51,7 +51,7 @@
       {% if not is_partial_list %}
       <td>
         {% if export_run.export_config_version.field_dict.config_file %}
-        <a class="button is-primary is-rounded is-small is-outlined" href="{{ export_run.export_config_version.field_dict.config_file.url }}">
+        <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}">
         <span class="icon">
           <i class="fa fa-download"></i>
         </span>
