@@ -18,7 +18,7 @@ chardet==3.0.4            # via requests
 commcare-export==1.4.0    # via -r requirements/requirements.in
 coreapi==2.3.3            # via -r requirements/requirements.in
 coreschema==0.0.4         # via coreapi
-cryptography==2.9.2       # via pyopenssl
+cryptography==3.3.1       # via pyopenssl
 csv342==1.0.0             # via commcare-export
 decorator==4.4.2          # via jsonpath-rw, sqlalchemy-migrate
 defusedxml==0.6.0         # via python3-openid
@@ -44,7 +44,7 @@ ply==3.11                 # via jsonpath-rw
 psycopg2-binary==2.8.3    # via -r requirements/requirements.in
 pyasn1==0.4.8             # via ndg-httpsclient
 pycparser==2.20           # via cffi
-pyopenssl==19.1.0         # via ndg-httpsclient
+pyopenssl==20.0.1         # via -r requirements/requirements.in, ndg-httpsclient
 python-dateutil==2.8.1    # via alembic, commcare-export
 python-editor==1.0.4      # via alembic
 python3-openid==3.1.0     # via django-allauth
