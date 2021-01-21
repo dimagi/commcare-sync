@@ -1,5 +1,4 @@
-from .settings import *
-import os
+from .settings import *  # noqa
 
 
 DEBUG = False
@@ -38,8 +37,8 @@ ANYMAIL = {
 }
 
 SERVER_EMAIL = 'noreply@localhost:8000'
-DEFAULT_FROM_EMAIL = 'czue+det@dimagi.com'
-ADMINS = [('Your Name', 'czue+det@dimagi.com'),]
+DEFAULT_FROM_EMAIL = 'noreply@dimagi.com'
+ADMINS = [('Your Name', 'devops+commcare-sync@dimagi.com')]
 
 GOOGLE_ANALYTICS_ID = ''  # replace with your google analytics ID to connect to Google Analytics
 

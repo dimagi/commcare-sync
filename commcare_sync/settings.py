@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = [
 
     'rest_framework',
     'celery_progress',
+    'reversion',
 
 ]
 
@@ -115,7 +116,6 @@ DATABASES = {
 }
 
 
-
 # Auth / login stuff
 
 # Django recommends overriding the user model even if you don't think you need to because it makes
@@ -156,7 +156,6 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGOUT_ON_GET = True
 
 
-
 # User signup configuration: change to "mandatory" to require users to confirm email before signing in.
 # or "optional" to send confirmation emails but not require them
 ACCOUNT_EMAIL_VERIFICATION = 'none'
@@ -168,7 +167,6 @@ AUTHENTICATION_BACKENDS = (
     # `allauth` specific authentication methods, such as login by e-mail
     "allauth.account.auth_backends.AuthenticationBackend",
 )
-
 
 
 # Internationalization
@@ -230,7 +228,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 # CommCare Config
 
-COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org/'
+COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org'
 COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 
 COMMCARE_SYNC_EXPORT_PERIODICITY = 60 * 60 * 12  # run everything every 12 hours by default
@@ -244,10 +242,10 @@ PROJECT_METADATA = {
     'DESCRIPTION': 'A Management Interface for the CommCare Data Export Tool',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export',
-    'CONTACT_EMAIL': 'czue+det@dimagi.com',
 }
 
 
-ADMINS = [('Dimagi', 'czue+det@dimagi.com')]
+# this should be overridden in project-specific settings
+ADMINS = [('Dimagi', 'devops+commcare-sync@dimagi.com')]
 
 GOOGLE_ANALYTICS_ID = ''  # replace with your google analytics ID to connect to Google Analytics

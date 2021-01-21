@@ -9,7 +9,7 @@ from .models import ExportRun, MultiProjectPartialExportRun, MultiProjectExportR
 
 def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync_all_data=False,
                              ignore_schedule_checks=False):
-    multi_export_config = multi_export_run.export_config
+    multi_export_config = multi_export_run.base_export_config
     multi_export_run.status = MultiProjectExportRun.STARTED
     multi_export_run.started_at = timezone.now()
     multi_export_run.save()
@@ -23,7 +23,9 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
                 project=project,
                 triggered_from_ui=multi_export_run.triggered_from_ui,
             )
-            export_record = _run_export_for_project(multi_export_config, project, export_record, force_sync_all_data)
+            export_record = _run_export_for_project(
+                multi_export_config, project, export_record, force_sync_all_data
+            )
             runs.append(export_record)
 
     run_statuses = set([run.status for run in runs])
@@ -37,37 +39,18 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
 
 
 def run_export(export_run: ExportRun, force=False):
-    export_config = export_run.export_config
+    export_config = export_run.base_export_config
     return _run_export_for_project(export_config, export_config.project, export_run, force)
 
 
 def _run_export_for_project(export_config, project, export_record, force):
-    command = [
-        settings.COMMCARE_EXPORT,
-        '--project', project.domain,
-        '--username', export_config.account.username,
-        '--auth-mode', 'apikey',
-        '--password', export_config.account.api_key,
-        '--output-format', 'sql',
-        '--output', export_config.database.connection_string,
-        '--batch-size', str(export_config.batch_size),
-        '--verbose',
-        '--query', export_config.config_file.path,
-    ]
-    if force:
-        command.append('--start-over')
-
-    for extra_arg in export_config.extra_args.split(" "):
-        if extra_arg:
-            command.append(extra_arg)
-
     export_record.status = ExportRun.STARTED
     export_record.started_at = timezone.now()
     export_record.save()
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         result = subprocess.run(
-            command,
+            _compile_export_command(export_config, project, force),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -81,6 +64,30 @@ def _run_export_for_project(export_config, project, export_record, force):
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
+
+
+def _compile_export_command(export_config, project, force):
+    command = [
+        settings.COMMCARE_EXPORT,
+        '--project', project.domain,
+        '--username', export_config.account.username,
+        '--auth-mode', 'apikey',
+        '--password', export_config.account.api_key,
+        '--output-format', 'sql',
+        '--output', export_config.database.connection_string,
+        '--batch-size', str(export_config.batch_size),
+        '--verbose',
+        '--query', export_config.config_file.path,
+        '--commcare-hq', project.server.url.rstrip('/'),
+    ]
+    if force:
+        command.append('--start-over')
+
+    for extra_arg in export_config.extra_args.split(" "):
+        if extra_arg:
+            command.append(extra_arg)
+
+    return command
 
 
 def _process_status_to_status_field(process_status):

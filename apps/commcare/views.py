@@ -56,7 +56,6 @@ def edit_project(request, project_id):
     })
 
 
-
 @login_required
 def create_account(request):
     if request.method == 'POST':
@@ -96,6 +95,3 @@ def edit_account(request, account_id):
         'form': form,
         'account': account,
     })
-
-
-
