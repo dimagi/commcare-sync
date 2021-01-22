@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.conf import settings
 from django.contrib import messages
@@ -7,6 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from reversion.models import Version
 
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
@@ -129,6 +131,30 @@ def export_details(request, export_id):
         'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
     })
+
+
+@login_required
+def download_export_file(request, export_id):
+    export = get_object_or_404(ExportConfig, id=export_id)
+    return _download_config_file(export.config_file)
+
+
+@login_required
+def download_multi_export_file(request, export_id):
+    export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    return _download_config_file(export.config_file)
+
+
+@login_required
+def download_export_file_version(request, version_id):
+    version = get_object_or_404(Version, id=version_id)
+    return _download_config_file(version.field_dict['config_file'])
+
+
+def _download_config_file(export_file_field):
+    response = HttpResponse(export_file_field.read(), content_type='application/force-download')
+    response['Content-Disposition'] = f'attachment; filename={os.path.basename(export_file_field.name)}'
+    return response
 
 
 @login_required
