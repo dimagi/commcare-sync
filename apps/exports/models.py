@@ -71,7 +71,6 @@ class ExportConfigBase(BaseModel):
         else:
             raise ValueError(f"Can't find details URL for {self}")
 
-
     def save(self, **kwargs):
         with reversion.create_revision():
             super().save(**kwargs)
