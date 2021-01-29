@@ -6,11 +6,11 @@
       <h1 class="title">{{ export.name }} - Details</h1>
     </div>
     <div class="level-right">
-      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
+      <a class="button is-danger is-rounded is-small is-outlined" href="{% url 'exports:delete_multi_export_config' export.id %}">
         <span class="icon">
-          <i class="fa fa-edit"></i>
+          <i class="fa fa-times"></i>
         </span>
-        <span>Edit</span>
+        <span>Delete</span>
       </a>
     </div>
   </div>
@@ -51,18 +51,26 @@
       </h2>
     </div>
   </div>
-{% if show_back_button %}
-  <a class="button is-primary is-rounded is-small" href="{% url 'exports:multi_export_details' export.id %}">
-    <span class="icon">
-      <i class="fa fa-arrow-left"></i>
-    </span>
-    <span>Back</span>
-  </a>
-{% endif %}
-  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_multi_export_file' export.id %}">
-    <span class="icon">
-      <i class="fa fa-download"></i>
-    </span>
-    <span>Download Config File</span>
-  </a>
+  <div class="buttons">
+  {% if show_back_button %}
+    <a class="button is-primary is-rounded is-small" href="{% url 'exports:multi_export_details' export.id %}">
+      <span class="icon">
+        <i class="fa fa-arrow-left"></i>
+      </span>
+      <span>Back</span>
+    </a>
+  {% endif %}
+    <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_multi_export_file' export.id %}">
+      <span class="icon">
+        <i class="fa fa-download"></i>
+      </span>
+      <span>Download Config File</span>
+    </a>
+    <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
+      <span class="icon">
+        <i class="fa fa-edit"></i>
+      </span>
+      <span>Edit</span>
+    </a>
+  </div>
 </section>
