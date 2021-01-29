@@ -18,6 +18,8 @@ urlpatterns = [
          name='multi_export_run_details'),
     path(r'view/multi-project/<int:export_id>/edit/', views.edit_multi_export_config,
          name='edit_multi_export_config'),
+    path(r'view/multi-project/<int:export_id>/delete/', views.delete_multi_export_config,
+         name='delete_multi_export_config'),
     path(r'download/multi-project/<int:export_id>/config-file/', views.download_multi_export_file,
          name='download_multi_export_file'),
     path(r'api/run/<int:export_id>/', views.run_export, name='run_export'),
