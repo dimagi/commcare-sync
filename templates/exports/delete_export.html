@@ -9,9 +9,6 @@
       <li>The Export and its configuration file.</li>
       <li>All {{ export.runs.count }} records of the export's individual runs and associated logs.</li>
     </ul>
-{#    <p>#}
-{#      If you aren't sure, you can also pause this export, which will discontinue syncing, but preserve all data.#}
-{#    </p>#}
     <p><strong>Note: the underlying data associated with the export must be deleted separately.</strong></p>
   </div>
   <form method="post" enctype="multipart/form-data">
@@ -21,7 +18,7 @@
         <input class="button is-danger" type="submit" value="Delete Export">
       </div>
       <div class="control">
-        <a class="button is-primary is-outlined" href="{% url 'exports:export_details' export.id %}">Cancel</a>
+        <a class="button is-primary is-outlined" href="{{ export.details_url }}">Cancel</a>
       </div>
     </div>
   </form>
