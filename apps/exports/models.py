@@ -1,6 +1,7 @@
 import reversion
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from reversion.models import Version
@@ -60,6 +61,15 @@ class ExportConfigBase(BaseModel):
     @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
+
+    @property
+    def details_url(self):
+        if isinstance(self, ExportConfig):
+            return reverse('exports:export_details', args=[self.id])
+        elif isinstance(self, MultiProjectExportConfig):
+            return reverse('exports:multi_export_details', args=[self.id])
+        else:
+            raise ValueError(f"Can't find details URL for {self}")
 
     def save(self, **kwargs):
         with reversion.create_revision():
