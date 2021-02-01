@@ -91,7 +91,7 @@ pip install -r requirements/dev-requirements.txt
 Then:
 
 ```bash
-fab -H commcare-sync-demo.dimagi.com -f deploy/environments/demo.yml deploy
+fab -H commcare-sync-demo2.dimagi.com -f deploy/environments/demo.yml deploy
 ```
 
 You'll have to set up authentication using something like [this guide](https://stackoverflow.com/a/5071823/8207).
@@ -99,8 +99,8 @@ You'll have to set up authentication using something like [this guide](https://s
 Here's an example `/.ssh/config` entry:
 
 ```
-Host commcare-sync-demo.dimagi.com
+Host commcare-sync-demo2.dimagi.com
   User ubuntu
-  HostName commcare-sync-demo.dimagi.com
+  HostName commcare-sync-demo2.dimagi.com
   IdentityFile ~/.ssh/Covid.pem
 ```
