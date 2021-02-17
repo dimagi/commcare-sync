@@ -38,7 +38,7 @@ class ExportConfigBase(BaseModel):
     is_paused = models.BooleanField(default=False,
                                     help_text='Pausing an export will disable automatic syncing. '
                                               'You can still manually run it.')
-    extra_args = models.TextField(null=True, blank=True)
+    extra_args = models.TextField(blank=True)
 
     class Meta:
         abstract = True
