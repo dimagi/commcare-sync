@@ -80,10 +80,11 @@ def _stream_log(process, export_record):
     start_time = datetime.utcnow()
     while True:
         output = process.stdout.readline()
-        if process.poll() is not None and output == '':
+        process_is_ended = process.poll() is not None and output == ''
+        if process_is_ended:
             break
         if output:
-            log_buffer.append(output.strip())
+            log_buffer.append(output)
         if datetime.utcnow() - start_time >= timedelta(seconds=LOG_STREAM_DELAY):
             export_record.log = "{}\n\n{}".format(
                 "\n".join(log_buffer),
