@@ -23,6 +23,11 @@ class MultiProjectExportConfigForm(forms.ModelForm):
         fields = ('name', 'projects', 'account', 'database', 'is_paused', 'time_between_runs',
                   'config_file', 'batch_size', 'extra_args')
 
+    projects = forms.ModelMultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "checkbox"}),
+        queryset=CommCareProject.objects.order_by('domain'),
+    )
+
 
 class CreateExportDatabaseForm(forms.ModelForm):
 
