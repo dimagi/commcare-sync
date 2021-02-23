@@ -53,6 +53,12 @@ Then to build (and watch for changes locally) just run:
 npm run dev-watch
 ```
 
+To build the files for production run:
+
+```bash
+npm run build
+```
+
 ### Running Celery
 
 Celery is used to run background tasks, including all the commcare-export runs as well as 

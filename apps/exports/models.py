@@ -148,10 +148,6 @@ class ExportRunBase(BaseModel):
     def get_duration_display(self):
         return readable_timedelta(self.duration)
 
-    def get_log_html(self):
-        formatted_log = str(self.log).replace('\n', '<br>') if self.log else ''
-        return mark_safe(formatted_log)
-
     def mark_skipped(self):
         if not self.status == ExportRun.QUEUED:
             raise Exception("Can't mark a run that has been started skipped!")

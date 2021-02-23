@@ -1,10 +1,17 @@
 import subprocess
+from datetime import datetime, timedelta
 
+from apps.exports.scheduling import export_is_scheduled_to_run
 from django.conf import settings
 from django.utils import timezone
 
-from apps.exports.scheduling import export_is_scheduled_to_run
-from .models import ExportRun, MultiProjectPartialExportRun, MultiProjectExportRun
+from .models import (
+    ExportRun,
+    MultiProjectExportRun,
+    MultiProjectPartialExportRun,
+)
+
+LOG_STREAM_DELAY = 30  # write the log every 30 seconds
 
 
 def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync_all_data=False,
@@ -49,21 +56,42 @@ def _run_export_for_project(export_config, project, export_record, force):
     export_record.save()
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
-        result = subprocess.run(
+        process = subprocess.Popen(
             _compile_export_command(export_config, project, force),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
+        log_buffer = _stream_log(process, export_record)
+        result = process.poll()
     except Exception as e:
         export_record.status = ExportRun.FAILED
         export_record.log = str(e)
     else:
-        export_record.status = _process_status_to_status_field(result.returncode)
-        export_record.log = result.stdout
+        export_record.status = _process_status_to_status_field(result)
+        export_record.log = "\n".join(log_buffer)
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
+
+
+def _stream_log(process, export_record):
+    log_buffer = []
+    start_time = datetime.utcnow()
+    while True:
+        output = process.stdout.readline()
+        process_is_ended = process.poll() is not None and output == ''
+        if process_is_ended:
+            break
+        if output:
+            log_buffer.append(output)
+        if datetime.utcnow() - start_time >= timedelta(seconds=LOG_STREAM_DELAY):
+            export_record.log = "{}\n\n{}".format(
+                "\n".join(log_buffer),
+                "Job still running, refresh the page to see more…"
+            )
+            export_record.save()
+    return log_buffer
 
 
 def _compile_export_command(export_config, project, force):
