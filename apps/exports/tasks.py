@@ -10,13 +10,13 @@ from .runner import run_export, run_multi_project_export
 @shared_task(bind=True)
 def run_all_exports_task(self):
     for export in ExportConfig.objects.filter(is_paused=False):
-        if export.is_scheduled_to_run() and not export.has_queued_runs():
+        if export.should_create_export_run():
             export_record = ExportRun.objects.create(base_export_config=export,
                                                      export_config_version=export.latest_version,
                                                      triggered_from_ui=False)
             run_export_task.delay(export_record.id, force_sync_all_data=False)
     for multi_export in MultiProjectExportConfig.objects.filter(is_paused=False):
-        if multi_export.is_scheduled_to_run() and not multi_export.has_queued_runs():
+        if multi_export.should_create_export_run():
             multi_export_record = MultiProjectExportRun.objects.create(
                 base_export_config=multi_export,
                 export_config_version=multi_export.latest_version,

@@ -11,10 +11,11 @@ class TestSchedule(BaseExportTestCase):
         # A config with no export runs should be scheduled
         self.assertTrue(self.export_config.is_scheduled_to_run())
 
-        # A config that has an export_run in the QUEUED state is expected to be scheduled
+        # A config that has an export_run in the QUEUED state should be seen as "scheduled"
         export_run = ExportRun.objects.create(
             base_export_config=self.export_config,
         )
+        self.addCleanup(export_run.delete)
         self.assertTrue(self.export_config.is_scheduled_to_run())
 
         # A completed export that is failed shouldn't be rescheduled
@@ -28,3 +29,10 @@ class TestSchedule(BaseExportTestCase):
         export_run.completed_at = timezone.now() - timedelta(minutes=15)
         export_run.save()
         self.assertTrue(self.export_config.is_scheduled_to_run())
+
+    def test_should_spawn_task(self):
+        ExportRun.objects.create(
+            base_export_config=self.export_config,
+        )
+
+        self.assertFalse(self.export_config.should_create_export_run())
