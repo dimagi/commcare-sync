@@ -58,6 +58,11 @@ class ExportConfigBase(BaseModel):
             return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
         return False
 
+    def should_create_export_run(self):
+        """If a new export_run should be created and celery task spawned
+        """
+        return self.is_scheduled_to_run() and not self.has_queued_runs()
+
     @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
