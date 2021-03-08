@@ -6,7 +6,27 @@ Some additional context on this project can be [found here](https://docs.google.
 
 For deploying this tool to a production server, see [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
 
-## Developer Setup
+## Developer Setup - Docker
+
+The easiest way to get up and running is with [Docker](https://www.docker.com/).
+
+Just [install Docker](https://www.docker.com/get-started) and
+[Docker Compose](https://docs.docker.com/compose/install/)
+and then run `docker-compose up` or (`docker-compose up -d` to run in the background).
+
+This will spin up a database, web worker, celery worker, and Redis broker.
+
+### Running commands in containers
+
+To run commands in containers (e.g. migrations) you can do:
+
+```
+docker-compose exec web python manage.py migrate --noinput
+```
+
+## Developer Setup - Native
+
+You can also install/run the app directly on your OS using the instructions below.
 
 ### Prerequisites
 - Python 3.8
