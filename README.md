@@ -16,12 +16,22 @@ and then run `docker-compose up` or (`docker-compose up -d` to run in the backgr
 
 This will spin up a database, web worker, celery worker, and Redis broker.
 
-### Running commands in containers
-
-To run commands in containers (e.g. migrations) you can do:
+Then run your migrations:
 
 ```
 docker-compose exec web python manage.py migrate --noinput
+```
+
+And go to [localhost:8000](http://localhost:8000/) to view the app.
+
+### Running commands in containers
+
+You can run management commands in containers using the same method as above.
+E.g.
+
+```
+docker-compose exec web python manage.py makemigrations
+docker-compose exec web python manage.py createsuperuser
 ```
 
 ## Developer Setup - Native
