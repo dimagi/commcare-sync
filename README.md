@@ -12,25 +12,25 @@ The easiest way to get up and running is with [Docker](https://www.docker.com/).
 
 Just [install Docker](https://www.docker.com/get-started) and
 [Docker Compose](https://docs.docker.com/compose/install/)
-and then run `docker-compose up` or (`docker-compose up -d` to run in the background).
-
-This will spin up a database, web worker, celery worker, and Redis broker.
-
-Then run your migrations:
-
+and then run:
+ 
 ```
-docker-compose exec web python manage.py migrate --noinput
+make init
 ```
 
-And go to [localhost:8000](http://localhost:8000/) to view the app.
+This will spin up a database, web worker, celery worker, and Redis broker and run your migrations.
 
-### Running commands in containers
+You go to [localhost:8000](http://localhost:8000/) to view the app.
 
-You can run management commands in containers using the same method as above.
-E.g.
+### Using the Makefile
+
+You can run `make` to see other helper functions, and you can view the source
+of the file in case you need to run any specific commands.
+
+For example, you can run management commands in containers using the same method 
+used in the `Makefile`. E.g.
 
 ```
-docker-compose exec web python manage.py makemigrations
 docker-compose exec web python manage.py createsuperuser
 ```
 

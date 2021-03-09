@@ -18,6 +18,8 @@ migrations: ## Create DB migrations in the container
 migrate: ## Run DB migrations in the container
 	@docker-compose exec web python manage.py migrate
 
+init: start migrate
+
 .PHONY: help
 .DEFAULT_GOAL := help
 
