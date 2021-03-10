@@ -1,6 +1,7 @@
 import os
 from .settings import *
 
+
 # just an example of using .env.dev to pass data to settings
 SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)  # noqa
 REDIS_URL = 'redis://redis:6379'  # from docker compose file
@@ -17,3 +18,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+# enable public sign-ups
+ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
