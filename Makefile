@@ -18,8 +18,10 @@ migrations: ## Create DB migrations in the container
 migrate: ## Run DB migrations in the container
 	@docker-compose exec web python manage.py migrate
 
-init: start migrate  ## Quickly get up and running (start containers and migrate DB)
+shell: ## Get a Django shell
+	@docker-compose exec web python manage.py shell
 
+init: start migrate  ## Quickly get up and running (start containers and migrate DB)
 
 .PHONY: help
 .DEFAULT_GOAL := help
