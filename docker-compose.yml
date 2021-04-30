@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A commcare_sync worker -l INFO
+    command: celery -A commcare_sync worker -l INFO -B
     volumes:
       - .:/code
     env_file:
