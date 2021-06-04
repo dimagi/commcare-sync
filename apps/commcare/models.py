@@ -24,6 +24,12 @@ class CommCareServer(BaseModel):
     def __str__(self):
         return f'{self.name} ({self.url})'
 
+    def get_url_base(self):
+        """
+        Returns the url with no trailing slash.
+        """
+        return self.url.rstrip('/')
+
 
 class CommCareProject(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
