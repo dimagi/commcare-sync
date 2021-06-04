@@ -4,12 +4,6 @@ from django.test import SimpleTestCase, TestCase
 from apps.commcare.models import CommCareServer
 
 
-class ExampleTest(SimpleTestCase):
-
-    def test_success(self):
-        self.assertEqual(1, 1)
-
-
 class ExampleDbTest(TestCase):
 
     def test_default_hq_auto_created(self):
