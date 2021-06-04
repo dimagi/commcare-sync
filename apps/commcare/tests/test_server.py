@@ -4,7 +4,7 @@ from django.test import SimpleTestCase, TestCase
 from apps.commcare.models import CommCareServer
 
 
-class ExampleDbTest(TestCase):
+class ServerDbTest(TestCase):
 
     def test_default_hq_auto_created(self):
         server = CommCareServer.objects.get()
