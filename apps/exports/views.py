@@ -247,7 +247,7 @@ def databases(request):
     })
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
