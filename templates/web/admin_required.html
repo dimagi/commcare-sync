@@ -1,0 +1,23 @@
+{% extends "web/base.html" %}
+{% load static %}
+{% block body %}
+<section class="section container">
+    <div class="columns columns-reversed">
+        <div class="column">
+            <img src="{% static 'images/undraw/undraw_alert.svg' %}" alt="Uh-Oh">
+        </div>
+        <div id="tagline" class="column">
+            <h1 class="title is-size-3">You have to be an administrator to do that.</h1>
+            <h2 class="subtitle is-size-5">
+                If you think you should have access to this page, contact someone on your support team.
+            </h2>
+          {% if dev_mode %}
+          <p>
+            In development you can fix this problem by running the command below and refreshing the page:
+            <pre>./manage.py promote_user_to_superuser {{ user.username }}</pre>.
+          </p>
+          {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock%}
