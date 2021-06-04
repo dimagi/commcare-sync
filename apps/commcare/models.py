@@ -46,7 +46,7 @@ class CommCareProject(BaseModel):
 
     @property
     def url(self):
-        return f'{self.server.url}a/{self.domain}/'
+        return f'{self.server.get_url_base()}/a/{self.domain}/'
 
 
 class CommCareAccount(BaseModel):
