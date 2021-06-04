@@ -106,7 +106,7 @@ def _compile_export_command(export_config, project, force):
         '--batch-size', str(export_config.batch_size),
         '--verbose',
         '--query', export_config.config_file.path,
-        '--commcare-hq', project.server.url.rstrip('/'),
+        '--commcare-hq', project.server.get_url_base()
     ]
     if force:
         command.append('--start-over')
