@@ -1,2 +1,5 @@
-pip-tools
 fabric
+pip-tools==6.6
+mypy
+Django==3.2
+django-stubs
