@@ -1,11 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
 
-def home(request):
+def home(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return HttpResponseRedirect(reverse('exports:home'))
     else:
@@ -13,7 +13,7 @@ def home(request):
 
 
 @login_required
-def admin_required(request):
+def admin_required(request: HttpRequest) -> HttpResponse:
     if request.user.is_superuser:
         return HttpResponseRedirect(request.GET.get('next', reverse('web:home')))
     else:
