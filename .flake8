@@ -5,8 +5,7 @@ ignore =
   E128,
   E265,
   F403,
-  W503,
-  W1618
+  W503
 exclude =
   migrations,  # django migrations
   node_modules  # npm stuff
