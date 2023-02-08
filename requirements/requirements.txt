@@ -32,7 +32,7 @@ coreapi==2.3.3
     # via -r requirements.in
 coreschema==0.0.4
     # via coreapi
-cryptography==3.3.2
+cryptography==39.0.1
     # via pyopenssl
 decorator==4.4.2
     # via
@@ -123,7 +123,6 @@ simplejson==3.17.0
     # via commcare-export
 six==1.15.0
     # via
-    #   cryptography
     #   django-anymail
     #   jsonpath-ng
     #   pyopenssl
