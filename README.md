@@ -8,7 +8,7 @@ For deploying this tool to a production server, see [commcare-sync-ansible](http
 
 # Configuration Steps
 
-Steps to configure CommCare Sync, as represented in the demo video:
+Steps to configure CommCare Sync, as represented in the [demo video](https://www.youtube.com/watch?v=73QxEK1xgGY):
 
 1. In CommCare HQ Data page, create a form or case export 
 2. Download the DET config file
