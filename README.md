@@ -6,7 +6,9 @@ Some additional context on this project can be [found here](https://docs.google.
 
 For deploying this tool to a production server, see [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
 
-# Configuration Steps
+## Production Setup
+
+### Configuration Steps
 
 Steps to configure CommCare Sync, as represented in the [demo video](https://www.youtube.com/watch?v=73QxEK1xgGY):
 
@@ -21,20 +23,20 @@ Steps to configure CommCare Sync, as represented in the [demo video](https://www
 9. View the log to see more info - like to confirm how much data was pulled in
 10. Connect your BI tool of choice, and start exploring the data
 
-# Note for projects syncing data from multiple CommCare project spaces: 
+### Note for projects syncing data from multiple CommCare project spaces: 
 
 The process described above is for connecting a single CommCare project space. If you are connecting data from multiple CommCare project spaces, you need to add each project space as a Project in CommCare Sync (step 5), and repeat the process of downloading each DET config file per project space (step 2), to then each be uploaded to CommCare Sync (steps 7 & 8).  (IMPORTANT:  there is a new feature release that will allow applying the same DET config file to multiple project spaces in the CommCare sync tool).
 
-# Download your DET config file from CommCare
+### Download your DET config file from CommCare
 
 - Download or create a [Data Export Tool](https://dimagi.atlassian.net/wiki/x/8CvKfw) config file.
 - The easiest way to create these is to start with a normal export configuration on HQ and have it generated. See here for more details: [CommCare Data Export Tool (DET) | Creating an Excel Query File in CommCare HQ](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET#Creating-an-Excel-Query-File-in-CommCare-HQ)
 - Edit the DET file using the “best practices” below
 
-# Create a CommCare Sync account
+### Create a CommCare Sync account
 Ask a site admin to create an account for you and share credentials, then change your password.
 
-# Sync your data
+### Sync your data
 
 To sync data, follow the following steps:
 
@@ -47,7 +49,7 @@ To sync data, follow the following steps:
 
 Data will be updated for all exports on a schedule (currently every 12 hours, managed by a system admin).
 
-# Data Export Tool Best Practices
+### Data Export Tool Best Practices
 
 Some recommendations for modifying the DET config files downloaded from HQ:
 
@@ -55,11 +57,11 @@ Some recommendations for modifying the DET config files downloaded from HQ:
 2. Add a “str2date” mapping to any date properties and fields. This will make it easier to use them in various BI tools.
 3. There is a subtle difference between the 'Extra Arguments' field in a CommCare Sync Export and a CommCare Data Export Tool parameter. If an argument in CommCare Sync takes multiple parameters ('since' and 'until,' for example) it must be formatted like: --until=2020-09-30
 
-# Adding Databases
+### Adding Databases
 
 Databases can be added by site admins by using the "databases" link in CommCare Sync sidebar navigation. The database may need to also be separately created by a system admin on the server.
 
-# Administration
+### Administration
 
 System administration is documented in our [production environment documentation](https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html).
 
