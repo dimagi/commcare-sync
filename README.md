@@ -1,10 +1,12 @@
 # CommCare Sync
 
-A Management Interface for the CommCare Data Export Tool.
+CommCare Sync simplifies the setup and management of your CommCare data pipeline. It is a self-hosted, standalone web application designed to manage a CommCare “data warehouse” over the command-line [CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET?atl_f=PAGETREE). This turnkey solution allows you to export data from CommCare and store it in a local or cloud-based database, including MySQL, PostgreSQL, Amazon RDS, GCP Cloud SQL, and Azure SQL Database. With CommCare Sync, you can utilise these key features: 
+- **Automated Configuration:** Generate a Data Export Tool (DET) configuration file directly from CommCare.
+- **Seamless Integration:** Connect CommCare Sync to your CommCare project space(s) and database(s).
+- **Scheduled Data Syncs:** Upload a DET configuration file to automate data transfers from CommCare to your database on a defined schedule.
+- **Sync Monitoring:** Track and manage data sync activities through CommCare Sync’s built-in log feature.
 
-Some additional context on this project can be [found here](https://docs.google.com/document/d/1r8ZQAjCGbxX8pXWtIq0ODJOpqqI27YqPDN4vuR_CLGw/edit) (Dimagi Internal).
-
-For deploying this tool to a production server, see [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
+**This documentation shows you how to set up a self-hosted version of CommCare Sync using the source code.**  For help installing and managing production environments, you can follow the [documentation](https://commcare-sync-ansible.readthedocs.io/en/latest/) of the commcare-sync ansible repository.
 
 ## Production Setup
 
