@@ -1,3 +1,9 @@
+# Note on usage
+
+Warning: The CommCare Sync project is **not actively maintained**. Interested parties are recommended to review the [CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET) as an alternative which is actively maintained. CommCare Sync implementers should expect to need to perform their own modernization and maintenance. 
+
+CommCare Sync is a community-of-practice open source project, and not an officially supported tool. It's free and available as an example and for use, and contribututions are welcome from the community, but there are currently no plans to update or modernize the project.
+
 # CommCare Sync
 
 CommCare Sync simplifies the setup and management of your CommCare data pipeline. It is a self-hosted, standalone web application designed to manage a CommCare “data warehouse” over the command-line [CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET?atl_f=PAGETREE). This turnkey solution allows you to export data from CommCare and store it in a local or cloud-based database, including MySQL, PostgreSQL, Amazon RDS, GCP Cloud SQL, and Azure SQL Database. With CommCare Sync, you can utilise these key features: 
@@ -12,7 +18,7 @@ CommCare Sync simplifies the setup and management of your CommCare data pipeline
 
 ### Configuration Steps
 
-Steps to configure CommCare Sync, as represented in the [demo video](https://www.youtube.com/watch?v=73QxEK1xgGY):
+To configure CommCare Sync:
 
 1. In CommCare HQ Data page, create a form or case export 
 2. Download the DET config file
@@ -44,7 +50,7 @@ To sync data, follow the following steps:
 
 1. If you haven’t already, add the CommCare project space in the “CommCare Setup” tab.
 2. If you haven’t already, add a CommCare account that has access to the project space.
-3. Important note to Dimagi users: Do NOT use your superuser @dimagi.com account, follow the steps below to create a user below. Create a web user for a specific project, and set up API key for that user (under [Account Settings](https://www.commcarehq.org/account/settings/)). You can use a "+" in your email address that tells you what your web user is for. e.g. "firstnamelastname+demo-cc-sync@dimagi.com"
+3. Note: If you have a privileged account, it's recommnded that you create a service account in the target project space instead with minimal permissions and use that for data syncing. 
 4. Add the export from the “Exports” tab.
 5. On the export details page, click “run”.
 6. When the run completes, view the logs to confirm it ran successfully.
