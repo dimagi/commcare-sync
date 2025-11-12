@@ -1,17 +1,19 @@
-version: "3.8"
-
 services:
   db:
     image: postgres
+    ports:
+      - "5432:5432"
     # persist data beyond lifetime of container
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql
     environment:
       - POSTGRES_DB=commcare_sync
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   redis:
     image: redis
+    ports:
+      - "6379:6379"
     # persistent storage
     command: redis-server --appendonly yes
     volumes:

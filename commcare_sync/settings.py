@@ -73,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'commcare_sync.urls'
@@ -115,6 +116,7 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Auth / login stuff
 
@@ -239,7 +241,7 @@ COMMCARE_SYNC_UI_PAGE_SIZE = 25
 PROJECT_METADATA = {
     'NAME': 'CommCare Sync',
     'URL': 'http://localhost:8000',
-    'DESCRIPTION': 'A Management Interface for the CommCare Data Export Tool',
+    'DESCRIPTION': 'Simplifies the management of your CommCare data pipeline',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export',
 }
