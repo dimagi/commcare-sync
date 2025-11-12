@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: python manage.py runserver 0.0.0.0:8000
+    command: uv run manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A commcare_sync worker -l INFO -B
+    command: uv run celery -A commcare_sync worker -l INFO -B
     volumes:
       - .:/code
     env_file:

@@ -1,18 +1,19 @@
-FROM python:3.8-buster
+FROM python:3.10-bookworm
 ENV PYTHONUNBUFFERED=1
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 RUN \
-  echo "deb https://deb.nodesource.com/node_14.x buster main" > /etc/apt/sources.list.d/nodesource.list && \
+  echo "deb https://deb.nodesource.com/node_14.x bookworm main" > /etc/apt/sources.list.d/nodesource.list && \
   wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
   apt-get update && \
   apt-get install -yqq nodejs
 
 # copy code files
 RUN mkdir /code
+COPY . /code/
 WORKDIR /code
 
-COPY requirements requirements/
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-
-COPY . /code/
+# Install dependencies with uv (--system installs to system Python, no venv needed in Docker)
+RUN uv sync --directory /code/ --frozen --no-dev
