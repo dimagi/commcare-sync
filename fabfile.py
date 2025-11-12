@@ -9,9 +9,11 @@ def deploy(c):
     """
     Deploy code to remote host by checking out the latest via git.
     """
-    if 'VIRTUALENV_ROOT' not in c.config:
+    if 'CODE_ROOT' not in c.config:
         print('Project config not found! Did you forget to pass in "-f deploy/environments/<env>.yml"')
         sys.exit(1)
+    if 'VIRTUALENV_ROOT' in c.config:
+        print('Note: VIRTUALENV_ROOT is deprecated. uv will create .venv in the project directory.')
     update_code(c)
     update_virtualenv(c)
     django_stuff(c)
@@ -28,15 +30,11 @@ def update_code(c):
 
 def update_virtualenv(c):
     """
-    Update external dependencies on remote host. Assumes you've done a code update.
+    Update external dependencies on remote host using uv. Assumes you've done a code update.
     """
-    files = (
-        posixpath.join(c.config.CODE_ROOT, 'requirements.txt'),
-        posixpath.join(c.config.CODE_ROOT, 'requirements', 'prod-requirements.txt'),
-    )
-    with c.prefix('source {}/bin/activate'.format(c.config.VIRTUALENV_ROOT)):
-        for req_file in files:
-            c.run('pip install -r {}'.format(req_file))
+    with c.cd(c.config.CODE_ROOT):
+        c.run('curl -LsSf https://astral.sh/uv/install.sh | sh || true')
+        c.run('uv sync --frozen --extra prod')
 
 
 def django_stuff(c):
@@ -46,8 +44,8 @@ def django_stuff(c):
     env = {'DJANGO_SETTINGS_MODULE': c.config.DJANGO_SETTINGS_MODULE}
     with c.cd(c.config.CODE_ROOT):
         with c.prefix(f'export DJANGO_SETTINGS_MODULE={c.config.DJANGO_SETTINGS_MODULE}'):
-            c.run('{}/bin/python manage.py migrate'.format(c.config.VIRTUALENV_ROOT), env=env)
-            c.run('{}/bin/python manage.py collectstatic --noinput'.format(c.config.VIRTUALENV_ROOT), env=env)
+            c.run('uv run manage.py migrate', env=env)
+            c.run('uv run manage.py collectstatic --noinput', env=env)
 
 
 def services_restart(c):
