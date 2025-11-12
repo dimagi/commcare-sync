@@ -4,11 +4,9 @@ ENV PYTHONUNBUFFERED=1
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN \
-  echo "deb https://deb.nodesource.com/node_14.x bookworm main" > /etc/apt/sources.list.d/nodesource.list && \
-  wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
-  apt-get update && \
-  apt-get install -yqq nodejs
+# Install Node.js 22.x LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+RUN apt-get install -y nodejs
 
 # copy code files
 RUN mkdir /code
