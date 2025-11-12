@@ -202,22 +202,29 @@ instructions below.
 
 ### Prerequisites
 
-- Python 3.8
-    On Ubuntu:
-    ```shell
-    sudo apt-get install python3.8 python3.8-dev
-    ```
+- Python 3.10. On Ubuntu:
+  ```shell
+  sudo apt-get install python3.10 python3.10-dev
+  ```
 
 - PostgreSQL (or other SQL DB, but you'll have to edit the settings if
   not Postgres)
 
 - Redis
 
-Setup a virtualenv and install requirements:
-
+Install uv:
 ```shell
-mkvirtualenv --no-site-packages commcare_sync -p $(which python3.8)
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Create a virtual environment and install dependencies:
+```shell
+uv sync --dev
+```
+
+To activate the virtual environment:
+```shell
+source .venv/bin/activate
 ```
 
 Create a database:
@@ -291,7 +298,7 @@ To set up a production server, see
 For incremental deploys you can also use `fabric`. First install it:
 
 ```shell
-pip install -r requirements/dev-requirements.txt
+uv sync --dev
 ```
 
 Then:
