@@ -109,8 +109,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'commcare_sync',
-        'USER': 'commcarehq',
-        'PASSWORD': 'commcarehq',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
