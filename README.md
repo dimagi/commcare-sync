@@ -202,11 +202,6 @@ instructions below.
 
 ### Prerequisites
 
-- Python 3.10. On Ubuntu:
-  ```shell
-  sudo apt-get install python3.10 python3.10-dev
-  ```
-
 - PostgreSQL (or other SQL DB, but you'll have to edit the settings if
   not Postgres)
 
@@ -215,6 +210,11 @@ instructions below.
 Install uv:
 ```shell
 curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Install Python 3.10, if it is not already installed:
+```shell
+uv python install 3.10
 ```
 
 Create a virtual environment and install dependencies:
