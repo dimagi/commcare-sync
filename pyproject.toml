@@ -29,8 +29,12 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    {include-group = "lint"},
     "pip-tools",
     "fabric",
+]
+lint = [
+    "ruff",
 ]
 
 [tool.uv.sources]

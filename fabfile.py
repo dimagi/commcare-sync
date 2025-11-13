@@ -1,5 +1,3 @@
-import posixpath
-
 import sys
 from fabric import task
 

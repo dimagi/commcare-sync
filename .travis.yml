@@ -9,16 +9,15 @@ env:
   - DJANGO_SETTINGS_MODULE=commcare_sync.settings_travis
 before_install:
   - curl -LsSf https://astral.sh/uv/install.sh | sh
-  - uv sync
 jobs:
   include:
     - name: "Linter"
       python:
         - "3.10"
       install:
-        - uv pip install flake8
+        - uv sync --group lint --no-dev --frozen
       script:
-        - uv run flake8 commcare_sync/
+        - uv run ruff check
     - name: "Django Test - Python 3.10"
       python:
         - "3.10"
@@ -26,6 +25,6 @@ jobs:
         - psql -c 'create database commcare_sync_test;' -U postgres
         - cp .travis/settings_travis.py commcare_sync
       install:
-        - uv sync --frozen
+        - uv sync --no-dev --frozen
       script:
         - uv run manage.py test
