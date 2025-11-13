@@ -12,7 +12,6 @@ dependencies = [
     "coreapi",  # DRF schemas and docs  # TODO: Switch to "openapi-core"
     "django-anymail[mailgun]",  # email services
     "celery-progress",
-    "celery",
     "celery[redis]",
     "django-reversion",
     "commcare-export==1.13.0",
