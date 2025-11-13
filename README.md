@@ -190,7 +190,7 @@ For example, you can run management commands in containers using the
 same method used in the `Makefile`. e.g.
 
 ```shell
-docker-compose exec web python manage.py createsuperuser
+docker-compose exec web uv run manage.py createsuperuser
 ```
 
 
