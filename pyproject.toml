@@ -8,8 +8,6 @@ dependencies = [
     "Django~=5.2",
     "django-allauth",
     "psycopg2-binary",
-    "djangorestframework",
-    "coreapi",  # DRF schemas and docs  # TODO: Switch to "openapi-core"
     "django-anymail[mailgun]",  # email services
     "celery-progress",
     "celery[redis]",
