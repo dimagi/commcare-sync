@@ -1,5 +1,5 @@
 import os
-from .settings import *
+from .settings import *  # noqa: F403
 
 
 # just an example of using .env.dev to pass data to settings

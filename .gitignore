@@ -11,3 +11,6 @@ docs/_build
 _dist/
 commcare_sync/local.py
 static_root/
+
+# uv
+.venv/

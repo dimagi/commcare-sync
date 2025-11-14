@@ -1,5 +1,5 @@
-start: ## Start the docker containers
-	@echo "Starting the docker containers"
+start: ## Start the Docker containers
+	@echo "Starting the Docker containers"
 	@docker-compose up -d
 	@echo "Containers started - http://localhost:8000"
 
@@ -13,13 +13,13 @@ ssh: ## SSH into running web container
 	docker-compose exec web bash
 
 migrations: ## Create DB migrations in the container
-	@docker-compose exec web python manage.py makemigrations
+	@docker-compose exec web uv run manage.py makemigrations
 
 migrate: ## Run DB migrations in the container
-	@docker-compose exec web python manage.py migrate
+	@docker-compose exec web uv run manage.py migrate
 
 shell: ## Get a Django shell
-	@docker-compose exec web python manage.py shell
+	@docker-compose exec web uv run manage.py shell
 
 init: start migrate  ## Quickly get up and running (start containers and migrate DB)
 
