@@ -13,5 +13,8 @@ RUN mkdir /code
 COPY . /code/
 WORKDIR /code
 
-# Install dependencies with uv (--system installs to system Python, no venv needed in Docker)
+# Set virtualenv location to avoid conflicts with host .venv
+ENV UV_PROJECT_ENVIRONMENT=.venv-docker
+
+# Install dependencies with uv into custom virtualenv
 RUN uv sync --directory /code/ --frozen --no-dev
