@@ -338,10 +338,10 @@ requires-dist = [
     { name = "celery-progress" },
     { name = "commcare-export", specifier = "==1.13.0" },
     { name = "coreapi" },
-    { name = "django", specifier = "~=3.2" },
+    { name = "django", specifier = "~=5.2" },
     { name = "django-allauth" },
     { name = "django-anymail", extras = ["mailgun"] },
-    { name = "django-reversion" },
+    { name = "django-reversion", specifier = ">=5.0.4" },
     { name = "djangorestframework" },
     { name = "gunicorn", marker = "extra == 'prod'" },
     { name = "psycopg2-binary" },
@@ -448,16 +448,16 @@ wheels = [
 
 [[package]]
 name = "django"
-version = "3.2.25"
+version = "5.2.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
-    { name = "pytz" },
     { name = "sqlparse" },
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/68/0e744f07b57bfdf99abbb6b3eb14fcba188867021c05f4a104e04f6d56b8/Django-3.2.25.tar.gz", hash = "sha256:7ca38a78654aee72378594d63e51636c04b8e28574f5505dff630895b5472777", size = 9836336, upload-time = "2024-03-04T08:57:02.257Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/a2/933dbbb3dd9990494960f6e64aca2af4c0745b63b7113f59a822df92329e/django-5.2.8.tar.gz", hash = "sha256:23254866a5bb9a2cfa6004e8b809ec6246eba4b58a7589bc2772f1bcc8456c7f", size = 10849032, upload-time = "2025-11-05T14:07:32.778Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/8e/cc23c762c5dcd1d367d73cf006a326e0df2bd0e785cba18b658b39904c1e/Django-3.2.25-py3-none-any.whl", hash = "sha256:a52ea7fcf280b16f7b739cec38fa6d3f8953a5456986944c3ca97e79882b4e38", size = 7890550, upload-time = "2024-03-04T08:56:47.529Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/3d/a035a4ee9b1d4d4beee2ae6e8e12fe6dee5514b21f62504e22efcbd9fb46/django-5.2.8-py3-none-any.whl", hash = "sha256:37e687f7bd73ddf043e2b6b97cfe02fcbb11f2dbb3adccc6a2b18c6daa054d7f", size = 8289692, upload-time = "2025-11-05T14:07:28.761Z" },
 ]
 
 [[package]]
@@ -485,14 +485,14 @@ wheels = [
 
 [[package]]
 name = "django-reversion"
-version = "3.0.8"
+version = "6.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/59/d0/16e96f21e61105646386d1973bd23e2d9bf536c83cf8ca8b2fbc5dea2d29/django-reversion-3.0.8.tar.gz", hash = "sha256:49e9930f90322dc6a2754dd26144285cfcc1c5bd0c1c39ca95d5602c5054ae32", size = 68134, upload-time = "2020-08-31T10:26:24.22Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/df/5870e38067fd80b3d749de2d11a4cbd32be811d1f43eb8ab948f9f3152c4/django_reversion-6.0.0.tar.gz", hash = "sha256:cab0fd90640b2ceb37d7a897823ca72a21b960ad1d6a3b9cb4e351fabbd27d9c", size = 74528, upload-time = "2025-09-20T08:56:20.119Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0f/44/d77fe38ed0fee2866ca313e85d3cfcd58182cb9401757d3da2825296a72b/django_reversion-3.0.8-py3-none-any.whl", hash = "sha256:9cfadeec2df37cb53d795ab79f6792f9eed8e70363dcf3a275dc19a58b971a8f", size = 84711, upload-time = "2020-08-31T10:26:22.48Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/0d/7e558eb30afcdb21eca15a6ef8aa048b6089efc4599e28611275a0643260/django_reversion-6.0.0-py3-none-any.whl", hash = "sha256:0755b4b3e615254b305d01012e426e09006455d375254e5adc29572fc9edf2ab", size = 85968, upload-time = "2025-09-20T08:56:18.761Z" },
 ]
 
 [[package]]

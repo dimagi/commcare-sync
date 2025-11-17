@@ -212,11 +212,6 @@ Install uv:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Install Python 3.10, if it is not already installed:
-```shell
-uv python install 3.10
-```
-
 Create a virtual environment and install dependencies:
 ```shell
 uv sync --dev
