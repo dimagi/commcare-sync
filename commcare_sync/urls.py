@@ -15,10 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.documentation import include_docs_urls, get_schemajs_view
-
-
-schemajs_view = get_schemajs_view(title="API")
 
 
 urlpatterns = [
@@ -30,8 +26,4 @@ urlpatterns = [
 
     path('', include('apps.web.urls')),
     path('celery-progress/', include('celery_progress.urls')),
-    # API docs
-    # these are needed for schema.js
-    path('docs/', include_docs_urls(title='API Docs')),
-    path('schemajs/', schemajs_view, name='api_schemajs'),
 ]

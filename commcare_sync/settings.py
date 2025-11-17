@@ -48,7 +48,6 @@ THIRD_PARTY_APPS = [
     'allauth',  # allauth account/registration management
     'allauth.account',
 
-    'rest_framework',
     'celery_progress',
     'reversion',
 
@@ -212,17 +211,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Django sites
 
 SITE_ID = 1
-
-# DRF config
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
-}
-
 
 # Celery setup (using redis)
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
