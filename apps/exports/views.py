@@ -247,7 +247,7 @@ def databases(request):
     })
 
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')
+@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
 def create_database(request):
     if request.method == 'POST':
         form = CreateExportDatabaseForm(request.POST, request.FILES)
@@ -266,7 +266,7 @@ def create_database(request):
     })
 
 
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
 def edit_database(request, database_id):
     db = get_object_or_404(ExportDatabase, id=database_id)
     if request.method == 'POST':

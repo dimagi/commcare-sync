@@ -14,8 +14,11 @@ from .models import (
 LOG_STREAM_DELAY = 30  # write the log every 30 seconds
 
 
-def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync_all_data=False,
-                             ignore_schedule_checks=False):
+def run_multi_project_export(
+    multi_export_run: MultiProjectExportRun,
+    force_sync_all_data: bool = False,
+    ignore_schedule_checks: bool = False,
+) -> list[MultiProjectPartialExportRun]:
     multi_export_config = multi_export_run.base_export_config
     multi_export_run.status = MultiProjectExportRun.STARTED
     multi_export_run.started_at = timezone.now()
@@ -45,7 +48,10 @@ def run_multi_project_export(multi_export_run: MultiProjectExportRun, force_sync
     return runs
 
 
-def run_export(export_run: ExportRun, force=False):
+def run_export(
+    export_run: ExportRun,
+    force: bool = False,
+) -> ExportRun:
     export_config = export_run.base_export_config
     return _run_export_for_project(export_config, export_config.project, export_run, force)
 
