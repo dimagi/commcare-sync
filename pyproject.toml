@@ -32,6 +32,8 @@ dev = [
     "fabric",
 ]
 lint = [
+    "django-stubs",
+    "mypy",
     "ruff",
 ]
 
