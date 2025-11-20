@@ -1,5 +1,25 @@
 <aside class="menu">
   <p class="menu-label is-hidden-tablet-only">
+    CommCare Management
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'commcare:home' %}" {% if active_tab == 'commcare' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fcc fcc-flower"></i></span><span class="is-hidden-tablet-only">CommCare Setup</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'commcare:create_project' %}" {% if active_tab == 'create_project' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">Add Project</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'commcare:create_account' %}" {% if active_tab == 'create_account' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-user-plus"></i></span><span class="is-hidden-tablet-only">Add Account</span>
+      </a>
+    </li>
+  </ul>
+  <p class="menu-label is-hidden-tablet-only">
     Export Management
   </p>
   <ul class="menu-list">
@@ -24,26 +44,7 @@
       </a>
     </li>
   </ul>
-  <p class="menu-label is-hidden-tablet-only">
-    CommCare Management
-  </p>
-  <ul class="menu-list">
-    <li>
-      <a href="{% url 'commcare:home' %}" {% if active_tab == 'commcare' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fcc fcc-flower"></i></span><span class="is-hidden-tablet-only">CommCare Setup</span>
-      </a>
-    </li>
-    <li>
-      <a href="{% url 'commcare:create_project' %}" {% if active_tab == 'create_project' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">Add Project</span>
-      </a>
-    </li>
-    <li>
-      <a href="{% url 'commcare:create_account' %}" {% if active_tab == 'create_account' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-user-plus"></i></span><span class="is-hidden-tablet-only">Add Account</span>
-      </a>
-    </li>
-  </ul>
+  <hr/>
   <p class="menu-label is-hidden-tablet-only">
     My Account
   </p>
