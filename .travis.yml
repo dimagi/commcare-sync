@@ -14,6 +14,10 @@ jobs:
       script:
         - uv run --python 3.14 ruff check
 
+    - name: "Type Checker"
+      script:
+        - uv run --python 3.14 mypy apps/ commcare_sync/ *.py
+
     - name: "Django Test - Python 3.10"
       before_script:
         - psql -c 'create database commcare_sync_test;' -U postgres
