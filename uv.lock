@@ -480,12 +480,14 @@ prod = [
 dev = [
     { name = "django-stubs" },
     { name = "fabric" },
+    { name = "freezegun" },
     { name = "mypy" },
     { name = "pip-tools" },
     { name = "ruff" },
 ]
-lint = [
+test = [
     { name = "django-stubs" },
+    { name = "freezegun" },
     { name = "mypy" },
     { name = "ruff" },
 ]
@@ -510,12 +512,14 @@ provides-extras = ["prod"]
 dev = [
     { name = "django-stubs" },
     { name = "fabric" },
+    { name = "freezegun" },
     { name = "mypy" },
     { name = "pip-tools" },
     { name = "ruff" },
 ]
-lint = [
+test = [
     { name = "django-stubs" },
+    { name = "freezegun" },
     { name = "mypy" },
     { name = "ruff" },
 ]
@@ -747,6 +751,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0d/3f/337f278b70ba339c618a490f6b8033b7006c583bd197a897f12fbc468c51/fabric-3.2.2.tar.gz", hash = "sha256:8783ca42e3b0076f08b26901aac6b9d9b1f19c410074e7accfab902c184ff4a3", size = 183215, upload-time = "2023-08-31T01:42:05.55Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/1f/e99e23ee01847147fa194e8d41cfcf2535a2dbfcb51414c541cadb15c5d7/fabric-3.2.2-py3-none-any.whl", hash = "sha256:91c47c0be68b14936c88b34da8a1f55e5710fd28397dac5d4ff2e21558113a6f", size = 59417, upload-time = "2023-08-31T01:42:03.917Z" },
+]
+
+[[package]]
+name = "freezegun"
+version = "1.5.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/dd/23e2f4e357f8fd3bdff613c1fe4466d21bfb00a6177f238079b17f7b1c84/freezegun-1.5.5.tar.gz", hash = "sha256:ac7742a6cc6c25a2c35e9292dfd554b897b517d2dec26891a2e8debf205cb94a", size = 35914, upload-time = "2025-08-09T10:39:08.338Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/2e/b41d8a1a917d6581fc27a35d05561037b048e47df50f27f8ac9c7e27a710/freezegun-1.5.5-py3-none-any.whl", hash = "sha256:cd557f4a75cf074e84bc374249b9dd491eaeacd61376b9eb3c423282211619d2", size = 19266, upload-time = "2025-08-09T10:39:06.636Z" },
 ]
 
 [[package]]
