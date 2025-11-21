@@ -11,6 +11,7 @@ dependencies = [
     "django-anymail[mailgun]",  # email services
     "celery-progress",
     "celery[redis]",
+    "django-celery-beat",
     "django-reversion>=5.0.4",
     "commcare-export==1.13.0",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
