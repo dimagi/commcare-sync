@@ -11,6 +11,7 @@ dependencies = [
     "django-anymail[mailgun]",  # email services
     "celery-progress",
     "celery[redis]",
+    "django-celery-beat",
     "django-reversion>=5.0.4",
     "commcare-export==1.13.0",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
@@ -27,12 +28,13 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    {include-group = "lint"},
+    {include-group = "test"},
     "pip-tools",
     "fabric",
 ]
-lint = [
+test = [
     "django-stubs",
+    "freezegun",
     "mypy",
     "ruff",
 ]
@@ -45,3 +47,9 @@ ignore_missing_imports = true
 disable_error_code = [
     "var-annotated",
 ]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "single"
