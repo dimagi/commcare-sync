@@ -7,7 +7,7 @@ class TestRunnerArguments(BaseSimpleExportTestCase):
     def test_custom_server_url(self):
         command = _compile_export_command(self.export_config, self.project, force=False)
 
-        self.assertIn(self.server.url, command)
+        assert self.server.url in command
 
 
 class RunnerArgumentsDbTest(BaseExportTestCase):
@@ -15,4 +15,4 @@ class RunnerArgumentsDbTest(BaseExportTestCase):
     def test_default_server_url(self):
         command = _compile_export_command(self.export_config, self.project, force=False)
 
-        self.assertIn('https://www.commcarehq.org', command)
+        assert 'https://www.commcarehq.org' in command
