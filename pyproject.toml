@@ -34,12 +34,12 @@ dev = [
 ]
 test = [
     "django-stubs",
-    "freezegun",
     "mypy",
     "pytest",
     "pytest-django",
     "pytest-unmagic",
     "ruff",
+    "time-machine",
 ]
 
 [tool.uv.sources]

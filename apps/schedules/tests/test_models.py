@@ -1,9 +1,9 @@
 from datetime import date, time
 
 import pytest
+import time_machine
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from freezegun import freeze_time
 
 from apps.schedules.models import Schedule
 
@@ -288,14 +288,14 @@ class ScheduleEdgeCasesTestCase(TestCase):
     """Test edge cases and special scenarios."""
 
     def test_schedule_ordering(self):
-        with freeze_time('2025-01-01 10:00:00'):
+        with time_machine.travel('2025-01-01 10:00:00', tick=False):
             schedule1 = Schedule.objects.create(
                 schedule_type=Schedule.ScheduleType.INTERVAL,
                 interval_value=60,
                 interval_unit=Schedule.IntervalUnit.MINUTES,
             )
 
-        with freeze_time('2025-01-01 11:00:00'):
+        with time_machine.travel('2025-01-01 11:00:00', tick=False):
             schedule2 = Schedule.objects.create(
                 schedule_type=Schedule.ScheduleType.INTERVAL,
                 interval_value=30,
