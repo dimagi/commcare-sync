@@ -149,12 +149,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # swap these two lines to enable public sign ups
 # ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
 ACCOUNT_ADAPTER = 'apps.users.account_adapter.NoNewUsersAccountAdapter'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGOUT_ON_GET = True
 

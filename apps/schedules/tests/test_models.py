@@ -1,8 +1,9 @@
 from datetime import date, time
 
+import pytest
+import time_machine
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from freezegun import freeze_time
 
 from apps.schedules.models import Schedule
 
@@ -18,8 +19,8 @@ class ScheduleIntervalTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.every, 30)
-        self.assertEqual(celery_schedule.period, 'minutes')
+        assert celery_schedule.every == 30
+        assert celery_schedule.period == 'minutes'
 
     def test_create_interval_schedule_hours(self):
         schedule = Schedule.objects.create(
@@ -30,8 +31,8 @@ class ScheduleIntervalTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.every, 2)
-        self.assertEqual(celery_schedule.period, 'hours')
+        assert celery_schedule.every == 2
+        assert celery_schedule.period == 'hours'
 
     def test_create_interval_schedule_days(self):
         schedule = Schedule.objects.create(
@@ -42,8 +43,8 @@ class ScheduleIntervalTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.every, 7)
-        self.assertEqual(celery_schedule.period, 'days')
+        assert celery_schedule.every == 7
+        assert celery_schedule.period == 'days'
 
     def test_interval_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -52,7 +53,7 @@ class ScheduleIntervalTestCase(TestCase):
             interval_unit=Schedule.IntervalUnit.MINUTES,
         )
 
-        self.assertEqual(str(schedule), 'Every 15 minutes')
+        assert str(schedule) == 'Every 15 minutes'
 
 
 class ScheduleWeeklyTestCase(TestCase):
@@ -67,12 +68,12 @@ class ScheduleWeeklyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.minute, '30')
-        self.assertEqual(celery_schedule.hour, '14')
-        self.assertEqual(celery_schedule.day_of_week, '1,3,5')
-        self.assertEqual(celery_schedule.day_of_month, '*')
-        self.assertEqual(celery_schedule.month_of_year, '*')
-        self.assertEqual(celery_schedule.timezone.key, 'America/New_York')
+        assert celery_schedule.minute == '30'
+        assert celery_schedule.hour == '14'
+        assert celery_schedule.day_of_week == '1,3,5'
+        assert celery_schedule.day_of_month == '*'
+        assert celery_schedule.month_of_year == '*'
+        assert celery_schedule.timezone.key == 'America/New_York'
 
     def test_weekly_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -82,7 +83,7 @@ class ScheduleWeeklyTestCase(TestCase):
             first_run_time=time(9, 0),
         )
 
-        self.assertEqual(str(schedule), 'Weekly on Sun, Sat at 09:00:00')
+        assert str(schedule) == 'Weekly on Sun, Sat at 09:00:00'
 
     def test_weekly_schedule_unsorted_days(self):
         """Test that days are sorted in crontab schedule."""
@@ -95,7 +96,7 @@ class ScheduleWeeklyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.day_of_week, '1,3,5')  # Sorted
+        assert celery_schedule.day_of_week == '1,3,5'  # Sorted
 
 
 class ScheduleMonthlyTestCase(TestCase):
@@ -111,11 +112,11 @@ class ScheduleMonthlyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.minute, '0')
-        self.assertEqual(celery_schedule.hour, '8')
-        self.assertEqual(celery_schedule.day_of_month, '15')
-        self.assertEqual(celery_schedule.day_of_week, '*')
-        self.assertEqual(celery_schedule.month_of_year, '*')
+        assert celery_schedule.minute == '0'
+        assert celery_schedule.hour == '8'
+        assert celery_schedule.day_of_month == '15'
+        assert celery_schedule.day_of_week == '*'
+        assert celery_schedule.month_of_year == '*'
 
     def test_monthly_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -124,7 +125,7 @@ class ScheduleMonthlyTestCase(TestCase):
             first_run_time=time(0, 0),
         )
 
-        self.assertEqual(str(schedule), 'Monthly on day 1 at 00:00:00')
+        assert str(schedule) == 'Monthly on day 1 at 00:00:00'
 
 
 class ScheduleQuarterlyTestCase(TestCase):
@@ -138,9 +139,9 @@ class ScheduleQuarterlyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.day_of_month, '10')
+        assert celery_schedule.day_of_month == '10'
         # Jan, Apr, Jul, Oct
-        self.assertEqual(celery_schedule.month_of_year, '1,4,7,10')
+        assert celery_schedule.month_of_year == '1,4,7,10'
 
     def test_quarterly_starting_february(self):
         schedule = Schedule.objects.create(
@@ -152,7 +153,7 @@ class ScheduleQuarterlyTestCase(TestCase):
         celery_schedule = schedule.create_celery_schedule()
 
         # Feb, May, Aug, Nov
-        self.assertEqual(celery_schedule.month_of_year, '2,5,8,11')
+        assert celery_schedule.month_of_year == '2,5,8,11'
 
     def test_quarterly_starting_march(self):
         schedule = Schedule.objects.create(
@@ -164,7 +165,7 @@ class ScheduleQuarterlyTestCase(TestCase):
         celery_schedule = schedule.create_celery_schedule()
 
         # Mar, Jun, Sep, Dec
-        self.assertEqual(celery_schedule.month_of_year, '3,6,9,12')
+        assert celery_schedule.month_of_year == '3,6,9,12'
 
     def test_quarterly_starting_november(self):
         schedule = Schedule.objects.create(
@@ -176,7 +177,7 @@ class ScheduleQuarterlyTestCase(TestCase):
         celery_schedule = schedule.create_celery_schedule()
 
         # Feb, May, Aug, Nov
-        self.assertEqual(celery_schedule.month_of_year, '2,5,8,11')
+        assert celery_schedule.month_of_year == '2,5,8,11'
 
     def test_quarterly_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -185,7 +186,7 @@ class ScheduleQuarterlyTestCase(TestCase):
             first_run_time=time(15, 30),
         )
 
-        self.assertEqual(str(schedule), 'Quarterly on day 1 at 15:30:00')
+        assert str(schedule) == 'Quarterly on day 1 at 15:30:00'
 
 
 class ScheduleSemiAnnuallyTestCase(TestCase):
@@ -200,7 +201,7 @@ class ScheduleSemiAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.month_of_year, '1,7')  # Jan, Jul
+        assert celery_schedule.month_of_year == '1,7'  # Jan, Jul
 
     def test_semi_annually_starting_march(self):
         schedule = Schedule.objects.create(
@@ -211,7 +212,7 @@ class ScheduleSemiAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.month_of_year, '3,9')  # Mar, Sep
+        assert celery_schedule.month_of_year == '3,9'  # Mar, Sep
 
     def test_semi_annually_starting_august(self):
         """Test semi-annual schedule starting in August (month wrapping)."""
@@ -223,7 +224,7 @@ class ScheduleSemiAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.month_of_year, '2,8') # Feb, Aug
+        assert celery_schedule.month_of_year == '2,8' # Feb, Aug
 
     def test_semi_annually_starting_october(self):
         schedule = Schedule.objects.create(
@@ -234,7 +235,7 @@ class ScheduleSemiAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.month_of_year, '4,10')  # Apr, Oct
+        assert celery_schedule.month_of_year == '4,10'  # Apr, Oct
 
     def test_semi_annually_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -243,7 +244,7 @@ class ScheduleSemiAnnuallyTestCase(TestCase):
             first_run_time=time(18, 0),
         )
 
-        self.assertEqual(str(schedule), 'Semi-annually on day 30 at 18:00:00')
+        assert str(schedule) == 'Semi-annually on day 30 at 18:00:00'
 
 
 class ScheduleAnnuallyTestCase(TestCase):
@@ -258,8 +259,8 @@ class ScheduleAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.day_of_month, '25')
-        self.assertEqual(celery_schedule.month_of_year, '12')
+        assert celery_schedule.day_of_month == '25'
+        assert celery_schedule.month_of_year == '12'
 
     def test_annually_different_month(self):
         schedule = Schedule.objects.create(
@@ -270,8 +271,8 @@ class ScheduleAnnuallyTestCase(TestCase):
 
         celery_schedule = schedule.create_celery_schedule()
 
-        self.assertEqual(celery_schedule.day_of_month, '1')
-        self.assertEqual(celery_schedule.month_of_year, '3')
+        assert celery_schedule.day_of_month == '1'
+        assert celery_schedule.month_of_year == '3'
 
     def test_annually_schedule_str(self):
         schedule = Schedule.objects.create(
@@ -280,21 +281,21 @@ class ScheduleAnnuallyTestCase(TestCase):
             first_run_time=time(12, 0),
         )
 
-        self.assertEqual(str(schedule), 'Annually on day 4 at 12:00:00')
+        assert str(schedule) == 'Annually on day 4 at 12:00:00'
 
 
 class ScheduleEdgeCasesTestCase(TestCase):
     """Test edge cases and special scenarios."""
 
     def test_schedule_ordering(self):
-        with freeze_time('2025-01-01 10:00:00'):
+        with time_machine.travel('2025-01-01 10:00:00', tick=False):
             schedule1 = Schedule.objects.create(
                 schedule_type=Schedule.ScheduleType.INTERVAL,
                 interval_value=60,
                 interval_unit=Schedule.IntervalUnit.MINUTES,
             )
 
-        with freeze_time('2025-01-01 11:00:00'):
+        with time_machine.travel('2025-01-01 11:00:00', tick=False):
             schedule2 = Schedule.objects.create(
                 schedule_type=Schedule.ScheduleType.INTERVAL,
                 interval_value=30,
@@ -302,8 +303,8 @@ class ScheduleEdgeCasesTestCase(TestCase):
             )
 
         schedules = list(Schedule.objects.all())
-        self.assertEqual(schedules[0].id, schedule2.id)
-        self.assertEqual(schedules[1].id, schedule1.id)
+        assert schedules[0].id == schedule2.id
+        assert schedules[1].id == schedule1.id
 
     def test_multiple_schedules_reuse_celery_schedules(self):
         schedule1 = Schedule.objects.create(
@@ -324,7 +325,7 @@ class ScheduleEdgeCasesTestCase(TestCase):
         celery_schedule2 = schedule2.create_celery_schedule()
 
         # Should be the same object (get_or_create reuses existing)
-        self.assertEqual(celery_schedule1.id, celery_schedule2.id)
+        assert celery_schedule1.id == celery_schedule2.id
 
 
 class ScheduleValidationTestCase(TestCase):
@@ -336,10 +337,10 @@ class ScheduleValidationTestCase(TestCase):
             interval_unit=Schedule.IntervalUnit.MINUTES,
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('interval_value', context.exception.message_dict)
+        assert 'interval_value' in exc_info.value.message_dict
 
     def test_interval_schedule_requires_interval_unit(self):
         schedule = Schedule(
@@ -347,10 +348,10 @@ class ScheduleValidationTestCase(TestCase):
             interval_value=30,
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('interval_unit', context.exception.message_dict)
+        assert 'interval_unit' in exc_info.value.message_dict
 
     def test_monthly_schedule_requires_first_run_date(self):
         schedule = Schedule(
@@ -358,10 +359,10 @@ class ScheduleValidationTestCase(TestCase):
             first_run_time=time(10, 0),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('first_run_date', context.exception.message_dict)
+        assert 'first_run_date' in exc_info.value.message_dict
 
     def test_quarterly_schedule_requires_first_run_date(self):
         schedule = Schedule(
@@ -369,10 +370,10 @@ class ScheduleValidationTestCase(TestCase):
             first_run_time=time(10, 0),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('first_run_date', context.exception.message_dict)
+        assert 'first_run_date' in exc_info.value.message_dict
 
     def test_semi_annually_schedule_requires_first_run_date(self):
         schedule = Schedule(
@@ -380,10 +381,10 @@ class ScheduleValidationTestCase(TestCase):
             first_run_time=time(10, 0),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('first_run_date', context.exception.message_dict)
+        assert 'first_run_date' in exc_info.value.message_dict
 
     def test_annually_schedule_requires_first_run_date(self):
         schedule = Schedule(
@@ -391,10 +392,10 @@ class ScheduleValidationTestCase(TestCase):
             first_run_time=time(10, 0),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('first_run_date', context.exception.message_dict)
+        assert 'first_run_date' in exc_info.value.message_dict
 
     def test_weekly_schedule_requires_first_run_date(self):
         schedule = Schedule(
@@ -403,10 +404,10 @@ class ScheduleValidationTestCase(TestCase):
             first_run_time=time(10, 0),
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('first_run_date', context.exception.message_dict)
+        assert 'first_run_date' in exc_info.value.message_dict
 
     def test_weekly_schedule_requires_days_of_week(self):
         schedule = Schedule(
@@ -416,10 +417,10 @@ class ScheduleValidationTestCase(TestCase):
             days_of_week=[],
         )
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             schedule.full_clean()
 
-        self.assertIn('days_of_week', context.exception.message_dict)
+        assert 'days_of_week' in exc_info.value.message_dict
 
     def test_valid_interval_schedule_passes_validation(self):
         schedule = Schedule(

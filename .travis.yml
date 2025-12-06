@@ -18,20 +18,6 @@ jobs:
       script:
         - uv run --python 3.14 mypy apps/ commcare_sync/ *.py
 
-    - name: "Django Test - Python 3.10"
-      before_script:
-        - psql -c 'create database commcare_sync_test;' -U postgres
-        - cp .travis/settings_travis.py commcare_sync
-      script:
-        - uv run --python 3.10 manage.py test
-
-    - name: "Django Test - Python 3.11"
-      before_script:
-        - psql -c 'create database commcare_sync_test;' -U postgres
-        - cp .travis/settings_travis.py commcare_sync
-      script:
-        - uv run --python 3.11 manage.py test
-
     - name: "Django Test - Python 3.12"
       before_script:
         - psql -c 'create database commcare_sync_test;' -U postgres
