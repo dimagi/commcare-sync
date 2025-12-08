@@ -129,8 +129,10 @@ class ForwardingRun(BaseModel):
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
 
-    base_forwarding_config = models.ForeignKey(
-        ForwardingConfig, on_delete=models.CASCADE, related_name='runs'
+    forwarding_config = models.ForeignKey(
+        ForwardingConfig,
+        on_delete=models.CASCADE,
+        related_name='runs',
     )
     forwarding_config_version = models.ForeignKey(
         Version, on_delete=models.CASCADE, null=True
@@ -157,7 +159,7 @@ class ForwardingRun(BaseModel):
     log = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.base_forwarding_config.name} ({self.created_at})'
+        return f'{self.forwarding_config.name} ({self.created_at})'
 
     @property
     def duration(self):
