@@ -93,15 +93,17 @@ class ForwardingConfig(BaseModel):
 
     @property
     def last_run(self):
-        runs = self.runs.exclude(status=ForwardingRun.Status.QUEUED)
-        return runs.order_by('-created_at')[0] if runs.exists() else None
+        return (
+            self.runs
+            .exclude(status=ForwardingRun.Status.QUEUED)
+            .order_by('-created_at')
+            .first()
+        )
 
     def has_queued_runs(self):
-        if self.runs.exists():
-            return (
-                self.runs.order_by('-created_at')[0].status
-                == ForwardingRun.Status.QUEUED
-            )
+        last_run = self.runs.order_by('-created_at').first()
+        if last_run:
+            return last_run.status == ForwardingRun.Status.QUEUED
         return False
 
     @property
