@@ -15,7 +15,10 @@ from apps.exports.templatetags.dateformat_tags import readable_timedelta
 class ExportDatabase(BaseModel):
     name = models.CharField(max_length=100)
     connection_string = models.CharField(max_length=500)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return self.name
@@ -23,7 +26,10 @@ class ExportDatabase(BaseModel):
 
 class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
-    account = models.ForeignKey('commcare.CommCareAccount', on_delete=models.CASCADE)
+    account = models.ForeignKey(
+        'commcare.CommCareAccount',
+        on_delete=models.CASCADE,
+    )
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     batch_size = models.PositiveIntegerField(
@@ -33,7 +39,10 @@ class ExportConfigBase(BaseModel):
             'this number if your export gets stuck.'
         ),
     )
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
     time_between_runs = models.PositiveIntegerField(
         default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
         help_text=_('How regularly to sync this export, in minutes.'),
@@ -62,12 +71,13 @@ class ExportConfigBase(BaseModel):
         if self.runs.exists():
             # Each run will ingest all new data when it is available, so we only need one run at a time.
             # We can therefore ignore all but the latest queued run.
-            return self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
+            return (
+                self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
+            )
         return False
 
     def should_create_export_run(self):
-        """If a new export_run should be created and celery task spawned
-        """
+        """If a new export_run should be created and celery task spawned"""
         return self.is_scheduled_to_run() and not self.has_queued_runs()
 
     @property
@@ -90,7 +100,10 @@ class ExportConfigBase(BaseModel):
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):
-    project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        'commcare.CommCareProject',
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return f'{self.name} - {self.project}'
@@ -107,7 +120,7 @@ class MultiProjectExportConfig(ExportConfigBase):
         try:
             return MultiProjectPartialExportRun.objects.filter(
                 parent_run__base_export_config=self,
-                project=project
+                project=project,
             ).order_by('-created_at')[0]
         except IndexError:
             return None
@@ -115,9 +128,13 @@ class MultiProjectExportConfig(ExportConfigBase):
     def get_projects_display_short(self):
         project_count = self.projects.count()
         if project_count > 2:
-            return mark_safe(f'{self.projects.all()[0].domain}<br>+ {project_count - 1} more')
+            return mark_safe(
+                f'{self.projects.all()[0].domain}<br>+ {project_count - 1} more'
+            )
         else:
-            return mark_safe('<br>'.join(p.domain for p in self.projects.all()))
+            return mark_safe(
+                '<br>'.join(p.domain for p in self.projects.all())
+            )
 
 
 class ExportRunBase(BaseModel):
@@ -145,9 +162,17 @@ class ExportRunBase(BaseModel):
     )
     completed_at = models.DateTimeField(null=True, blank=True)
     triggered_from_ui = models.BooleanField(null=True, default=None)
-    triggering_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                                        on_delete=models.SET_NULL)
-    status = models.CharField(max_length=10, default=QUEUED, choices=STATUS_CHOICES)
+    triggering_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    status = models.CharField(
+        max_length=10,
+        default=QUEUED,
+        choices=STATUS_CHOICES,
+    )
     log = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -175,16 +200,38 @@ class ExportRunBase(BaseModel):
 
 
 class ExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(ExportConfig, on_delete=models.CASCADE, related_name='runs')
-    export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
+    base_export_config = models.ForeignKey(
+        ExportConfig,
+        on_delete=models.CASCADE,
+        related_name='runs',
+    )
+    export_config_version = models.ForeignKey(
+        Version,
+        on_delete=models.CASCADE,
+        null=True,
+    )
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs')
-    export_config_version = models.ForeignKey(Version, on_delete=models.CASCADE, null=True)
+    base_export_config = models.ForeignKey(
+        MultiProjectExportConfig, on_delete=models.CASCADE, related_name='runs'
+    )
+    export_config_version = models.ForeignKey(
+        Version,
+        on_delete=models.CASCADE,
+        null=True,
+    )
 
 
 class MultiProjectPartialExportRun(ExportRunBase):
-    parent_run = models.ForeignKey(MultiProjectExportRun, null=True, blank=True, on_delete=models.CASCADE,
-                                   related_name='partial_runs')
-    project = models.ForeignKey('commcare.CommCareProject', on_delete=models.CASCADE)
+    parent_run = models.ForeignKey(
+        MultiProjectExportRun,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='partial_runs',
+    )
+    project = models.ForeignKey(
+        'commcare.CommCareProject',
+        on_delete=models.CASCADE,
+    )
