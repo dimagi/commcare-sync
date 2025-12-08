@@ -73,19 +73,12 @@ class ForwardingConfig(BaseModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
-    schedule = models.ForeignKey(
+    schedule = models.OneToOneField(
         'schedules.Schedule',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         help_text=_('Scheduling configuration for automatic forwarding.'),
-    )
-    is_paused = models.BooleanField(
-        default=False,
-        help_text=_(
-            'Pausing will disable automatic forwarding. You can still '
-            'manually run it.'
-        ),
     )
 
     def __str__(self):
@@ -99,6 +92,20 @@ class ForwardingConfig(BaseModel):
             .order_by('-created_at')
             .first()
         )
+
+    @property
+    def is_paused(self):
+        """
+        Returns True if forwarding is paused.
+
+        A forwarding config is considered paused if:
+        - It has no schedule, or
+        - The schedule has no periodic_task, or
+        - The periodic_task is disabled
+        """
+        if not self.schedule or not self.schedule.periodic_task:
+            return True
+        return not self.schedule.periodic_task.enabled
 
     def has_queued_runs(self):
         last_run = self.runs.order_by('-created_at').first()
