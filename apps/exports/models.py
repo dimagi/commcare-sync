@@ -4,6 +4,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel
@@ -27,17 +28,23 @@ class ExportConfigBase(BaseModel):
     config_file = models.FileField(upload_to='export-configs/')
     batch_size = models.PositiveIntegerField(
         default=500,
-        help_text='How many cases to fetch at a time from CommCare. '
-                  'Try increasing this number if your export gets stuck.',
+        help_text=_(
+            'How many cases to fetch at a time from CommCare. Try increasing '
+            'this number if your export gets stuck.'
+        ),
     )
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     time_between_runs = models.PositiveIntegerField(
         default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
-        help_text='How regularly to sync this export, in minutes.',
+        help_text=_('How regularly to sync this export, in minutes.'),
     )
-    is_paused = models.BooleanField(default=False,
-                                    help_text='Pausing an export will disable automatic syncing. '
-                                              'You can still manually run it.')
+    is_paused = models.BooleanField(
+        default=False,
+        help_text=_(
+            'Pausing an export will disable automatic syncing. You can still '
+            'manually run it.'
+        ),
+    )
     extra_args = models.TextField(blank=True)
 
     class Meta:
@@ -128,8 +135,14 @@ class ExportRunBase(BaseModel):
         (MULTIPLE, 'multiple statuses'),  # MultiExport only
         (SKIPPED, 'skipped'),
     )
-    started_at = models.DateTimeField(null=True, blank=True, help_text="When the export actually started running. "
-                                                                       "It may have been created/queued earlier.")
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_(
+            'When the export actually started running. It may have been '
+            'created/queued earlier.'
+        ),
+    )
     completed_at = models.DateTimeField(null=True, blank=True)
     triggered_from_ui = models.BooleanField(null=True, default=None)
     triggering_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
