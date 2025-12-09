@@ -1,4 +1,5 @@
 {% extends "web/app/app_base.html" %}
+{% load i18n %}
 {% block app %}
 <section class="section app-card">
     <div class="columns">
@@ -7,32 +8,32 @@
               <img class="avatar" src="{{ user.avatar_url}}" >
               <div id='profile-upload-holder' class="has-text-centered">
                 <label id='profile-upload-label' for="profile-upload" class="custom-file-upload">
-                  Change Picture
+                  {% trans "Change Picture" %}
                 </label>
                 <input id="profile-upload" type="file" accept="image/*" />
               </div>
             </div>
         </div>
         <div class="column">
-            <h1 class="title is-size-4">My Details</h1>
+            <h1 class="title is-size-4">{% trans "My Details" %}</h1>
             <form method="post">
                 {% csrf_token %}
                 <div class="field">
-                  <label class="label">Email</label>
+                  <label class="label">{% trans "Email" %}</label>
                   <div class="control">
                     {{ form.email }}
                   </div>
                   {{ form.email.errors }}
                 </div>
                 <div class="field">
-                  <label class="label">First Name</label>
+                  <label class="label">{% trans "First Name" %}</label>
                   <div class="control">
                     {{ form.first_name }}
                   </div>
                   {{ form.first_name.errors }}
                 </div>
                 <div class="field">
-                  <label class="label">Last Name</label>
+                  <label class="label">{% trans "Last Name" %}</label>
                   <div class="control">
                     {{ form.last_name }}
                   </div>
@@ -40,7 +41,7 @@
                 </div>
                 <div class="field is-grouped">
                     <div class="control">
-                        <input class="button is-primary" type="submit" value="Save">
+                        <input class="button is-primary" type="submit" value="{% trans "Save" %}">
                     </div>
                 </div>
             </form>
@@ -52,6 +53,9 @@
 <script type="application/javascript">
   document.addEventListener('DOMContentLoaded', () => {
     const uploadUrl = '{% url "users:upload_profile_image" %}';
+    const uploadingText = '{% trans "Uploading..." %}';
+    const uploadFailedText = '{% trans "Upload failed!" %}';
+
     document.getElementById("profile-upload").onchange = function() {
       let files = document.getElementById("profile-upload").files;
       let file = files[0];
@@ -75,7 +79,7 @@
     function uploadImage(file) {
       // update UI
       let uploadlabel = document.getElementById("profile-upload-label")
-      uploadlabel.innerHTML = '<span class="icon"><i class="fa fa-refresh"></i></span><span>Uploading...</span>';
+      uploadlabel.innerHTML = '<span class="icon"><i class="fa fa-refresh"></i></span><span>' + uploadingText + '</span>';
       uploadlabel.classList.add('is-active');
       // upload to server
       let formData = new FormData();
@@ -94,7 +98,7 @@
           } else {
             response.text().then(function (errorText) {
               console.error(errorText);
-              uploadlabel.innerHTML = '<span class="icon"><i class="fa fa-times"></i></span><span>Upload failed!</span>';
+              uploadlabel.innerHTML = '<span class="icon"><i class="fa fa-times"></i></span><span>' + uploadFailedText + '</span>';
               uploadlabel.classList.add('has-text-danger');
             });
           }
