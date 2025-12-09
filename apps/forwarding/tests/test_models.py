@@ -1,12 +1,14 @@
-from datetime import timedelta
+from datetime import date, time, timedelta
 
 import pytest
 import time_machine
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django_celery_beat.models import PeriodicTask
 from reversion.models import Version
 
 from apps.exports.models import ExportDatabase
+from apps.schedules.models import Schedule
 
 from ..models import (
     ForwardingConfig,
@@ -315,3 +317,215 @@ class ForwardingDestinationTestCase:
 
         assert destination.api_username == 'admin'
         assert destination.api_password == 'secret'
+
+
+class ForwardingSchedulingTestCase:
+    """Test automatic scheduling of ForwardingConfig runs."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser', email='test@example.com', password='testpass'
+        )
+        self.database = ExportDatabase.objects.create(
+            name='Test DB',
+            connection_string='postgresql://localhost/test',
+            owner=self.user,
+        )
+        self.destination = ForwardingDestination.objects.create(
+            name='Test API',
+            api_url='https://example.com/api',
+            owner=self.user,
+        )
+
+    def test_creating_config_with_interval_schedule_creates_periodic_task(
+        self,
+    ):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+
+        config = ForwardingConfig.objects.create(
+            name='Scheduled Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+
+        # Verify that a PeriodicTask was created
+        schedule.refresh_from_db()
+        assert schedule.periodic_task is not None
+        assert isinstance(schedule.periodic_task, PeriodicTask)
+        assert schedule.periodic_task.enabled is True
+        assert (
+            schedule.periodic_task.task
+            == 'apps.forwarding.tasks.run_forwarding_task'
+        )
+        assert f'{config.id}' in schedule.periodic_task.args
+
+    def test_creating_config_with_weekly_schedule_creates_periodic_task(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.WEEKLY,
+            first_run_date=date(2025, 1, 1),
+            first_run_time=time(14, 30),
+            days_of_week=[1, 3, 5],  # Mon, Wed, Fri
+        )
+
+        ForwardingConfig.objects.create(
+            name='Weekly Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+
+        # Verify that a PeriodicTask was created
+        schedule.refresh_from_db()
+        assert schedule.periodic_task is not None
+        assert isinstance(schedule.periodic_task, PeriodicTask)
+        assert schedule.periodic_task.crontab is not None
+        assert schedule.periodic_task.interval is None
+        assert schedule.periodic_task.crontab.day_of_week == '1,3,5'
+
+    def test_creating_config_without_schedule_does_not_create_periodic_task(
+        self,
+    ):
+        config = ForwardingConfig.objects.create(
+            name='Unscheduled Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+        )
+
+        assert config.schedule is None
+
+    def test_updating_config_schedule_updates_periodic_task(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+        config = ForwardingConfig.objects.create(
+            name='Config to Update',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+        schedule.refresh_from_db()
+        initial_task_id = schedule.periodic_task.id
+
+        # Update the schedule
+        schedule.interval_value = 60
+        schedule.save()
+
+        # Trigger the signal by re-saving the config
+        config.save()
+
+        schedule.refresh_from_db()
+        # The task should be updated (same ID)
+        assert schedule.periodic_task.id == initial_task_id
+
+    def test_deleting_config_deletes_periodic_task(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+        config = ForwardingConfig.objects.create(
+            name='Config to Delete',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+        schedule.refresh_from_db()
+        task_id = schedule.periodic_task.id
+
+        # Delete the config
+        config.delete()
+
+        # Verify the PeriodicTask was deleted
+        assert not PeriodicTask.objects.filter(id=task_id).exists()
+
+    def test_is_paused_returns_true_when_no_schedule(self):
+        """Test that is_paused returns True when there's no schedule."""
+        config = ForwardingConfig.objects.create(
+            name='Unscheduled Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+        )
+
+        assert config.is_paused is True
+
+    def test_is_paused_returns_true_when_no_periodic_task(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+
+        # Create config without triggering the signal
+        config = ForwardingConfig.objects.create(
+            name='No Task Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+        )
+        # Manually set the schedule without saving
+        config.schedule = schedule
+
+        # Clear the periodic_task to simulate the condition
+        schedule.periodic_task = None
+        schedule.save()
+
+        assert config.is_paused is True
+
+    def test_is_paused_returns_false_when_periodic_task_enabled(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+        config = ForwardingConfig.objects.create(
+            name='Enabled Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+
+        assert config.is_paused is False
+
+    def test_is_paused_returns_true_when_periodic_task_disabled(self):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+        config = ForwardingConfig.objects.create(
+            name='Disabled Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT * FROM test',
+            created_by=self.user,
+            schedule=schedule,
+        )
+
+        # Disable the periodic task
+        schedule.refresh_from_db()
+        schedule.periodic_task.enabled = False
+        schedule.periodic_task.save()
+
+        assert config.is_paused is True
