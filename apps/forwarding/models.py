@@ -180,7 +180,7 @@ class ForwardingRun(BaseModel):
 
     def mark_skipped(self):
         if not self.status == ForwardingRun.Status.QUEUED:
-            raise Exception(
+            raise ValueError(
                 _('Can\'t mark a run "skipped" after it has been started.')
             )
         self.status = ForwardingRun.Status.SKIPPED
