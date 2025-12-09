@@ -197,19 +197,20 @@ class ForwardingRunTestCase(TestCase):
         assert run.duration is None
 
     def test_get_duration_display(self):
-        run = ForwardingRun.objects.create(
-            forwarding_config=self.config,
-            status=ForwardingRun.Status.COMPLETED,
-            started_at=timezone.now(),
-        )
+        with time_machine.travel('2025-01-15 10:00:00', tick=False):
+            run = ForwardingRun.objects.create(
+                forwarding_config=self.config,
+                status=ForwardingRun.Status.STARTED,
+                started_at=timezone.now(),
+            )
 
-        run.completed_at = run.started_at + timedelta(hours=2, minutes=15)
-        run.save()
+            run.completed_at = run.started_at + timedelta(hours=2, minutes=15)
+            run.status = ForwardingRun.Status.COMPLETED
+            run.save()
 
-        duration_display = run.get_duration_display()
+            duration_display = run.get_duration_display()
 
-        assert duration_display is not None
-        assert isinstance(duration_display, str)
+            assert duration_display == ' 2 hours 15 minutes'
 
     def test_mark_skipped_success(self):
         run = ForwardingRun.objects.create(
