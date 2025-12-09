@@ -8,9 +8,10 @@ from django.test import TestCase
 from django.utils import timezone
 from reversion.models import Version
 
-from apps.forwarding.models import (
+from apps.exports.models import ExportDatabase
+
+from ..models import (
     ForwardingConfig,
-    ForwardingDatabase,
     ForwardingDestination,
     ForwardingRun,
 )
@@ -23,7 +24,7 @@ class ForwardingConfigTestCase(TestCase):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ForwardingDatabase.objects.create(
+        self.database = ExportDatabase.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,
@@ -139,7 +140,7 @@ class ForwardingRunTestCase(TestCase):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ForwardingDatabase.objects.create(
+        self.database = ExportDatabase.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,
@@ -265,14 +266,14 @@ class ForwardingRunTestCase(TestCase):
         assert run.status == ForwardingRun.Status.QUEUED
 
 
-class ForwardingDatabaseTestCase(TestCase):
+class ExportDatabaseTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
 
     def test_str_method(self):
-        database = ForwardingDatabase.objects.create(
+        database = ExportDatabase.objects.create(
             name='Production DB',
             connection_string='postgresql://localhost/prod',
             owner=self.user,
