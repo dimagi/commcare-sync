@@ -1,22 +1,22 @@
 {% extends "web/base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block body %}
 <div id="fullpage-form-wrapper">
     <div id="fullpage-form">
-        <h1 class="title is-size-4">Sign Up</h1>
+        <h1 class="title is-size-4">{% trans "Sign Up" %}</h1>
         <form method="post">
             {% csrf_token %}
             {{ form.non_field_errors }}
             <div class="field">
-              <label class="label">Email</label>
+              <label class="label">{% trans "Email" %}</label>
               <div class="control">
                 {{ form.email }}
               </div>
               {{ form.email.errors }}
             </div>
             <div class="field">
-              <label class="label">Password</label>
+              <label class="label">{% trans "Password" %}</label>
               <div class="control">
                 {{ form.password1 }}
               </div>
@@ -24,14 +24,14 @@
             </div>
 
 
-            <input class="button is-primary is-fullwidth" type="submit" value="Sign Up">
+            <input class="button is-primary is-fullwidth" type="submit" value="{% trans "Sign Up" %}">
 
 
             <hr>
             <div class="field has-text-centered has-text-grey">
-                Already have account?
+                {% trans "Already have account?" %}
                 <a class="muted-link" href="{% url 'account_login' %}">
-                    Go to sign in.
+                    {% trans "Go to Sign In." %}
                 </a>
             </div>
         </form>
