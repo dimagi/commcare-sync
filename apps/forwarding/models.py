@@ -7,20 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel
+from apps.exports.models import ExportDatabase
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
-
-
-class ForwardingDatabase(BaseModel):
-    """Database where queries are executed (source)."""
-
-    name = models.CharField(max_length=100)
-    connection_string = models.CharField(max_length=500)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return self.name
 
 
 class ForwardingDestination(BaseModel):
@@ -53,7 +41,7 @@ class ForwardingConfig(BaseModel):
     """Configuration for a data forwarding job."""
 
     name = models.CharField(max_length=100)
-    database = models.ForeignKey(ForwardingDatabase, on_delete=models.CASCADE)
+    database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
     destination = models.ForeignKey(
         ForwardingDestination, on_delete=models.CASCADE
     )
