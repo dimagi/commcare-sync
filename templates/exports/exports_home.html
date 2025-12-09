@@ -1,23 +1,24 @@
 {% extends "web/app/app_base.html" %}
+{% load i18n %}
 {% block app %}
 {% load exports_tags %}
 {% load humanize %}
 <section class="section app-card">
-  <h1 class="title">Export Configurations</h1>
+  <h1 class="title">{% trans "Export Configurations" %}</h1>
 {% if exports.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_export_config' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
     </span>
-    <span>New Export</span>
+    <span>{% trans "New Export" %}</span>
   </a>
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
-      <th>Export</th>
-      <th>Project</th>
-      <th>Created By</th>
-      <th>Last Run</th>
+      <th>{% trans "Export" %}</th>
+      <th>{% trans "Project" %}</th>
+      <th>{% trans "Created By" %}</th>
+      <th>{% trans "Last Run" %}</th>
     </tr>
     </thead>
     <tbody>
@@ -26,11 +27,11 @@
         <td>
           <a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a>
           {% if export.is_paused %}
-            <i title="This export is paused." class="fa fa-pause-circle has-text-grey-light"></i>
+            <i title="{% trans 'This export is paused.' %}" class="fa fa-pause-circle has-text-grey-light"></i>
           {% endif %}
         </td>
         <td>{{ export.project.domain }}</td>
-        <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
+        <td>{% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
         <td>{{ export.last_run.status|to_status_icon }} {{ export.last_run.created_at|naturaltime }}</td>
       </tr>
     {% endfor %}
@@ -38,32 +39,32 @@
   </table>
 {% else %}
   <section class="notification is-warning is-light">
-    No export configurations found!
+    {% trans "No export configurations found!" %}
   </section>
   <a class="button is-primary " href="{% url 'exports:create_export_config' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
     </span>
-    <span>Add Your First Export</span>
+    <span>{% trans "Add Your First Export" %}</span>
   </a>
 {% endif  %}
 </section>
 {% if multi_project_exports.exists %}
 <section class="section app-card">
-  <h1 class="title">Multi-Project Export Configurations</h1>
+  <h1 class="title">{% trans "Multi-Project Export Configurations" %}</h1>
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_multi_export_config' %}">
     <span class="icon">
       <i class="fa fa-plus"></i>
     </span>
-    <span>New Multi-Project Export</span>
+    <span>{% trans "New Multi-Project Export" %}</span>
   </a>
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
-      <th>Export</th>
-      <th>Projects</th>
-      <th>Created By</th>
-      <th>Last Run</th>
+      <th>{% trans "Export" %}</th>
+      <th>{% trans "Projects" %}</th>
+      <th>{% trans "Created By" %}</th>
+      <th>{% trans "Last Run" %}</th>
     </tr>
     </thead>
     <tbody>
@@ -72,11 +73,11 @@
         <td>
           <a href="{% url 'exports:multi_export_details' export.id %}">{{ export.name }}</a>
           {% if export.is_paused %}
-            <i title="paused" class="fa fa-pause-circle"></i>
+            <i title="{% trans 'paused' %}" class="fa fa-pause-circle"></i>
           {% endif %}
         </td>
         <td>{{ export.get_projects_display_short }}</td>
-        <td>{% if request.user == export.created_by %}You{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
+        <td>{% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.get_display_name }}{% endif %}</td>
         <td>{{ export.last_run.status|to_status_icon }} {{ export.last_run.created_at|naturaltime }}</td>
       </tr>
     {% endfor %}

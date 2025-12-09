@@ -1,22 +1,23 @@
+{% load i18n %}
 {% load humanize %}
 <section class="section app-card">
   <div class="level">
     <!-- Left side -->
     <div class="level-left">
-      <h1 class="title">{{ export.name }} - Details</h1>
+      <h1 class="title">{% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}</h1>
     </div>
     <div class="level-right">
       <a class="button is-danger is-rounded is-small is-outlined" href="{% url 'exports:delete_multi_export_config' export.id %}">
         <span class="icon">
           <i class="fa fa-times"></i>
         </span>
-        <span>Delete</span>
+        <span>{% trans "Delete" %}</span>
       </a>
     </div>
   </div>
   <div class="columns">
     <div class="column">
-      <span class="heading">Project Spaces</span>
+      <span class="heading">{% trans "Project Spaces" %}</span>
       <h2>
         {% for project in export.projects.all %}
           <a href="{{ project.url }}" target="_blank" style="white-space: nowrap;">{{ project.domain }}
@@ -27,25 +28,25 @@
       </h2>
     </div>
     <div class="column">
-      <span class="heading">Account</span>
+      <span class="heading">{% trans "Account" %}</span>
       <h2>
         {{ export.account.username }}
       </h2>
     </div>
     <div class="column">
-      <span class="heading">Database</span>
+      <span class="heading">{% trans "Database" %}</span>
       <h2>
         {{ export.database.name }}
       </h2>
     </div>
     <div class="column">
-      <span class="heading">Created By</span>
+      <span class="heading">{% trans "Created By" %}</span>
       <h2>
-        {% if request.user == export.created_by %}You{% else %}{{ export.created_by.username}}{% endif %}
+        {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username}}{% endif %}
       </h2>
     </div>
     <div class="column">
-      <span class="heading">Last Modified</span>
+      <span class="heading">{% trans "Last Modified" %}</span>
       <h2>
         {{ export.updated_at|naturaltime }}
       </h2>
@@ -57,20 +58,20 @@
       <span class="icon">
         <i class="fa fa-arrow-left"></i>
       </span>
-      <span>Back</span>
+      <span>{% trans "Back" %}</span>
     </a>
   {% endif %}
     <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_multi_export_file' export.id %}">
       <span class="icon">
         <i class="fa fa-download"></i>
       </span>
-      <span>Download Config File</span>
+      <span>{% trans "Download Config File" %}</span>
     </a>
     <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
       <span class="icon">
         <i class="fa fa-edit"></i>
       </span>
-      <span>Edit</span>
+      <span>{% trans "Edit" %}</span>
     </a>
   </div>
 </section>
