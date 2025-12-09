@@ -230,7 +230,7 @@ class ForwardingRunTestCase(TestCase):
             status=ForwardingRun.Status.STARTED,
         )
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             run.mark_skipped()
 
         assert 'skipped' in str(exc_info.value)
@@ -241,7 +241,7 @@ class ForwardingRunTestCase(TestCase):
             status=ForwardingRun.Status.COMPLETED,
         )
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             run.mark_skipped()
 
         assert 'skipped' in str(exc_info.value)
@@ -252,7 +252,7 @@ class ForwardingRunTestCase(TestCase):
             status=ForwardingRun.Status.FAILED,
         )
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             run.mark_skipped()
 
         assert 'skipped' in str(exc_info.value)
