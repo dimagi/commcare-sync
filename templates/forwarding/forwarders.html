@@ -1,0 +1,60 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+{% load exports_tags %}
+{% load humanize %}
+<section class="section app-card">
+  <h1 class="title">{% trans "Forwarding Configurations" %}</h1>
+{% if forwarders.exists %}
+  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'forwarding:create_forwarding_config' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>{% trans "New Forwarder" %}</span>
+  </a>
+  <table class="table is-striped is-fullwidth">
+    <thead>
+    <tr>
+      <th>{% trans "Forwarder" %}</th>
+      <th>{% trans "Database" %}</th>
+      <th>{% trans "Destination" %}</th>
+      <th>{% trans "Created By" %}</th>
+      <th>{% trans "Last Run" %}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for forwarder in forwarders %}
+      <tr>
+        <td>
+          <a href="{% url 'forwarding:forwarding_details' forwarder.id %}">{{ forwarder.name }}</a>
+          {% if forwarder.is_paused %}
+            <i title="{% trans 'This forwarder is paused.' %}" class="fa fa-pause-circle has-text-grey-light"></i>
+          {% endif %}
+        </td>
+        <td>{{ forwarder.database.name }}</td>
+        <td>{{ forwarder.destination.name }}</td>
+        <td>{% if request.user == forwarder.created_by %}{% trans "You" %}{% else %}{{ forwarder.created_by.get_display_name }}{% endif %}</td>
+        <td>
+          {% if forwarder.last_run %}
+            {{ forwarder.last_run.status|to_status_icon }} {{ forwarder.last_run.created_at|naturaltime }}
+          {% else %}
+            <span class="has-text-grey-light">{% trans "Never" %}</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <section class="notification is-warning is-light">
+    {% trans "No forwarding configurations found!" %}
+  </section>
+  <a class="button is-primary " href="{% url 'forwarding:create_forwarding_config' %}">
+    <span class="icon">
+      <i class="fa fa-plus"></i>
+    </span>
+    <span>{% trans "Add Your First Forwarder" %}</span>
+  </a>
+{% endif  %}
+</section>
+{% endblock app %}

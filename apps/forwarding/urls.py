@@ -6,6 +6,11 @@ app_name = 'forwarding'
 
 urlpatterns = [
     path(
+        '',
+        views.forwarders,
+        name='forwarders',
+    ),
+    path(
         'create/',
         views.create_forwarding_config,
         name='create_forwarding_config',

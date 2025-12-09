@@ -12,7 +12,21 @@ from .forms import (
     CreateForwardingDestinationForm,
     EditForwardingDestinationForm,
 )
-from .models import ForwardingDestination
+from .models import ForwardingConfig, ForwardingDestination
+
+
+@login_required
+def forwarders(request):
+    """List all forwarding configurations."""
+    fwd_configs = ForwardingConfig.objects.order_by('-updated_at')
+    return render(
+        request,
+        'forwarding/forwarders.html',
+        {
+            'active_tab': 'forwarders',
+            'forwarders': fwd_configs,
+        },
+    )
 
 
 @login_required
