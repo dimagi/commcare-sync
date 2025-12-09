@@ -1,12 +1,13 @@
 {% extends "web/app/app_base.html" %}
+{% load i18n %}
 {% block app %}
 <section class="section app-card">
-  <h1 class="title">Add Project</h1>
+  <h1 class="title">{% trans "Add Project" %}</h1>
   <form method="post" enctype="multipart/form-data">
     {% include 'commcare/partials/project_form.html' %}
     <div class="field is-grouped">
         <div class="control">
-            <input class="button is-primary" type="submit" value="Add Project">
+            <input class="button is-primary" type="submit" value="{% trans "Add Project" %}">
         </div>
     </div>
   </form>

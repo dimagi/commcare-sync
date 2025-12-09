@@ -1,5 +1,6 @@
+{% load i18n %}
 <div class="field">
-  <label class="label">Server</label>
+  <label class="label">{% trans "Server" %}</label>
   {% if form.server.field.queryset.count == 1 %}
     {% with form.server.field.queryset.0 as default_server %}
       <input class="input is-static" type="text" value="{{ default_server }}" readonly />
