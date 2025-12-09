@@ -1,7 +1,6 @@
 import json
 import os
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -10,6 +9,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from reversion.models import Version
 
+from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
 from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
 from .tasks import run_export_task, run_multi_project_export_task
@@ -134,14 +134,14 @@ def delete_multi_export_config(request, export_id):
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     runs = export.runs
-    hide_skipped = _get_hide_skipped_from_request(request)
+    hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
 
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
     })
 
@@ -174,14 +174,14 @@ def _download_config_file(export_file_field):
 def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     runs = export.runs
-    hide_skipped = _get_hide_skipped_from_request(request)
+    hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
 
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
-        'runs': runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
 
     })
@@ -196,7 +196,7 @@ def multi_export_run_details(request, export_id, run_id):
         'active_tab': 'exports',
         'export_run': export_run,
         'export': export_run.base_export_config,
-        'runs': export_run.partial_runs.order_by('-created_at')[:_get_ui_page_size(request)],
+        'runs': export_run.partial_runs.order_by('-created_at')[:get_ui_page_size(request)],
     })
 
 
@@ -282,19 +282,3 @@ def edit_database(request, database_id):
         'active_tab': 'create_export',
         'form': form,
     })
-
-
-def _get_ui_page_size(request):
-    limit = settings.COMMCARE_SYNC_UI_PAGE_SIZE
-    if 'limit' in request.GET:
-        try:
-            limit = int(request.GET['limit'])
-        except ValueError:
-            pass
-    return limit
-
-
-def _get_hide_skipped_from_request(request):
-    if 'hide_skipped' in request.GET:
-        return request.GET['hide_skipped'] == 'y'
-    return False

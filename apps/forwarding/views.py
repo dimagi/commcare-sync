@@ -6,13 +6,14 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from apps.schedules.forms import ScheduleForm
+from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
 
 from .forms import (
     ForwardingConfigForm,
     CreateForwardingDestinationForm,
     EditForwardingDestinationForm,
 )
-from .models import ForwardingConfig, ForwardingDestination
+from .models import ForwardingConfig, ForwardingDestination, ForwardingRun
 
 
 @login_required
@@ -54,7 +55,7 @@ def create_forwarding_config(request):
                 ),
             )
             return HttpResponseRedirect(
-                reverse('forwarding:forwarding_details', args=[config.id])
+                reverse('forwarding:forwarder_details', args=[config.id])
             )
     else:
         config_form = ForwardingConfigForm()
@@ -139,5 +140,28 @@ def edit_destination(request, destination_id):
             'active_tab': 'destinations',
             'form': form,
             'destination': destination,
+        },
+    )
+
+
+@login_required
+def forwarder_details(request, forwarder_id):
+    """Display details for a forwarding configuration."""
+    forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
+    runs = forwarder.runs
+    hide_skipped = get_hide_skipped_from_request(request)
+    if hide_skipped:
+        runs = runs.exclude(
+            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
+        )
+
+    return render(
+        request,
+        'forwarding/forwarder_details.html',
+        {
+            'active_tab': 'forwarders',
+            'forwarder': forwarder,
+            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'hide_skipped': hide_skipped,
         },
     )

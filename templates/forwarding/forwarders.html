@@ -26,7 +26,7 @@
     {% for forwarder in forwarders %}
       <tr>
         <td>
-          <a href="{% url 'forwarding:forwarding_details' forwarder.id %}">{{ forwarder.name }}</a>
+          <a href="{% url 'forwarding:forwarder_details' forwarder.id %}">{{ forwarder.name }}</a>
           {% if forwarder.is_paused %}
             <i title="{% trans 'This forwarder is paused.' %}" class="fa fa-pause-circle has-text-grey-light"></i>
           {% endif %}

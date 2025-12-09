@@ -30,10 +30,9 @@ urlpatterns = [
         views.edit_destination,
         name='edit_destination',
     ),
-    # Placeholder for forwarding_details - will be implemented later
     path(
-        '<int:forwarding_id>/',
-        lambda request, forwarding_id: None,
-        name='forwarding_details',
+        '<int:forwarder_id>/',
+        views.forwarder_details,
+        name='forwarder_details',
     ),
 ]

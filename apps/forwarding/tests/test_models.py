@@ -1,5 +1,4 @@
 from datetime import timedelta
-from unittest import skip
 
 import pytest
 import time_machine
@@ -117,7 +116,6 @@ class ForwardingConfigTestCase:
         assert version is not None
         assert isinstance(version, Version)
 
-    @skip('Forwarding URLs not yet configured')
     def test_details_url(self):
         expected_url = f'/forwarding/{self.config.id}/'
         assert self.config.details_url == expected_url

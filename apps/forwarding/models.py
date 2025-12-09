@@ -107,7 +107,7 @@ class ForwardingConfig(BaseModel):
 
     @property
     def details_url(self):
-        return reverse('forwarding:forwarding_details', args=[self.id])
+        return reverse('forwarding:forwarder_details', args=[self.id])
 
     def save(self, **kwargs):
         with reversion.create_revision():
