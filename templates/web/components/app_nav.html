@@ -45,6 +45,16 @@
       </a>
     </li>
   </ul>
+  <p class="menu-label is-hidden-tablet-only">
+    {% trans "Data Forwarding" %}
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'forwarding:create_forwarding_config' %}" {% if active_tab == 'create_forwarder' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "New Forwarder" %}</span>
+      </a>
+    </li>
+  </ul>
   <hr/>
   <p class="menu-label is-hidden-tablet-only">
     {% trans "My Account" %}
