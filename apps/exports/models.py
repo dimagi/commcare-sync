@@ -61,19 +61,23 @@ class ExportConfigBase(BaseModel):
 
     @property
     def last_run(self):
-        runs = self.runs.exclude(status=ExportRun.QUEUED)
-        return runs.order_by('-created_at')[0] if runs.exists() else None
+        return (
+            self.runs
+            .exclude(status=ExportRun.QUEUED)
+            .order_by('-created_at')
+            .first()
+        )
 
     def is_scheduled_to_run(self):
         return export_is_scheduled_to_run(self, self.last_run)
 
     def has_queued_runs(self):
-        if self.runs.exists():
-            # Each run will ingest all new data when it is available, so we only need one run at a time.
-            # We can therefore ignore all but the latest queued run.
-            return (
-                self.runs.order_by('-created_at')[0].status == ExportRun.QUEUED
-            )
+        # Each run will ingest all new data when it is available, so we
+        # only need one run at a time. We can therefore ignore all but
+        # the latest queued run.
+        last_run = self.runs.order_by('-created_at').first()
+        if last_run:
+            return last_run.status == ExportRun.QUEUED
         return False
 
     def should_create_export_run(self):
@@ -193,7 +197,9 @@ class ExportRunBase(BaseModel):
 
     def mark_skipped(self):
         if not self.status == ExportRun.QUEUED:
-            raise Exception("Can't mark a run that has been started skipped!")
+            raise ValueError(
+                _('Can\'t mark a run "skipped" after it has been started.')
+            )
         self.status = ExportRun.SKIPPED
         self.completed_at = timezone.now()
         self.save()
