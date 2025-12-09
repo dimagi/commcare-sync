@@ -1,0 +1,44 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+<section class="section app-card">
+  <h1 class="title">{% trans "Create Destination" %}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="field">
+      <label class="label">{% trans "Name" %}</label>
+      <div class="control">
+        {{ form.name }}
+      </div>
+      {{ form.name.errors }}
+    </div>
+    <div class="field">
+      <label class="label">{% trans "API URL" %}</label>
+      <div class="control">
+        {{ form.api_url }}
+      </div>
+      {{ form.api_url.errors }}
+    </div>
+    <div class="field">
+      <label class="label">{% trans "API Username" %}</label>
+      <div class="control">
+        {{ form.api_username }}
+      </div>
+      {{ form.api_username.errors }}
+    </div>
+    <div class="field">
+      <label class="label">{% trans "API Password" %}</label>
+      <div class="control">
+        {{ form.api_password }}
+      </div>
+      {{ form.api_password.errors }}
+    </div>
+    <div class="field is-grouped">
+        <div class="control">
+            <input class="button is-primary" type="submit" value="{% trans 'Create' %}">
+        </div>
+    </div>
+  </form>
+</section>
+{% endblock app %}

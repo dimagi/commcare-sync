@@ -54,6 +54,11 @@
         <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "New Forwarder" %}</span>
       </a>
     </li>
+    <li>
+      <a href="{% url 'forwarding:destinations' %}" {% if active_tab == 'destinations' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-paper-plane"></i></span><span class="is-hidden-tablet-only">{% trans "Destinations" %}</span>
+      </a>
+    </li>
   </ul>
   <hr/>
   <p class="menu-label is-hidden-tablet-only">
