@@ -118,6 +118,32 @@ def edit_forwarding_config(request, forwarder_id):
 
 
 @login_required
+def delete_forwarding_config(request, forwarder_id):
+    """Delete an existing forwarding configuration."""
+    forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
+
+    if request.method == 'POST':
+        forwarder_name = forwarder.name
+        forwarder.delete()
+        messages.success(
+            request,
+            _('Forwarding configuration "{}" was successfully deleted.').format(
+                forwarder_name
+            ),
+        )
+        return HttpResponseRedirect(reverse('forwarding:forwarders'))
+
+    return render(
+        request,
+        'forwarding/delete_forwarding.html',
+        {
+            'active_tab': 'forwarders',
+            'forwarder': forwarder,
+        },
+    )
+
+
+@login_required
 def destinations(request):
     """List all forwarding destinations."""
     destinations = ForwardingDestination.objects.order_by('name')
