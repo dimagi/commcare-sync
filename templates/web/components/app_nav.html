@@ -1,67 +1,68 @@
+{% load i18n %}
 <aside class="menu">
   <p class="menu-label is-hidden-tablet-only">
-    CommCare Management
+    {% trans "CommCare Management" %}
   </p>
   <ul class="menu-list">
     <li>
       <a href="{% url 'commcare:home' %}" {% if active_tab == 'commcare' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fcc fcc-flower"></i></span><span class="is-hidden-tablet-only">CommCare Setup</span>
+        <span class="icon"><i class="fcc fcc-flower"></i></span><span class="is-hidden-tablet-only">{% trans "CommCare Setup" %}</span>
       </a>
     </li>
     <li>
       <a href="{% url 'commcare:create_project' %}" {% if active_tab == 'create_project' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">Add Project</span>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "Add Project" %}</span>
       </a>
     </li>
     <li>
       <a href="{% url 'commcare:create_account' %}" {% if active_tab == 'create_account' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-user-plus"></i></span><span class="is-hidden-tablet-only">Add Account</span>
+        <span class="icon"><i class="fa fa-user-plus"></i></span><span class="is-hidden-tablet-only">{% trans "Add Account" %}</span>
       </a>
     </li>
   </ul>
   <p class="menu-label is-hidden-tablet-only">
-    Export Management
+    {% trans "Export Management" %}
   </p>
   <ul class="menu-list">
     <li>
       <a href="{% url 'exports:home' %}" {% if active_tab == 'exports' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-home"></i></span><span class="is-hidden-tablet-only">Exports</span>
+        <span class="icon"><i class="fa fa-home"></i></span><span class="is-hidden-tablet-only">{% trans "Exports" %}</span>
       </a>
     </li>
     <li>
       <a href="{% url 'exports:create_export_config' %}" {% if active_tab == 'create_export' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">New Export</span>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "New Export" %}</span>
       </a>
     </li>
     <li>
       <a href="{% url 'exports:create_multi_export_config' %}" {% if active_tab == 'create_multi_export' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">Multi-Project Export</span>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "Multi-Project Export" %}</span>
       </a>
     </li>
     <li>
       <a href="{% url 'exports:databases' %}" {% if active_tab == 'databases' %}class="is-active"{% endif %}>
-        <span class="icon"><i class="fa fa-database"></i></span><span class="is-hidden-tablet-only">Databases</span>
+        <span class="icon"><i class="fa fa-database"></i></span><span class="is-hidden-tablet-only">{% trans "Databases" %}</span>
       </a>
     </li>
   </ul>
   <hr/>
   <p class="menu-label is-hidden-tablet-only">
-    My Account
+    {% trans "My Account" %}
   </p>
   <ul class="menu-list">
     <li>
         <a href="{% url 'users:user_profile' %}" {% if active_tab == 'profile' %}class="is-active"{% endif %}>
-            <span class="icon"><i class="fa fa-user"></i></span><span class="is-hidden-tablet-only">Profile</span>
+            <span class="icon"><i class="fa fa-user"></i></span><span class="is-hidden-tablet-only">{% trans "Profile" %}</span>
         </a>
     </li>
     <li>
         <a href="{% url 'account_change_password' %}" {% if 'accounts/password/change' in request.path %}class="is-active"{% endif %}>
-            <span class="icon"><i class="fa fa-unlock-alt"></i></span><span class="is-hidden-tablet-only">Change Password</span>
+            <span class="icon"><i class="fa fa-unlock-alt"></i></span><span class="is-hidden-tablet-only">{% trans "Change Password" %}</span>
         </a>
     </li>
     <li>
         <a href="{% url 'account_logout' %}" {% if 'accounts/logout' in request.path %}class="is-active"{% endif %}>
-            <span class="icon"><i class="fa fa-sign-out"></i></span><span class="is-hidden-tablet-only">Sign out</span>
+            <span class="icon"><i class="fa fa-sign-out"></i></span><span class="is-hidden-tablet-only">{% trans "Sign out" %}</span>
         </a>
     </li>
   </ul>

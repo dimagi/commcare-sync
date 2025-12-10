@@ -1,8 +1,9 @@
+{% load i18n %}
 {% csrf_token %}
 {{ form.non_field_errors }}
 {% include 'commcare/partials/commcare_server_field.html' %}
 <div class="field">
-  <label class="label">Username</label>
+  <label class="label">{% trans "Username" %}</label>
   <div class="control">
     {{ form.username }}
   </div>
@@ -10,7 +11,7 @@
   {{ form.username.errors }}
 </div>
 <div class="field">
-  <label class="label">API Key</label>
+  <label class="label">{% trans "API Key" %}</label>
   <div class="control">
     {{ form.api_key }}
   </div>

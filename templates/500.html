@@ -1,15 +1,15 @@
 {% extends "web/base.html" %}
-{% load static %}
+{% load static i18n %}
 {% block body %}
 <section class="section container">
     <div class="columns columns-reversed">
         <div class="column">
-            <img src="{% static 'images/undraw/undraw_alert.svg' %}" alt="Uh-Oh">
+            <img src="{% static 'images/undraw/undraw_alert.svg' %}" alt="{% trans 'Uh-Oh' %}">
         </div>
         <div id="tagline" class="column">
-            <h1 class="title is-size-2">Shucks. That's an error.</h1>
+            <h1 class="title is-size-2">{% trans "Shucks. That's an error." %}</h1>
             <h2 class="subtitle is-size-4">
-                Please try again, and if you continue to get this message, contact support.
+                {% trans "Please try again, and if you continue to get this message, contact Support." %}
             </h2>
         </div>
     </div>

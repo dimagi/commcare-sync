@@ -1,27 +1,28 @@
+{% load i18n %}
 <section class="section app-card">
-  <h1 class="title">Run History</h1>
+  <h1 class="title">{% trans "Run History" %}</h1>
   <div class="level">
     <div class="level-left">
       <button class="button is-primary is-rounded is-small" id="run-export-button">
         <span class="icon">
           <i class="fa fa-play"></i>
         </span>
-        <span>Run Now</span>
+        <span>{% trans "Run Now" %}</span>
       </button>
       <label class="checkbox mx-2 my-1">
         <input type="checkbox" id="force-sync-checkbox">
-        Force sync of all data
+        {% trans "Force sync of all data" %}
       </label>
     </div>
     <div class="level-right">
-      <label>Filter</label>
+      <label>{% trans "Filter" %}</label>
       {% if hide_skipped %}
         <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=n">
-          <span>Show Queued and Skipped Items</span>
+          <span>{% trans "Show Queued and Skipped Items" %}</span>
         </a>
       {% else %}
       <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=y">
-        <span>Hide Queued and Skipped Items</span>
+        <span>{% trans "Hide Queued and Skipped Items" %}</span>
       </a>
       {% endif %}
     </div>
@@ -30,7 +31,7 @@
     <div class='progress-wrapper'>
       <progress id="progress-bar" class="progress is-small is-primary" max="100"></progress>
     </div>
-    <div id="progress-bar-message" style="color: grey;">Waiting for task to start...</div>
+    <div id="progress-bar-message" style="color: grey;">{% trans "Waiting for task to start..." %}</div>
   </div>
 {% include 'exports/partials/run_history_table.html' %}
 </section>

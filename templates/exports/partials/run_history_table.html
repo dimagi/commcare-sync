@@ -1,20 +1,21 @@
+{% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
 <table id="export-run-table" class="table is-fullwidth my-2">
   <thead>
   <tr>
-    <th>Queued</th>
-    <th>Started</th>
+    <th>{% trans "Queued" %}</th>
+    <th>{% trans "Started" %}</th>
 {% if is_partial_list  %}
-    <th>Project</th>
+    <th>{% trans "Project" %}</th>
 {% endif  %}
-    <th>Duration</th>
-    <th>Status</th>
+    <th>{% trans "Duration" %}</th>
+    <th>{% trans "Status" %}</th>
   {% if not is_multi_project %}
-    <th>Log</th>
+    <th>{% trans "Log" %}</th>
   {% endif %}
   {% if not is_partial_list %}
-    <th>Config File</th>
+    <th>{% trans "Config File" %}</th>
   {% endif %}
   </tr>
   </thead>
@@ -24,11 +25,11 @@
       <td>
       <span class="icon" >
       {% if export_run.triggered_from_ui %}
-        <i class="fa fa-user" title="Triggered from UI by {{ export_run.triggering_user|default:'unknown'}}"></i>
+        <i class="fa fa-user" title="{% blocktrans with user=export_run.triggering_user|default:'unknown' %}Triggered from UI by {{ user }}{% endblocktrans %}"></i>
       {% elif export_run.triggered_from_ui == False %}
-        <i class="fa fa-clock-o has-text-grey-light" title="Scheduled Run"></i>
+        <i class="fa fa-clock-o has-text-grey-light" title="{% trans 'Scheduled Run' %}"></i>
       {% else %}
-        <i class="fa fa-question has-text-grey-light" title="Unknown"></i>
+        <i class="fa fa-question has-text-grey-light" title="{% trans 'Unknown' %}"></i>
       {% endif %}
       </span>
 
@@ -43,7 +44,7 @@
       {% if not is_multi_project %}
       <td>
         <a class="log-trigger" data-open-status="closed" data-export-run-id="{{ export_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
-          View log
+          {% trans "View log" %}
         </a>
       </td>
       {% endif %}
@@ -57,7 +58,7 @@
         </span>
         </a>
         {% else %}
-          <span class="has-text-grey">Not available</span>
+          <span class="has-text-grey">{% trans "Not available" %}</span>
         {% endif %}
       </td>
       {% endif %}
@@ -66,7 +67,7 @@
     {% if not is_multi_project %}
     <tr class="export-log my-1" id='export-log-{{ export_run.id }}' style="display: none;" >
       <td colspan="{% if is_multi_project  %}7{% else %}6{% endif %}">
-        <pre class="wrapped">{{ export_run.log |default_if_none:"No logs yet…" }}</pre>
+        <pre class="wrapped">{% if export_run.log %}{{ export_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre>
       </td>
     </tr>
     {% endif %}

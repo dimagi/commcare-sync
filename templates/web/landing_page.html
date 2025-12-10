@@ -1,8 +1,9 @@
 {% extends "web/base.html" %}
+{% load i18n %}
 {% load static %}
 {% block body %}
 <section class="section container">
-    <img class="my-2" src="{% static 'images/commcare-logo.png' %}" alt="CommCare Logo" style="max-width: 600px">
+    <img class="my-2" src="{% static 'images/commcare-logo.png' %}" alt="{% trans 'CommCare Logo' %}" style="max-width: 600px">
     <div>
         <h1 class="title is-size-2">{{project_meta.NAME}}</h1>
         <h2 class="subtitle is-size-4">
@@ -10,10 +11,10 @@
         </h2>
         <p class="buttons">
             <a class="button is-primary is-large" href="{% url 'account_signup' %}">
-                Create account
+                {% trans "Create account" %}
             </a>
             <a class="button is-primary is-large is-outlined" href="{% url 'account_login' %}">
-                Sign in
+                {% trans "Sign in" %}
             </a>
         </p>
     </div>
