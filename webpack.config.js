@@ -1,5 +1,6 @@
 const path = require('path');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -32,5 +33,12 @@ module.exports = {
   },
   plugins: [
     new ExtractTextPlugin('css/site.css'),
-  ]
+  ],
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        cache: false, // Avoid MD4 hashing unsupported in newer Node builds
+      }),
+    ],
+  },
 };
