@@ -16,6 +16,11 @@ urlpatterns = [
         name='create_forwarding_config',
     ),
     path(
+        '<int:forwarder_id>/edit/',
+        views.edit_forwarding_config,
+        name='edit_forwarding_config',
+    ),
+    path(
         'destinations/',
         views.destinations,
         name='destinations',

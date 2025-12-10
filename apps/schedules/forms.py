@@ -7,6 +7,22 @@ from .models import Schedule
 class ScheduleForm(forms.ModelForm):
     """Form for creating and editing Schedule objects."""
 
+    # Override days_of_week to use TypedMultipleChoiceField so checkboxes work properly
+    days_of_week = forms.TypedMultipleChoiceField(
+        required=False,
+        coerce=int,
+        choices=[
+            (0, _('Sunday')),
+            (1, _('Monday')),
+            (2, _('Tuesday')),
+            (3, _('Wednesday')),
+            (4, _('Thursday')),
+            (5, _('Friday')),
+            (6, _('Saturday')),
+        ],
+        widget=forms.CheckboxSelectMultiple(),
+    )
+
     class Meta:
         model = Schedule
         fields = (
@@ -21,17 +37,6 @@ class ScheduleForm(forms.ModelForm):
         widgets = {
             'first_run_date': forms.DateInput(attrs={'type': 'date'}),
             'first_run_time': forms.TimeInput(attrs={'type': 'time'}),
-            'days_of_week': forms.CheckboxSelectMultiple(
-                choices=[
-                    (0, _('Sunday')),
-                    (1, _('Monday')),
-                    (2, _('Tuesday')),
-                    (3, _('Wednesday')),
-                    (4, _('Thursday')),
-                    (5, _('Friday')),
-                    (6, _('Saturday')),
-                ]
-            ),
         }
 
     def __init__(self, *args, **kwargs):

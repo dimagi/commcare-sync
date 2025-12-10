@@ -73,6 +73,51 @@ def create_forwarding_config(request):
 
 
 @login_required
+def edit_forwarding_config(request, forwarder_id):
+    """Edit an existing forwarding configuration."""
+    forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
+
+    if request.method == 'POST':
+        config_form = ForwardingConfigForm(request.POST, instance=forwarder)
+        schedule_form = ScheduleForm(
+            request.POST,
+            instance=forwarder.schedule if forwarder.schedule else None,
+        )
+
+        if config_form.is_valid() and schedule_form.is_valid():
+            schedule = schedule_form.save()
+            config = config_form.save(commit=False)
+            config.schedule = schedule
+            config.save()
+
+            messages.success(
+                request,
+                _('Forwarding configuration "{}" was successfully updated.').format(
+                    config.name
+                ),
+            )
+            return HttpResponseRedirect(
+                reverse('forwarding:forwarder_details', args=[config.id])
+            )
+    else:
+        config_form = ForwardingConfigForm(instance=forwarder)
+        schedule_form = ScheduleForm(
+            instance=forwarder.schedule if forwarder.schedule else None
+        )
+
+    return render(
+        request,
+        'forwarding/edit_forwarding.html',
+        {
+            'active_tab': 'forwarders',
+            'config_form': config_form,
+            'schedule_form': schedule_form,
+            'forwarder': forwarder,
+        },
+    )
+
+
+@login_required
 def destinations(request):
     """List all forwarding destinations."""
     destinations = ForwardingDestination.objects.order_by('name')
