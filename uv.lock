@@ -388,6 +388,7 @@ dependencies = [
     { name = "celery", extra = ["redis"] },
     { name = "celery-progress" },
     { name = "commcare-export" },
+    { name = "db-query-fwd" },
     { name = "django" },
     { name = "django-allauth" },
     { name = "django-anymail" },
@@ -429,6 +430,7 @@ requires-dist = [
     { name = "celery", extras = ["redis"] },
     { name = "celery-progress" },
     { name = "commcare-export", specifier = "==1.13.0" },
+    { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git" },
     { name = "django", specifier = "~=5.2" },
     { name = "django-allauth" },
     { name = "django-anymail", extras = ["mailgun"] },
@@ -528,6 +530,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/6e/1c8331ddf91ca4730ab3086a0f1be19c65510a33b5a441cb334e7a2d2560/cryptography-46.0.3-cp38-abi3-win32.whl", hash = "sha256:6276eb85ef938dc035d59b87c8a7dc559a232f954962520137529d77b18ff1df", size = 3036695, upload-time = "2025-10-15T23:18:08.672Z" },
     { url = "https://files.pythonhosted.org/packages/90/45/b0d691df20633eff80955a0fc7695ff9051ffce8b69741444bd9ed7bd0db/cryptography-46.0.3-cp38-abi3-win_amd64.whl", hash = "sha256:416260257577718c05135c55958b674000baef9a1c7d9e8f306ec60d71db850f", size = 3501720, upload-time = "2025-10-15T23:18:10.632Z" },
     { url = "https://files.pythonhosted.org/packages/e8/cb/2da4cc83f5edb9c3257d09e1e7ab7b23f049c7962cae8d842bbef0a9cec9/cryptography-46.0.3-cp38-abi3-win_arm64.whl", hash = "sha256:d89c3468de4cdc4f08a57e214384d0471911a3830fcdaf7a8cc587e42a866372", size = 2918740, upload-time = "2025-10-15T23:18:12.277Z" },
+]
+
+[[package]]
+name = "db-query-fwd"
+version = "0.1.0"
+source = { git = "https://github.com/dimagi/db-query-fwd.git#54a416e1bc1b6cb745a9035db34e49fa00f89117" }
+dependencies = [
+    { name = "requests" },
+    { name = "sqlalchemy" },
 ]
 
 [[package]]
