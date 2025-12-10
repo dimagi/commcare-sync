@@ -72,3 +72,16 @@
 </section>
 {% include 'forwarding/partials/run_history.html' %}
 {% endblock app %}
+{% block page_js %}
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+<script src="{% static 'js/app-bundle.js' %}"></script>
+<script>
+    const apiUrl = "{% url 'forwarding:run_forwarding' forwarder.id %}";
+    const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
+    const Forwarding = SiteJS.app.Forwarding;
+    document.addEventListener("DOMContentLoaded", function () {
+      Forwarding.initializeForwardingRunButton(apiUrl, progressUrl);
+    });
+    document.addEventListener('DOMContentLoaded', Forwarding.setupLogTriggers);
+</script>
+{% endblock page_js %}

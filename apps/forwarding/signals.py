@@ -61,7 +61,7 @@ def create_or_update_periodic_task(
 
     task_name = f'Run forwarding: {instance} (ID: {instance.id})'
     task_kwargs = {
-        'task': 'apps.forwarding.tasks.run_forwarding_task',
+        'task': 'apps.forwarding.tasks.run_scheduled_forwarding_task',
         'name': task_name,
         'enabled': True,
         'args': f'[{instance.id}]',

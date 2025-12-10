@@ -362,7 +362,7 @@ class ForwardingSchedulingTestCase:
         assert schedule.periodic_task.enabled is True
         assert (
             schedule.periodic_task.task
-            == 'apps.forwarding.tasks.run_forwarding_task'
+            == 'apps.forwarding.tasks.run_scheduled_forwarding_task'
         )
         assert f'{config.id}' in schedule.periodic_task.args
 

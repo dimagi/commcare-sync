@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
 
 from apps.schedules.forms import ScheduleForm
 from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
@@ -14,6 +15,7 @@ from .forms import (
     EditForwardingDestinationForm,
 )
 from .models import ForwardingConfig, ForwardingDestination, ForwardingRun
+from .tasks import run_forwarding_task
 
 
 @login_required
@@ -236,3 +238,20 @@ def forwarder_details(request, forwarder_id):
             'hide_skipped': hide_skipped,
         },
     )
+
+
+@login_required
+@require_POST
+def run_forwarding(request, forwarder_id):
+    """Manually trigger a forwarding run."""
+    forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
+
+    forwarding_run = ForwardingRun.objects.create(
+        forwarding_config=forwarder,
+        forwarding_config_version=forwarder.latest_version,
+        triggered_from_ui=True,
+        triggering_user=request.user,
+    )
+
+    result = run_forwarding_task.delay(forwarding_run.id)
+    return HttpResponse(result.task_id)

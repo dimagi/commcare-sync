@@ -45,4 +45,9 @@ urlpatterns = [
         views.forwarder_details,
         name='forwarder_details',
     ),
+    path(
+        '<int:forwarder_id>/run/',
+        views.run_forwarding,
+        name='run_forwarding',
+    ),
 ]
