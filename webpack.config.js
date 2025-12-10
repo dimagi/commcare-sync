@@ -1,5 +1,5 @@
 const path = require('path');
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
@@ -22,22 +22,38 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            'css-loader',
-            'sass-loader'
-          ]
-        })
-    }]
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1,
+            },
+          },
+          {
+            loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                loadPaths: [
+                  path.resolve(__dirname, 'node_modules'),
+                ],
+                quietDeps: true,
+              },
+            },
+          },
+        ],
+      },
+    ]
   },
   plugins: [
-    new ExtractTextPlugin('css/site.css'),
+    new MiniCssExtractPlugin({
+      filename: 'css/site.css',
+    }),
   ],
   optimization: {
     minimizer: [
       new TerserPlugin({
-        cache: false, // Avoid MD4 hashing unsupported in newer Node builds
+        extractComments: false,
       }),
     ],
   },
