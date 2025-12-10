@@ -8,7 +8,7 @@
     <p>{% trans "After deleting, the following items will be deleted and the export will stop syncing data." %}</p>
     <ul>
       <li>{% trans "The Export and its configuration file." %}</li>
-      <li>{% blocktrans count counter=export.runs.count %}All {{ counter }} records of the export's individual runs and associated logs.{% endblocktrans %}</li>
+      <li>{% blocktrans with counter=export.runs.count %}All {{ counter }} records of the export's individual runs and associated logs.{% endblocktrans %}</li>
     </ul>
     <p><strong>{% trans "Note: the underlying data associated with the export must be deleted separately." %}</strong></p>
   </div>
