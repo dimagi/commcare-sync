@@ -6,6 +6,34 @@ from apps.exports.models import ExportDatabase
 from .models import ForwardingConfig, ForwardingDestination
 
 
+class CreateForwardingDestinationForm(forms.ModelForm):
+    """Form for creating ForwardingDestination objects."""
+
+    class Meta:
+        model = ForwardingDestination
+        fields = ('name', 'api_url', 'api_username', 'api_password')
+        widgets = {
+            'api_password': forms.PasswordInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Style URLField the same as CharField
+        self.fields['api_url'].widget.attrs['class'] = 'input'
+
+
+class EditForwardingDestinationForm(forms.ModelForm):
+    """Form for editing ForwardingDestination objects."""
+
+    class Meta:
+        model = ForwardingDestination
+        fields = ('name', 'api_url', 'api_username')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['api_url'].widget.attrs['class'] = 'input'
+
+
 class ForwardingConfigForm(forms.ModelForm):
     """Form for creating and editing ForwardingConfig objects."""
 

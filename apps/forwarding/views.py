@@ -1,13 +1,18 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from apps.schedules.forms import ScheduleForm
 
-from .forms import ForwardingConfigForm
+from .forms import (
+    ForwardingConfigForm,
+    CreateForwardingDestinationForm,
+    EditForwardingDestinationForm,
+)
+from .models import ForwardingDestination
 
 
 @login_required
@@ -48,5 +53,77 @@ def create_forwarding_config(request):
             'active_tab': 'create_forwarder',
             'config_form': config_form,
             'schedule_form': schedule_form,
+        },
+    )
+
+
+@login_required
+def destinations(request):
+    """List all forwarding destinations."""
+    destinations = ForwardingDestination.objects.order_by('name')
+    return render(
+        request,
+        'forwarding/destinations.html',
+        {
+            'active_tab': 'destinations',
+            'destinations': destinations,
+        },
+    )
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
+def create_destination(request):
+    """Create a new forwarding destination."""
+    if request.method == 'POST':
+        form = CreateForwardingDestinationForm(request.POST)
+        if form.is_valid():
+            destination = form.save(commit=False)
+            destination.owner = request.user
+            destination.save()
+            messages.success(
+                request,
+                _('Destination "{}" was successfully created.').format(
+                    destination.name
+                ),
+            )
+            return HttpResponseRedirect(reverse('forwarding:destinations'))
+    else:
+        form = CreateForwardingDestinationForm()
+
+    return render(
+        request,
+        'forwarding/create_destination.html',
+        {
+            'active_tab': 'destinations',
+            'form': form,
+        },
+    )
+
+
+@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
+def edit_destination(request, destination_id):
+    """Edit an existing forwarding destination."""
+    destination = get_object_or_404(ForwardingDestination, id=destination_id)
+    if request.method == 'POST':
+        form = EditForwardingDestinationForm(request.POST, instance=destination)
+        if form.is_valid():
+            destination = form.save()
+            messages.success(
+                request,
+                _('Destination "{}" was successfully updated.').format(
+                    destination.name
+                ),
+            )
+            return HttpResponseRedirect(reverse('forwarding:destinations'))
+    else:
+        form = EditForwardingDestinationForm(instance=destination)
+
+    return render(
+        request,
+        'forwarding/edit_destination.html',
+        {
+            'active_tab': 'destinations',
+            'form': form,
+            'destination': destination,
         },
     )
