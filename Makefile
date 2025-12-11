@@ -29,10 +29,10 @@ init: start migrate  ## Quickly get up and running (start containers and migrate
 npm-install: ## Runs npm install in the container
 	@docker-compose exec web npm install
 
-npm-build: ## Runs npm install in the container
+npm-build: ## Bundle JS files for production in the container
 	@docker-compose exec web npm run build
 
-npm-watch: ## Runs npm install in the container
+npm-watch: ## Bundle JS files and watch for changes in the container
 	@docker-compose exec web npm run dev-watch
 
 .PHONY: help
