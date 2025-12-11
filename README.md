@@ -1,20 +1,3 @@
-Note on usage
-=============
-
-> [!WARNING]
-> The CommCare Sync project is **not actively maintained**. Interested
-> parties are recommended to review the
-> [CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET)
-> as an alternative which is actively maintained. CommCare Sync
-> implementers should expect to need to perform their own modernization
-> and maintenance.
-
-CommCare Sync is a community-of-practice open source project, and not an
-officially supported tool. It's free and available as an example and
-for use, and contributions are welcome from the community, but there
-are currently no plans to update or modernize the project.
-
-
 CommCare Sync
 =============
 
