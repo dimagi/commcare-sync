@@ -2,10 +2,11 @@
 
 ## Commands
 
-* Running tests: `pytest`
-* Type checking: `mypy apps/ commcare_sync/ *.py`
-* Linting: `ruff check`
-* Formatting: `ruff format <path/to/file.py>`
+* Run tests: `pytest`
+* Check typing: `mypy apps/ commcare_sync/ *.py`
+* Check linting: `ruff check`
+* Format: `ruff format <path/to/file.py>`
+* Sort imports `ruff check --select I --fix <path/to/file.py>`
 
 
 ## Coding style
