@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 prod = [
-    "gunicorn",
+    "gunicorn[eventlet]",
 ]
 
 [build-system]
