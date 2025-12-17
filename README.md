@@ -1,30 +1,33 @@
-CommCare Sync
-=============
+CommCare Data Pipeline
+======================
 
-CommCare Sync simplifies the setup and management of your CommCare data
-pipeline. It is a self-hosted, standalone web application designed to
-manage a CommCare “data warehouse” over the command-line
-[CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET?atl_f=PAGETREE).
+CommCare Data Pipeline simplifies the setup and management of your
+CommCare data pipeline.
+
+It is a self-hosted, standalone web application designed to manage a
+CommCare “data warehouse” over the command-line
+[CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET).
+
 This turnkey solution allows you to export data from CommCare and store
 it in a local or cloud-based database, including MySQL, PostgreSQL,
-Amazon RDS, GCP Cloud SQL, and Azure SQL Database. With CommCare Sync,
-you can utilise these key features:
+Amazon RDS, GCP Cloud SQL, and Azure SQL Database. With CommCare Data
+Pipeline, you can utilise these key features:
 
 - **Automated Configuration:** Generate a Data Export Tool
   (DET) configuration file directly from CommCare.
 
-- **Seamless Integration:** Connect CommCare Sync to your CommCare
-  project space(s) and database(s).
+- **Seamless Integration:** Connect CommCare Data Pipeline to your
+  CommCare project space(s) and database(s).
 
-- **Scheduled Data Syncs:** Upload a DET configuration file to automate
-  data transfers from CommCare to your database on a defined
+- **Scheduled Data Exports:** Upload a DET configuration file to
+  automate data transfers from CommCare to your database on a defined
   schedule.
 
-- **Sync Monitoring:** Track and manage data sync activities through
-  CommCare Sync’s built-in log feature.
+- **Export Monitoring:** Track and manage data export activities through
+  CommCare Data Pipeline’s built-in log feature.
 
 **This documentation shows you how to set up a self-hosted version of
-CommCare Sync using the source code.**  For help installing and managing
+CommCare Data Pipeline using the source code.**  For help installing and managing
 production environments, you can follow the
 [documentation](https://commcare-sync-ansible.readthedocs.io/en/latest/)
 of the commcare-sync ansible repository.
@@ -35,7 +38,7 @@ Production Setup
 
 ### Configuration Steps
 
-To configure CommCare Sync:
+To configure CommCare Data Pipeline:
 
 1. In CommCare HQ Data page, create a form or case export 
 
@@ -45,7 +48,7 @@ To configure CommCare Sync:
    with the option of mapping specific data types. If you aren't
    transforming your data, there's no step needed here.
 
-4. Open CommCare Sync, create a new account (instructions below)
+4. Open CommCare Data Pipeline, create a new account (instructions below)
 
 5. Add a project by pasting your CommCare project space name
 
@@ -85,7 +88,7 @@ in the CommCare sync tool).
 
 - Edit the DET file using the “best practices” below
 
-### Create a CommCare Sync account
+### Create a CommCare Data Pipeline account
 
 Ask a site admin to create an account for you and share credentials,
 then change your password.
@@ -128,16 +131,16 @@ Some recommendations for modifying the DET config files downloaded from HQ:
    make it easier to use them in various BI tools.
 
 3. There is a subtle difference between the 'Extra Arguments' field in a
-   CommCare Sync Export and a CommCare Data Export Tool parameter. If an
-   argument in CommCare Sync takes multiple parameters
-   ('since' and 'until,' for example) it must be formatted
+   CommCare Data Pipeline Export and a CommCare Data Export Tool
+   parameter. If an argument in CommCare Data Pipeline takes multiple
+   parameters ('since' and 'until', for example) it must be formatted
    like: --until=2020-09-30
 
 ### Adding Databases
 
 Databases can be added by site admins by using the "databases" link in
-CommCare Sync sidebar navigation. The database may need to also be
-separately created by a system admin on the server.
+CommCare Data Pipeline sidebar navigation. The database may need to also
+be separately created by a system admin on the server.
 
 ### Administration
 
