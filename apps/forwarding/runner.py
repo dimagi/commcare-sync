@@ -28,9 +28,9 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
         query = fwd_config.query
         api_url = fwd_config.destination.api_url
         params = [
-            p.strip()
-            for p in fwd_config.query_params.splitlines()
-            if p.strip()
+            param.strip()
+            for param in fwd_config.query_params.splitlines()
+            if param.strip()
         ]
         credentials = None
         if (
