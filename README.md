@@ -26,6 +26,9 @@ Pipeline, you can utilise these key features:
 - **Export Monitoring:** Track and manage data export activities through
   CommCare Data Pipeline’s built-in log feature.
 
+See [the documentation](docs/index.md) for details on configuring
+CommCare Data Pipeline, how to install and contribute.
+
 **This documentation shows you how to set up a self-hosted version of
 CommCare Data Pipeline using the source code.**  For help installing and managing
 production environments, you can follow the
