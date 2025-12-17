@@ -22,6 +22,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('commcare/', include('apps.commcare.urls')),
     path('exports/', include('apps.exports.urls')),
+    path('forwarding/', include('apps.forwarding.urls')),
     path('users/', include('apps.users.urls')),
 
     path('', include('apps.web.urls')),

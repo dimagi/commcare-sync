@@ -1,0 +1,111 @@
+{% load i18n %}
+<div class="box">
+  <h3 class="title is-5">{% trans "Schedule Configuration" %}</h3>
+  <p class="help mb-4">{% trans "Configure when this task should run automatically." %}</p>
+
+  {{ schedule_form.non_field_errors }}
+
+  <div class="field">
+    <label class="label">{% trans "Schedule Type" %}</label>
+    <div class="control">
+      <div class="select">
+        {{ schedule_form.schedule_type }}
+      </div>
+    </div>
+    {{ schedule_form.schedule_type.errors }}
+  </div>
+
+  <div class="field" id="interval-fields">
+    <label class="label">{% trans "Interval" %}</label>
+    <div class="field has-addons">
+      <div class="control">
+        {{ schedule_form.interval_value }}
+      </div>
+      <div class="control">
+        <div class="select">
+          {{ schedule_form.interval_unit }}
+        </div>
+      </div>
+    </div>
+    <p class="help">{% trans "Run every N minutes/hours/days" %}</p>
+    {{ schedule_form.interval_value.errors }}
+    {{ schedule_form.interval_unit.errors }}
+  </div>
+
+  <div class="field" id="first-run-date-field">
+    <label class="label">{% trans "First Run Date" %}</label>
+    <div class="control">
+      {{ schedule_form.first_run_date }}
+    </div>
+    <p class="help">{% trans "The date when this schedule should start" %}</p>
+    {{ schedule_form.first_run_date.errors }}
+  </div>
+
+  <div class="field" id="first-run-time-field">
+    <label class="label">{% trans "Run Time" %}</label>
+    <div class="control">
+      {{ schedule_form.first_run_time }}
+    </div>
+    <p class="help">{% trans "Time of day for scheduled runs" %}</p>
+    {{ schedule_form.first_run_time.errors }}
+  </div>
+
+  <div class="field" id="timezone-field">
+    <label class="label">{% trans "Timezone" %}</label>
+    <div class="control">
+      {{ schedule_form.timezone }}
+    </div>
+    <p class="help">{% trans "Timezone for scheduled runs (e.g., 'America/New_York', 'UTC')" %}</p>
+    {{ schedule_form.timezone.errors }}
+  </div>
+
+  <div class="field" id="days-of-week-field">
+    <label class="label">{% trans "Days of Week" %}</label>
+    <div class="control">
+      {{ schedule_form.days_of_week }}
+    </div>
+    <p class="help">{% trans "Select which days of the week to run (for weekly schedules)" %}</p>
+    {{ schedule_form.days_of_week.errors }}
+  </div>
+</div>
+
+<script>
+  // Show/hide fields based on schedule type
+  document.addEventListener('DOMContentLoaded', function() {
+    const scheduleTypeSelect = document.getElementById('{{ schedule_form.schedule_type.id_for_label }}');
+    const intervalFields = document.getElementById('interval-fields');
+    const firstRunDateField = document.getElementById('first-run-date-field');
+    const firstRunTimeField = document.getElementById('first-run-time-field');
+    const timezoneField = document.getElementById('timezone-field');
+    const daysOfWeekField = document.getElementById('days-of-week-field');
+
+    function updateFieldVisibility() {
+      const scheduleType = scheduleTypeSelect.value;
+
+      // Hide all optional fields first
+      intervalFields.style.display = 'none';
+      firstRunDateField.style.display = 'none';
+      firstRunTimeField.style.display = 'none';
+      timezoneField.style.display = 'none';
+      daysOfWeekField.style.display = 'none';
+
+      // Show fields based on schedule type
+      if (scheduleType === 'interval') {
+        intervalFields.style.display = 'block';
+      } else if (scheduleType === 'weekly') {
+        firstRunDateField.style.display = 'block';
+        firstRunTimeField.style.display = 'block';
+        timezoneField.style.display = 'block';
+        daysOfWeekField.style.display = 'block';
+      } else if (scheduleType) {
+        // monthly, quarterly, semi-annually, annually
+        firstRunDateField.style.display = 'block';
+        firstRunTimeField.style.display = 'block';
+        timezoneField.style.display = 'block';
+      }
+    }
+
+    scheduleTypeSelect.addEventListener('change', updateFieldVisibility);
+    updateFieldVisibility(); // Initial call
+  });
+</script>

@@ -45,6 +45,26 @@
       </a>
     </li>
   </ul>
+  <p class="menu-label is-hidden-tablet-only">
+    {% trans "Data Forwarding" %}
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'forwarding:forwarders' %}" {% if active_tab == 'forwarders' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-bus"></i></span><span class="is-hidden-tablet-only">{% trans "Forwarders" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'forwarding:create_forwarding_config' %}" {% if active_tab == 'create_forwarder' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-plus"></i></span><span class="is-hidden-tablet-only">{% trans "New Forwarder" %}</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'forwarding:destinations' %}" {% if active_tab == 'destinations' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-globe"></i></span><span class="is-hidden-tablet-only">{% trans "Destinations" %}</span>
+      </a>
+    </li>
+  </ul>
   <hr/>
   <p class="menu-label is-hidden-tablet-only">
     {% trans "My Account" %}

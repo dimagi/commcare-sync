@@ -15,11 +15,12 @@ dependencies = [
     "django-reversion>=5.0.4",
     "commcare-export==1.13.0",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
+    "db-query-fwd",
 ]
 
 [project.optional-dependencies]
 prod = [
-    "gunicorn",
+    "gunicorn[eventlet]",
 ]
 
 [build-system]
@@ -43,13 +44,20 @@ test = [
 ]
 
 [tool.uv.sources]
+db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git" }
 
 [tool.mypy]
 disallow_incomplete_defs = true
 ignore_missing_imports = true
+plugins = [
+    "mypy_django_plugin.main",
+]
 disable_error_code = [
     "var-annotated",
 ]
+
+[tool.django-stubs]
+django_settings_module = "commcare_sync.settings"
 
 [tool.ruff]
 line-length = 79
