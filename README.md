@@ -270,29 +270,3 @@ Deployment
 
 To set up a production server, see
 [commcare-sync-ansible](https://github.com/dimagi/commcare-sync-ansible)
-
-### Deploying with Fabric
-
-For incremental deploys you can also use `fabric`. First install it:
-
-```shell
-uv sync --dev
-```
-
-Then:
-
-```shell
-fab -H commcare-sync-demo2.dimagi.com -f deploy/environments/demo.yml deploy
-```
-
-You'll have to set up authentication using something like
-[this guide](https://stackoverflow.com/a/5071823/8207).
-
-Here's an example `/.ssh/config` entry:
-
-```
-Host commcare-sync-demo2.dimagi.com
-  User ubuntu
-  HostName commcare-sync-demo2.dimagi.com
-  IdentityFile ~/.ssh/Covid.pem
-```

@@ -31,7 +31,6 @@ build-backend = "hatchling.build"
 dev = [
     {include-group = "test"},
     "pip-tools",
-    "fabric",
 ]
 test = [
     "django-stubs",
