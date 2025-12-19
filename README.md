@@ -27,7 +27,7 @@ Pipeline, you can utilise these key features:
   CommCare Data Pipeline’s built-in log feature.
 
 See [the documentation](docs/index.md) for details on installing a
-development environment.
+development environment and setting up a test data pipeline.
 
 See the
 [**commcare-sync-ansible** documentation](https://commcare-sync-ansible.readthedocs.io/en/latest/)
