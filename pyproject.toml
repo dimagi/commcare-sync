@@ -40,6 +40,7 @@ test = [
     "pytest-unmagic",
     "ruff",
     "time-machine",
+    "types-requests",
 ]
 
 [tool.uv.sources]
