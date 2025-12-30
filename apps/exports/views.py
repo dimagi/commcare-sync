@@ -3,15 +3,34 @@ import os
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render, get_object_or_404
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from reversion.models import Version
 
-from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
-from .forms import ExportConfigForm, MultiProjectExportConfigForm, EditExportDatabaseForm, CreateExportDatabaseForm
-from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase, ExportRun, MultiProjectExportRun
+from apps.commcare.models import CommCareAccount, CommCareProject
+from commcare_sync.views import get_hide_skipped_from_request, get_ui_page_size
+
+from .api_client import fetch_available_configs
+from .forms import (
+    CreateExportDatabaseForm,
+    EditExportDatabaseForm,
+    ExportConfigForm,
+    MultiProjectExportConfigForm,
+)
+from .models import (
+    ExportConfig,
+    ExportDatabase,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+)
 from .tasks import run_export_task, run_multi_project_export_task
 
 
@@ -282,3 +301,50 @@ def edit_database(request, database_id):
         'active_tab': 'create_export',
         'form': form,
     })
+
+
+@login_required
+def fetch_config_files(request):
+    """
+    AJAX endpoint to fetch available config files from CommCare HQ.
+
+    Expects GET parameters: ``account_id`` and comma-separated ``project_ids``.
+    """
+    account_id = request.GET.get('account_id')
+    project_ids = request.GET.get('project_ids', '').split(',')
+    project_ids = [pid for pid in project_ids if pid]
+
+    if not account_id or not project_ids:
+        return JsonResponse(
+            {'error': 'Missing account_id or project_ids'},
+            status=400,
+        )
+
+    account = get_object_or_404(CommCareAccount, id=account_id)
+    projects = CommCareProject.objects.filter(id__in=project_ids)
+    if not projects.exists():
+        return JsonResponse({'error': 'No valid projects found'}, status=400)
+
+    all_configs = []
+    errors = []
+    for project in projects:
+        try:
+            configs = fetch_available_configs(
+                server_url=project.server.url,
+                domain=project.domain,
+                username=account.username,
+                api_key=account.api_key
+            )
+            for config in configs:
+                all_configs.append({
+                    'domain': project.domain,
+                    'name': config.get('name', 'Unnamed'),
+                    'det_config_url': config.get('det_config_url'),
+                })
+        except Exception as err:
+            errors.append(str(err))
+
+    data = {'configs': all_configs}
+    if errors:
+        data['errors'] = errors
+    return JsonResponse(data)

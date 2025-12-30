@@ -67,6 +67,11 @@ urlpatterns = [
         views.run_multi_export,
         name='run_multi_export',
     ),
+    path(
+        r'api/fetch-config-files/',
+        views.fetch_config_files,
+        name='fetch_config_files',
+    ),
     path(r'databases/', views.databases, name='databases'),
     path(r'databases/create/', views.create_database, name='create_database'),
     path(
