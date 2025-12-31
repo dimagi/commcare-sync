@@ -1,3 +1,4 @@
+from email.message import EmailMessage
 from typing import TypedDict
 
 import requests
@@ -68,5 +69,21 @@ def download_config_file(url: str, username: str, api_key: str) -> ContentFile:
         timeout=30,
     )
     response.raise_for_status()
-    filename = url.split('/')[-1] or 'config.xlsx'
+    filename = get_filename_from_response(response, default='config.xlsx')
     return ContentFile(response.content, name=filename)
+
+
+def get_filename_from_response(
+    response: requests.Response,
+    default: str = 'filename',
+) -> str:
+      """Extract filename from Content-Disposition header if available."""
+      content_disposition = response.headers.get('Content-Disposition')
+      if content_disposition:
+          # Parse using email.message for proper handling of quoted values
+          msg = EmailMessage()
+          msg['content-disposition'] = content_disposition
+          filename = msg.get_filename()
+          if filename:
+              return filename
+      return default
