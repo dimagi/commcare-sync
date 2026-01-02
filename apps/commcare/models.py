@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -74,12 +74,12 @@ class CommCareAccount(BaseModel):
         if not self.api_key_encrypted:
             return ''
 
-        # Get the first (current) key from FERNET_KEYS
-        fernet_key = settings.FERNET_KEYS[0]
-        cipher = Fernet(fernet_key.encode() if isinstance(fernet_key, str) else fernet_key)
-
-        # Decrypt the value
-        decrypted = cipher.decrypt(self.api_key_encrypted.encode())
+        fernet_keys = (  # Include rotated keys for decryption
+            key.encode() if isinstance(key, str) else key
+            for key in settings.FERNET_KEYS
+        )
+        fernet = MultiFernet([Fernet(k) for k in fernet_keys])
+        decrypted = fernet.decrypt(self.api_key_encrypted.encode())
         return decrypted.decode()
 
     @api_key.setter
@@ -89,10 +89,7 @@ class CommCareAccount(BaseModel):
             self.api_key_encrypted = ''
             return
 
-        # Get the first (current) key from FERNET_KEYS
-        fernet_key = settings.FERNET_KEYS[0]
-        cipher = Fernet(fernet_key.encode() if isinstance(fernet_key, str) else fernet_key)
-
-        # Encrypt the value
-        encrypted = cipher.encrypt(value.encode())
+        key = settings.FERNET_KEYS[0]  # Encrypt using the current key
+        fernet = Fernet(key.encode() if isinstance(key, str) else key)
+        encrypted = fernet.encrypt(value.encode())
         self.api_key_encrypted = encrypted.decode()
