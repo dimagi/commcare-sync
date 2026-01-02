@@ -1,0 +1,15 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12,<3.15"
+# dependencies = ["cryptography"]
+# ///
+from cryptography.fernet import Fernet
+
+
+def main():
+    key_bytes = Fernet.generate_key()
+    print(key_bytes.decode())
+
+
+if __name__ == "__main__":
+    main()
