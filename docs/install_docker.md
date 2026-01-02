@@ -4,16 +4,35 @@ Installing a development environment with Docker
 The easiest way to get up and running is with
 [Docker](https://www.docker.com/).
 
-Just [install Docker](https://www.docker.com/get-started) and
-[Docker Compose](https://docs.docker.com/compose/install/) and then
-run:
- 
-```shell
-make init
-```
+1. [Install Docker](https://www.docker.com/get-started),
+   [Docker Compose](https://docs.docker.com/compose/install/) and
+   [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
-This will spin up a database, web worker, celery worker, and Redis
-broker and run your migrations.
+2. Clone this repository:
+   ```shell
+   git clone https://github.com/dimagi/commcare-sync.git
+   ```
+
+3. Uncomment `SECRET_KEY` and `FERNET_KEYS` in `commcare_sync/settings.py`
+   and create secure values for them:
+
+   To generate a value for `SECRET_KEY` you can use
+   ```shell
+   openssl rand -base64 48
+   ```
+
+   To generate a Fernet key, use
+   ```shell
+   ./fernet-gen
+   ```
+
+4. Run
+   ```shell
+   make init
+   ```
+
+   This will spin up a database, web worker, celery worker, and Redis
+   broker and run your migrations.
 
 Go to http://localhost:8000/ to view the app.
 
