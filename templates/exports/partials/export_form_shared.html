@@ -6,6 +6,24 @@
   {{ form.account.errors }}
 </div>
 <div class="field">
+  <label class="label">CommCare Export</label>
+  <div class="control">
+    <div class="select is-fullwidth" id="config-file-select-wrapper">
+      <select id="id_config_file_select" name="config_file_select" disabled>
+        <option value="">Select account and project(s) first...</option>
+      </select>
+    </div>
+    <p class="help" id="config-loading-message" style="display: none;">
+      <i class="fa fa-spinner fa-spin"></i> Loading available configs from CommCare HQ...
+    </p>
+    <p class="help is-danger" id="config-error-message" style="display: none;"></p>
+    {% if form.instance.pk and form.instance.config_file.name %}
+      <p class="help">Current file: {{ form.instance.config_file.name }}</p>
+    {% endif %}
+  </div>
+  {{ form.det_config_url }}
+</div>
+<div class="field">
   <label class="label">Database</label>
   <div class="select">
     {{ form.database }}
@@ -36,42 +54,6 @@
   <p class="help">{{ form.batch_size.help_text }}</p>
   {{ form.batch_size.errors }}
 </div>
-<div class="field">
-  <div id="export-file" class="file has-name">
-    <label class="file-label">
-      <input class="file-input" type="file" name="config_file" required_id="id_config_file">
-      <span class="file-cta">
-        <span class="file-icon">
-          <i class="fa fa-upload"></i>
-        </span>
-        <span class="file-label">
-          {% if form.instance.pk and form.instance.config_file.name %}
-            Change Config File
-          {% else %}
-            Upload Config File
-          {% endif %}
-        </span>
-      </span>
-      <span class="file-name">
-        {% if form.instance.pk and form.instance.config_file.name %}
-        {{ form.instance.config_file.name }}
-        {% else %}
-          Choose a file...
-        {% endif %}
-      </span>
-    </label>
-  </div>
-  {{ form.config_file.errors }}
-</div>
-<script>
-  const fileInput = document.querySelector('#export-file input[type=file]');
-  fileInput.onchange = () => {
-    if (fileInput.files.length > 0) {
-      const fileName = document.querySelector('#export-file .file-name');
-      fileName.textContent = fileInput.files[0].name;
-    }
-  }
-</script>
 <div class="field">
   <label class="label">Extra Arguments</label>
   <div class="control">
