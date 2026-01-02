@@ -1,3 +1,4 @@
+from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -55,8 +56,8 @@ class CommCareAccount(BaseModel):
         max_length=100,
         help_text=_("The email address you use to sign into CommCare HQ")
     )
-    api_key = models.CharField(
-        max_length=40,
+    api_key_encrypted = models.CharField(
+        max_length=255,
         help_text=_('Your API key is available under "My Account Settings" in CommCare.')
     )
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -66,3 +67,29 @@ class CommCareAccount(BaseModel):
 
     def __str__(self):
         return self.username
+
+    @property
+    def api_key(self):
+        """Decrypt and return the API key."""
+        if not self.api_key_encrypted:
+            return ''
+
+        fernet_keys = (  # Include rotated keys for decryption
+            key.encode() if isinstance(key, str) else key
+            for key in settings.FERNET_KEYS
+        )
+        fernet = MultiFernet([Fernet(k) for k in fernet_keys])
+        decrypted = fernet.decrypt(self.api_key_encrypted.encode())
+        return decrypted.decode()
+
+    @api_key.setter
+    def api_key(self, value):
+        """Encrypt and store the API key."""
+        if not value:
+            self.api_key_encrypted = ''
+            return
+
+        key = settings.FERNET_KEYS[0]  # Encrypt using the current key
+        fernet = Fernet(key.encode() if isinstance(key, str) else key)
+        encrypted = fernet.encrypt(value.encode())
+        self.api_key_encrypted = encrypted.decode()
