@@ -342,7 +342,7 @@ def fetch_config_files(request):
                     'det_config_url': config.get('det_config_url'),
                 })
         except Exception as err:
-            errors.append(str(err))
+            errors.append(f"{type(err).__name__}: {err}")
 
     data = {'configs': all_configs}
     if errors:
