@@ -14,7 +14,7 @@ dependencies = [
     "cryptography",
     "django-celery-beat",
     "django-reversion>=5.0.4",
-    "commcare-export==1.13.0",
+    "commcare-export",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
     "db-query-fwd",
 ]
@@ -46,6 +46,7 @@ test = [
 
 [tool.uv.sources]
 db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git" }
+commcare-export = { git = "https://github.com/dimagi/commcare-export.git" }
 
 [tool.mypy]
 disallow_incomplete_defs = true

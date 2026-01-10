@@ -29,15 +29,6 @@ wheels = [
 ]
 
 [[package]]
-name = "argparse"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4", size = 70508, upload-time = "2015-09-12T20:22:16.217Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/94/3af39d34be01a24a6e65433d19e107099374224905f1e0cc6bbe1fd22a2f/argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314", size = 23000, upload-time = "2015-09-14T16:03:16.137Z" },
-]
-
-[[package]]
 name = "asgiref"
 version = "3.11.0"
 source = { registry = "https://pypi.org/simple" }
@@ -295,11 +286,10 @@ wheels = [
 
 [[package]]
 name = "commcare-export"
-version = "1.13.0"
-source = { registry = "https://pypi.org/simple" }
+version = "1.14.0"
+source = { git = "https://github.com/dimagi/commcare-export.git#40ec82ef5cb0be19eb67b9d5cecb31ac890dabd9" }
 dependencies = [
     { name = "alembic" },
-    { name = "argparse" },
     { name = "backoff" },
     { name = "jsonpath-ng" },
     { name = "ndg-httpsclient" },
@@ -311,7 +301,6 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlalchemy-migrate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/ab/08e670b046804050d49f1fbb326600c87db3f84106df77d9d49e8c020029/commcare-export-1.13.0.tar.gz", hash = "sha256:ca6316efe89ae837c5fa2d4c2e4e8756de08443d583c71045f22bbdaf0e32af7", size = 150506, upload-time = "2024-04-12T10:10:43.536Z" }
 
 [[package]]
 name = "commcare-sync"
@@ -364,7 +353,7 @@ test = [
 requires-dist = [
     { name = "celery", extras = ["redis"] },
     { name = "celery-progress" },
-    { name = "commcare-export", specifier = "==1.13.0" },
+    { name = "commcare-export", git = "https://github.com/dimagi/commcare-export.git" },
     { name = "cryptography" },
     { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git" },
     { name = "django", specifier = "~=5.2" },
@@ -704,15 +693,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jdcal"
-version = "1.4.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7b/b0/fa20fce23e9c3b55b640e629cb5edf32a85e6af3cf7af599940eb0c753fe/jdcal-1.4.1.tar.gz", hash = "sha256:472872e096eb8df219c23f2689fc336668bdb43d194094b5cc1707e1640acfc8", size = 7479, upload-time = "2019-04-24T10:22:15.079Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/da/572cbc0bc582390480bbd7c4e93d14dc46079778ed915b505dc494b37c57/jdcal-1.4.1-py2.py3-none-any.whl", hash = "sha256:1abf1305fce18b4e8aa248cf8fe0c56ce2032392bc64bbd61b5dff2a19ec8bba", size = 9522, upload-time = "2019-04-24T10:22:13.201Z" },
-]
-
-[[package]]
 name = "jsonpath-ng"
 version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -928,13 +908,15 @@ wheels = [
 
 [[package]]
 name = "openpyxl"
-version = "2.5.12"
+version = "3.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "et-xmlfile" },
-    { name = "jdcal" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/08/8a/509eb6f58672288da9a5884e1cc7e90819bc8dbef501161c4b40a6a4e46b/openpyxl-2.5.12.tar.gz", hash = "sha256:7bcf019a0be528673a8aec1e60b5c863342c3231962dbf7922fd4da42a49a91a", size = 173659, upload-time = "2018-11-29T11:29:14.739Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/f9/88d94a75de065ea32619465d2f77b29a0469500e99012523b91cc4141cd1/openpyxl-3.1.5.tar.gz", hash = "sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050", size = 186464, upload-time = "2024-06-28T14:03:44.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl", hash = "sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", size = 250910, upload-time = "2024-06-28T14:03:41.161Z" },
+]
 
 [[package]]
 name = "packaging"
