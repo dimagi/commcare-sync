@@ -1,12 +1,16 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from .forms import CommCareProjectForm, CommCareAccountForm
-from .models import CommCareProject, CommCareAccount
+from .forms import (
+    CommCareProjectForm,
+    CreateCommCareAccountForm,
+    EditCommCareAccountForm,
+)
+from .models import CommCareAccount, CommCareProject
 
 
 @login_required
@@ -59,7 +63,7 @@ def edit_project(request, project_id):
 @login_required
 def create_account(request):
     if request.method == 'POST':
-        form = CommCareAccountForm(request.POST, request.FILES)
+        form = CreateCommCareAccountForm(request.POST, request.FILES)
         if form.is_valid():
             account = form.save(commit=False)
             account.owner = request.user
@@ -67,7 +71,7 @@ def create_account(request):
             messages.success(request, f'Account {account.username} was successfully added.')
             return HttpResponseRedirect(reverse('commcare:home'))
     else:
-        form = CommCareAccountForm()
+        form = CreateCommCareAccountForm()
 
     return render(request, 'commcare/create_account.html', {
         'active_tab': 'create_account',
@@ -82,13 +86,13 @@ def edit_account(request, account_id):
         messages.warning(request, _("Sorry, you don't have permission to edit that account"))
         return HttpResponseRedirect(reverse('commcare:home'))
     if request.method == 'POST':
-        form = CommCareAccountForm(request.POST, request.FILES, instance=account)
+        form = EditCommCareAccountForm(request.POST, request.FILES, instance=account)
         if form.is_valid():
             account = form.save()
             messages.success(request, _('Account {account} was successfully saved.').format(account=account))
             return HttpResponseRedirect(reverse('commcare:home'))
     else:
-        form = CommCareAccountForm(instance=account)
+        form = EditCommCareAccountForm(instance=account)
 
     return render(request, 'commcare/edit_account.html', {
         'active_tab': 'commcare',
