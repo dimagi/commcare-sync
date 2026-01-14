@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from apps.commcare.models import CommCareProject, CommCareAccount
 from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
@@ -81,14 +82,27 @@ class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
 
 
 class CreateExportDatabaseForm(forms.ModelForm):
+    connection_string = forms.CharField()
 
     class Meta:
         model = ExportDatabase
         fields = ('name', 'connection_string')
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.cleaned_data['connection_string']:
+            # Set connection_string through the property setter to encrypt it
+            instance.connection_string = self.cleaned_data['connection_string']
+        if commit:
+            instance.save()
+        return instance
 
-class EditExportDatabaseForm(forms.ModelForm):
 
-    class Meta:
-        model = ExportDatabase
-        fields = ('name',)
+class EditExportDatabaseForm(CreateExportDatabaseForm):
+    connection_string = forms.CharField(
+        required=False,
+        help_text=(_(
+            'Connection strings are not prepopulated in the form because they '
+            'may contain passwords.'
+        ))
+    )
