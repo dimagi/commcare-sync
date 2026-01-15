@@ -1,11 +1,11 @@
 Installing a development environment with Docker
-------------------------------------------------
+================================================
 
 The easiest way to get up and running is with
 [Docker](https://www.docker.com/).
 
 <details>
-<summary>Running Windows? Click to expand setup instructions</summary>
+<summary>Running Windows? Click to expand ...</summary>
 
 Install Ubuntu on Windows Subsystem for Linux:
 
@@ -21,23 +21,79 @@ Install Ubuntu on Windows Subsystem for Linux:
 3. Once installation is complete, open Ubuntu using the Start menu.
 
 4. The first time you open Ubuntu, you will be asked to create a
-   username and password. (When you enter a password, nothing will
-   appear on the screen.) In the future you will automatically be signed
-   in as this user. It will be a system administrator with the ability
-   to run commands with `sudo` ("superuser do").
+   username and password. (Unlike in Windows, when you enter a password
+   in Linux, nothing will appear on the screen.) In the future you will
+   automatically be signed in as this user. It will be a system
+   administrator with the ability to run commands with `sudo`
+   ("superuser do").
 
-[Learn more here](https://learn.microsoft.com/en-gb/windows/wsl/setup/environment).
+([Microsoft docs](https://learn.microsoft.com/en-gb/windows/wsl/setup/environment))
 
 </details>
 
-1. Install requirements:
-   1. [Docker](https://www.docker.com/get-started)
-   2. [Docker Compose](https://docs.docker.com/compose/install/)
-   3. [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Install Docker and uv, if they are not already installed:
 
-2. Clone this repository:
+1. Install Docker and Docker Compose:
+
+   Add Docker's official GPG key:
+   ```shell
+   $ sudo apt install ca-certificates curl
+   $ sudo install -m 0755 -d /etc/apt/keyrings
+   $ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      -o /etc/apt/keyrings/docker.asc
+   $ sudo chmod a+r /etc/apt/keyrings/docker.asc
+   ```
+
+   Add Docker's Ubuntu software repository:
+   ```shell
+   $ sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+   Types: deb
+   URIs: https://download.docker.com/linux/ubuntu
+   Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+   Components: stable
+   Signed-By: /etc/apt/keyrings/docker.asc
+   EOF
+
+   $ sudo apt update
+   ```
+
+   Install the Docker packages:
+   ```shell
+   $ sudo apt install docker-ce \
+      docker-ce-cli \
+      containerd.io \
+      docker-buildx-plugin \
+      docker-compose-plugin
+   ```
+
+   Start Docker in case it's not already running:
+   ```shell
+   $ sudo systemctl start docker
+   ```
+
+   ([Docker docs](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository))
+
+2. Install uv:
+   ```shell
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+   ([uv docs](https://docs.astral.sh/uv/))
+
+Install CommCare Data Pipeline:
+
+1. Clone this repository:
    ```shell
    git clone https://github.com/dimagi/commcare-sync.git
+   cd commcare-sync/
+   ```
+
+2. Use uv to create a Python virtual environment, activate the
+   environment, and sync requirements:
+   ```shell
+   $ uv venv --python 3.14
+   $ source .venv/bin/activate
+   $ uv sync
    ```
 
 3. Create `commcare_sync/local_settings.py` and add `SECRET_KEY` and
