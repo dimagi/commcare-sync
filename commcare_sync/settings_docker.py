@@ -1,9 +1,6 @@
-import os
 from .settings import *  # noqa: F403
 
 
-# just an example of using .env.dev to pass data to settings
-SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)  # type: str # noqa
 REDIS_URL = 'redis://redis:6379'  # from docker compose file
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL

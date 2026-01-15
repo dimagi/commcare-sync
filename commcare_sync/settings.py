@@ -1,6 +1,7 @@
 """
 Django settings for CommCare Data Pipeline
 """
+import json
 import os
 
 
@@ -24,6 +25,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # If using environment variables, store FERNET_KEYS as a JSON list, with
 # the current key first, and previous keys after. e.g.
 # FERNET_KEYS=`["current", "previous", "oldest"]`
+
+if 'SECRET_KEY' in os.environ:
+    SECRET_KEY = os.environ['SECRET_KEY']
+if 'FERNET_KEYS' in os.environ:
+    FERNET_KEYS = json.loads(os.environ['FERNET_KEYS'])  # JSON list
 
 
 ALLOWED_HOSTS = []
