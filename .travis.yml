@@ -2,9 +2,6 @@ dist: noble
 language: python
 services:
   - postgresql
-env:
-  global:
-  - DJANGO_SETTINGS_MODULE=commcare_sync.settings_travis
 before_install:
   - curl -LsSf https://astral.sh/uv/install.sh | sh
 jobs:
@@ -21,20 +18,20 @@ jobs:
     - name: "Django Test - Python 3.12"
       before_script:
         - psql -c 'create database commcare_sync_test;' -U postgres
-        - cp .travis/settings_travis.py commcare_sync
+        - cp commcare_sync/{settings_travis.py,settings_local.py}
       script:
         - uv run --python 3.12 pytest
 
     - name: "Django Test - Python 3.13"
       before_script:
         - psql -c 'create database commcare_sync_test;' -U postgres
-        - cp .travis/settings_travis.py commcare_sync
+        - cp commcare_sync/{settings_travis.py,settings_local.py}
       script:
         - uv run --python 3.13 pytest
 
     - name: "Django Test - Python 3.14"
       before_script:
         - psql -c 'create database commcare_sync_test;' -U postgres
-        - cp .travis/settings_travis.py commcare_sync
+        - cp commcare_sync/{settings_travis.py,settings_local.py}
       script:
         - uv run --python 3.14 pytest
