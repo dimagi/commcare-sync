@@ -246,3 +246,8 @@ PROJECT_METADATA = {
 ADMINS = [('Dimagi', 'devops+commcare-sync@dimagi.com')]
 
 GOOGLE_ANALYTICS_ID = ''  # replace with your google analytics ID to connect to Google Analytics
+
+try:
+    from .settings_local import *  # noqa
+except ImportError:
+    pass
