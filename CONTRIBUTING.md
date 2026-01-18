@@ -32,6 +32,11 @@ would clarify the type or purpose of a variable.
 
 ### Tests
 
+#### Pythonic pytest
+
+Don't use docstrings for test functions. The function's name should
+explain what it is testing.
+
 Take advantage of pytest features where possible. e.g. Combine
 repetitive tests using pytest parametrized tests.
 
@@ -40,10 +45,11 @@ pytest fixtures explicit.
 
 Use Pythonic assert statements.
 
-Use docstrings for doctests for functions and methods where a doctest
-can demonstrate usage in a simple way. Doctests can augment but should
-not replace unit tests. Run doctests from an appropriate test module.
-For example,
+#### Doctests
+
+Add doctests for functions and methods where a doctest can demonstrate
+usage in a simple way. Doctests can augment but should not replace unit
+tests. Run doctests from an appropriate test module. For example,
 
 ```python
 # tests/some/module.py
@@ -53,6 +59,3 @@ def test_doctests():
     results = doctest.testmod(module, optionflags=doctest.ELLIPSIS)
     assert results.failed == 0
 ```
-
-Don't use docstrings for test functions. The function's name should
-explain what it is testing.
