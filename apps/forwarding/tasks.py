@@ -1,7 +1,9 @@
 """Celery tasks for data forwarding."""
+import json
 import logging
 
 from celery import shared_task
+from django_celery_beat.models import PeriodicTask
 
 from .models import ForwardingConfig, ForwardingRun
 from .runner import run_forwarding
@@ -58,18 +60,12 @@ def run_scheduled_forwarding_task(fwd_config_id):
     return fwd_run.id
 
 
-@shared_task
-def sync_forwarding_schedules():
+def ensure_periodic_tasks_exist():
     """
-    Syncs Schedule instances with ForwardingConfig instances.
+    Ensures every ``ForwardingConfig`` instance with a schedule has
+    a ``PeriodicTask``.
 
-    This task runs every 4 hours to ensure all ForwardingConfig instances
-    that have a schedule also have a properly configured PeriodicTask.
-    This handles cases where ForwardingConfig instances are created or
-    updated outside the Django ORM (e.g., via database migrations, manual
-    SQL, or other means that bypass the post_save signal).
-
-    :returns: Dictionary with sync statistics
+    :returns: Number of configs synced
     """
     configs_with_schedule = ForwardingConfig.objects.filter(
         schedule__isnull=False
@@ -85,11 +81,76 @@ def sync_forwarding_schedules():
         )
         synced_count += 1
 
+    return synced_count
+
+
+def delete_orphaned_periodic_tasks():
+    """
+    Deletes ``PeriodicTask`` instances that reference deleted
+    ``ForwardingConfig`` instances.
+
+    NOTE: This query is not efficient, as the 'task' and 'args' fields
+    are not indexed in the ``PeriodicTask`` model. For large numbers of
+    periodic tasks, this could be slow.
+
+    :returns: Number of orphaned tasks deleted
+    """
+    orphaned_tasks = PeriodicTask.objects.filter(
+        task='apps.forwarding.tasks.run_scheduled_forwarding_task'
+    )
+
+    orphaned_count = 0
+    valid_config_ids = set(
+        ForwardingConfig.objects.values_list('id', flat=True)
+    )
+
+    for periodic_task in orphaned_tasks:
+        try:
+            # periodic_task.args looks like '[config_id]'
+            (config_id,) = json.loads(periodic_task.args)
+        except (json.JSONDecodeError, ValueError) as err:
+            logger.warning(
+                f'Failed to parse args for periodic task '
+                f'"{periodic_task.name}": {err}'
+            )
+        else:
+            if config_id not in valid_config_ids:
+                orphaned_count += 1
+                periodic_task.delete()
+                logger.info(
+                    f'Deleted orphaned periodic task "{periodic_task.name}" '
+                    f'for non-existent ForwardingConfig ID {config_id}'
+                )
+
+    return orphaned_count
+
+
+@shared_task
+def sync_forwarding_schedules():
+    """
+    Syncs ``Schedule`` instances with ``ForwardingConfig`` instances.
+
+    This task runs every 4 hours to ensure all ``ForwardingConfig``
+    instances that have a schedule also have a properly configured
+    ``PeriodicTask``. This handles cases where ``ForwardingConfig``
+    instances are created or updated outside the Django ORM (e.g. via
+    database migrations, manual SQL, or other means that bypass the
+    ``post_save`` signal).
+
+    Also cleans up orphaned ``PeriodicTask`` instances that reference
+    deleted ``ForwardingConfig`` instances.
+
+    :returns: Dictionary with sync statistics
+    """
+    synced_count = ensure_periodic_tasks_exist()
+    orphaned_count = delete_orphaned_periodic_tasks()
+
     logger.info(
-        f'Forwarding schedule sync completed: {synced_count} configs synced'
+        f'Forwarding schedule sync completed: {synced_count} configs '
+        f'synced, {orphaned_count} orphaned tasks deleted'
     )
 
     return {
         'synced': synced_count,
-        'total_checked': configs_with_schedule.count(),
+        'orphaned_deleted': orphaned_count,
     }
