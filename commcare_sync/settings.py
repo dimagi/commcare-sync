@@ -4,6 +4,8 @@ Django settings for CommCare Data Pipeline
 import json
 import os
 
+from celery.schedules import crontab
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -207,6 +209,13 @@ SITE_ID = 1
 # Celery setup (using Redis)
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_BEAT_SCHEDULE = {
+    'sync-forwarding-schedules': {
+        'task': 'apps.forwarding.tasks.sync_forwarding_schedules',
+        'schedule': crontab(hour='*/4'),  # Every 4 hours
+    },
+}
 
 
 # CommCare Config

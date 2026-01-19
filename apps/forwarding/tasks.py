@@ -5,6 +5,7 @@ from celery import shared_task
 
 from .models import ForwardingConfig, ForwardingRun
 from .runner import run_forwarding
+from .signals import create_or_update_periodic_task
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +56,40 @@ def run_scheduled_forwarding_task(fwd_config_id):
     )
     run_forwarding(fwd_run)
     return fwd_run.id
+
+
+@shared_task
+def sync_forwarding_schedules():
+    """
+    Syncs Schedule instances with ForwardingConfig instances.
+
+    This task runs every 4 hours to ensure all ForwardingConfig instances
+    that have a schedule also have a properly configured PeriodicTask.
+    This handles cases where ForwardingConfig instances are created or
+    updated outside the Django ORM (e.g., via database migrations, manual
+    SQL, or other means that bypass the post_save signal).
+
+    :returns: Dictionary with sync statistics
+    """
+    configs_with_schedule = ForwardingConfig.objects.filter(
+        schedule__isnull=False
+    ).select_related('schedule', 'schedule__periodic_task')
+
+    synced_count = 0
+
+    for config in configs_with_schedule:
+        create_or_update_periodic_task(
+            sender=ForwardingConfig,
+            instance=config,
+            created=False,
+        )
+        synced_count += 1
+
+    logger.info(
+        f'Forwarding schedule sync completed: {synced_count} configs synced'
+    )
+
+    return {
+        'synced': synced_count,
+        'total_checked': configs_with_schedule.count(),
+    }
