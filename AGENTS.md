@@ -8,8 +8,12 @@
 * Format: `ruff format <path/to/file.py>`
 * Sort imports `ruff check --select I --fix <path/to/file.py>`
 
+These commands assume the virtual environment in `.venv/` is activated.
 
-## Reference
+## Tech Stack
 
-* See `pyproject.toml` for the project's tech stack.
-* See `CONTRIBUTING.md` for the coding style to use.
+See [pyproject.toml](pyproject.toml).
+
+## Coding Style
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
