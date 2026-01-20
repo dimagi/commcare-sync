@@ -4,7 +4,15 @@
 {% load exports_tags %}
 {% load humanize %}
 <section class="section app-card">
-  <h1 class="title">{% trans "Export Configurations" %}</h1>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1 class="title" style="margin-bottom: 0;">{% trans "Export Configurations" %}</h1>
+    <a class="button is-info is-rounded is-small" href="{% url 'exports:download_commcare_export_log' %}">
+      <span class="icon">
+        <i class="fa fa-download"></i>
+      </span>
+      <span>{% trans "Download Export Log" %}</span>
+    </a>
+  </div>
 {% if exports.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_export_config' %}">
     <span class="icon">

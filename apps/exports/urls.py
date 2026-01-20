@@ -79,4 +79,9 @@ urlpatterns = [
         views.edit_database,
         name='edit_database',
     ),
+    path(
+        r'download/commcare-export-log/',
+        views.download_commcare_export_log,
+        name='download_commcare_export_log',
+    ),
 ]
