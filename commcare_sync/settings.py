@@ -35,6 +35,9 @@ if 'FERNET_KEYS' in os.environ:
 ALLOWED_HOSTS = []
 
 
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+
+
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
