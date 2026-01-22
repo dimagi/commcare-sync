@@ -3,6 +3,7 @@ import json
 import logging
 
 from celery import shared_task
+from django.db import DataError, connection, transaction
 from django_celery_beat.models import PeriodicTask
 
 from .models import ForwardingConfig, ForwardingRun
@@ -89,12 +90,18 @@ def delete_orphaned_periodic_tasks():
     Deletes ``PeriodicTask`` instances that reference deleted
     ``ForwardingConfig`` instances.
 
-    NOTE: This query is not efficient, as the 'task' and 'args' fields
-    are not indexed in the ``PeriodicTask`` model. For large numbers of
-    periodic tasks, this could be slow.
+    On PostgreSQL, this uses a raw SQL statement for efficiency.
+
+    ..note::
+        For other databases, this function is not efficient, as the
+        'task' and 'args' fields are not indexed in the ``PeriodicTask``
+        model. For large numbers of periodic tasks, this could be slow.
 
     :returns: Number of orphaned tasks deleted
     """
+    if connection.vendor == 'postgresql':
+        return delete_orphaned_periodic_tasks_postgres()
+
     periodic_tasks = PeriodicTask.objects.filter(
         task='apps.forwarding.tasks.run_scheduled_forwarding_task'
     )
@@ -122,6 +129,39 @@ def delete_orphaned_periodic_tasks():
                 )
 
     return orphaned_count
+
+
+def delete_orphaned_periodic_tasks_postgres():
+    """
+    Deletes orphaned PeriodicTask rows using a PostgreSQL-specific query.
+
+    :returns: Number of orphaned tasks deleted
+    """
+    periodic_task_table = connection.ops.quote_name(
+        PeriodicTask._meta.db_table
+    )
+    forwarding_config_table = connection.ops.quote_name(
+        ForwardingConfig._meta.db_table
+    )
+    sql = f"""
+        DELETE FROM {periodic_task_table} task
+        WHERE
+            task.task = 'apps.forwarding.tasks.run_scheduled_forwarding_task'
+            AND json_array_length(task.args::json) = 1
+            AND NOT (task.args::json ->> 0)::int IN (
+                SELECT id FROM {forwarding_config_table}
+            );
+    """
+    with connection.cursor() as cursor:
+        savepoint_id = transaction.savepoint()
+        try:
+            cursor.execute(sql)
+        except DataError as err:
+            transaction.savepoint_rollback(savepoint_id)
+            logger.warning(f'PeriodicTask data type error: {err}')
+            return 0
+        transaction.savepoint_commit(savepoint_id)
+        return cursor.rowcount
 
 
 @shared_task
