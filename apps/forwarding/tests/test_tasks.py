@@ -83,7 +83,7 @@ class TestEnsurePeriodicTasksExist(ForwardingTasksTestBase):
         )
         schedule.refresh_from_db()
         old_task_name = schedule.periodic_task.name
-        schedule.periodic_task.name = 'Old Name'
+        schedule.periodic_task.name = 'New Name'
         schedule.periodic_task.save()
 
         count = ensure_periodic_tasks_exist()
