@@ -95,16 +95,15 @@ def delete_orphaned_periodic_tasks():
 
     :returns: Number of orphaned tasks deleted
     """
-    orphaned_tasks = PeriodicTask.objects.filter(
+    periodic_tasks = PeriodicTask.objects.filter(
         task='apps.forwarding.tasks.run_scheduled_forwarding_task'
     )
-
     orphaned_count = 0
     valid_config_ids = set(
         ForwardingConfig.objects.values_list('id', flat=True)
     )
 
-    for periodic_task in orphaned_tasks:
+    for periodic_task in periodic_tasks:
         try:
             # periodic_task.args looks like '[config_id]'
             (config_id,) = json.loads(periodic_task.args)
