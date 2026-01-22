@@ -4,15 +4,19 @@
 {% load exports_tags %}
 {% load humanize %}
 <section class="section app-card">
-  <div class="exports-header">
-    <h1 class="title">{% trans "Export Configurations" %}</h1>
-    <a class="button is-info is-rounded is-small" href="{% url 'exports:download_commcare_export_log' %}">
-      <span class="icon">
-        <i class="fa fa-download"></i>
-      </span>
-      <span>{% trans "Download Export Log" %}</span>
-    </a>
-  </div>
+  <nav class="level">
+    <div class="level-left">
+      <h1 class="title">{% trans "Export Configurations" %}</h1>
+    </div>
+    <div class="level-right">
+      <a class="button is-info is-rounded is-small" href="{% url 'exports:download_commcare_export_log' %}">
+        <span class="icon">
+          <i class="fa fa-download"></i>
+        </span>
+        <span>{% trans "Download Export Log" %}</span>
+      </a>
+    </div>
+  </nav>
 {% if exports.exists %}
   <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_export_config' %}">
     <span class="icon">
