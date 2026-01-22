@@ -132,7 +132,7 @@ Install CommCare Data Pipeline:
 
    Use the email address as the username value too.
 
-CommCare Data Pipeline is ready. Go to http://localhost:8000/ to log in.
+CommCare Data Pipeline is ready. Go to http://localhost:8001/ to log in.
 
 
 Stopping
