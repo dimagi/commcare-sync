@@ -147,6 +147,7 @@ def delete_orphaned_periodic_tasks_postgres():
         DELETE FROM {periodic_task_table} task
         WHERE
             task.task = 'apps.forwarding.tasks.run_scheduled_forwarding_task'
+            AND task.args IS JSON ARRAY
             AND json_array_length(task.args::json) = 1
             AND NOT (task.args::json ->> 0)::int IN (
                 SELECT id FROM {forwarding_config_table}
