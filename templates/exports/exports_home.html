@@ -63,13 +63,19 @@
 </section>
 {% if multi_project_exports.exists %}
 <section class="section app-card">
-  <h1 class="title">{% trans "Multi-Project Export Configurations" %}</h1>
-  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_multi_export_config' %}">
-    <span class="icon">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Multi-Project Export" %}</span>
-  </a>
+  <nav class="level">
+    <div class="level-left">
+      <h1 class="title">{% trans "Multi-Project Export Configurations" %}</h1>
+    </div>
+    <div class="level-right">
+      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_multi_export_config' %}">
+        <span class="icon">
+          <i class="fa fa-plus"></i>
+        </span>
+        <span>{% trans "New Multi-Project Export" %}</span>
+      </a>
+    </div>
+  </nav>
   <table class="table is-striped is-fullwidth">
     <thead>
     <tr>
