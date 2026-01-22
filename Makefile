@@ -1,7 +1,7 @@
 start: ## Start the Docker containers
 	@echo "Starting the Docker containers"
 	@docker-compose up -d
-	@echo "Containers started - http://localhost:8000"
+	@echo "Containers started - http://localhost:8001"
 
 services: ## Start Docker containers excl. "web"
 	@docker-compose up db redis celery -d

@@ -2,7 +2,7 @@ services:
   db:
     image: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Don't clash host port with commcare-hq
     # persist data beyond lifetime of container
     volumes:
       - postgres_data:/var/lib/postgresql
@@ -13,7 +13,7 @@ services:
   redis:
     image: redis
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Don't clash host port with commcare-hq
     # persistent storage
     command: redis-server --appendonly yes
     volumes:
@@ -22,11 +22,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: uv run manage.py runserver 0.0.0.0:8000
+    command: uv run manage.py runserver 0.0.0.0:8001
     volumes:
       - .:/code
     ports:
-      - "8000:8000"
+      - "8001:8001"
     env_file:
       - ./.env.dev
     depends_on:
