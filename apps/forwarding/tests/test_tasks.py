@@ -1,8 +1,11 @@
 from datetime import date, time
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import TestCase
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
+import pytest
 
 from apps.exports.models import ExportDatabase
 from apps.schedules.models import Schedule
@@ -10,6 +13,7 @@ from apps.schedules.models import Schedule
 from ..models import ForwardingConfig, ForwardingDestination
 from ..tasks import (
     delete_orphaned_periodic_tasks,
+    delete_orphaned_periodic_tasks_postgres,
     ensure_periodic_tasks_exist,
     sync_forwarding_schedules,
 )
@@ -261,3 +265,94 @@ class TestSyncForwardingSchedules(ForwardingTasksTestBase):
 
         assert result['synced'] == 1
         assert result['orphaned_deleted'] == 1
+
+
+@pytest.mark.skipif(
+    connection.vendor != 'postgresql',
+    reason='PostgreSQL-specific tests',
+)
+class TestDeleteOrphanedPeriodicTasksPostgres(ForwardingTasksTestBase):
+
+    @patch('apps.forwarding.tasks.logger')
+    def test_ignores_non_json_array_args(self, mock_logger):
+        task = PeriodicTask.objects.create(
+            task='apps.forwarding.tasks.run_scheduled_forwarding_task',
+            name='Not JSON Array',
+            args='{"key": "value"}',
+            interval=self.interval,
+        )
+
+        count = delete_orphaned_periodic_tasks_postgres()
+
+        assert PeriodicTask.objects.filter(id=task.id).exists()
+        assert count == 0
+        mock_logger.warning.assert_not_called()
+
+    @patch('apps.forwarding.tasks.logger')
+    def test_ignores_empty_json_array(self, mock_logger):
+        task = PeriodicTask.objects.create(
+            task='apps.forwarding.tasks.run_scheduled_forwarding_task',
+            name='Empty Array',
+            args='[]',
+            interval=self.interval,
+        )
+
+        count = delete_orphaned_periodic_tasks_postgres()
+
+        assert PeriodicTask.objects.filter(id=task.id).exists()
+        assert count == 0
+        mock_logger.warning.assert_not_called()
+
+    @patch('apps.forwarding.tasks.logger')
+    def test_deletes_orphaned_task_with_valid_integer(self, mock_logger):
+        task = PeriodicTask.objects.create(
+            task='apps.forwarding.tasks.run_scheduled_forwarding_task',
+            name='Valid Orphaned',
+            args='[99999]',
+            interval=self.interval,
+        )
+
+        count = delete_orphaned_periodic_tasks_postgres()
+
+        assert not PeriodicTask.objects.filter(id=task.id).exists()
+        assert count == 1
+        mock_logger.warning.assert_not_called()
+
+    @patch('apps.forwarding.tasks.logger')
+    def test_deletes_orphaned_task_with_non_integer(self, mock_logger):
+        task = PeriodicTask.objects.create(
+            task='apps.forwarding.tasks.run_scheduled_forwarding_task',
+            name='Non-integer Value',
+            args='["not_an_integer"]',
+            interval=self.interval,
+        )
+
+        count = delete_orphaned_periodic_tasks_postgres()
+
+        assert not PeriodicTask.objects.filter(id=task.id).exists()
+        assert count == 1
+        mock_logger.warning.assert_not_called()
+
+    @patch('apps.forwarding.tasks.logger')
+    def test_preserves_task_with_valid_config_id(self, mock_logger):
+        schedule = Schedule.objects.create(
+            schedule_type=Schedule.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=Schedule.IntervalUnit.MINUTES,
+        )
+        ForwardingConfig.objects.create(
+            name='Active Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT 1',
+            created_by=self.user,
+            schedule=schedule,
+        )
+        schedule.refresh_from_db()
+        task_id = schedule.periodic_task.id
+
+        count = delete_orphaned_periodic_tasks_postgres()
+
+        assert PeriodicTask.objects.filter(id=task_id).exists()
+        assert count == 0
+        mock_logger.warning.assert_not_called()
