@@ -1,6 +1,7 @@
 import json
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import (
@@ -348,3 +349,19 @@ def fetch_config_files(request):
     if errors:
         data['errors'] = errors
     return JsonResponse(data)
+
+
+@login_required
+def download_commcare_export_log(request):
+    """
+    Download the commcare_export.log file from the configured log directory.
+    """
+    log_file_path = os.path.join(settings.LOG_DIR, 'commcare_export.log')
+
+    if not os.path.exists(log_file_path):
+        raise Http404('Log file not found')
+
+    with open(log_file_path, 'rb') as f:
+        response = HttpResponse(f.read(), content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename=commcare_export.log'
+        return response
