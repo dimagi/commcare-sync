@@ -1,6 +1,16 @@
 {% load i18n %}
 <aside class="menu">
   <p class="menu-label is-hidden-tablet-only">
+    {% trans "Overview" %}
+  </p>
+  <ul class="menu-list">
+    <li>
+      <a href="{% url 'web:dashboard' %}" {% if active_tab == 'dashboard' %}class="is-active"{% endif %}>
+        <span class="icon"><i class="fa fa-tachometer"></i></span><span class="is-hidden-tablet-only">{% trans "Dashboard" %}</span>
+      </a>
+    </li>
+  </ul>
+  <p class="menu-label is-hidden-tablet-only">
     {% trans "CommCare Management" %}
   </p>
   <ul class="menu-list">
