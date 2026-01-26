@@ -286,8 +286,8 @@ wheels = [
 
 [[package]]
 name = "commcare-export"
-version = "1.14.0"
-source = { git = "https://github.com/dimagi/commcare-export.git#40ec82ef5cb0be19eb67b9d5cecb31ac890dabd9" }
+version = "1.14.0.post1.dev18"
+source = { git = "https://github.com/dimagi/commcare-export.git?branch=nh%2Frefactor_tests#7d37ba1877342fc7816cdae98f6f75198175e325" }
 dependencies = [
     { name = "alembic" },
     { name = "backoff" },
@@ -353,7 +353,7 @@ test = [
 requires-dist = [
     { name = "celery", extras = ["redis"] },
     { name = "celery-progress" },
-    { name = "commcare-export", git = "https://github.com/dimagi/commcare-export.git" },
+    { name = "commcare-export", git = "https://github.com/dimagi/commcare-export.git?branch=nh%2Frefactor_tests" },
     { name = "cryptography" },
     { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git" },
     { name = "django", specifier = "~=5.2" },
