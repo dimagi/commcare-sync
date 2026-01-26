@@ -46,7 +46,7 @@ test = [
 
 [tool.uv.sources]
 db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git" }
-commcare-export = { git = "https://github.com/dimagi/commcare-export.git" }
+commcare-export = { git = "https://github.com/dimagi/commcare-export.git", branch = "nh/refactor_tests" }
 
 [tool.mypy]
 disallow_incomplete_defs = true
