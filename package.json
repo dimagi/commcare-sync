@@ -1,7 +1,7 @@
 {
-  "name": "commcare-det-web",
+  "name": "commcare-data-pipeline",
   "version": "1.0.0",
-  "description": "",
+  "description": "CommCare Data Pipeline simplifies the management of your CommCare data pipeline",
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,8 +9,8 @@
     "dev": "webpack --mode development",
     "dev-watch": "webpack --mode development --watch"
   },
-  "author": "",
-  "homepage": "http://example.com/",
+  "author": "Dimagi",
+  "homepage": "https://github.com/dimagi/commcare-sync/",
   "devDependencies": {
     "@babel/cli": "^7.19.3",
     "@babel/core": "^7.8.7",
