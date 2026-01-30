@@ -1,7 +1,7 @@
 [project]
 name = "commcare-sync"
 version = "0.1.0"
-description = "CommCare Data Pipeline simplifies the management of your CommCare data pipeline"
+description = "CommCare Data Pipeline continuously exports CommCare data into your own databases and BI platforms."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [

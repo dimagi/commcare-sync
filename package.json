@@ -1,7 +1,7 @@
 {
   "name": "commcare-data-pipeline",
   "version": "1.0.0",
-  "description": "CommCare Data Pipeline simplifies the management of your CommCare data pipeline",
+  "description": "CommCare Data Pipeline continuously exports CommCare data into your own databases and BI platforms.",
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

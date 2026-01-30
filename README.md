@@ -1,8 +1,8 @@
 CommCare Data Pipeline
 ======================
 
-CommCare Data Pipeline simplifies the setup and management of your
-CommCare data pipeline.
+CommCare Data Pipeline continuously exports CommCare data into your own
+databases and BI platforms.
 
 It is a self-hosted, standalone web application designed to manage a
 CommCare “data warehouse” over the command-line
