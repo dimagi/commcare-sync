@@ -17,3 +17,7 @@ See [pyproject.toml](pyproject.toml).
 ## Coding Style
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Skills
+
+When creating AI skills for this project, add them to `.claude/skills/`. This format is compatible with both Cursor and Claude Code.
