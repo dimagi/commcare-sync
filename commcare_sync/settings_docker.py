@@ -1,6 +1,6 @@
 from .settings import *  # noqa: F403
 
-REDIS_URL = 'redis://redis:6380'  # from docker compose file
+REDIS_URL = 'redis://redis:6379'  # internal Docker network port
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 
@@ -11,7 +11,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'db',  # from docker compose file
-        'PORT': '5433',
+        'PORT': '5432',  # internal Docker network port
     }
 }
 
