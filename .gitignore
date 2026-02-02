@@ -13,3 +13,6 @@ static_root/
 
 # uv
 .venv/
+
+#configuration
+.env
