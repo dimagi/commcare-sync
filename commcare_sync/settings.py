@@ -223,11 +223,11 @@ COMMCARE_SYNC_UI_PAGE_SIZE = 25
 
 
 PROJECT_METADATA = {
-    'NAME': 'CommCare Sync',
+    'NAME': 'CommCare Data Pipeline',
     'URL': 'http://localhost:8001',
-    'DESCRIPTION': 'Simplifies the management of your CommCare data pipeline',
+    'DESCRIPTION': "Continuously exports CommCare data into your own databases and BI platforms",
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
-    'KEYWORDS': 'CommCare, Export',
+    'KEYWORDS': 'CommCare, Export, Data, Pipeline',
 }
 
 

@@ -1,4 +1,4 @@
-# Contributing to CommCare Sync
+# Contributing to CommCare Data Pipeline
 
 ## Coding style
 

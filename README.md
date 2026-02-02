@@ -1,27 +1,30 @@
 CommCare Data Pipeline
 ======================
 
-CommCare Data Pipeline simplifies the setup and management of your
-CommCare data pipeline.
+CommCare Data Pipeline continuously exports CommCare data into your own
+databases and BI platforms.
 
 It is a self-hosted, standalone web application designed to manage a
-CommCare “data warehouse” over the command-line
+CommCare data warehouse over the command-line
 [CommCare Data Export Tool](https://dimagi.atlassian.net/wiki/spaces/commcarepublic/pages/2143955952/CommCare+Data+Export+Tool+DET).
 
 This turnkey solution allows you to export data from CommCare and store
 it in a local or cloud-based database, including MySQL, PostgreSQL,
-Amazon RDS, GCP Cloud SQL, and Azure SQL Database. With CommCare Data
-Pipeline, you can utilise these key features:
+Microsoft SQL Server, Amazon RDS, GCP Cloud SQL, and Azure SQL Database.
 
-- **Automated Configuration:** Generate a Data Export Tool
-  (DET) configuration file directly from CommCare.
+With CommCare Data Pipeline, you can utilise these key features:
+
+- **Automated Configuration:** Import a Data Export Tool (DET)
+  configuration directly from CommCare.
 
 - **Seamless Integration:** Connect CommCare Data Pipeline to your
   CommCare project space(s) and database(s).
 
-- **Scheduled Data Exports:** Upload a DET configuration file to
-  automate data transfers from CommCare to your database on a defined
-  schedule.
+- **Scheduled Data Exports:** Automate data transfers from CommCare to
+  your database on a defined schedule.
+
+- **Data Forwarding:** Forward data automatically from your database to
+  a RESTful JSON API on a scheduled basis.
 
 - **Export Monitoring:** Track and manage data export activities through
   CommCare Data Pipeline’s built-in log feature.
