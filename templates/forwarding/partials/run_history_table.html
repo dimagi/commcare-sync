@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="forwarding-run-table" class="table is-fullwidth my-2">
+<table id="forwarding-run-table" class="table w-100 my-2">
   <thead>
   <tr>
     <th>{% trans "Queued" %}</th>
@@ -19,9 +19,9 @@
       {% if forwarding_run.triggered_from_ui %}
         <i class="fa fa-user" title="{% blocktrans with user=forwarding_run.triggering_user|default:'unknown' %}Triggered from UI by {{ user }}{% endblocktrans %}"></i>
       {% elif forwarding_run.triggered_from_ui == False %}
-        <i class="fa fa-clock-o has-text-grey-light" title="{% trans 'Scheduled Run' %}"></i>
+        <i class="fa fa-clock-o text-muted" title="{% trans 'Scheduled Run' %}"></i>
       {% else %}
-        <i class="fa fa-question has-text-grey-light" title="{% trans 'Unknown' %}"></i>
+        <i class="fa fa-question text-muted" title="{% trans 'Unknown' %}"></i>
       {% endif %}
       </span>
         {{ forwarding_run.created_at }}
