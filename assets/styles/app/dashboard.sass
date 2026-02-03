@@ -42,14 +42,14 @@
   .recent-runs
     margin-top: 1rem
     padding-top: 1rem
-    border-top: 1px solid $grey-lighter
+    border-top: 1px solid $gray-200
 
 /* Responsive design */
-+tablet
+@include media-breakpoint-up(md)
   .pipeline-flow
     min-height: 400px
 
-+mobile
+@include media-breakpoint-down(sm)
   .pipeline-flow
     flex-direction: column
 
