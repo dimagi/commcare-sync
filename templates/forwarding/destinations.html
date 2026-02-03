@@ -9,7 +9,7 @@
     {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
   </p>
   {% if user.is_superuser %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'forwarding:create_destination' %}">
+  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'forwarding:create_destination' %}">
     <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>

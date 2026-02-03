@@ -9,7 +9,7 @@
   <h1 class="h2">{% trans "Projects" %}</h1>
   <h2 class="lead">{% trans "Manage the CommCare project spaces you'll connect to here" %}</h2>
 {% if projects.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'commcare:create_project' %}">
+  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'commcare:create_project' %}">
     <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
@@ -56,7 +56,7 @@
   <h1 class="h2">{% trans "Accounts" %}</h1>
   <h2 class="lead">{% trans "Manage the CommCare accounts used to sync your data" %}</h2>
 {% if accounts.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'commcare:create_account' %}">
+  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'commcare:create_account' %}">
     <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
