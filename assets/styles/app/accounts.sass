@@ -1,5 +1,4 @@
-@import 'bulma/sass/utilities/initial-variables'
-
+// Bootstrap mixins and variables are available from site.scss
 
 img.socialicon
   padding-right: .5em
@@ -13,7 +12,7 @@ img.socialicon
   margin: 2em
   padding: 2em
   // on tablets make it a pop-up style form
-  +from($tablet)
+  @include media-breakpoint-up(md)
     border-radius: .3em
     box-shadow: $default-shadow
     background-color: $white

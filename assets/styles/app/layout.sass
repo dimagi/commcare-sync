@@ -3,10 +3,10 @@
   box-shadow: $default-shadow
   .navbar-item
     &.is-active
-      +until($desktop)
+      @include media-breakpoint-down(md)
         background-color: inherit
-      +from($desktop)
-        border-bottom: 3px solid $navbar-item-active-color
+      @include media-breakpoint-up(lg)
+        border-bottom: 3px solid $link-color
 
   // style avatar / profile picture in nav
   img.avatar
@@ -21,17 +21,17 @@
   // default to menu above content
   flex-direction: column
   // but display side-by-side if enough space
-  +from($tablet)
+  @include media-breakpoint-up(md)
     flex-direction: row
 
 #app-nav
-  +from($desktop)
+  @include media-breakpoint-up(lg)
     min-width: 12em
 
 #app-content
   flex-direction: row
-  width: 100%
-  +from($tablet)
+  min-width: 0
+  @include media-breakpoint-up(md)
     margin-left: 2em
 
 .app-card
@@ -40,8 +40,8 @@
   width: 100%
   border-radius: .3em
   box-shadow: $default-shadow
-  // allow using "notification" class to override color styles
-  &:not(.notification)
+  // allow using "alert" class to override color styles
+  &:not(.alert)
     background-color: white
 
 // for content-heavy things like blogs
@@ -50,15 +50,15 @@
   max-width: 1152px
 
 #content-nav
-  +from($desktop)
+  @include media-breakpoint-up(lg)
     min-width: 14em
-  +tablet-only()
+  @include media-breakpoint-only(md)
     min-width: 8em
 
 // these classes related to a sticky notification: https://coder-coder.com/sticky-header-animated/
-.notification
+.alert
   transition: padding 300ms ease
-  // override bulma adding a margin to notices
+  // override Bootstrap adding a margin to notices
   &.app-message
     margin-bottom: .5rem
   &.sticky
