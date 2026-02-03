@@ -1,13 +1,13 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Add Account" %}</h1>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Add Account" %}</h1>
   <form method="post" enctype="multipart/form-data">
     {% include 'commcare/partials/account_form.html' %}
-    <div class="field is-grouped">
-        <div class="control">
-            <input class="button is-primary" type="submit" value="{% trans 'Add Account' %}">
+    <div class="d-flex gap-2">
+        <div>
+            <input class="btn btn-primary" type="submit" value="{% trans 'Add Account' %}">
         </div>
     </div>
   </form>

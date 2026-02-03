@@ -1,10 +1,10 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="section app-card">
-  <h1 class="title">{% blocktrans with name=export.name %}Delete {{ name }}?{% endblocktrans %}</h1>
-  <h2 class="subtitle">{% trans "Are you sure you want to delete this export? This operation is not reversible." %}</h2>
-  <div class="content">
+<section class="py-4 app-card">
+  <h1 class="h2">{% blocktrans with name=export.name %}Delete {{ name }}?{% endblocktrans %}</h1>
+  <h2 class="lead">{% trans "Are you sure you want to delete this export? This operation is not reversible." %}</h2>
+  <div>
     <p>{% trans "After deleting, the following items will be deleted and the export will stop syncing data." %}</p>
     <ul>
       <li>{% trans "The Export and its configuration file." %}</li>
@@ -14,12 +14,12 @@
   </div>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="field is-grouped">
-      <div class="control">
-        <input class="button is-danger" type="submit" value="{% trans 'Delete Export' %}">
+    <div class="d-flex gap-2">
+      <div>
+        <input class="btn btn-danger" type="submit" value="{% trans 'Delete Export' %}">
       </div>
-      <div class="control">
-        <a class="button is-primary is-outlined" href="{{ export.details_url }}">{% trans "Cancel" %}</a>
+      <div>
+        <a class="btn btn-outline-primary" href="{{ export.details_url }}">{% trans "Cancel" %}</a>
       </div>
     </div>
   </form>
