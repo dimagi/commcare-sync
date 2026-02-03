@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="export-run-table" class="table is-fullwidth my-2">
+<table id="export-run-table" class="table w-100 my-2">
   <thead>
   <tr>
     <th>{% trans "Queued" %}</th>
@@ -27,9 +27,9 @@
       {% if export_run.triggered_from_ui %}
         <i class="fa fa-user" title="{% blocktrans with user=export_run.triggering_user|default:'unknown' %}Triggered from UI by {{ user }}{% endblocktrans %}"></i>
       {% elif export_run.triggered_from_ui == False %}
-        <i class="fa fa-clock-o has-text-grey-light" title="{% trans 'Scheduled Run' %}"></i>
+        <i class="fa fa-clock-o text-muted" title="{% trans 'Scheduled Run' %}"></i>
       {% else %}
-        <i class="fa fa-question has-text-grey-light" title="{% trans 'Unknown' %}"></i>
+        <i class="fa fa-question text-muted" title="{% trans 'Unknown' %}"></i>
       {% endif %}
       </span>
 
@@ -52,13 +52,11 @@
       {% if not is_partial_list %}
       <td>
         {% if export_run.export_config_version.field_dict.config_file %}
-        <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}">
-        <span class="icon">
+        <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}">
           <i class="fa fa-download"></i>
-        </span>
         </a>
         {% else %}
-          <span class="has-text-grey">{% trans "Not available" %}</span>
+          <span class="text-muted">{% trans "Not available" %}</span>
         {% endif %}
       </td>
       {% endif %}
