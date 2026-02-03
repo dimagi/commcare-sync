@@ -1,47 +1,47 @@
 {% load i18n %}
 {% csrf_token %}
 {{ config_form.non_field_errors }}
-<div class="field">
-  <label class="label">{% trans "Name" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "Name" %}</label>
+  <div>
     {{ config_form.name }}
   </div>
-  <p class="help">{{ config_form.name.help_text }}</p>
+  <p class="form-text">{{ config_form.name.help_text }}</p>
   {{ config_form.name.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "Database" %}</label>
-  <div class="control">
-    <div class="select">
+<div class="mb-3">
+  <label class="form-label">{% trans "Database" %}</label>
+  <div>
+    <div>
       {{ config_form.database }}
     </div>
   </div>
-  <p class="help">{{ config_form.database.help_text }}</p>
+  <p class="form-text">{{ config_form.database.help_text }}</p>
   {{ config_form.database.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "Destination" %}</label>
-  <div class="control">
-    <div class="select">
+<div class="mb-3">
+  <label class="form-label">{% trans "Destination" %}</label>
+  <div>
+    <div>
       {{ config_form.destination }}
     </div>
   </div>
-  <p class="help">{{ config_form.destination.help_text }}</p>
+  <p class="form-text">{{ config_form.destination.help_text }}</p>
   {{ config_form.destination.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "Query" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "Query" %}</label>
+  <div>
     {{ config_form.query }}
   </div>
-  <p class="help">{{ config_form.query.help_text }}</p>
+  <p class="form-text">{{ config_form.query.help_text }}</p>
   {{ config_form.query.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "Query Parameters" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "Query Parameters" %}</label>
+  <div>
     {{ config_form.query_params }}
   </div>
-  <p class="help">{{ config_form.query_params.help_text }}</p>
+  <p class="form-text">{{ config_form.query_params.help_text }}</p>
   {{ config_form.query_params.errors }}
 </div>

@@ -1,24 +1,23 @@
 {% load i18n %}
 {% load humanize %}
-<section class="section app-card">
-  <div class="level">
-    <!-- Left side -->
-    <div class="level-left">
-      <h1 class="title">{% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}</h1>
+<section class="py-4 app-card">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="h2">{% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}</h1>
     </div>
-    <div class="level-right">
-      <a class="button is-danger is-rounded is-small is-outlined" href="{% url 'exports:delete_multi_export_config' export.id %}">
-        <span class="icon">
+    <div>
+      <a class="btn btn-outline-danger btn-sm rounded-pill" href="{% url 'exports:delete_multi_export_config' export.id %}">
+        <span class="me-2">
           <i class="fa fa-times"></i>
         </span>
         <span>{% trans "Delete" %}</span>
       </a>
     </div>
   </div>
-  <div class="columns">
-    <div class="column">
-      <span class="heading">{% trans "Project Spaces" %}</span>
-      <h2>
+  <div class="row">
+    <div class="col">
+      <span class="text-muted small">{% trans "Project Spaces" %}</span>
+      <h2 class="h5">
         {% for project in export.projects.all %}
           <a href="{{ project.url }}" target="_blank" style="white-space: nowrap;">{{ project.domain }}
             <i class="fa fa-external-link"></i>
@@ -27,48 +26,48 @@
         {% endfor %}
       </h2>
     </div>
-    <div class="column">
-      <span class="heading">{% trans "Account" %}</span>
-      <h2>
+    <div class="col">
+      <span class="text-muted small">{% trans "Account" %}</span>
+      <h2 class="h5">
         {{ export.account.username }}
       </h2>
     </div>
-    <div class="column">
-      <span class="heading">{% trans "Database" %}</span>
-      <h2>
+    <div class="col">
+      <span class="text-muted small">{% trans "Database" %}</span>
+      <h2 class="h5">
         {{ export.database.name }}
       </h2>
     </div>
-    <div class="column">
-      <span class="heading">{% trans "Created By" %}</span>
-      <h2>
+    <div class="col">
+      <span class="text-muted small">{% trans "Created By" %}</span>
+      <h2 class="h5">
         {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username}}{% endif %}
       </h2>
     </div>
-    <div class="column">
-      <span class="heading">{% trans "Last Modified" %}</span>
-      <h2>
+    <div class="col">
+      <span class="text-muted small">{% trans "Last Modified" %}</span>
+      <h2 class="h5">
         {{ export.updated_at|naturaltime }}
       </h2>
     </div>
   </div>
-  <div class="buttons">
+  <div class="d-flex gap-2">
   {% if show_back_button %}
-    <a class="button is-primary is-rounded is-small" href="{% url 'exports:multi_export_details' export.id %}">
-      <span class="icon">
+    <a class="btn btn-primary btn-sm rounded-pill" href="{% url 'exports:multi_export_details' export.id %}">
+      <span class="me-2">
         <i class="fa fa-arrow-left"></i>
       </span>
       <span>{% trans "Back" %}</span>
     </a>
   {% endif %}
-    <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:download_multi_export_file' export.id %}">
-      <span class="icon">
+    <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'exports:download_multi_export_file' export.id %}">
+      <span class="me-2">
         <i class="fa fa-download"></i>
       </span>
       <span>{% trans "Download Config File" %}</span>
     </a>
-    <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:edit_multi_export_config' export.id %}">
-      <span class="icon">
+    <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'exports:edit_multi_export_config' export.id %}">
+      <span class="me-2">
         <i class="fa fa-edit"></i>
       </span>
       <span>{% trans "Edit" %}</span>

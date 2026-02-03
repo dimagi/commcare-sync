@@ -1,15 +1,15 @@
 {% load i18n %}
 {% csrf_token %}
 {{ form.non_field_errors }}
-<div class="field">
-  <label class="label">{% trans "Name" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "Name" %}</label>
+  <div>
     {{ form.name }}
   </div>
   {{ form.name.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "Projects" %}</label>
+<div class="mb-3">
+  <label class="form-label">{% trans "Projects" %}</label>
   <div>
     {{ form.projects }}
   </div>

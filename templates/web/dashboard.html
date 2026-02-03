@@ -4,13 +4,11 @@
 {% load exports_tags %}
 
 {% block app %}
-<section class="section app-card">
-  <div class="level">
-    <div class="level-left">
-      <div>
-        <h1 class="title">{% trans "Data Pipeline Dashboard" %}</h1>
-        <p class="subtitle">{% trans "Overview of your CommCare data pipeline" %}</p>
-      </div>
+<section class="py-4 app-card">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="h2">{% trans "Data Pipeline Dashboard" %}</h1>
+      <p class="lead">{% trans "Overview of your CommCare data pipeline" %}</p>
     </div>
   </div>
 
@@ -20,42 +18,44 @@
     <!-- Stage 1: Exports -->
     <div class="pipeline-stage">
       <div class="card pipeline-card">
-        <div class="card-header {% if export_stats.status == 'healthy' %}has-background-success-light{% elif export_stats.status == 'error' %}has-background-danger-light{% elif export_stats.status == 'warning' %}has-background-warning-light{% endif %}">
-          <p class="card-header-title">
-            <span class="icon"><i class="fa fa-download"></i></span>
-            <span>{% trans "Exports" %}</span>
-          </p>
-          <div class="card-header-icon">
-            {% if export_stats.status == 'healthy' %}
-              <span class="tag is-success">{% trans "Healthy" %}</span>
-            {% elif export_stats.status == 'warning' %}
-              <span class="tag is-warning">{% trans "Warning" %}</span>
-            {% elif export_stats.status == 'error' %}
-              <span class="tag is-danger">{% trans "Issues" %}</span>
-            {% else %}
-              <span class="tag is-light">{% trans "No Data" %}</span>
-            {% endif %}
+        <div class="card-header {% if export_stats.status == 'healthy' %}bg-success-subtle{% elif export_stats.status == 'error' %}bg-danger-subtle{% elif export_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <h5 class="card-title mb-0">
+              <span class="me-2"><i class="fa fa-download"></i></span>
+              <span>{% trans "Exports" %}</span>
+            </h5>
+            <div>
+              {% if export_stats.status == 'healthy' %}
+                <span class="badge bg-success">{% trans "Healthy" %}</span>
+              {% elif export_stats.status == 'warning' %}
+                <span class="badge bg-warning">{% trans "Warning" %}</span>
+              {% elif export_stats.status == 'error' %}
+                <span class="badge bg-danger">{% trans "Issues" %}</span>
+              {% else %}
+                <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+              {% endif %}
+            </div>
           </div>
         </div>
-        <div class="card-content">
-          <div class="content">
-            <div class="level">
-              <div class="level-item has-text-centered">
+        <div class="card-body">
+          <div>
+            <div class="d-flex justify-content-around align-items-center">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Configs" %}</p>
-                  <p class="title is-5">{{ export_stats.total_configs }}</p>
+                  <p class="text-muted small mb-1">{% trans "Configs" %}</p>
+                  <p class="h5">{{ export_stats.total_configs }}</p>
                 </div>
               </div>
-              <div class="level-item has-text-centered">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Last 24h" %}</p>
-                  <p class="title is-5">{{ export_stats.last_24h_runs }}</p>
+                  <p class="text-muted small mb-1">{% trans "Last 24h" %}</p>
+                  <p class="h5">{{ export_stats.last_24h_runs }}</p>
                 </div>
               </div>
-              <div class="level-item has-text-centered">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Success" %}</p>
-                  <p class="title is-5 {% if export_stats.status == 'healthy' %}has-text-success{% elif export_stats.status == 'error' %}has-text-danger{% elif export_stats.status == 'warning' %}has-text-warning{% endif %}">
+                  <p class="text-muted small mb-1">{% trans "Success" %}</p>
+                  <p class="h5 {% if export_stats.status == 'healthy' %}text-success{% elif export_stats.status == 'error' %}text-danger{% elif export_stats.status == 'warning' %}text-warning{% endif %}">
                     {{ export_stats.success_rate }}%
                   </p>
                 </div>
@@ -63,9 +63,9 @@
             </div>
 
             {% if export_stats.recent_runs %}
-            <div class="recent-runs">
-              <p class="heading mb-2">{% trans "Recent Exports" %}</p>
-              <table class="table is-narrow is-fullwidth is-size-7">
+            <div class="recent-runs mt-3">
+              <p class="text-muted small mb-2">{% trans "Recent Exports" %}</p>
+              <table class="table table-sm w-100 small">
                 <tbody>
                   {% for run in export_stats.recent_runs|slice:":5" %}
                   <tr>
@@ -75,7 +75,7 @@
                       </a>
                     </td>
                     <td>{{ run.status|to_status_icon }}</td>
-                    <td class="has-text-grey is-size-7">{{ run.created_at|naturaltime }}</td>
+                    <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -84,37 +84,39 @@
             {% endif %}
           </div>
         </div>
-        <footer class="card-footer">
-          <a href="{% url 'exports:home' %}" class="card-footer-item">
+        <div class="card-footer">
+          <a href="{% url 'exports:home' %}" class="card-link">
             {% trans "Manage Exports" %}
           </a>
-        </footer>
+        </div>
       </div>
     </div>
 
     <div class="pipeline-arrow">
-      <i class="fa fa-arrow-right has-text-primary"></i>
+      <i class="fa fa-arrow-right text-primary"></i>
     </div>
 
     <!-- Stage 2: Aggregation (Placeholder) -->
     <div class="pipeline-stage">
       <div class="card pipeline-card is-placeholder">
-        <div class="card-header has-background-light">
-          <p class="card-header-title has-text-grey">
-            <span class="icon"><i class="fa fa-table"></i></span>
-            <span>{% trans "Aggregation" %}</span>
-          </p>
-          <div class="card-header-icon">
-            <span class="tag is-light">{% trans "Coming Soon" %}</span>
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <h5 class="card-title mb-0 text-muted">
+              <span class="me-2"><i class="fa fa-table"></i></span>
+              <span>{% trans "Aggregation" %}</span>
+            </h5>
+            <div>
+              <span class="badge bg-light text-dark">{% trans "Coming Soon" %}</span>
+            </div>
           </div>
         </div>
-        <div class="card-content">
-          <div class="content has-text-grey">
-            <p class="is-size-7">
+        <div class="card-body">
+          <div class="text-muted">
+            <p class="small">
               <i class="fa fa-info-circle"></i>
               {% trans "Scheduled materialized view rebuilds will appear here." %}
             </p>
-            <p class="is-size-7">
+            <p class="small">
               {% trans "This stage will automatically rebuild database views to aggregate data from exports." %}
             </p>
           </div>
@@ -123,28 +125,30 @@
     </div>
 
     <div class="pipeline-arrow">
-      <i class="fa fa-arrow-right has-text-grey-light"></i>
+      <i class="fa fa-arrow-right text-muted"></i>
     </div>
 
     <!-- Stage 3: Transformation (Placeholder) -->
     <div class="pipeline-stage">
       <div class="card pipeline-card is-placeholder">
-        <div class="card-header has-background-light">
-          <p class="card-header-title has-text-grey">
-            <span class="icon"><i class="fa fa-cogs"></i></span>
-            <span>{% trans "Transformation" %}</span>
-          </p>
-          <div class="card-header-icon">
-            <span class="tag is-light">{% trans "Coming Soon" %}</span>
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <h5 class="card-title mb-0 text-muted">
+              <span class="me-2"><i class="fa fa-cogs"></i></span>
+              <span>{% trans "Transformation" %}</span>
+            </h5>
+            <div>
+              <span class="badge bg-light text-dark">{% trans "Coming Soon" %}</span>
+            </div>
           </div>
         </div>
-        <div class="card-content">
-          <div class="content has-text-grey">
-            <p class="is-size-7">
+        <div class="card-body">
+          <div class="text-muted">
+            <p class="small">
               <i class="fa fa-info-circle"></i>
               {% trans "Scheduled view transformations will appear here." %}
             </p>
-            <p class="is-size-7">
+            <p class="small">
               {% trans "This stage will transform aggregated data into payloads for external systems." %}
             </p>
           </div>
@@ -153,48 +157,50 @@
     </div>
 
     <div class="pipeline-arrow">
-      <i class="fa fa-arrow-right has-text-primary"></i>
+      <i class="fa fa-arrow-right text-primary"></i>
     </div>
 
     <!-- Stage 4: Forwarders -->
     <div class="pipeline-stage">
       <div class="card pipeline-card">
-        <div class="card-header {% if forwarding_stats.status == 'healthy' %}has-background-success-light{% elif forwarding_stats.status == 'error' %}has-background-danger-light{% elif forwarding_stats.status == 'warning' %}has-background-warning-light{% endif %}">
-          <p class="card-header-title">
-            <span class="icon"><i class="fa fa-paper-plane"></i></span>
-            <span>{% trans "Forwarders" %}</span>
-          </p>
-          <div class="card-header-icon">
-            {% if forwarding_stats.status == 'healthy' %}
-              <span class="tag is-success">{% trans "Healthy" %}</span>
-            {% elif forwarding_stats.status == 'warning' %}
-              <span class="tag is-warning">{% trans "Warning" %}</span>
-            {% elif forwarding_stats.status == 'error' %}
-              <span class="tag is-danger">{% trans "Issues" %}</span>
-            {% else %}
-              <span class="tag is-light">{% trans "No Data" %}</span>
-            {% endif %}
+        <div class="card-header {% if forwarding_stats.status == 'healthy' %}bg-success-subtle{% elif forwarding_stats.status == 'error' %}bg-danger-subtle{% elif forwarding_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <h5 class="card-title mb-0">
+              <span class="me-2"><i class="fa fa-paper-plane"></i></span>
+              <span>{% trans "Forwarders" %}</span>
+            </h5>
+            <div>
+              {% if forwarding_stats.status == 'healthy' %}
+                <span class="badge bg-success">{% trans "Healthy" %}</span>
+              {% elif forwarding_stats.status == 'warning' %}
+                <span class="badge bg-warning">{% trans "Warning" %}</span>
+              {% elif forwarding_stats.status == 'error' %}
+                <span class="badge bg-danger">{% trans "Issues" %}</span>
+              {% else %}
+                <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+              {% endif %}
+            </div>
           </div>
         </div>
-        <div class="card-content">
-          <div class="content">
-            <div class="level">
-              <div class="level-item has-text-centered">
+        <div class="card-body">
+          <div>
+            <div class="d-flex justify-content-around align-items-center">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Configs" %}</p>
-                  <p class="title is-5">{{ forwarding_stats.total_configs }}</p>
+                  <p class="text-muted small mb-1">{% trans "Configs" %}</p>
+                  <p class="h5">{{ forwarding_stats.total_configs }}</p>
                 </div>
               </div>
-              <div class="level-item has-text-centered">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Last 24h" %}</p>
-                  <p class="title is-5">{{ forwarding_stats.last_24h_runs }}</p>
+                  <p class="text-muted small mb-1">{% trans "Last 24h" %}</p>
+                  <p class="h5">{{ forwarding_stats.last_24h_runs }}</p>
                 </div>
               </div>
-              <div class="level-item has-text-centered">
+              <div class="text-center">
                 <div>
-                  <p class="heading">{% trans "Success" %}</p>
-                  <p class="title is-5 {% if forwarding_stats.status == 'healthy' %}has-text-success{% elif forwarding_stats.status == 'error' %}has-text-danger{% elif forwarding_stats.status == 'warning' %}has-text-warning{% endif %}">
+                  <p class="text-muted small mb-1">{% trans "Success" %}</p>
+                  <p class="h5 {% if forwarding_stats.status == 'healthy' %}text-success{% elif forwarding_stats.status == 'error' %}text-danger{% elif forwarding_stats.status == 'warning' %}text-warning{% endif %}">
                     {{ forwarding_stats.success_rate }}%
                   </p>
                 </div>
@@ -202,9 +208,9 @@
             </div>
 
             {% if forwarding_stats.recent_runs %}
-            <div class="recent-runs">
-              <p class="heading mb-2">{% trans "Recent Forwards" %}</p>
-              <table class="table is-narrow is-fullwidth is-size-7">
+            <div class="recent-runs mt-3">
+              <p class="text-muted small mb-2">{% trans "Recent Forwards" %}</p>
+              <table class="table table-sm w-100 small">
                 <tbody>
                   {% for run in forwarding_stats.recent_runs|slice:":5" %}
                   <tr>
@@ -214,7 +220,7 @@
                       </a>
                     </td>
                     <td>{{ run.status|to_status_icon }}</td>
-                    <td class="has-text-grey is-size-7">{{ run.created_at|naturaltime }}</td>
+                    <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -223,11 +229,11 @@
             {% endif %}
           </div>
         </div>
-        <footer class="card-footer">
-          <a href="{% url 'forwarding:forwarders' %}" class="card-footer-item">
+        <div class="card-footer">
+          <a href="{% url 'forwarding:forwarders' %}" class="card-link">
             {% trans "Manage Forwarding" %}
           </a>
-        </footer>
+        </div>
       </div>
     </div>
 
@@ -235,16 +241,16 @@
 
   <!-- Empty State (when no data) -->
   {% if export_stats.total_configs == 0 and forwarding_stats.total_configs == 0 %}
-  <div class="notification is-info is-light mt-5">
-    <p class="heading">{% trans "Welcome to CommCare Sync!" %}</p>
+  <div class="alert alert-info mt-5">
+    <p class="text-muted small mb-1">{% trans "Welcome to CommCare Sync!" %}</p>
     <p>{% trans "Get started by configuring your CommCare connection and creating your first data export." %}</p>
-    <div class="buttons mt-3">
-      <a class="button is-primary" href="{% url 'commcare:home' %}">
-        <span class="icon"><i class="fa fa-cog"></i></span>
+    <div class="d-flex gap-2 mt-3">
+      <a class="btn btn-primary" href="{% url 'commcare:home' %}">
+        <span class="me-2"><i class="fa fa-cog"></i></span>
         <span>{% trans "Configure CommCare" %}</span>
       </a>
-      <a class="button is-primary is-outlined" href="{% url 'exports:create_export_config' %}">
-        <span class="icon"><i class="fa fa-plus"></i></span>
+      <a class="btn btn-outline-primary" href="{% url 'exports:create_export_config' %}">
+        <span class="me-2"><i class="fa fa-plus"></i></span>
         <span>{% trans "Create Export" %}</span>
       </a>
     </div>

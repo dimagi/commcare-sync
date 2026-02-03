@@ -2,18 +2,18 @@
 {% load i18n %}
 {% load static %}
 {% block body %}
-<section class="section container">
+<section class="py-5 container">
     <img class="my-2" src="{% static 'images/commcare-logo.png' %}" alt="{% trans 'CommCare Logo' %}" style="max-width: 600px">
     <div>
-        <h1 class="title is-size-2">{{project_meta.NAME}}</h1>
-        <h2 class="subtitle is-size-4">
+        <h1 class="display-4">{{project_meta.NAME}}</h1>
+        <h2 class="h3 text-muted">
             {{project_meta.DESCRIPTION}}
         </h2>
-        <p class="buttons">
-            <a class="button is-primary is-large" href="{% url 'account_signup' %}">
+        <p class="d-flex gap-2">
+            <a class="btn btn-primary btn-lg" href="{% url 'account_signup' %}">
                 {% trans "Create account" %}
             </a>
-            <a class="button is-primary is-large is-outlined" href="{% url 'account_login' %}">
+            <a class="btn btn-outline-primary btn-lg" href="{% url 'account_login' %}">
                 {% trans "Sign in" %}
             </a>
         </p>

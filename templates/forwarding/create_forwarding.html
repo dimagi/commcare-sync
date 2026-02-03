@@ -1,14 +1,14 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Create Data Forwarding Configuration" %}</h1>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Create Data Forwarding Configuration" %}</h1>
   <form method="post" enctype="multipart/form-data">
     {% include 'forwarding/partials/forwarding_form.html' %}
     {% include 'schedules/partials/schedule_form.html' %}
-    <div class="field is-grouped">
-        <div class="control">
-            <input class="button is-primary" type="submit" value="{% trans 'Create' %}">
+    <div class="d-flex gap-2">
+        <div>
+            <input class="btn btn-primary" type="submit" value="{% trans 'Create' %}">
         </div>
     </div>
   </form>

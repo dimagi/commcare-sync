@@ -3,22 +3,22 @@
 {% block app %}
 {% load exports_tags %}
 {% load humanize %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Database Connections" %}</h1>
-  <h2 class="subtitle">{% trans "Manage the databases that you export data to here" %}</h2>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Database Connections" %}</h1>
+  <h2 class="lead">{% trans "Manage the databases that you export data to here" %}</h2>
 {% if databases.exists %}
-  <p class="notification is-info is-light">
+  <p class="alert alert-info">
     {% trans "Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases." %}
   </p>
   {% if user.is_superuser %}
-  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_database' %}">
-    <span class="icon">
+  <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'exports:create_database' %}">
+    <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
     <span>{% trans "New Database Connection" %}</span>
   </a>
   {% endif %}
-  <table class="table is-striped is-fullwidth">
+  <table class="table table-striped w-100">
     <thead>
     <tr>
       <th>{% trans "Database" %}</th>
@@ -43,11 +43,11 @@
     </tbody>
   </table>
 {% else %}
-  <section class="notification is-warning is-light">
+  <div class="alert alert-warning">
     {% trans "No database connections found!" %}
-  </section>
-  <a class="button is-primary " href="{% url 'exports:create_database' %}">
-    <span class="icon">
+  </div>
+  <a class="btn btn-primary" href="{% url 'exports:create_database' %}">
+    <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
     <span>{% trans "Add Your First Database Connection" %}</span>

@@ -1,22 +1,22 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Forwarding Destinations" %}</h1>
-  <h2 class="subtitle">{% trans "Manage the API endpoints where data will be forwarded" %}</h2>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Forwarding Destinations" %}</h1>
+  <h2 class="lead">{% trans "Manage the API endpoints where data will be forwarded" %}</h2>
 {% if destinations.exists %}
-  <p class="notification is-info is-light">
+  <p class="alert alert-info">
     {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
   </p>
   {% if user.is_superuser %}
-  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'forwarding:create_destination' %}">
-    <span class="icon">
+  <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'forwarding:create_destination' %}">
+    <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
     <span>{% trans "New Destination" %}</span>
   </a>
   {% endif %}
-  <table class="table is-striped is-fullwidth">
+  <table class="table table-striped w-100">
     <thead>
     <tr>
       <th>{% trans "Name" %}</th>
@@ -43,11 +43,11 @@
     </tbody>
   </table>
 {% else %}
-  <section class="notification is-warning is-light">
+  <div class="alert alert-warning">
     {% trans "No forwarding destinations found!" %}
-  </section>
-  <a class="button is-primary " href="{% url 'forwarding:create_destination' %}">
-    <span class="icon">
+  </div>
+  <a class="btn btn-primary" href="{% url 'forwarding:create_destination' %}">
+    <span class="me-2">
       <i class="fa fa-plus"></i>
     </span>
     <span>{% trans "Add Your First Destination" %}</span>
