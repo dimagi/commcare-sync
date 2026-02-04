@@ -12,10 +12,6 @@
   "author": "Dimagi",
   "homepage": "https://github.com/dimagi/commcare-sync/",
   "devDependencies": {
-    "@babel/cli": "^7.19.3",
-    "@babel/core": "^7.8.7",
-    "@babel/preset-env": "^7.9.0",
-    "babel-loader": "^8.0.6",
     "bulma": "^0.8.2",
     "css-loader": "^7.1.2",
     "js-cookie": "^2.2.1",
