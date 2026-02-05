@@ -56,6 +56,15 @@ Data Pipeline (steps 7 & 8).
 Ask a site admin to create an account for you and share credentials,
 then change your password.
 
+### Optional: Set up CommCare OAuth
+
+CommCare OAuth integration enables easier configuration by allowing you to
+browse your available domains, case types, and export configurations directly
+from CommCare. See [OAuth Setup](oauth_setup.md) for instructions.
+
+**Note:** OAuth is for configuration assistance only. You still need API keys
+for running production exports.
+
 ### Export your data
 
 To export data, follow the following steps:

@@ -17,6 +17,8 @@ dependencies = [
     "commcare-export",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
     "db-query-fwd",
+    "httpx",  # for OAuth HTTP requests
+    "python-dotenv",  # for loading .env files
 ]
 
 [project.optional-dependencies]

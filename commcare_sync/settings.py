@@ -4,6 +4,11 @@ Django settings for CommCare Data Pipeline
 import json
 import os
 
+from dotenv import load_dotenv
+
+# Load .env file if it exists
+load_dotenv()
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -220,6 +225,20 @@ COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 # Run everything every 12 hours by default
 COMMCARE_SYNC_EXPORT_PERIODICITY = 60 * 60 * 12
 COMMCARE_SYNC_UI_PAGE_SIZE = 25
+
+
+# CommCare OAuth Configuration
+# Used for interactive configuration assistance (not production exports)
+# See .env.dev for setup instructions
+
+COMMCARE_HQ_URL = os.environ.get('COMMCARE_HQ_URL', 'https://www.commcarehq.org')
+
+# Web OAuth (confidential client) - for browser-based OAuth flow
+COMMCARE_OAUTH_CLIENT_ID = os.environ.get('COMMCARE_OAUTH_CLIENT_ID', '')
+COMMCARE_OAUTH_CLIENT_SECRET = os.environ.get('COMMCARE_OAUTH_CLIENT_SECRET', '')
+
+# CLI OAuth (public client) - for command-line token acquisition (no secret, uses PKCE)
+COMMCARE_OAUTH_CLI_CLIENT_ID = os.environ.get('COMMCARE_OAUTH_CLI_CLIENT_ID', '')
 
 
 PROJECT_METADATA = {

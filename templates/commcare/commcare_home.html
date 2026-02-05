@@ -5,6 +5,61 @@
   <h1 class="title">{% trans "CommCare Home" %}</h1>
   <h2 class="subtitle">{% trans "View and manage your CommCare connections" %}</h2>
 </section>
+
+{# OAuth Connection Status #}
+<section class="section app-card">
+  <h1 class="title">{% trans "CommCare OAuth Connection" %}</h1>
+  <h2 class="subtitle">{% trans "Connect with CommCare to enable easier configuration" %}</h2>
+
+  {% if oauth_connected %}
+    <div class="notification is-success is-light">
+      <div class="columns is-vcentered">
+        <div class="column">
+          <p>
+            <span class="icon"><i class="fa fa-check-circle"></i></span>
+            <strong>{% trans "Connected" %}</strong>
+            {% trans "as" %} <strong>{{ oauth_email }}</strong>
+          </p>
+          {% if oauth_expires_in_minutes %}
+          <p class="is-size-7 has-text-grey">
+            {% blocktrans with minutes=oauth_expires_in_minutes %}Token expires in {{ minutes }} minutes{% endblocktrans %}
+          </p>
+          {% endif %}
+        </div>
+        <div class="column is-narrow">
+          <a class="button is-danger is-outlined is-small" href="{% url 'commcare:oauth_disconnect' %}">
+            <span class="icon"><i class="fa fa-unlink"></i></span>
+            <span>{% trans "Disconnect" %}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <p class="has-text-grey">
+      {% trans "Your OAuth connection enables features like auto-fetching available domains and export configurations. For running exports, you still need to configure an API key in your CommCare Account below." %}
+    </p>
+  {% else %}
+    <div class="notification is-info is-light">
+      <p>
+        <span class="icon"><i class="fa fa-info-circle"></i></span>
+        {% trans "Connect with CommCare to enable easier configuration, such as auto-fetching your available domains and export configurations." %}
+      </p>
+    </div>
+    {% if oauth_configured %}
+      <a class="button is-primary" href="{% url 'commcare:oauth_initiate' %}">
+        <span class="icon"><i class="fa fa-link"></i></span>
+        <span>{% trans "Connect with CommCare" %}</span>
+      </a>
+    {% else %}
+      <div class="notification is-warning is-light">
+        <p>
+          <span class="icon"><i class="fa fa-exclamation-triangle"></i></span>
+          {% trans "OAuth is not configured. Contact your administrator to set up CommCare OAuth integration." %}
+        </p>
+      </div>
+    {% endif %}
+  {% endif %}
+</section>
+
 <section class="section app-card">
   <h1 class="title">{% trans "Projects" %}</h1>
   <h2 class="subtitle">{% trans "Manage the CommCare project spaces you'll connect to here" %}</h2>
