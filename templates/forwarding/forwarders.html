@@ -6,11 +6,12 @@
 <section class="py-4 app-card">
   <h1 class="h2">{% trans "Forwarding Configurations" %}</h1>
 {% if forwarders.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'forwarding:create_forwarding_config' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Forwarder" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'forwarding:create_forwarding_config' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "New Forwarder" %}
   </a>
   <table class="table table-striped w-100">
     <thead>
@@ -49,11 +50,12 @@
   <div class="alert alert-warning">
     {% trans "No forwarding configurations found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'forwarding:create_forwarding_config' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Forwarder" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'forwarding:create_forwarding_config' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Forwarder" %}
   </a>
 {% endif  %}
 </section>

@@ -9,11 +9,12 @@
   <h1 class="h2">{% trans "Projects" %}</h1>
   <h2 class="lead">{% trans "Manage the CommCare project spaces you'll connect to here" %}</h2>
 {% if projects.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'commcare:create_project' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Project" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'commcare:create_project' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Project" %}
   </a>
   <table class="table table-striped w-100">
     <thead>
@@ -29,11 +30,12 @@
         <td>{{ project.domain }}</td>
         <td><a href="{{ project.url }}" target="_blank">{% trans "View in CommCare" %} <i class="fa fa-external-link"></i></a></td>
         <td>
-          <a class="btn btn-sm btn-outline-primary rounded-pill" href="{% url 'commcare:edit_project' project.id %}">
-            <span class="me-2">
-              <i class="fa fa-edit"></i>
-            </span>
-            <span>{% trans "Edit" %}</span>
+          <a
+            class="icon-link btn btn-sm btn-outline-primary rounded-pill"
+            href="{% url 'commcare:edit_project' project.id %}"
+          >
+            <i class="fa fa-edit"></i>
+            {% trans "Edit" %}
           </a>
         </td>
       </tr>
@@ -44,11 +46,12 @@
   <div class="alert alert-warning">
     {% trans "No projects found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'commcare:create_project' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Project" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'commcare:create_project' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Project" %}
   </a>
 {% endif %}
 </section>
@@ -56,11 +59,12 @@
   <h1 class="h2">{% trans "Accounts" %}</h1>
   <h2 class="lead">{% trans "Manage the CommCare accounts used to sync your data" %}</h2>
 {% if accounts.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'commcare:create_account' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Account" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'commcare:create_account' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Account" %}
   </a>
   <table class="table table-striped w-100">
     <thead>
@@ -79,11 +83,12 @@
         <td>{% if request.user == account.owner %}{% trans "You" %}{% else %}{{ account.owner.get_display_name }}{% endif %}</td>
         <td>
           {% if request.user == account.owner %}
-          <a class="btn btn-sm btn-outline-primary rounded-pill" href="{% url 'commcare:edit_account' account.id %}">
-            <span class="me-2">
-              <i class="fa fa-edit"></i>
-            </span>
-            <span>{% trans "Edit" %}</span>
+          <a
+            class="icon-link btn btn-sm btn-outline-primary rounded-pill"
+            href="{% url 'commcare:edit_account' account.id %}"
+          >
+            <i class="fa fa-edit"></i>
+            {% trans "Edit" %}
           </a>
           {% else %}
             &mdash;
@@ -97,11 +102,12 @@
   <div class="alert alert-warning">
     {% trans "No accounts found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'commcare:create_account' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Account" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'commcare:create_account' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Account" %}
   </a>
 {% endif %}
 </section>

@@ -11,11 +11,12 @@
     {% trans "Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases." %}
   </p>
   {% if user.is_superuser %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'exports:create_database' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Database Connection" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'exports:create_database' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "New Database Connection" %}
   </a>
   {% endif %}
   <table class="table table-striped w-100">
@@ -46,11 +47,12 @@
   <div class="alert alert-warning">
     {% trans "No database connections found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'exports:create_database' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Database Connection" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'exports:create_database' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Database Connection" %}
   </a>
 {% endif  %}
 </section>

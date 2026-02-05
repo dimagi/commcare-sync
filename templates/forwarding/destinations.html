@@ -9,11 +9,12 @@
     {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
   </p>
   {% if user.is_superuser %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'forwarding:create_destination' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Destination" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'forwarding:create_destination' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "New Destination" %}
   </a>
   {% endif %}
   <table class="table table-striped w-100">
@@ -46,11 +47,12 @@
   <div class="alert alert-warning">
     {% trans "No forwarding destinations found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'forwarding:create_destination' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Destination" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'forwarding:create_destination' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Destination" %}
   </a>
 {% endif  %}
 </section>

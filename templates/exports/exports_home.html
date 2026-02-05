@@ -9,20 +9,22 @@
       <h1 class="h2">{% trans "Export Configurations" %}</h1>
     </div>
     <div>
-      <a class="btn btn-info btn-sm rounded-pill" href="{% url 'exports:download_commcare_export_log' %}">
-        <span class="me-2">
-          <i class="fa fa-download"></i>
-        </span>
-        <span>{% trans "Download Export Log" %}</span>
+      <a
+        class="icon-link btn btn-info btn-sm rounded-pill"
+        href="{% url 'exports:download_commcare_export_log' %}"
+      >
+        <i class="fa fa-download"></i>
+        {% trans "Download Export Log" %}
       </a>
     </div>
   </nav>
 {% if exports.exists %}
-  <a class="btn btn-outline-primary btn-sm rounded-pill mb-3" href="{% url 'exports:create_export_config' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Export" %}</span>
+  <a
+    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+    href="{% url 'exports:create_export_config' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "New Export" %}
   </a>
   <table class="table table-striped w-100">
     <thead>
@@ -53,11 +55,12 @@
   <div class="alert alert-warning">
     {% trans "No export configurations found!" %}
   </div>
-  <a class="btn btn-primary" href="{% url 'exports:create_export_config' %}">
-    <span class="me-2">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Export" %}</span>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'exports:create_export_config' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Export" %}
   </a>
 {% endif  %}
 </section>
@@ -68,11 +71,12 @@
       <h1 class="h2">{% trans "Multi-Project Export Configurations" %}</h1>
     </div>
     <div>
-      <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'exports:create_multi_export_config' %}">
-        <span class="me-2">
-          <i class="fa fa-plus"></i>
-        </span>
-        <span>{% trans "New Multi-Project Export" %}</span>
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill"
+        href="{% url 'exports:create_multi_export_config' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "New Multi-Project Export" %}
       </a>
     </div>
   </nav>
