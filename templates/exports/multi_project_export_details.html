@@ -8,7 +8,8 @@
 {% endblock app %}
 {% block page_js %}
   <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-  <script src="{% static 'js/app-bundle.js' %}"></script>
+  {# TODO: Refactor to use Alpine.js/HTMX instead of removed app-bundle.js #}
+  {# <script src="{% static 'js/app-bundle.js' %}"></script>
   <script>
     const apiUrl = "{% url 'exports:run_multi_export' export.id %}";
     const progressUrl =
@@ -18,5 +19,5 @@
       Exports.initializeExportRunButton(apiUrl, progressUrl);
     });
     document.addEventListener("DOMContentLoaded", Exports.setupLogTriggers);
-  </script>
+  </script> #}
 {% endblock page_js %}

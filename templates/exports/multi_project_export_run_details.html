@@ -36,11 +36,12 @@
   </section>
 {% endblock app %}
 {% block page_js %}
-  <script src="{% static 'js/app-bundle.js' %}"></script>
+  {# TODO: Refactor to use Alpine.js/HTMX instead of removed app-bundle.js #}
+  {# <script src="{% static 'js/app-bundle.js' %}"></script>
   <script>
     document.addEventListener(
       "DOMContentLoaded",
       SiteJS.app.Exports.setupLogTriggers,
     );
-  </script>
+  </script> #}
 {% endblock %}
