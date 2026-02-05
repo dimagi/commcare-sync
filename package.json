@@ -2,25 +2,21 @@
   "name": "commcare-data-pipeline",
   "version": "1.0.0",
   "description": "CommCare Data Pipeline continuously exports CommCare data into your own databases and BI platforms.",
-  "main": "webpack.config.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode production",
-    "dev": "webpack --mode development",
-    "dev-watch": "webpack --mode development --watch"
+    "build": "npm run build:css && npm run copy:vendor",
+    "build:css": "sass assets/styles/site.scss:static/css/site.css --load-path=node_modules --quiet-deps --style=compressed --no-source-map",
+    "copy:vendor": "npm run copy:bootstrap && npm run copy:js-cookie",
+    "copy:bootstrap": "cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js static/js/bootstrap.bundle.min.js",
+    "copy:js-cookie": "cp node_modules/js-cookie/src/js.cookie.js static/js/js.cookie.js",
+    "dev-watch": "npm run dev:css",
+    "dev:css": "sass assets/styles/site.scss:static/css/site.css --load-path=node_modules --quiet-deps --watch --style=expanded --source-map"
   },
   "author": "Dimagi",
   "homepage": "https://github.com/dimagi/commcare-sync/",
   "devDependencies": {
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.2",
-    "css-loader": "^7.1.2",
     "js-cookie": "^2.2.1",
-    "mini-css-extract-plugin": "^2.9.4",
-    "sass": "^1.72.0",
-    "sass-loader": "^14.2.1",
-    "terser-webpack-plugin": "^5.3.10",
-    "webpack": "^5.95.0",
-    "webpack-cli": "^5.1.4"
+    "sass": "^1.72.0"
   }
 }

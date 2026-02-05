@@ -31,7 +31,8 @@
     {% block footer %}
       {% include 'web/components/footer.html' %}
     {% endblock %}
-    <script src="{% static 'js/index-bundle.js' %}"></script>{# includes Bootstrap #}
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/js.cookie.js' %}"></script>
     {% block page_js %}
     {% endblock %}
     {% include 'web/components/messages-js.html' %}
