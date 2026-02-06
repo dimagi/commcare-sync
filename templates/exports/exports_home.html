@@ -4,28 +4,26 @@
 {% load exports_tags %}
 {% load humanize %}
 <section class="py-4 app-card">
+  <h1 class="h2">{% trans "Export Configurations" %}</h1>
   <nav class="d-flex justify-content-between align-items-center">
-    <div>
-      <h1 class="h2">{% trans "Export Configurations" %}</h1>
-    </div>
-    <div>
-      <a
-        class="icon-link btn btn-info btn-sm rounded-pill"
-        href="{% url 'exports:download_commcare_export_log' %}"
-      >
-        <i class="fa fa-download"></i>
-        {% trans "Download Export Log" %}
-      </a>
-    </div>
+{% if exports.exists %}
+    <a
+      class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+      href="{% url 'exports:create_export_config' %}"
+    >
+      <i class="fa fa-plus"></i>
+      {% trans "New Export" %}
+    </a>
+{% endif  %}
+    <a
+      class="icon-link btn btn-info btn-sm rounded-pill mb-3"
+      href="{% url 'exports:download_commcare_export_log' %}"
+    >
+      <i class="fa fa-download"></i>
+      {% trans "Download Export Log" %}
+    </a>
   </nav>
 {% if exports.exists %}
-  <a
-    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-    href="{% url 'exports:create_export_config' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "New Export" %}
-  </a>
   <table class="table table-striped w-100">
     <thead>
     <tr>
