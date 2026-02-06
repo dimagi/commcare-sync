@@ -1,16 +1,16 @@
 {% extends "web/base.html" %}
 {% load static i18n %}
 {% block body %}
-<section class="section container">
-    <div class="columns columns-reversed">
-        <div class="column">
+<section class="py-4 container">
+    <div class="row flex-row-reverse">
+        <div class="col-md-6">
             <img src="{% static 'images/undraw/undraw_alert.svg' %}" alt="{% trans 'Uh-Oh' %}">
         </div>
-        <div id="tagline" class="column">
-            <h1 class="title is-size-2">{% trans "Shucks. That's an error." %}</h1>
-            <h2 class="subtitle is-size-4">
+        <div id="tagline" class="col-md-6">
+            <h1 class="display-4">{% trans "Shucks. That's an error." %}</h1>
+            <p class="lead">
                 {% trans "Please try again, and if you continue to get this message, contact Support." %}
-            </h2>
+            </p>
         </div>
     </div>
 </section>
