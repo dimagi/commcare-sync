@@ -2,10 +2,10 @@
 {% if request.team and request.user|is_admin_of:request.team %}
   <li>
     <a
-      class="icon-link"
-      href="{% url 'web:team_admin' request.team.slug %}" {% if active_tab == 'team-admin' %}class="is-active"{% endif %}
+      class="icon-link{% if active_tab == 'team-admin' %} active{% endif %}"
+      href="{% url 'web:team_admin' request.team.slug %}"
     >
-      <span class="icon"><i class="fa fa-gear"></i></span><span class="is-hidden-tablet-only">Admin</span>
+      <i class="fa fa-gear"></i><span class="d-none d-lg-inline ms-2">Admin</span>
     </a>
   </li>
 {% endif %}
