@@ -31,7 +31,7 @@
     {% block footer %}
       {% include 'web/components/footer.html' %}
     {% endblock %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="{% static 'js/index-bundle.js' %}"></script>{# includes Bootstrap #}
     {% block page_js %}
     {% endblock %}
     {% include 'web/components/messages-js.html' %}
