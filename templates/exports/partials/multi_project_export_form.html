@@ -10,7 +10,7 @@
 </div>
 <div class="mb-3">
   <label class="form-label">{% trans "Projects" %}</label>
-  <div>
+  <div @change="if ($event.target.name === 'projects') { htmx.trigger('#id_config_file_select', 'refresh') }">
     {{ form.projects }}
   </div>
   {{ form.projects.errors }}

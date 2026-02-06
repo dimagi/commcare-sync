@@ -1,0 +1,13 @@
+{% load i18n %}
+{% if configs %}
+  <option value="">{% trans "Select a config file..." %}</option>
+  {% for config in configs %}
+    <option value="{{ config.det_config_url }}"{% if config.det_config_url == current_value %} selected{% endif %}>
+      {% if is_multi_project %}{{ config.name }} ({{ config.domain }}){% else %}{{ config.name }}{% endif %}
+    </option>
+  {% endfor %}
+{% elif error %}
+  <option value="">{% trans "Error loading configs" %}</option>
+{% else %}
+  <option value="">{% trans "No configs available" %}</option>
+{% endif %}

@@ -1,27 +1,48 @@
-<div class="mb-3">
+<div class="mb-3" x-data="{ loading: false, selectedConfig: '' }">
   <label class="form-label">Account</label>
   <div>
-    {{ form.account }}
+    <select
+      name="{{ form.account.html_name }}"
+      id="{{ form.account.id_for_label }}"
+      class="form-select"
+      @change="htmx.trigger('#id_config_file_select', 'refresh')"
+    >
+      {% for value, label in form.account.field.choices %}
+        <option value="{{ value }}"{% if form.account.value == value %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
   </div>
   {{ form.account.errors }}
 </div>
-<div class="mb-3">
+<div class="mb-3" x-data="{ loading: false, selectedConfig: '{{ form.det_config_url.value|default:'' }}' }">
   <label class="form-label">CommCare Export</label>
   <div>
-    <div class="w-100" id="config-file-select-wrapper">
-      <select id="id_config_file_select" name="config_file_select" class="form-select" disabled>
+    <div class="w-100">
+      <select
+        id="id_config_file_select"
+        name="config_file_select"
+        class="form-select"
+        x-model="selectedConfig"
+        :disabled="loading"
+        hx-get="{% url 'exports:fetch_config_files' %}"
+        hx-trigger="{% if form.instance.pk %}load, {% endif %}refresh"
+        hx-include="[name='{{ form.account.html_name }}'], [name='{{ form.project.html_name }}'], [name='projects'], [name='{{ form.det_config_url.html_name }}']"
+        hx-swap="innerHTML"
+        hx-target="this"
+        @htmx:before-request="loading = true"
+        @htmx:after-request="loading = false"
+      >
         <option value="">Select account and project(s) first...</option>
       </select>
     </div>
-    <p class="form-text" id="config-loading-message" style="display: none;">
+    <p class="form-text" x-show="loading" x-cloak>
       <i class="fa fa-spinner fa-spin"></i> Loading available configs from CommCare HQ...
     </p>
-    <p class="form-text text-danger" id="config-error-message" style="display: none;"></p>
     {% if form.instance.pk and form.instance.config_file.name %}
       <p class="form-text">Current file: {{ form.instance.config_file.name }}</p>
     {% endif %}
   </div>
-  {{ form.det_config_url }}
+  <input type="hidden" name="{{ form.det_config_url.html_name }}" id="{{ form.det_config_url.id_for_label }}" :value="selectedConfig">
 </div>
 <div class="mb-3">
   <label class="form-label">Database</label>
