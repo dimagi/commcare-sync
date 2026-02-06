@@ -10,12 +10,12 @@ register = template.Library()
 @register.filter()
 def to_status_icon(export_status):
     text_modifiers = {
-        ExportRunBase.COMPLETED: 'has-text-success',
-        ExportRunBase.FAILED: 'has-text-danger',
-        ExportRunBase.STARTED: 'has-text-primary',
-        ExportRunBase.MULTIPLE: 'has-text-warning',
-        ExportRunBase.QUEUED: 'has-text-grey',
-        ExportRunBase.SKIPPED: 'has-text-grey',
+        ExportRunBase.COMPLETED: 'text-success',
+        ExportRunBase.FAILED: 'text-danger',
+        ExportRunBase.STARTED: 'text-primary',
+        ExportRunBase.MULTIPLE: 'text-warning',
+        ExportRunBase.QUEUED: 'text-muted',
+        ExportRunBase.SKIPPED: 'text-muted',
     }
     icons = {
         ExportRunBase.COMPLETED: 'fa-check-circle',
@@ -25,4 +25,9 @@ def to_status_icon(export_status):
         ExportRunBase.QUEUED: 'fa-ellipsis-h',
         ExportRunBase.SKIPPED: 'fa-ban',
     }
-    return mark_safe(f'<span class="icon {text_modifiers.get(export_status)}"><i title="{export_status}" class="fa {icons.get(export_status)}"></i></span>')  # noqa
+    return mark_safe(
+        '<i'
+        f'  title="{export_status}"'
+        f'  class="fa {icons.get(export_status)} {text_modifiers.get(export_status)}"'
+        '></i>'
+    )
