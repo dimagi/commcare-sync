@@ -29,3 +29,7 @@ $navbar-light-hover-color: rgba($COMMCARE_BLUE, 0.7);
 
 @import "bootstrap/scss/bootstrap";
 @import "app/_all";
+
+// <span class="icon"> cancels the underline under its nested <i> tag
+// just by giving the <i> tag a parent. No definition necessary:
+//a.icon-link .icon

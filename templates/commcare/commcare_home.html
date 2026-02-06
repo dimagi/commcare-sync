@@ -28,7 +28,15 @@
     {% for project in projects %}
       <tr>
         <td>{{ project.domain }}</td>
-        <td><a href="{{ project.url }}" target="_blank">{% trans "View in CommCare" %} <i class="fa fa-external-link"></i></a></td>
+        <td>
+          <a
+            class="icon-link"
+            href="{{ project.url }}"
+            target="_blank"
+          >{% trans "View in CommCare" %}
+            <span class="icon"><i class="fa fa-external-link"></i></span>
+          </a>
+        </td>
         <td>
           <a
             class="icon-link btn btn-sm btn-outline-primary rounded-pill"

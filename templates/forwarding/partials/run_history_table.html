@@ -30,7 +30,11 @@
       <td>{{ forwarding_run.duration|readable_timedelta }}</td>
       <td>{{ forwarding_run.status|to_status_icon }} {{ forwarding_run.status }}</td>
       <td>
-        <a class="log-trigger" data-open-status="closed" data-forwarding-run-id="{{ forwarding_run.id }}"><span class="icon"><i class="fa fa-chevron-down"></i></span>
+        <a
+          class="icon-link log-trigger"
+          data-open-status="closed"
+          data-forwarding-run-id="{{ forwarding_run.id }}"
+        ><span class="icon"><i class="fa fa-chevron-down"></i></span>
           {% trans "View log" %}
         </a>
       </td>

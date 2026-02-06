@@ -25,8 +25,12 @@
     <div class="col">
       <span class="text-muted small">{% trans "Project Space" %}</span>
       <h2 class="h5">
-        <a href="{{ export.project.url }}" target="_blank">{{ export.project.domain }}
-          <i class="fa fa-external-link"></i>
+        <a
+          class="icon-link"
+          href="{{ export.project.url }}"
+          target="_blank"
+        >{{ export.project.domain }}
+          <span class="icon"><i class="fa fa-external-link"></i></span>
         </a>
       </h2>
     </div>
