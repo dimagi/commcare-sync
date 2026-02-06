@@ -1,20 +1,20 @@
 {% extends "web/base.html" %}
 {% load i18n %}
 {% block body %}
-<p class="app-message notification is-info">
+<p class="alert alert-info">
   {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
   You are about to use your {{provider_name}} account to login to
   {{site_name}}. As a final step, please complete the following form.{% endblocktrans %}
 </p>
 <div id="fullpage-form-wrapper">
     <div id="fullpage-form">
-        <h1 class="title is-size-4">{% trans "Sign Up" %}</h1>
+        <h1 class="h4">{% trans "Sign Up" %}</h1>
         <form class="signup" method="post" action="{% url 'socialaccount_signup' %}">
           {% csrf_token %}
           {{ form.non_field_errors }}
-          <div class="field">
-            <label class="label">{% trans "Email" %}</label>
-            <div class="control">
+          <div class="mb-3">
+            <label class="form-label">{% trans "Email" %}</label>
+            <div>
               {{ form.email }}
             </div>
             {{ form.email.errors }}
@@ -22,9 +22,9 @@
           {% if redirect_field_value %}
           <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
           {% endif %}
-          <div class="field is-grouped">
-              <div class="control">
-                  <button class="button is-primary" type="submit">{% trans "Sign Up" %} &raquo;</button>
+          <div class="d-flex gap-2">
+              <div>
+                  <button class="btn btn-primary" type="submit">{% trans "Sign Up" %} &raquo;</button>
               </div>
           </div>
         </form>
