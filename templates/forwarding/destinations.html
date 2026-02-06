@@ -5,9 +5,9 @@
   <h1 class="h2">{% trans "Forwarding Destinations" %}</h1>
   <h2 class="lead">{% trans "Manage the API endpoints where data will be forwarded" %}</h2>
 {% if destinations.exists %}
-  <p class="alert alert-info">
+  <div class="alert alert-info">
     {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
-  </p>
+  </div>
   {% if user.is_superuser %}
   <a
     class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
@@ -48,7 +48,7 @@
     {% trans "No forwarding destinations found!" %}
   </div>
   <a
-    class="icon-link btn btn-primary"
+    class="icon-link btn btn-primary btn-sm rounded-pill"
     href="{% url 'forwarding:create_destination' %}"
   >
     <i class="fa fa-plus"></i>
