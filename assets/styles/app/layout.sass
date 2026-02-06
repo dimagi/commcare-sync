@@ -1,13 +1,7 @@
 
+// Navbar customizations
 .navbar
   box-shadow: $default-shadow
-  .navbar-item
-    &.is-active
-      @include media-breakpoint-down(lg)
-        background-color: inherit
-      @include media-breakpoint-up(lg)
-        border-bottom: 3px solid $link-color
-
   // style avatar / profile picture in nav
   img.avatar
     height: 32px
@@ -15,12 +9,12 @@
     border-radius: 50%
     max-height: 32px
 
-
+// Two-column app layout (sidebar + content)
 .app-two-column
   display: flex
-  // default to menu above content
+  // Default to menu above content on mobile
   flex-direction: column
-  // but display side-by-side if enough space
+  // Display side-by-side on tablets and up
   @include media-breakpoint-up(md)
     flex-direction: row
 
@@ -30,21 +24,21 @@
 
 #app-content
   flex-direction: row
-  min-width: 0
+  min-width: 0  // Prevent flex items from overflowing
   @include media-breakpoint-up(md)
     margin-left: 2em
 
+// Card component used throughout app for content sections
+// Equivalent to: mb-4 p-4 w-100 rounded shadow-sm bg-white
 .app-card
   margin-bottom: 1em
   padding: 2em
   width: 100%
   border-radius: .3em
   box-shadow: $default-shadow
-  // allow using "alert" class to override color styles
+  // Allow "alert" class to override color styles
   &:not(.alert)
     background-color: white
-
-// for content-heavy things like blogs
 
 #content-main
   max-width: 1152px
@@ -55,10 +49,9 @@
   @include media-breakpoint-only(md)
     min-width: 8em
 
-// these classes related to a sticky notification: https://coder-coder.com/sticky-header-animated/
+// Used for sticky notifications
 .alert
   transition: padding 300ms ease
-  // override Bootstrap adding a margin to notices
   &.app-message
     margin-bottom: .5rem
   &.sticky
@@ -66,7 +59,6 @@
     width: 100%
     top: 0
     z-index: 1
-
 
 .sticky-offset
   margin-top: 90px
