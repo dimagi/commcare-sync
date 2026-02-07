@@ -169,6 +169,24 @@ def export_details(request, export_id):
 
 
 @login_required
+def run_history_table(request, export_id):
+    """HTMX endpoint to refresh the run history table."""
+    export = get_object_or_404(ExportConfig, id=export_id)
+    runs = export.runs
+    hide_skipped = get_hide_skipped_from_request(request)
+    is_multi_project = request.GET.get('is_multi_project') == 'true'
+
+    if hide_skipped:
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+
+    return render(request, 'exports/partials/run_history_table.html', {
+        'export': export,
+        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
+        'is_multi_project': is_multi_project,
+    })
+
+
+@login_required
 def download_export_file(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     return _download_config_file(export.config_file)

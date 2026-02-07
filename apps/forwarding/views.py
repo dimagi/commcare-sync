@@ -241,6 +241,28 @@ def forwarder_details(request, forwarder_id):
 
 
 @login_required
+def run_history_table(request, forwarder_id):
+    """HTMX endpoint to refresh the run history table."""
+    forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
+    runs = forwarder.runs
+    hide_skipped = get_hide_skipped_from_request(request)
+
+    if hide_skipped:
+        runs = runs.exclude(
+            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
+        )
+
+    return render(
+        request,
+        'forwarding/partials/run_history_table.html',
+        {
+            'forwarder': forwarder,
+            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+        },
+    )
+
+
+@login_required
 @require_POST
 def run_forwarding(request, forwarder_id):
     """Manually trigger a forwarding run."""

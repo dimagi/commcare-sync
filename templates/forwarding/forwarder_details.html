@@ -75,15 +75,5 @@
 {% endblock app %}
 {% block page_js %}
 <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-{# TODO: Refactor to use Alpine.js/HTMX instead of removed app-bundle.js #}
-{# <script src="{% static 'js/app-bundle.js' %}"></script>
-<script>
-    const apiUrl = "{% url 'forwarding:run_forwarding' forwarder.id %}";
-    const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
-    const Forwarding = SiteJS.app.Forwarding;
-    document.addEventListener("DOMContentLoaded", function () {
-      Forwarding.initializeForwardingRunButton(apiUrl, progressUrl);
-    });
-    document.addEventListener('DOMContentLoaded', Forwarding.setupLogTriggers);
-</script> #}
+{% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id progress_message='Running Forwarding...' include_force_sync=False %}
 {% endblock page_js %}

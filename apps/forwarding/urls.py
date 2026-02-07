@@ -46,6 +46,11 @@ urlpatterns = [
         name='forwarder_details',
     ),
     path(
+        '<int:forwarder_id>/run-history-table/',
+        views.run_history_table,
+        name='run_history_table',
+    ),
+    path(
         '<int:forwarder_id>/run/',
         views.run_forwarding,
         name='run_forwarding',

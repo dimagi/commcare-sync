@@ -1,9 +1,14 @@
 {% load i18n %}
-<section class="py-4 app-card">
+<section class="py-4 app-card" x-data="{ running: false, forceSync: false }">
   <h1 class="h2">{% trans "Run History" %}</h1>
   <div class="d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-primary btn-sm rounded-pill" id="run-now-button">
+      <button
+        class="btn btn-primary btn-sm rounded-pill"
+        id="run-now-button"
+        @click="running = true"
+        :disabled="running"
+      >
         <span class="me-2">
           <i class="fa fa-play"></i>
         </span>
@@ -11,7 +16,12 @@
       </button>
       {% if show_force_sync %}
       <label class="form-check-label mx-2">
-        <input type="checkbox" class="form-check-input" id="force-sync-checkbox">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="force-sync-checkbox"
+          x-model="forceSync"
+        >
         {% trans "Force sync of all data" %}
       </label>
       {% endif %}
@@ -29,7 +39,7 @@
       {% endif %}
     </div>
   </div>
-  <div id="run-status-progress" class="my-2" style="display: none;">
+  <div id="run-status-progress" class="my-2" x-show="running" x-cloak>
     <div class='progress-wrapper'>
       <div class="progress" style="height: 20px;">
         <div

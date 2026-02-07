@@ -1,7 +1,13 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="forwarding-run-table" class="table my-2">
+<table
+  id="run-table"
+  class="table my-2"
+  hx-get="{% url 'forwarding:run_history_table' forwarder.id %}"
+  hx-trigger="refresh from:body"
+  hx-swap="outerHTML"
+>
   <thead>
   <tr>
     <th>{% trans "Queued" %}</th>
