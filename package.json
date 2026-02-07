@@ -5,11 +5,10 @@
   "scripts": {
     "build": "npm run build:css && npm run copy:vendor",
     "build:css": "sass assets/styles/site.scss:static/css/site.css --load-path=node_modules --quiet-deps --style=compressed --no-source-map",
-    "copy:vendor": "npm run copy:alpine && npm run copy:htmx && npm run copy:bootstrap && npm run copy:js-cookie",
+    "copy:vendor": "npm run copy:alpine && npm run copy:htmx && npm run copy:bootstrap",
     "copy:alpine": "cp node_modules/alpinejs/dist/cdn.min.js static/js/alpine.min.js",
     "copy:htmx": "cp node_modules/htmx.org/dist/htmx.min.js static/js/htmx.min.js",
     "copy:bootstrap": "cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js static/js/bootstrap.bundle.min.js",
-    "copy:js-cookie": "cp node_modules/js-cookie/src/js.cookie.js static/js/js.cookie.js",
     "dev-watch": "npm run dev:css",
     "dev:css": "sass assets/styles/site.scss:static/css/site.css --load-path=node_modules --quiet-deps --watch --style=expanded --source-map"
   },
@@ -20,7 +19,6 @@
     "alpinejs": "^3.14.1",
     "bootstrap": "^5.3.2",
     "htmx.org": "^2.0.4",
-    "js-cookie": "^2.2.1",
     "prettier": "^3.8.1",
     "prettier-plugin-jinja-template": "^2.1.0",
     "sass": "^1.72.0"
