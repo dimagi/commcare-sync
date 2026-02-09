@@ -10,16 +10,12 @@
             {{ form.non_field_errors }}
             <div class="mb-3">
               <label class="form-label">{% trans "Email" %}</label>
-              <div>
-                {{ form.login }}
-              </div>
+              {{ form.login }}
               {{ form.login.errors }}
             </div>
             <div class="mb-3">
               <label class="form-label">{% trans "Password" %}</label>
-              <div>
-                {{ form.password }}
-              </div>
+              {{ form.password }}
               {{ form.password.errors }}
             </div>
             <input class="btn btn-primary w-100" type="submit" value="{% trans 'Sign in' %}">
