@@ -5,7 +5,8 @@
 * Run tests: `uv run pytest [path/to/file.py::TestClass::test_method]`
 * Check typing: `uv run mypy apps/ commcare_sync/ *.py`
 * Check linting: `uv run ruff check`
-* Format: `uv run ruff format <path/to/file.py>`
+* Format Python: `uv run ruff format <path/to/file.py>`
+* Format HTML templates: `npx prettier --write <path/to/file.html>`
 * Sort imports `uv run ruff check --select I --fix <path/to/file.py>`
 
 These commands assume the virtual environment in `.venv/` is activated.
