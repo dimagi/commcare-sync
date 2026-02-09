@@ -1,0 +1,33 @@
+<select
+  name="{{ widget.name }}"
+  class="form-select{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %}"
+  {% for key, value in widget.attrs.items %}
+    {% if key != 'class' %}{{ key }}{% if value != True %}="{{ value }}"{% endif %} {% endif %}
+  {% endfor %}
+>
+  {% for group_name, group_choices, group_index in widget.optgroups %}
+    {% if group_name %}
+      <optgroup label="{{ group_name }}">
+        {% for option in group_choices %}
+          <option
+            value="{{ option.value|stringformat:'s' }}"
+            {% if option.selected %}selected{% endif %}
+            {% for key, value in option.attrs.items %}{{ key }}="{% if value != True %}{{ value }}{% endif %}"{% endfor %}
+          >
+            {{ option.label }}
+          </option>
+        {% endfor %}
+      </optgroup>
+    {% else %}
+      {% for option in group_choices %}
+        <option
+          value="{{ option.value|stringformat:'s' }}"
+          {% if option.selected %}selected{% endif %}
+          {% for key, value in option.attrs.items %}{{ key }}="{% if value != True %}{{ value }}{% endif %}"{% endfor %}
+        >
+          {{ option.label }}
+        </option>
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+</select>
