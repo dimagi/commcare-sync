@@ -1,80 +1,94 @@
 {% comment %}
-Shared JavaScript for run button functionality.
+  Shared JavaScript for run button functionality.
 
-Parameters:
-  - run_url_name: Django URL name (e.g., 'exports:run_export')
-  - object_id: ID of the object to run
-  - progress_message: Message to show during execution (e.g., 'Running Export...')
-  - include_force_sync: Whether to include forceSync checkbox value (default: false)
+  Parameters:
+    - run_url_name: Django URL name (e.g., 'exports:run_export')
+    - object_id: ID of the object to run
+    - progress_message: Message to show during execution (e.g., 'Running
+      Export...')
+    - include_force_sync: Whether to include forceSync checkbox value
+      (default: false)
 {% endcomment %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const runButton = document.getElementById('run-now-button');
-  const progressBar = document.getElementById('progress-bar');
-  const progressMessage = document.getElementById('progress-bar-message');
+  document.addEventListener("DOMContentLoaded", function () {
+    const runButton = document.getElementById("run-now-button");
+    const progressBar = document.getElementById("progress-bar");
+    const progressMessage = document.getElementById("progress-bar-message");
 
-  if (!runButton) return;
+    if (!runButton) return;
 
-  runButton.addEventListener('click', function() {
-    {% if include_force_sync %}
-    const forceSync = document.getElementById('force-sync-checkbox')?.checked || false;
-    {% endif %}
+    runButton.addEventListener("click", function () {
+      {% if include_force_sync %}
+        const forceSync =
+          document.getElementById("force-sync-checkbox")?.checked || false;
+      {% endif %}
 
-    fetch('{% url run_url_name object_id %}', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-      },
-      body: JSON.stringify({% if include_force_sync %}{ forceSync: forceSync }{% else %}{}{% endif %}),
-    })
-    .then(response => response.text())
-    .then(taskId => {
-      const taskUrl = '{% url "celery_progress:task_status" "TASK_ID" %}'.replace('TASK_ID', taskId);
-
-      progressBar.classList.remove('bg-danger', 'bg-success');
-      progressBar.style.width = '0%';
-
-      CeleryProgressBar.initProgressBar(taskUrl, {
-        onProgress: function() {
-          progressMessage.textContent = '{{ progress_message }}';
+      fetch("{% url run_url_name object_id %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
         },
-        onSuccess: function() {
-          progressBar.style.width = '100%';
-          progressBar.classList.add('bg-success');
-          progressMessage.textContent = 'Complete!';
-        },
-        onResult: function(resultElement, result) {
-          if (result.status === 'failed') {
-            progressBar.classList.add('bg-danger');
-            progressBar.style.width = '100%';
-            progressMessage.textContent = 'Failed!';
+        body: JSON.stringify(
+          {% if include_force_sync %}
+            { forceSync: forceSync }
+          {% else %}
+            {}
+          {% endif %}
+        ),
+      })
+        .then((response) => response.text())
+        .then((taskId) => {
+          const taskUrl =
+            '{% url "celery_progress:task_status" "TASK_ID" %}'.replace(
+              "TASK_ID",
+              taskId,
+            );
+
+          progressBar.classList.remove("bg-danger", "bg-success");
+          progressBar.style.width = "0%";
+
+          CeleryProgressBar.initProgressBar(taskUrl, {
+            onProgress: function () {
+              progressMessage.textContent = "{{ progress_message }}";
+            },
+            onSuccess: function () {
+              progressBar.style.width = "100%";
+              progressBar.classList.add("bg-success");
+              progressMessage.textContent = "Complete!";
+            },
+            onResult: function (resultElement, result) {
+              if (result.status === "failed") {
+                progressBar.classList.add("bg-danger");
+                progressBar.style.width = "100%";
+                progressMessage.textContent = "Failed!";
+              }
+
+              // Trigger HTMX table refresh
+              setTimeout(() => {
+                htmx.trigger("#run-table", "refresh");
+                runButton.disabled = false;
+
+                // Reset Alpine state
+                const section = runButton.closest("section");
+                if (section && Alpine.$data(section)) {
+                  Alpine.$data(section).running = false;
+                }
+              }, 1000);
+            },
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to start task:", error);
+          runButton.disabled = false;
+
+          const section = runButton.closest("section");
+          if (section && Alpine.$data(section)) {
+            Alpine.$data(section).running = false;
           }
-
-          // Trigger HTMX table refresh
-          setTimeout(() => {
-            htmx.trigger('#run-table', 'refresh');
-            runButton.disabled = false;
-
-            // Reset Alpine state
-            const section = runButton.closest('section');
-            if (section && Alpine.$data(section)) {
-              Alpine.$data(section).running = false;
-            }
-          }, 1000);
-        }
-      });
-    })
-    .catch(error => {
-      console.error('Failed to start task:', error);
-      runButton.disabled = false;
-
-      const section = runButton.closest('section');
-      if (section && Alpine.$data(section)) {
-        Alpine.$data(section).running = false;
-      }
+        });
     });
   });
-});
 </script>
