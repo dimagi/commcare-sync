@@ -1,7 +1,7 @@
 <input
   name="{{ widget.name }}"
   type="{{ widget.type }}"
-  {% if widget.type in 'text,password,email,tel,number' %}class="form-control"{% endif %}
+  {% if widget.type in 'text,password,email,tel,number,url,date,time' %}class="form-control"{% endif %}
   {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
   {% include "django/forms/widgets/attrs.html" %}
 />
