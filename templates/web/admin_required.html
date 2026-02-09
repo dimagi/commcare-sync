@@ -15,8 +15,8 @@
           {% if dev_mode %}
           <p>
             {% trans "In development you can fix this problem by running the command below and refreshing the page:" %}
-            <pre>./manage.py promote_user_to_superuser {{ user.username }}</pre>.
           </p>
+          <pre>./manage.py promote_user_to_superuser {{ user.username }}</pre>
           {% endif %}
         </div>
     </div>
