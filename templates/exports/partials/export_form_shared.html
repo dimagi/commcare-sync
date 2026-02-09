@@ -1,5 +1,5 @@
 <div class="mb-3" x-data="{ loading: false, selectedConfig: '' }">
-  <label class="form-label">Account</label>
+  <label for="{{ form.account.id_for_label }}" class="form-label">Account</label>
   <div>
     <select
       name="{{ form.account.html_name }}"
@@ -15,7 +15,7 @@
   {{ form.account.errors }}
 </div>
 <div class="mb-3" x-data="{ loading: false, selectedConfig: '{{ form.det_config_url.value|default:'' }}' }">
-  <label class="form-label">CommCare Export</label>
+  <label for="id_config_file_select" class="form-label">CommCare Export</label>
   <div>
     <div class="w-100">
       <select
@@ -45,14 +45,14 @@
   <input type="hidden" name="{{ form.det_config_url.html_name }}" id="{{ form.det_config_url.id_for_label }}" :value="selectedConfig">
 </div>
 <div class="mb-3">
-  <label class="form-label">Database</label>
+  <label for="{{ form.database.id_for_label }}" class="form-label">Database</label>
   <div>
     {{ form.database }}
   </div>
   {{ form.database.errors }}
 </div>
 <div class="mb-3">
-  <label class="form-label">Is Paused?</label>
+  <label for="{{ form.is_paused.id_for_label }}" class="form-label">Is Paused?</label>
   <div>
     {{ form.is_paused }}
   </div>
@@ -60,7 +60,7 @@
   {{ form.is_paused.errors }}
 </div>
 <div class="mb-3">
-  <label class="form-label">Time Between Runs</label>
+  <label for="{{ form.time_between_runs.id_for_label }}" class="form-label">Time Between Runs</label>
   <div>
     {{ form.time_between_runs }}
   </div>
@@ -68,7 +68,7 @@
   {{ form.time_between_runs.errors }}
 </div>
 <div class="mb-3">
-  <label class="form-label">Batch Size</label>
+  <label for="{{ form.batch_size.id_for_label }}" class="form-label">Batch Size</label>
   <div>
     {{ form.batch_size }}
   </div>
@@ -76,7 +76,7 @@
   {{ form.batch_size.errors }}
 </div>
 <div class="mb-3">
-  <label class="form-label">Extra Arguments</label>
+  <label for="{{ form.extra_args.id_for_label }}" class="form-label">Extra Arguments</label>
   <div>
     {{ form.extra_args }}
   </div>

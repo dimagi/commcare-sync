@@ -7,7 +7,7 @@
     {{ schedule_form.non_field_errors }}
 
     <div class="mb-3">
-      <label class="form-label">{% trans "Schedule Type" %}</label>
+      <label for="{{ schedule_form.schedule_type.id_for_label }}" class="form-label">{% trans "Schedule Type" %}</label>
       <div>
         <div>
           <select x-model="scheduleType" name="{{ schedule_form.schedule_type.html_name }}" id="{{ schedule_form.schedule_type.id_for_label }}" class="form-select">
@@ -21,7 +21,7 @@
     </div>
 
     <div class="mb-3" x-show="scheduleType === 'interval'" x-transition>
-      <label class="form-label">{% trans "Interval" %}</label>
+      <label for="{{ schedule_form.interval_value.id_for_label }}" class="form-label">{% trans "Interval" %}</label>
       <div class="input-group">
         <div>
           {{ schedule_form.interval_value }}
@@ -38,7 +38,7 @@
     </div>
 
     <div class="mb-3" x-show="scheduleType && scheduleType !== 'interval'" x-transition>
-      <label class="form-label">{% trans "First Run Date" %}</label>
+      <label for="{{ schedule_form.first_run_date.id_for_label }}" class="form-label">{% trans "First Run Date" %}</label>
       <div>
         {{ schedule_form.first_run_date }}
       </div>
@@ -47,7 +47,7 @@
     </div>
 
     <div class="mb-3" x-show="scheduleType && scheduleType !== 'interval'" x-transition>
-      <label class="form-label">{% trans "Run Time" %}</label>
+      <label for="{{ schedule_form.first_run_time.id_for_label }}" class="form-label">{% trans "Run Time" %}</label>
       <div>
         {{ schedule_form.first_run_time }}
       </div>
@@ -56,7 +56,7 @@
     </div>
 
     <div class="mb-3" x-show="scheduleType && scheduleType !== 'interval'" x-transition>
-      <label class="form-label">{% trans "Timezone" %}</label>
+      <label for="{{ schedule_form.timezone.id_for_label }}" class="form-label">{% trans "Timezone" %}</label>
       <div>
         {{ schedule_form.timezone }}
       </div>
@@ -65,7 +65,7 @@
     </div>
 
     <div class="mb-3" x-show="scheduleType === 'weekly'" x-transition>
-      <label class="form-label">{% trans "Days of Week" %}</label>
+      <label for="{{ schedule_form.days_of_week.id_for_label }}" class="form-label">{% trans "Days of Week" %}</label>
       <div>
         {{ schedule_form.days_of_week }}
       </div>

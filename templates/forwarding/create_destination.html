@@ -7,28 +7,28 @@
     {% csrf_token %}
     {{ form.non_field_errors }}
     <div class="mb-3">
-      <label class="form-label">{% trans "Name" %}</label>
+      <label for="{{ form.name.id_for_label }}" class="form-label">{% trans "Name" %}</label>
       <div>
         {{ form.name }}
       </div>
       {{ form.name.errors }}
     </div>
     <div class="mb-3">
-      <label class="form-label">{% trans "API URL" %}</label>
+      <label for="{{ form.api_url.id_for_label }}" class="form-label">{% trans "API URL" %}</label>
       <div>
         {{ form.api_url }}
       </div>
       {{ form.api_url.errors }}
     </div>
     <div class="mb-3">
-      <label class="form-label">{% trans "API Username" %}</label>
+      <label for="{{ form.api_username.id_for_label }}" class="form-label">{% trans "API Username" %}</label>
       <div>
         {{ form.api_username }}
       </div>
       {{ form.api_username.errors }}
     </div>
     <div class="mb-3">
-      <label class="form-label">{% trans "API Password" %}</label>
+      <label for="{{ form.api_password.id_for_label }}" class="form-label">{% trans "API Password" %}</label>
       <div>
         {{ form.api_password }}
       </div>
