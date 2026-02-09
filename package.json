@@ -19,6 +19,21 @@
     "alpinejs": "^3.14.1",
     "bootstrap": "^5.3.2",
     "htmx.org": "^2.0.4",
+    "prettier": "^3.8.1",
+    "prettier-plugin-jinja-template": "^2.1.0",
     "sass": "^1.72.0"
+  },
+  "prettier": {
+    "plugins": ["prettier-plugin-jinja-template"],
+    "overrides": [
+      {
+        "files": ["*.html"],
+        "options": {
+          "parser": "jinja-template"
+        }
+      }
+    ],
+    "proseWrap": "always",
+    "tabWidth": 2
   }
 }
