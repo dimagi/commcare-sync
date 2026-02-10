@@ -1,5 +1,7 @@
 <div class="mb-3" x-data="{ loading: false, selectedConfig: '' }">
-  <label for="{{ form.account.id_for_label }}" class="form-label">Account</label>
+  <label for="{{ form.account.id_for_label }}" class="form-label"
+    >Account</label
+  >
   <div>
     <select
       name="{{ form.account.html_name }}"
@@ -8,13 +10,21 @@
       @change="htmx.trigger('#id_config_file_select', 'refresh')"
     >
       {% for value, label in form.account.field.choices %}
-        <option value="{{ value }}"{% if form.account.value == value %} selected{% endif %}>{{ label }}</option>
+        <option
+          value="{{ value }}"
+          {% if form.account.value == value %}selected{% endif %}
+        >
+          {{ label }}
+        </option>
       {% endfor %}
     </select>
   </div>
   {{ form.account.errors }}
 </div>
-<div class="mb-3" x-data="{ loading: false, selectedConfig: '{{ form.det_config_url.value|default:'' }}' }">
+<div
+  class="mb-3"
+  x-data="{ loading: false, selectedConfig: '{{ form.det_config_url.value|default:'' }}' }"
+>
   <label for="id_config_file_select" class="form-label">CommCare Export</label>
   <div>
     <div class="w-100">
@@ -25,7 +35,7 @@
         x-model="selectedConfig"
         :disabled="loading"
         hx-get="{% url 'exports:fetch_config_files' %}"
-        hx-trigger="{% if form.instance.pk %}load, {% endif %}refresh"
+        hx-trigger="{% if form.instance.pk %}load,{% endif %}refresh"
         hx-include="[name='{{ form.account.html_name }}'], [name='{{ form.project.html_name }}'], [name='projects'], [name='{{ form.det_config_url.html_name }}']"
         hx-swap="innerHTML"
         hx-target="this"
@@ -36,49 +46,57 @@
       </select>
     </div>
     <p class="form-text" x-show="loading" x-cloak>
-      <i class="fa fa-spinner fa-spin"></i> Loading available configs from CommCare HQ...
+      <i class="fa fa-spinner fa-spin"></i> Loading available configs from
+      CommCare HQ...
     </p>
     {% if form.instance.pk and form.instance.config_file.name %}
-      <p class="form-text">Current file: {{ form.instance.config_file.name }}</p>
+      <p class="form-text">
+        Current file: {{ form.instance.config_file.name }}
+      </p>
     {% endif %}
   </div>
-  <input type="hidden" name="{{ form.det_config_url.html_name }}" id="{{ form.det_config_url.id_for_label }}" :value="selectedConfig">
+  <input
+    type="hidden"
+    name="{{ form.det_config_url.html_name }}"
+    id="{{ form.det_config_url.id_for_label }}"
+    :value="selectedConfig"
+  />
 </div>
 <div class="mb-3">
-  <label for="{{ form.database.id_for_label }}" class="form-label">Database</label>
-  <div>
-    {{ form.database }}
-  </div>
+  <label for="{{ form.database.id_for_label }}" class="form-label"
+    >Database</label
+  >
+  <div>{{ form.database }}</div>
   {{ form.database.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.is_paused.id_for_label }}" class="form-label">Is Paused?</label>
-  <div>
-    {{ form.is_paused }}
-  </div>
+  <label for="{{ form.is_paused.id_for_label }}" class="form-label"
+    >Is Paused?</label
+  >
+  <div>{{ form.is_paused }}</div>
   <p class="form-text">{{ form.is_paused.help_text }}</p>
   {{ form.is_paused.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.time_between_runs.id_for_label }}" class="form-label">Time Between Runs</label>
-  <div>
-    {{ form.time_between_runs }}
-  </div>
+  <label for="{{ form.time_between_runs.id_for_label }}" class="form-label"
+    >Time Between Runs</label
+  >
+  <div>{{ form.time_between_runs }}</div>
   <p class="form-text">{{ form.time_between_runs.help_text }}</p>
   {{ form.time_between_runs.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.batch_size.id_for_label }}" class="form-label">Batch Size</label>
-  <div>
-    {{ form.batch_size }}
-  </div>
+  <label for="{{ form.batch_size.id_for_label }}" class="form-label"
+    >Batch Size</label
+  >
+  <div>{{ form.batch_size }}</div>
   <p class="form-text">{{ form.batch_size.help_text }}</p>
   {{ form.batch_size.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.extra_args.id_for_label }}" class="form-label">Extra Arguments</label>
-  <div>
-    {{ form.extra_args }}
-  </div>
+  <label for="{{ form.extra_args.id_for_label }}" class="form-label"
+    >Extra Arguments</label
+  >
+  <div>{{ form.extra_args }}</div>
   {{ form.extra_args.errors }}
 </div>

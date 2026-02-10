@@ -1,19 +1,19 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n static %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Create Export Configuration" %}</h1>
-  <form
-      method="post"
-      enctype="multipart/form-data"
-      id="export-config-form"
-  >
-    {% include 'exports/partials/multi_project_export_form.html' %}
-    <div class="d-flex gap-2">
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Create Export Configuration" %}</h1>
+    <form method="post" enctype="multipart/form-data" id="export-config-form">
+      {% include 'exports/partials/multi_project_export_form.html' %}
+      <div class="d-flex gap-2">
         <div>
-            <input class="btn btn-primary" type="submit" value="{% trans 'Create' %}">
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Create' %}"
+          />
         </div>
-    </div>
-  </form>
-</section>
+      </div>
+    </form>
+  </section>
 {% endblock app %}

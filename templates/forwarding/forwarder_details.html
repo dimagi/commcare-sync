@@ -4,76 +4,72 @@
 {% load static %}
 {% load dateformat_tags %}
 {% block app %}
-<section class="py-4 app-card">
-  <div class="d-flex justify-content-between align-items-center">
-    <div>
-      <h1 class="h2">{% blocktrans with name=forwarder.name %}{{ name }} - Details{% endblocktrans %}</h1>
-    </div>
-    <div>
-      <div class="d-flex gap-2">
-      <a
-        class="icon-link btn btn-outline-danger btn-sm rounded-pill"
-        href="{% url 'forwarding:delete_forwarding_config' forwarder.id %}"
-      >
-        <i class="fa fa-times"></i>
-        {% trans "Delete" %}
-      </a>
+  <section class="py-4 app-card">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="h2">
+          {% blocktrans with name=forwarder.name %}{{ name }} - Details{% endblocktrans %}
+        </h1>
+      </div>
+      <div>
+        <div class="d-flex gap-2">
+          <a
+            class="icon-link btn btn-outline-danger btn-sm rounded-pill"
+            href="{% url 'forwarding:delete_forwarding_config' forwarder.id %}"
+          >
+            <i class="fa fa-times"></i>
+            {% trans "Delete" %}
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <span class="text-muted small">{% trans "Database" %}</span>
-      <h2 class="h5">
-        {{ forwarder.database.name }}
-      </h2>
+    <div class="row">
+      <div class="col">
+        <span class="text-muted small">{% trans "Database" %}</span>
+        <h2 class="h5">{{ forwarder.database.name }}</h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Destination" %}</span>
+        <h2 class="h5">{{ forwarder.destination.name }}</h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Created By" %}</span>
+        <h2 class="h5">
+          {% if request.user == forwarder.created_by %}{% trans "You" %}{% else %}{{ forwarder.created_by.username }}{% endif %}
+        </h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Last Modified" %}</span>
+        <h2 class="h5">{{ forwarder.updated_at|naturaltime }}</h2>
+      </div>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Destination" %}</span>
-      <h2 class="h5">
-        {{ forwarder.destination.name }}
-      </h2>
+    <div class="row">
+      <div class="col">
+        <span class="text-muted small">{% trans "Query" %}</span>
+        <pre class="wrapped">{{ forwarder.query }}</pre>
+      </div>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Created By" %}</span>
-      <h2 class="h5">
-        {% if request.user == forwarder.created_by %}{% trans "You" %}{% else %}{{ forwarder.created_by.username}}{% endif %}
-      </h2>
+    {% if forwarder.query_params %}
+      <div class="row">
+        <div class="col">
+          <span class="text-muted small">{% trans "Query Parameters" %}</span>
+          <pre class="wrapped">{{ forwarder.query_params }}</pre>
+        </div>
+      </div>
+    {% endif %}
+    <div class="d-flex gap-2">
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill"
+        href="{% url 'forwarding:edit_forwarding_config' forwarder.id %}"
+      >
+        <i class="fa fa-edit"></i>
+        {% trans "Edit" %}
+      </a>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Last Modified" %}</span>
-      <h2 class="h5">
-        {{ forwarder.updated_at|naturaltime }}
-      </h2>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <span class="text-muted small">{% trans "Query" %}</span>
-      <pre class="wrapped">{{ forwarder.query }}</pre>
-    </div>
-  </div>
-  {% if forwarder.query_params %}
-  <div class="row">
-    <div class="col">
-      <span class="text-muted small">{% trans "Query Parameters" %}</span>
-      <pre class="wrapped">{{ forwarder.query_params }}</pre>
-    </div>
-  </div>
-  {% endif %}
-  <div class="d-flex gap-2">
-    <a
-      class="icon-link btn btn-outline-primary btn-sm rounded-pill"
-      href="{% url 'forwarding:edit_forwarding_config' forwarder.id %}"
-    >
-      <i class="fa fa-edit"></i>
-      {% trans "Edit" %}
-    </a>
-  </div>
-</section>
-{% include 'forwarding/partials/run_history.html' %}
+  </section>
+  {% include 'forwarding/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
-<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-{% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id progress_message='Running Forwarding...' include_force_sync=False %}
+  <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+  {% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id progress_message='Running Forwarding...' include_force_sync=False %}
 {% endblock page_js %}

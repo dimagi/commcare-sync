@@ -2,14 +2,16 @@
 {% csrf_token %}
 {{ form.non_field_errors }}
 <div class="mb-3">
-  <label for="{{ form.name.id_for_label }}" class="form-label">{% trans "Name" %}</label>
-  <div>
-    {{ form.name }}
-  </div>
+  <label for="{{ form.name.id_for_label }}" class="form-label"
+    >{% trans "Name" %}</label
+  >
+  <div>{{ form.name }}</div>
   {{ form.name.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.project.id_for_label }}" class="form-label">{% trans "Project" %}</label>
+  <label for="{{ form.project.id_for_label }}" class="form-label"
+    >{% trans "Project" %}</label
+  >
   <div>
     <select
       name="{{ form.project.html_name }}"
@@ -18,7 +20,12 @@
       @change="htmx.trigger('#id_config_file_select', 'refresh')"
     >
       {% for value, label in form.project.field.choices %}
-        <option value="{{ value }}"{% if form.project.value == value %} selected{% endif %}>{{ label }}</option>
+        <option
+          value="{{ value }}"
+          {% if form.project.value == value %}selected{% endif %}
+        >
+          {{ label }}
+        </option>
       {% endfor %}
     </select>
   </div>

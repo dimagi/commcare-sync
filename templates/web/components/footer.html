@@ -1,10 +1,10 @@
 <footer class="footer mt-5 py-4 bg-light">
   <div class="container text-center">
-    {{ project_meta.NAME }} &mdash;
-    {{ project_meta.DESCRIPTION }} &mdash;
+    {{ project_meta.NAME }} &mdash; {{ project_meta.DESCRIPTION }} &mdash;
     &copy; <span id="copyright-year">2025</span>
   </div>
 </footer>
 <script>
-    document.getElementById('copyright-year').innerText = (new Date()).getFullYear();
+  document.getElementById("copyright-year").innerText =
+    new Date().getFullYear();
 </script>

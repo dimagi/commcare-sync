@@ -1,12 +1,12 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% block app %}
-{% include 'exports/partials/multi_export_details.html' %}
-{% with True as is_multi_project %}
-  {% include 'exports/partials/run_history.html' %}
-{% endwith %}
+  {% include 'exports/partials/multi_export_details.html' %}
+  {% with True as is_multi_project %}
+    {% include 'exports/partials/run_history.html' %}
+  {% endwith %}
 {% endblock app %}
 {% block page_js %}
-<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-{% include 'web/components/run_button_script.html' with run_url_name='exports:run_multi_export' object_id=export.id progress_message='Running Export...' include_force_sync=True %}
+  <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+  {% include 'web/components/run_button_script.html' with run_url_name='exports:run_multi_export' object_id=export.id progress_message='Running Export...' include_force_sync=True %}
 {% endblock page_js %}

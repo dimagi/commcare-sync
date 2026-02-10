@@ -1,14 +1,17 @@
 {% load i18n %}
 {% if messages %}
-    {% for message in messages %}
-    <div class="app-message alert {% if message.tags %}alert-{% if message.level_tag == 'error' %}danger{% else %}{{ message.level_tag }}{% endif %}{% endif %} alert-dismissible fade show {{ message.extra_tags }}" role="alert">
-        {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-          aria-label="{% trans 'Close' %}"
-        ></button>
+  {% for message in messages %}
+    <div
+      class="app-message alert {% if message.tags %}alert-{% if message.level_tag == 'error' %}danger{% else %}{{ message.level_tag }}{% endif %}{% endif %} alert-dismissible fade show {{ message.extra_tags }}"
+      role="alert"
+    >
+      {{ message }}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="{% trans 'Close' %}"
+      ></button>
     </div>
-    {% endfor %}
+  {% endfor %}
 {% endif %}

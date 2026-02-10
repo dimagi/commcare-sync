@@ -9,47 +9,70 @@
   hx-swap="outerHTML"
 >
   <thead>
-  <tr>
-    <th>{% trans "Queued" %}</th>
-    <th>{% trans "Started" %}</th>
-    <th>{% trans "Duration" %}</th>
-    <th>{% trans "Status" %}</th>
-    <th>{% trans "Log" %}</th>
-  </tr>
+    <tr>
+      <th>{% trans "Queued" %}</th>
+      <th>{% trans "Started" %}</th>
+      <th>{% trans "Duration" %}</th>
+      <th>{% trans "Status" %}</th>
+      <th>{% trans "Log" %}</th>
+    </tr>
   </thead>
   <tbody x-data="{ expandedLogs: {} }">
-  {% for forwarding_run in runs %}
-    <tr>
-      <td>
-      <span class="icon" >
-      {% if forwarding_run.triggered_from_ui %}
-        <i class="fa fa-user" title="{% blocktrans with user=forwarding_run.triggering_user|default:'unknown' %}Triggered from UI by {{ user }}{% endblocktrans %}"></i>
-      {% elif forwarding_run.triggered_from_ui == False %}
-        <i class="fa fa-clock-o text-muted" title="{% trans 'Scheduled Run' %}"></i>
-      {% else %}
-        <i class="fa fa-question text-muted" title="{% trans 'Unknown' %}"></i>
-      {% endif %}
-      </span>
-        {{ forwarding_run.created_at }}
-      </td>
-      <td>{{ forwarding_run.started_at|default:'-' }}</td>
-      <td>{{ forwarding_run.duration|readable_timedelta }}</td>
-      <td>{{ forwarding_run.status|to_status_icon }} {{ forwarding_run.status }}</td>
-      <td>
-        <a
-          class="icon-link"
-          @click="expandedLogs[{{ forwarding_run.id }}] = !expandedLogs[{{ forwarding_run.id }}]"
-          role="button"
-        ><span class="icon"><i class="fa" :class="expandedLogs[{{ forwarding_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"></i></span>
-          {% trans "View log" %}
-        </a>
-      </td>
-    </tr>
-    <tr class="forwarding-log my-1" x-show="expandedLogs[{{ forwarding_run.id }}]" x-transition>
-      <td colspan="5">
-        <pre class="wrapped">{% if forwarding_run.log %}{{ forwarding_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre>
-      </td>
-    </tr>
-  {% endfor %}
+    {% for forwarding_run in runs %}
+      <tr>
+        <td>
+          <span class="icon">
+            {% if forwarding_run.triggered_from_ui %}
+              <i
+                class="fa fa-user"
+                title="{% blocktrans with user=forwarding_run.triggering_user|default:'unknown' %}Triggered
+                from UI by {{ user }}{% endblocktrans %}"
+              ></i>
+            {% elif forwarding_run.triggered_from_ui == False %}
+              <i
+                class="fa fa-clock-o text-muted"
+                title="{% trans 'Scheduled Run' %}"
+              ></i>
+            {% else %}
+              <i
+                class="fa fa-question text-muted"
+                title="{% trans 'Unknown' %}"
+              ></i>
+            {% endif %}
+          </span>
+          {{ forwarding_run.created_at }}
+        </td>
+        <td>{{ forwarding_run.started_at|default:'-' }}</td>
+        <td>{{ forwarding_run.duration|readable_timedelta }}</td>
+        <td>
+          {{ forwarding_run.status|to_status_icon }} {{ forwarding_run.status }}
+        </td>
+        <td>
+          <a
+            class="icon-link"
+            @click="expandedLogs[{{ forwarding_run.id }}] = !expandedLogs[{{ forwarding_run.id }}]"
+            role="button"
+            ><span class="icon"
+              ><i
+                class="fa"
+                :class="expandedLogs[{{ forwarding_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+              ></i
+            ></span>
+            {% trans "View log" %}
+          </a>
+        </td>
+      </tr>
+      <tr
+        class="forwarding-log my-1"
+        x-show="expandedLogs[{{ forwarding_run.id }}]"
+        x-transition
+      >
+        <td colspan="5">
+          <pre class="wrapped">
+{% if forwarding_run.log %}{{ forwarding_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre
+          >
+        </td>
+      </tr>
+    {% endfor %}
   </tbody>
 </table>

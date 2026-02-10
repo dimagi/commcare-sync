@@ -9,79 +9,102 @@
   hx-swap="outerHTML"
 >
   <thead>
-  <tr>
-    <th>{% trans "Queued" %}</th>
-    <th>{% trans "Started" %}</th>
-{% if is_partial_list  %}
-    <th>{% trans "Project" %}</th>
-{% endif  %}
-    <th>{% trans "Duration" %}</th>
-    <th>{% trans "Status" %}</th>
-  {% if not is_multi_project %}
-    <th>{% trans "Log" %}</th>
-  {% endif %}
-  {% if not is_partial_list %}
-    <th>{% trans "Config File" %}</th>
-  {% endif %}
-  </tr>
+    <tr>
+      <th>{% trans "Queued" %}</th>
+      <th>{% trans "Started" %}</th>
+      {% if is_partial_list %}
+        <th>{% trans "Project" %}</th>
+      {% endif %}
+      <th>{% trans "Duration" %}</th>
+      <th>{% trans "Status" %}</th>
+      {% if not is_multi_project %}
+        <th>{% trans "Log" %}</th>
+      {% endif %}
+      {% if not is_partial_list %}
+        <th>{% trans "Config File" %}</th>
+      {% endif %}
+    </tr>
   </thead>
   <tbody x-data="{ expandedLogs: {} }">
-  {% for export_run in runs %}
-    <tr>
-      <td>
-      <span class="icon" >
-      {% if export_run.triggered_from_ui %}
-        <i class="fa fa-user" title="{% blocktrans with user=export_run.triggering_user|default:'unknown' %}Triggered from UI by {{ user }}{% endblocktrans %}"></i>
-      {% elif export_run.triggered_from_ui == False %}
-        <i class="fa fa-clock-o text-muted" title="{% trans 'Scheduled Run' %}"></i>
-      {% else %}
-        <i class="fa fa-question text-muted" title="{% trans 'Unknown' %}"></i>
-      {% endif %}
-      </span>
+    {% for export_run in runs %}
+      <tr>
+        <td>
+          <span class="icon">
+            {% if export_run.triggered_from_ui %}
+              <i
+                class="fa fa-user"
+                title="{% blocktrans with user=export_run.triggering_user|default:'unknown' %}Triggered
+                from UI by {{ user }}{% endblocktrans %}"
+              ></i>
+            {% elif export_run.triggered_from_ui == False %}
+              <i
+                class="fa fa-clock-o text-muted"
+                title="{% trans 'Scheduled Run' %}"
+              ></i>
+            {% else %}
+              <i
+                class="fa fa-question text-muted"
+                title="{% trans 'Unknown' %}"
+              ></i>
+            {% endif %}
+          </span>
 
-        {% if is_multi_project  %}<a href="{% url 'exports:multi_export_run_details' export.id export_run.id %}">{{ export_run.created_at }}</a>{% else %}{{ export_run.created_at }}{% endif %}
-      </td>
-      <td>{{ export_run.started_at|default:'-' }}</td>
-      {% if is_partial_list  %}
-        <td>{{ export_run.project.domain }}</td>
-      {% endif  %}
-      <td>{{ export_run.duration|readable_timedelta }}</td>
-      <td>{{ export_run.status|to_status_icon }} {{ export_run.status }}</td>
-      {% if not is_multi_project %}
-      <td>
-        <a
-          class="icon-link"
-          @click="expandedLogs[{{ export_run.id }}] = !expandedLogs[{{ export_run.id }}]"
-          role="button"
-        ><span class="icon"><i class="fa" :class="expandedLogs[{{ export_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"></i></span>
-          {% trans "View log" %}
-        </a>
-      </td>
-      {% endif %}
-
-      {% if not is_partial_list %}
-      <td>
-        {% if export_run.export_config_version.field_dict.config_file %}
-        <a
-          class="icon-link btn btn-outline-primary btn-sm rounded-pill"
-          href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}"
-        >
-          <i class="fa fa-download"></i>
-        </a>
-        {% else %}
-          <span class="text-muted">{% trans "Not available" %}</span>
+          {% if is_multi_project %}<a
+            href="{% url 'exports:multi_export_run_details' export.id export_run.id %}"
+            >{{ export_run.created_at }}</a
+          >{% else %}{{ export_run.created_at }}{% endif %}
+        </td>
+        <td>{{ export_run.started_at|default:'-' }}</td>
+        {% if is_partial_list %}
+          <td>{{ export_run.project.domain }}</td>
         {% endif %}
-      </td>
-      {% endif %}
+        <td>{{ export_run.duration|readable_timedelta }}</td>
+        <td>{{ export_run.status|to_status_icon }} {{ export_run.status }}</td>
+        {% if not is_multi_project %}
+          <td>
+            <a
+              class="icon-link"
+              @click="expandedLogs[{{ export_run.id }}] = !expandedLogs[{{ export_run.id }}]"
+              role="button"
+              ><span class="icon"
+                ><i
+                  class="fa"
+                  :class="expandedLogs[{{ export_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                ></i
+              ></span>
+              {% trans "View log" %}
+            </a>
+          </td>
+        {% endif %}
 
-    </tr>
-    {% if not is_multi_project %}
-    <tr class="export-log my-1" x-show="expandedLogs[{{ export_run.id }}]" x-transition>
-      <td colspan="{% if is_multi_project  %}7{% else %}6{% endif %}">
-        <pre class="wrapped">{% if export_run.log %}{{ export_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre>
-      </td>
-    </tr>
-    {% endif %}
-  {% endfor %}
+        {% if not is_partial_list %}
+          <td>
+            {% if export_run.export_config_version.field_dict.config_file %}
+              <a
+                class="icon-link btn btn-outline-primary btn-sm rounded-pill"
+                href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}"
+              >
+                <i class="fa fa-download"></i>
+              </a>
+            {% else %}
+              <span class="text-muted">{% trans "Not available" %}</span>
+            {% endif %}
+          </td>
+        {% endif %}
+      </tr>
+      {% if not is_multi_project %}
+        <tr
+          class="export-log my-1"
+          x-show="expandedLogs[{{ export_run.id }}]"
+          x-transition
+        >
+          <td colspan="{% if is_multi_project %}7{% else %}6{% endif %}">
+            <pre class="wrapped">
+{% if export_run.log %}{{ export_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre
+            >
+          </td>
+        </tr>
+      {% endif %}
+    {% endfor %}
   </tbody>
 </table>
