@@ -1,5 +1,9 @@
 {% load i18n %}
-<div class="card" x-data="{ scheduleType: '{{ schedule_form.schedule_type.value|default:'' }}' }">
+<div
+  class="card"
+  {# schedule_form.schedule_type values are Schedule.ScheduleType choices #}
+  x-data="{ scheduleType: '{{ schedule_form.schedule_type.value|default:'' }}' }"
+>
   <div class="card-body">
     <h3 class="h5">{% trans "Schedule Configuration" %}</h3>
     <p class="form-text mb-4">
