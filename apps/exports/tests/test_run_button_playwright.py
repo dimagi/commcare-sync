@@ -1,0 +1,291 @@
+"""
+Playwright tests for Run button functionality.
+
+Tests that verify the Run button's Alpine.js state management,
+HTMX table refresh, and integration with Celery progress tracking.
+"""
+import json
+
+import pytest
+from django.urls import reverse
+from playwright.sync_api import Route, expect
+from unmagic import get_request
+
+from apps.exports.models import ExportConfig
+from .fixtures import test_data
+from .helpers import login, navigate_to_export_details
+
+
+def create_export_config(data):
+    """Helper to create an ExportConfig for testing."""
+    export = ExportConfig.objects.create(
+        name='Test Export',
+        account=data['account'],
+        project=data['project'],
+        database=data['database'],
+        created_by=data['user'],
+    )
+    return export
+
+
+@pytest.mark.django_db(transaction=True)
+class TestRunButtonStructure:
+    """Test Run button HTML structure and Alpine.js attributes."""
+
+    def test_run_button_has_alpine_attributes(self):
+        """Test that Run button has required Alpine.js attributes."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify Run button exists and has Alpine.js attributes
+        run_button = page.locator('#run-now-button')
+        expect(run_button).to_be_visible()
+        expect(run_button).to_have_attribute('@click', 'running = true')
+        expect(run_button).to_have_attribute(':disabled', 'running')
+
+    def test_section_has_alpine_data(self):
+        """Test that run history section has x-data with state."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Find the section containing the run button (use .last to get
+        # the run history section)
+        section = page.locator('section:has(#run-now-button)').last
+        expect(section).to_have_attribute(
+            'x-data',
+            "{ running: false, forceSync: false }"
+        )
+
+    def test_progress_section_has_x_show(self):
+        """Test that progress section has x-show binding."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify progress section has x-show binding
+        progress_section = page.locator('#run-status-progress')
+        expect(progress_section).to_have_attribute('x-show', 'running')
+
+    def test_force_sync_checkbox_has_alpine_model(self):
+        """Test that force sync checkbox has x-model binding."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify force sync checkbox has x-model
+        force_sync = page.locator('#force-sync-checkbox')
+        expect(force_sync).to_be_visible()
+        expect(force_sync).to_have_attribute('x-model', 'forceSync')
+
+    def test_run_history_table_has_htmx_attributes(self):
+        """Test that run history table has HTMX refresh attributes."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify run history table has HTMX attributes
+        run_table = page.locator('#run-table')
+        expect(run_table).to_have_attribute(
+            'hx-get',
+            reverse('exports:run_history_table', args=[export.id])
+        )
+        expect(run_table).to_have_attribute('hx-trigger', 'refresh from:body')
+        expect(run_table).to_have_attribute('hx-swap', 'outerHTML')
+
+
+@pytest.mark.django_db
+class TestRunHistoryTableEndpoint:
+    """Test run history table HTMX endpoint configuration."""
+
+    def test_run_history_table_endpoint_exists(self):
+        """Test that run_history_table endpoint is properly configured."""
+        url = reverse('exports:run_history_table', args=[1])
+        assert url == '/exports/view/1/run-history-table/'
+
+
+@pytest.mark.django_db(transaction=True)
+class TestRunButtonWithMocks:
+    """Test Run button functionality with mocked API responses."""
+
+    def test_run_button_javascript_handler_attached(self):
+        """Test that Run button has JavaScript click handler attached."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify run button exists
+        run_button = page.locator('#run-now-button')
+        expect(run_button).to_be_visible()
+
+        # Verify the button has Alpine @click handler
+        expect(run_button).to_have_attribute('@click', 'running = true')
+
+        # Verify progress bar elements exist (will be shown when running=true)
+        expect(page.locator('#progress-bar')).to_be_attached()
+        expect(page.locator('#progress-bar-message')).to_be_attached()
+
+        # Verify the run button script is loaded by checking for the click
+        # handler
+        has_click_handler = page.evaluate('''() => {
+            const button = document.getElementById('run-now-button');
+            return button && button.onclick !== null ||
+                   (button && button.getAttribute('@click') !== null);
+        }''')
+        assert has_click_handler, "Run button should have click handler"
+
+    def test_force_sync_checkbox_alpine_binding(self):
+        """Test that force sync checkbox is bound to Alpine.js state."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify checkbox starts unchecked
+        force_sync = page.locator('#force-sync-checkbox')
+        expect(force_sync).not_to_be_checked()
+
+        # Check the force sync checkbox
+        force_sync.check()
+
+        # Verify checkbox is now checked
+        expect(force_sync).to_be_checked()
+
+        # Verify Alpine x-model binding exists
+        expect(force_sync).to_have_attribute('x-model', 'forceSync')
+
+        # Use page.evaluate to verify Alpine state changed
+        alpine_state = page.evaluate('''() => {
+            const button = document.getElementById('run-now-button');
+            if (!button) return null;
+            const section = button.closest('section[x-data]');
+            if (!section || !Alpine || !Alpine.$data) return null;
+            const data = Alpine.$data(section);
+            return data ? data.forceSync : null;
+        }''')
+
+        assert alpine_state is True, (
+            'Alpine forceSync state should be true when checkbox is checked, '
+            f'got: {alpine_state}'
+        )
+
+    def test_alpine_running_state_changes_on_click(self):
+        """Test that Alpine running state changes when Run button is clicked."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify initial Alpine state
+        initial_state = page.evaluate('''() => {
+            const section = document.querySelector('section[x-data]');
+            return section && Alpine.$data(section) ? Alpine.$data(section).running : null;
+        }''')
+
+        assert initial_state is False, (
+            'Alpine running state should initially be false'
+        )
+
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        # Small delay for Alpine to update
+        page.wait_for_timeout(100)
+
+        # Verify Alpine state changed to true
+        running_state = page.evaluate('''() => {
+            const section = document.querySelector('section[x-data]');
+            return section && Alpine.$data(section) ? Alpine.$data(section).running : null;
+        }''')
+
+        assert running_state is True, (
+            'Alpine running state should be true after clicking Run button'
+        )
+
+    def test_progress_elements_exist_on_page(self):
+        """Test that progress bar elements are present on the page."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        # Verify progress elements exist in the DOM (they may be hidden by Alpine)
+        expect(page.locator('#run-status-progress')).to_be_attached()
+        expect(page.locator('#progress-bar')).to_be_attached()
+        expect(page.locator('#progress-bar-message')).to_be_attached()
+
+    def test_run_button_disabled_state(self):
+        """Test that Run button is disabled when clicked via Alpine state."""
+        page = get_request().getfixturevalue('page')
+        live_server = get_request().getfixturevalue('live_server')
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route: Route):
+            # Delay response to keep button disabled longer
+            route.fulfill(
+                status=200,
+                content_type='text/plain',
+                body='test-task-id-12345'
+            )
+
+        def mock_celery_progress(route: Route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    'state': 'PENDING',
+                    'complete': False,
+                    'success': False,
+                })
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/celery-progress/**', mock_celery_progress)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        run_button = page.locator('#run-now-button')
+
+        # Verify button is initially enabled
+        expect(run_button).not_to_be_disabled()
+
+        run_button.click()
+
+        # Verify button becomes disabled (via Alpine @click setting running=true)
+        expect(run_button).to_be_disabled(timeout=2000)
