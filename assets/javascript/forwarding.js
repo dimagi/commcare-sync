@@ -36,11 +36,11 @@ const setupLogTriggers = function () {
 };
 
 const initializeForwardingRunButton = function (apiUrl, progressUrl) {
-  const runForwardingButton = document.getElementById('run-forwarding-button');
+  const runForwardingButton = document.getElementById('run-now-button');
   runForwardingButton.addEventListener('click', (event) => {
     event.preventDefault();
     runForwardingButton.disabled = true;
-    const progressWrapper = document.getElementById('forwarding-status-progress');
+    const progressWrapper = document.getElementById('run-status-progress');
     progressWrapper.style.display = 'inherit';
     const progressBar = document.getElementById('progress-bar');
     const progressMessage = document.getElementById('progress-bar-message');

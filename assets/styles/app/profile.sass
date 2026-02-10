@@ -1,5 +1,7 @@
+// Profile page styles
 
-
+// Center the profile picture container
+// Could be replaced with: class="d-flex justify-content-center" in template
 #profile-picture
   display: flex
   justify-content: center
@@ -9,15 +11,19 @@
     height: 128px
     border-radius: 50%
 
+// Hide the actual file input (custom styling applied to label)
 input[type="file"]
   display: none
 
+// Custom file upload button styling
 .custom-file-upload
   font-size: .9em
-  &:not(.is-active)
-    @extend a
+  cursor: pointer
+  &:hover
+    text-decoration: underline
 
-
+// Spacing for upload button holder
+// Could be replaced with: class="pt-2" in template
 #profile-upload-holder
   padding-top: .5em
 

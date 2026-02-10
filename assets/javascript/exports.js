@@ -42,13 +42,13 @@ const setupLogTriggers = function () {
 
 
 const initializeExportRunButton = function (apiUrl, progressUrl) {
-  const runExportButton = document.getElementById('run-export-button');
+  const runExportButton = document.getElementById('run-now-button');
   const forceSyncCheckbox = document.getElementById('force-sync-checkbox');
   runExportButton.addEventListener('click', function (e) {
     e.preventDefault();
     const forceSync = forceSyncCheckbox.checked;
     runExportButton.disabled = true;
-    const progressWrapper = document.getElementById('export-status-progress');
+    const progressWrapper = document.getElementById('run-status-progress');
     progressWrapper.style.display = 'inherit';
     const progressBar = document.getElementById('progress-bar');
     const progressMessage = document.getElementById('progress-bar-message');
