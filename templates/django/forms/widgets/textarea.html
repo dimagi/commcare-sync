@@ -1,6 +1,6 @@
 <textarea
   name="{{ widget.name }}"
-  class="form-control{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %}"
+  class="form-control {% if widget.attrs.class %}{{ widget.attrs.class }}{% endif %}"
   {% for key, value in widget.attrs.items %}
     {% if key != 'class' %}{{ key }}{% if value != True %}="{{ value }}"{% endif %} {% endif %}
   {% endfor %}
