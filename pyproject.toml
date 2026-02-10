@@ -36,8 +36,11 @@ dev = [
 test = [
     "django-stubs",
     "mypy",
+    "playwright",
     "pytest",
+    "pytest-asyncio",
     "pytest-django",
+    "pytest-playwright",
     "pytest-unmagic",
     "ruff",
     "time-machine",
@@ -72,3 +75,4 @@ DJANGO_SETTINGS_MODULE = "commcare_sync.settings"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+asyncio_mode = "auto"
