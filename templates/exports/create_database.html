@@ -1,28 +1,28 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Create Database" %}</h1>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Create Database" %}</h1>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.non_field_errors }}
-    <div class="field">
-      <label class="label">{% trans "Name" %}</label>
-      <div class="control">
+    <div class="mb-3">
+      <label class="form-label">{% trans "Name" %}</label>
+      <div>
         {{ form.name }}
       </div>
       {{ form.name.errors }}
     </div>
-    <div class="field">
-      <label class="label">{% trans "Connection String" %}</label>
-      <div class="control">
+    <div class="mb-3">
+      <label class="form-label">{% trans "Connection String" %}</label>
+      <div>
         {{ form.connection_string }}
       </div>
       {{ form.connection_string.errors }}
     </div>
-    <div class="field is-grouped">
-        <div class="control">
-            <input class="button is-primary" type="submit" value="{% trans 'Create' %}">
+    <div class="d-flex gap-2">
+        <div>
+            <input class="btn btn-primary" type="submit" value="{% trans 'Create' %}">
         </div>
     </div>
   </form>

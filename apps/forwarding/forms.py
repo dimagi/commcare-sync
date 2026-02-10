@@ -16,11 +16,6 @@ class CreateForwardingDestinationForm(forms.ModelForm):
             'api_password': forms.PasswordInput(),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Style URLField the same as CharField
-        self.fields['api_url'].widget.attrs['class'] = 'input'
-
 
 class EditForwardingDestinationForm(forms.ModelForm):
     """Form for editing ForwardingDestination objects."""
@@ -28,10 +23,6 @@ class EditForwardingDestinationForm(forms.ModelForm):
     class Meta:
         model = ForwardingDestination
         fields = ('name', 'api_url', 'api_username')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['api_url'].widget.attrs['class'] = 'input'
 
 
 class ForwardingConfigForm(forms.ModelForm):
@@ -56,13 +47,6 @@ class ForwardingConfigForm(forms.ModelForm):
         # Pop schedule_data if provided (used for creating schedule)
         self.schedule_data = kwargs.pop('schedule_data', None)
         super().__init__(*args, **kwargs)
-
-        # Add CSS classes
-        self.fields['name'].widget.attrs['class'] = 'input'
-        self.fields['database'].widget.attrs['class'] = 'select'
-        self.fields['destination'].widget.attrs['class'] = 'select'
-        self.fields['query'].widget.attrs['class'] = 'textarea'
-        self.fields['query_params'].widget.attrs['class'] = 'textarea'
 
     def save(self, commit=True):
         instance = super().save(commit=False)

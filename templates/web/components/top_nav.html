@@ -1,53 +1,58 @@
 {% load i18n %}
 {% load static %}
-<nav class="navbar" role="navigation" aria-label="{% trans 'main navigation' %}">
+<nav class="navbar navbar-expand-lg navbar-light bg-white" role="navigation" aria-label="{% trans 'main navigation' %}">
     <div class="container">
-      <div class="navbar-brand">
-        <a class="navbar-item" href="{% url 'web:home' %}">
-          <img src="{% static 'images/commcare-flower.png' %}" width="28" height="28">
-          <span class="mx-2">{{project_meta.NAME}}</span>
-        </a>
+      <a class="navbar-brand" href="{% url 'web:home' %}">
+        <img src="{% static 'images/commcare-flower.png' %}" width="28" height="28" alt="CommCare">
+        <span class="mx-2">{{project_meta.NAME}}</span>
+      </a>
 
-        <a role="button" class="navbar-burger burger" aria-label="{% trans 'menu' %}" aria-expanded="false" data-target="nav-menu">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
-      <div class="navbar-menu" id="nav-menu">
-        <div class="navbar-end">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav-menu" aria-controls="nav-menu" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="nav-menu">
+        <ul class="navbar-nav ms-auto">
           {% if user.is_authenticated %}
             {% if user.is_superuser and user.is_staff %}
-              <a class="navbar-item" href="{% url 'admin:index' %}">
-                {% trans "Admin Site" %}
-              </a>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin:index' %}">
+                  {% trans "Admin Site" %}
+                </a>
+              </li>
             {% endif %}
-            <div class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
-                <img class="avatar is-hidden-touch" src="{{ user.avatar_url}}">
-                <span class="is-hidden-desktop">{% trans "My Account" %}</span>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img class="avatar d-none d-lg-inline-block" src="{{ user.avatar_url}}">
+                <span class="d-lg-none">{% trans "My Account" %}</span>
               </a>
-              <div class="navbar-dropdown is-right">
-                <a class="navbar-item" href="{% url 'users:user_profile' %}" >
-                  <span class="icon"><i class="fa fa-user"></i></span><span>{% trans "Profile" %}</span>
-                </a>
-                <a class="navbar-item" href="{% url 'account_change_password' %}">
-                  <span class="icon"><i class="fa fa-unlock-alt"></i></span><span>{% trans "Change Password" %}</span>
-                </a>
-                <a class="navbar-item" href="{% url 'account_logout' %}" >
-                  <span class="icon"><i class="fa fa-sign-out"></i></span><span>{% trans "Sign out" %}</span>
-                </a>
-              </div>
-            </div>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                <li>
+                  <a class="dropdown-item" href="{% url 'users:user_profile' %}">
+                    <i class="fa fa-user"></i> {% trans "Profile" %}
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'account_change_password' %}">
+                    <i class="fa fa-unlock-alt"></i> {% trans "Change Password" %}
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'account_logout' %}">
+                    <i class="fa fa-sign-out"></i> {% trans "Sign out" %}
+                  </a>
+                </li>
+              </ul>
+            </li>
           {% else %}
-              <div class="navbar-item">
-                  <div class="buttons">
-                      <a class="button is-primary is-outlined" href="{% url 'account_signup' %}">{% trans "Sign up" %}</a>
-                      <a class="button is-text" href="{% url 'account_login' %}">{% trans "Sign in" %}</a>
-                  </div>
-              </div>
+            <li class="nav-item">
+              <a class="btn btn-outline-primary me-2" href="{% url 'account_signup' %}">{% trans "Sign up" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-link" href="{% url 'account_login' %}">{% trans "Sign in" %}</a>
+            </li>
           {% endif %}
-        </div>
+        </ul>
       </div>
     </div>
 </nav>

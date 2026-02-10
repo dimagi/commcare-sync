@@ -2,16 +2,16 @@
 {% load i18n %}
 {% load static %}
 {% block body %}
-<section class="section container">
-    <div class="columns columns-reversed">
-        <div class="column">
+<section class="py-4 container">
+    <div class="row flex-row-reverse">
+        <div class="col-md-6">
             <img src="{% static 'images/undraw/undraw_alert.svg' %}" alt="{% trans 'Uh-Oh' %}">
         </div>
-        <div id="tagline" class="column">
-            <h1 class="title is-size-3">{% trans "You have to be an administrator to do that." %}</h1>
-            <h2 class="subtitle is-size-5">
+        <div id="tagline" class="col-md-6">
+            <h1 class="h3">{% trans "You have to be an administrator to do that." %}</h1>
+            <p class="lead">
                 {% trans "If you think you should have access to this page, contact someone on your support team." %}
-            </h2>
+            </p>
           {% if dev_mode %}
           <p>
             {% trans "In development you can fix this problem by running the command below and refreshing the page:" %}

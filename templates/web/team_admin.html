@@ -2,11 +2,11 @@
 {% load i18n %}
 {% load static %}
 {% block app %}
-<section class="section app-card">
-    <h1 class="title">{% trans "Team Admin" %}</h1>
-    <h2 class="subtitle">
+<section class="py-4 app-card">
+    <h1 class="h2">{% trans "Team Admin" %}</h1>
+    <p class="lead">
         {% blocktrans with team_name=team.name %}This page is only visible to team members with role set to "admin" on the "{{ team_name }}" Team.{% endblocktrans %}
-    </h2>
+    </p>
     <p>{% trans "Tip: the source of this page can be found at" %} <code>templates/web/team_admin.html</code></p>
 </section>
 {% endblock %}

@@ -1,37 +1,39 @@
 {% load i18n %}
-<section class="section app-card">
-  <h1 class="title">{% trans "Run History" %}</h1>
-  <div class="level">
-    <div class="level-left">
-      <button class="button is-primary is-rounded is-small" id="run-export-button">
-        <span class="icon">
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Run History" %}</h1>
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-primary btn-sm rounded-pill" id="run-export-button">
+        <span class="me-2">
           <i class="fa fa-play"></i>
         </span>
         <span>{% trans "Run Now" %}</span>
       </button>
-      <label class="checkbox mx-2 my-1">
-        <input type="checkbox" id="force-sync-checkbox">
+      <label class="form-check-label mx-2">
+        <input type="checkbox" class="form-check-input" id="force-sync-checkbox">
         {% trans "Force sync of all data" %}
       </label>
     </div>
-    <div class="level-right">
+    <div class="d-flex align-items-center gap-2">
       <label>{% trans "Filter" %}</label>
       {% if hide_skipped %}
-        <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=n">
+        <a class="btn btn-outline-primary btn-sm rounded-pill mx-2" href="?hide_skipped=n">
           <span>{% trans "Show Queued and Skipped Items" %}</span>
         </a>
       {% else %}
-      <a class="button is-primary is-rounded is-outlined is-small mx-2" href="?hide_skipped=y">
+      <a class="btn btn-outline-primary btn-sm rounded-pill mx-2" href="?hide_skipped=y">
         <span>{% trans "Hide Queued and Skipped Items" %}</span>
       </a>
       {% endif %}
     </div>
   </div>
-  <div id="export-status-progress" class="progress-bar-demo my-2" style="display: none;">
+  <div id="export-status-progress" class="my-2" style="display: none;">
     <div class='progress-wrapper'>
-      <progress id="progress-bar" class="progress is-small is-primary" max="100"></progress>
+      <div class="progress" style="height: 20px;">
+        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
     </div>
-    <div id="progress-bar-message" class="has-text-grey">{% trans "Waiting for task to start..." %}</div>
+    <div id="progress-bar-message" class="text-muted">{% trans "Waiting for task to start..." %}</div>
   </div>
 {% include 'exports/partials/run_history_table.html' %}
 </section>

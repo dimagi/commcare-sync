@@ -39,13 +39,6 @@ class ScheduleForm(forms.ModelForm):
             'first_run_time': forms.TimeInput(attrs={'type': 'time'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add CSS classes for better styling
-        for field_name, field in self.fields.items():
-            if field_name != 'days_of_week':
-                field.widget.attrs['class'] = 'input'
-
     def clean_days_of_week(self):
         """Ensure days_of_week is always a list, not None."""
         days = self.cleaned_data.get('days_of_week')

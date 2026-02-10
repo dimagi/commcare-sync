@@ -4,30 +4,26 @@
 {% block body %}
 <div id="fullpage-form-wrapper">
     <div id="fullpage-form">
-        <h1 class="title is-size-4">{% trans "Sign in" %}</h1>
+        <h1 class="h4">{% trans "Sign in" %}</h1>
         <form method="post">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            <div class="field">
-              <label class="label">{% trans "Email" %}</label>
-              <div class="control">
-                {{ form.login }}
-              </div>
+            <div class="mb-3">
+              <label class="form-label">{% trans "Email" %}</label>
+              {{ form.login }}
               {{ form.login.errors }}
             </div>
-            <div class="field">
-              <label class="label">{% trans "Password" %}</label>
-              <div class="control">
-                {{ form.password }}
-              </div>
+            <div class="mb-3">
+              <label class="form-label">{% trans "Password" %}</label>
+              {{ form.password }}
               {{ form.password.errors }}
             </div>
-            <input class="button is-primary is-fullwidth" type="submit" value="{% trans 'Sign in' %}">
+            <input class="btn btn-primary w-100" type="submit" value="{% trans 'Sign in' %}">
 
 
 
             <hr>
-            <div class="field has-text-centered">
+            <div class="mb-3 text-center">
                 <a class="muted-link" href="{% url 'account_reset_password' %}">
                     {% trans "Forgot password?" %}
                 </a>

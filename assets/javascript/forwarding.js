@@ -39,7 +39,7 @@ const initializeForwardingRunButton = function (apiUrl, progressUrl) {
   const runForwardingButton = document.getElementById('run-forwarding-button');
   runForwardingButton.addEventListener('click', (event) => {
     event.preventDefault();
-    runForwardingButton.classList.add('is-loading', 'is-disabled');
+    runForwardingButton.disabled = true;
     const progressWrapper = document.getElementById('forwarding-status-progress');
     progressWrapper.style.display = 'inherit';
     const progressBar = document.getElementById('progress-bar');
@@ -59,15 +59,15 @@ const initializeForwardingRunButton = function (apiUrl, progressUrl) {
         if (typeof CeleryProgressBar === 'undefined') {
           const errorMessage = 'CeleryProgressBar class missing. Did you forget to import celery_progress.js?';
           console.error(errorMessage);
-          progressBar.classList.add('is-danger');
+          progressBar.classList.add('bg-danger');
           progressBar.setAttribute('value', '100');
           progressMessage.innerText = errorMessage;
           return;
         }
 
         progressBar.removeAttribute('value');
-        progressBar.classList.remove('is-danger');
-        progressBar.classList.remove('is-success');
+        progressBar.classList.remove('bg-danger');
+        progressBar.classList.remove('bg-success');
 
         CeleryProgressBar.initProgressBar(taskUrl, {
           onProgress: () => {
@@ -82,14 +82,14 @@ const initializeForwardingRunButton = function (apiUrl, progressUrl) {
             recordRow.cells[2].innerText = result.duration;
             recordRow.cells[3].innerText = result.status;
             if (result.status === 'completed') {
-              progressBar.classList.add('is-success');
+              progressBar.classList.add('bg-success');
             } else if (result.status === 'failed') {
-              progressBar.classList.add('is-danger');
+              progressBar.classList.add('bg-danger');
               progressBar.setAttribute('value', '100');
               progressMessage.innerText = 'Failed!';
             }
             recordRow.cells[4].innerHTML = '<a onclick=location.reload()>Refresh for log</a>';
-            runForwardingButton.classList.remove('is-loading', 'is-disabled');
+            runForwardingButton.disabled = false;
           },
         });
       }).catch((error) => {

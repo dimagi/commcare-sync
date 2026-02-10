@@ -2,19 +2,19 @@
 {% csrf_token %}
 {{ form.non_field_errors }}
 {% include 'commcare/partials/commcare_server_field.html' %}
-<div class="field">
-  <label class="label">{% trans "Username" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "Username" %}</label>
+  <div>
     {{ form.username }}
   </div>
-  <p class="help">{{ form.username.help_text }}</p>
+  <p class="form-text">{{ form.username.help_text }}</p>
   {{ form.username.errors }}
 </div>
-<div class="field">
-  <label class="label">{% trans "API Key" %}</label>
-  <div class="control">
+<div class="mb-3">
+  <label class="form-label">{% trans "API Key" %}</label>
+  <div>
     {{ form.api_key }}
   </div>
-  <p class="help">{{ form.api_key.help_text }}</p>
+  <p class="form-text">{{ form.api_key.help_text }}</p>
   {{ form.api_key.errors }}
 </div>

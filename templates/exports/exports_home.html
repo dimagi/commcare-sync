@@ -3,28 +3,28 @@
 {% block app %}
 {% load exports_tags %}
 {% load humanize %}
-<section class="section app-card">
-  <nav class="level">
-    <div class="level-left">
-      <h1 class="title">{% trans "Export Configurations" %}</h1>
-    </div>
-    <div class="level-right">
-      <a class="button is-info is-rounded is-small" href="{% url 'exports:download_commcare_export_log' %}">
-        <span class="icon">
-          <i class="fa fa-download"></i>
-        </span>
-        <span>{% trans "Download Export Log" %}</span>
-      </a>
-    </div>
+<section class="py-4 app-card">
+  <h1 class="h2">{% trans "Export Configurations" %}</h1>
+  <nav class="d-flex justify-content-between align-items-center">
+{% if exports.exists %}
+    <a
+      class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+      href="{% url 'exports:create_export_config' %}"
+    >
+      <i class="fa fa-plus"></i>
+      {% trans "New Export" %}
+    </a>
+{% endif  %}
+    <a
+      class="icon-link btn btn-info btn-sm rounded-pill mb-3"
+      href="{% url 'exports:download_commcare_export_log' %}"
+    >
+      <i class="fa fa-download"></i>
+      {% trans "Download Export Log" %}
+    </a>
   </nav>
 {% if exports.exists %}
-  <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_export_config' %}">
-    <span class="icon">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "New Export" %}</span>
-  </a>
-  <table class="table is-striped is-fullwidth">
+  <table class="table table-striped">
     <thead>
     <tr>
       <th>{% trans "Export" %}</th>
@@ -39,7 +39,7 @@
         <td>
           <a href="{% url 'exports:export_details' export.id %}">{{ export.name }}</a>
           {% if export.is_paused %}
-            <i title="{% trans 'This export is paused.' %}" class="fa fa-pause-circle has-text-grey-light"></i>
+            <i title="{% trans 'This export is paused.' %}" class="fa fa-pause-circle text-muted"></i>
           {% endif %}
         </td>
         <td>{{ export.project.domain }}</td>
@@ -50,33 +50,35 @@
     </tbody>
   </table>
 {% else %}
-  <section class="notification is-warning is-light">
+  <div class="alert alert-warning">
     {% trans "No export configurations found!" %}
-  </section>
-  <a class="button is-primary " href="{% url 'exports:create_export_config' %}">
-    <span class="icon">
-      <i class="fa fa-plus"></i>
-    </span>
-    <span>{% trans "Add Your First Export" %}</span>
+  </div>
+  <a
+    class="icon-link btn btn-primary"
+    href="{% url 'exports:create_export_config' %}"
+  >
+    <i class="fa fa-plus"></i>
+    {% trans "Add Your First Export" %}
   </a>
 {% endif  %}
 </section>
 {% if multi_project_exports.exists %}
-<section class="section app-card">
-  <nav class="level">
-    <div class="level-left">
-      <h1 class="title">{% trans "Multi-Project Export Configurations" %}</h1>
+<section class="py-4 app-card">
+  <nav class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="h2">{% trans "Multi-Project Export Configurations" %}</h1>
     </div>
-    <div class="level-right">
-      <a class="button is-primary is-rounded is-small is-outlined" href="{% url 'exports:create_multi_export_config' %}">
-        <span class="icon">
-          <i class="fa fa-plus"></i>
-        </span>
-        <span>{% trans "New Multi-Project Export" %}</span>
+    <div>
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill"
+        href="{% url 'exports:create_multi_export_config' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "New Multi-Project Export" %}
       </a>
     </div>
   </nav>
-  <table class="table is-striped is-fullwidth">
+  <table class="table table-striped">
     <thead>
     <tr>
       <th>{% trans "Export" %}</th>
