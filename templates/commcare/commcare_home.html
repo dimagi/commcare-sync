@@ -1,122 +1,123 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "CommCare Home" %}</h1>
-  <h2 class="lead">{% trans "View and manage your CommCare connections" %}</h2>
-</section>
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Projects" %}</h1>
-  <h2 class="lead">{% trans "Manage the CommCare project spaces you'll connect to here" %}</h2>
-{% if projects.exists %}
-  <a
-    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-    href="{% url 'commcare:create_project' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "Add Project" %}
-  </a>
-  <table class="table table-striped">
-    <thead>
-    <tr>
-      <th>{% trans "Project" %}</th>
-      <th>{% trans "View" %}</th>
-      <th>{% trans "Edit" %}</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for project in projects %}
-      <tr>
-        <td>{{ project.domain }}</td>
-        <td>
-          <a
-            class="icon-link"
-            href="{{ project.url }}"
-            target="_blank"
-          >{% trans "View in CommCare" %}
-            <span class="icon"><i class="fa fa-external-link"></i></span>
-          </a>
-        </td>
-        <td>
-          <a
-            class="icon-link btn btn-sm btn-outline-primary rounded-pill"
-            href="{% url 'commcare:edit_project' project.id %}"
-          >
-            <i class="fa fa-edit"></i>
-            {% trans "Edit" %}
-          </a>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <div class="alert alert-warning">
-    {% trans "No projects found!" %}
-  </div>
-  <a
-    class="icon-link btn btn-primary btn-sm rounded-pill"
-    href="{% url 'commcare:create_project' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "Add Your First Project" %}
-  </a>
-{% endif %}
-</section>
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Accounts" %}</h1>
-  <h2 class="lead">{% trans "Manage the CommCare accounts used to sync your data" %}</h2>
-{% if accounts.exists %}
-  <a
-    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-    href="{% url 'commcare:create_account' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "Add Account" %}
-  </a>
-  <table class="table table-striped">
-    <thead>
-    <tr>
-      <th>{% trans "Username" %}</th>
-      <th>{% trans "Created" %}</th>
-      <th>{% trans "Owner" %}</th>
-      <th>{% trans "Edit" %}</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for account in accounts %}
-      <tr>
-        <td>{{ account.username }}</td>
-        <td>{{ account.created_at }}</td>
-        <td>{% if request.user == account.owner %}{% trans "You" %}{% else %}{{ account.owner.get_display_name }}{% endif %}</td>
-        <td>
-          {% if request.user == account.owner %}
-          <a
-            class="icon-link btn btn-sm btn-outline-primary rounded-pill"
-            href="{% url 'commcare:edit_account' account.id %}"
-          >
-            <i class="fa fa-edit"></i>
-            {% trans "Edit" %}
-          </a>
-          {% else %}
-            &mdash;
-          {% endif %}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <div class="alert alert-warning">
-    {% trans "No accounts found!" %}
-  </div>
-  <a
-    class="icon-link btn btn-primary btn-sm rounded-pill"
-    href="{% url 'commcare:create_account' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "Add Your First Account" %}
-  </a>
-{% endif %}
-</section>
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "CommCare Home" %}</h1>
+    <h2 class="lead">
+      {% trans "View and manage your CommCare connections" %}
+    </h2>
+  </section>
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Projects" %}</h1>
+    <h2 class="lead">
+      {% trans "Manage the CommCare project spaces you'll connect to here" %}
+    </h2>
+    {% if projects.exists %}
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+        href="{% url 'commcare:create_project' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Project" %}
+      </a>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Project" %}</th>
+            <th>{% trans "View" %}</th>
+            <th>{% trans "Edit" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+            <tr>
+              <td>{{ project.domain }}</td>
+              <td>
+                <a class="icon-link" href="{{ project.url }}" target="_blank"
+                  >{% trans "View in CommCare" %}
+                  <span class="icon"><i class="fa fa-external-link"></i></span>
+                </a>
+              </td>
+              <td>
+                <a
+                  class="icon-link btn btn-sm btn-outline-primary rounded-pill"
+                  href="{% url 'commcare:edit_project' project.id %}"
+                >
+                  <i class="fa fa-edit"></i>
+                  {% trans "Edit" %}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-warning">{% trans "No projects found!" %}</div>
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'commcare:create_project' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Your First Project" %}
+      </a>
+    {% endif %}
+  </section>
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Accounts" %}</h1>
+    <h2 class="lead">
+      {% trans "Manage the CommCare accounts used to sync your data" %}
+    </h2>
+    {% if accounts.exists %}
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+        href="{% url 'commcare:create_account' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Account" %}
+      </a>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Username" %}</th>
+            <th>{% trans "Created" %}</th>
+            <th>{% trans "Owner" %}</th>
+            <th>{% trans "Edit" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for account in accounts %}
+            <tr>
+              <td>{{ account.username }}</td>
+              <td>{{ account.created_at }}</td>
+              <td>
+                {% if request.user == account.owner %}{% trans "You" %}{% else %}{{ account.owner.get_display_name }}{% endif %}
+              </td>
+              <td>
+                {% if request.user == account.owner %}
+                  <a
+                    class="icon-link btn btn-sm btn-outline-primary rounded-pill"
+                    href="{% url 'commcare:edit_account' account.id %}"
+                  >
+                    <i class="fa fa-edit"></i>
+                    {% trans "Edit" %}
+                  </a>
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-warning">{% trans "No accounts found!" %}</div>
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'commcare:create_account' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Your First Account" %}
+      </a>
+    {% endif %}
+  </section>
 {% endblock app %}

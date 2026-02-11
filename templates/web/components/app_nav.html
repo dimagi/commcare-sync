@@ -5,18 +5,30 @@
   </h6>
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'commcare' %}active{% endif %}" href="{% url 'commcare:home' %}">
-        <i class="fcc fcc-flower"></i><span class="d-md-none d-lg-inline">{% trans "CommCare Setup" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'commcare' %}active{% endif %}"
+        href="{% url 'commcare:home' %}"
+      >
+        <i class="fcc fcc-flower"></i
+        ><span class="d-md-none d-lg-inline">{% trans "CommCare Setup" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'create_project' %}active{% endif %}" href="{% url 'commcare:create_project' %}">
-        <i class="fa fa-plus"></i><span class="d-md-none d-lg-inline">{% trans "Add Project" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'create_project' %}active{% endif %}"
+        href="{% url 'commcare:create_project' %}"
+      >
+        <i class="fa fa-plus"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Add Project" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'create_account' %}active{% endif %}" href="{% url 'commcare:create_account' %}">
-        <i class="fa fa-user-plus"></i><span class="d-md-none d-lg-inline">{% trans "Add Account" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'create_account' %}active{% endif %}"
+        href="{% url 'commcare:create_account' %}"
+      >
+        <i class="fa fa-user-plus"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Add Account" %}</span>
       </a>
     </li>
   </ul>
@@ -25,23 +37,41 @@
   </h6>
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'exports' %}active{% endif %}" href="{% url 'exports:home' %}">
-        <i class="fa fa-download"></i><span class="d-md-none d-lg-inline">{% trans "Exports" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'exports' %}active{% endif %}"
+        href="{% url 'exports:home' %}"
+      >
+        <i class="fa fa-download"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Exports" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'create_export' %}active{% endif %}" href="{% url 'exports:create_export_config' %}">
-        <i class="fa fa-plus"></i><span class="d-md-none d-lg-inline">{% trans "New Export" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'create_export' %}active{% endif %}"
+        href="{% url 'exports:create_export_config' %}"
+      >
+        <i class="fa fa-plus"></i
+        ><span class="d-md-none d-lg-inline">{% trans "New Export" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'create_multi_export' %}active{% endif %}" href="{% url 'exports:create_multi_export_config' %}">
-        <i class="fa fa-plus"></i><span class="d-md-none d-lg-inline">{% trans "Multi-Project Export" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'create_multi_export' %}active{% endif %}"
+        href="{% url 'exports:create_multi_export_config' %}"
+      >
+        <i class="fa fa-plus"></i
+        ><span class="d-md-none d-lg-inline"
+          >{% trans "Multi-Project Export" %}</span
+        >
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'databases' %}active{% endif %}" href="{% url 'exports:databases' %}">
-        <i class="fa fa-database"></i><span class="d-md-none d-lg-inline">{% trans "Databases" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'databases' %}active{% endif %}"
+        href="{% url 'exports:databases' %}"
+      >
+        <i class="fa fa-database"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Databases" %}</span>
       </a>
     </li>
   </ul>
@@ -50,39 +80,65 @@
   </h6>
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'forwarders' %}active{% endif %}" href="{% url 'forwarding:forwarders' %}">
-        <i class="fa fa-paper-plane"></i><span class="d-md-none d-lg-inline">{% trans "Forwarders" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'forwarders' %}active{% endif %}"
+        href="{% url 'forwarding:forwarders' %}"
+      >
+        <i class="fa fa-paper-plane"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Forwarders" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'create_forwarder' %}active{% endif %}" href="{% url 'forwarding:create_forwarding_config' %}">
-        <i class="fa fa-plus"></i><span class="d-md-none d-lg-inline">{% trans "New Forwarder" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'create_forwarder' %}active{% endif %}"
+        href="{% url 'forwarding:create_forwarding_config' %}"
+      >
+        <i class="fa fa-plus"></i
+        ><span class="d-md-none d-lg-inline">{% trans "New Forwarder" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'destinations' %}active{% endif %}" href="{% url 'forwarding:destinations' %}">
-        <i class="fa fa-globe"></i><span class="d-md-none d-lg-inline">{% trans "Destinations" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'destinations' %}active{% endif %}"
+        href="{% url 'forwarding:destinations' %}"
+      >
+        <i class="fa fa-globe"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Destinations" %}</span>
       </a>
     </li>
   </ul>
-  <hr/>
+  <hr />
   <h6 class="text-muted text-uppercase small fw-bold mt-3 d-md-none d-lg-block">
     {% trans "My Account" %}
   </h6>
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a class="nav-link icon-link {% if active_tab == 'profile' %}active{% endif %}" href="{% url 'users:user_profile' %}">
-        <i class="fa fa-user"></i><span class="d-md-none d-lg-inline">{% trans "Profile" %}</span>
+      <a
+        class="nav-link icon-link {% if active_tab == 'profile' %}active{% endif %}"
+        href="{% url 'users:user_profile' %}"
+      >
+        <i class="fa fa-user"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Profile" %}</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if 'accounts/password/change' in request.path %}active{% endif %}" href="{% url 'account_change_password' %}">
-        <i class="fa fa-unlock-alt"></i><span class="d-md-none d-lg-inline">{% trans "Change Password" %}</span>
+      <a
+        class="nav-link icon-link {% if 'accounts/password/change' in request.path %}active{% endif %}"
+        href="{% url 'account_change_password' %}"
+      >
+        <i class="fa fa-unlock-alt"></i
+        ><span class="d-md-none d-lg-inline"
+          >{% trans "Change Password" %}</span
+        >
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link icon-link {% if 'accounts/logout' in request.path %}active{% endif %}" href="{% url 'account_logout' %}">
-        <i class="fa fa-sign-out"></i><span class="d-md-none d-lg-inline">{% trans "Sign out" %}</span>
+      <a
+        class="nav-link icon-link {% if 'accounts/logout' in request.path %}active{% endif %}"
+        href="{% url 'account_logout' %}"
+      >
+        <i class="fa fa-sign-out"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Sign out" %}</span>
       </a>
     </li>
   </ul>

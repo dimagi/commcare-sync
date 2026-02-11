@@ -1,59 +1,65 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Forwarding Destinations" %}</h1>
-  <h2 class="lead">{% trans "Manage the API endpoints where data will be forwarded" %}</h2>
-{% if destinations.exists %}
-  <div class="alert alert-info">
-    {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
-  </div>
-  {% if user.is_superuser %}
-  <a
-    class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-    href="{% url 'forwarding:create_destination' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "New Destination" %}
-  </a>
-  {% endif %}
-  <table class="table table-striped">
-    <thead>
-    <tr>
-      <th>{% trans "Name" %}</th>
-      <th>{% trans "API URL" %}</th>
-      <th>{% trans "Owner" %}</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for destination in destinations %}
-      <tr>
-        <td>
-          {% if user.is_superuser %}
-          <a href="{% url 'forwarding:edit_destination' destination.id %}">
-            {{ destination.name }}
-          </a>
-          {% else %}
-          {{ destination.name }}
-          {% endif %}
-        </td>
-        <td>{{ destination.api_url }}</td>
-        <td>{% if request.user == destination.owner %}{% trans "You" %}{% else %}{{ destination.owner.get_display_name }}{% endif %}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <div class="alert alert-warning">
-    {% trans "No forwarding destinations found!" %}
-  </div>
-  <a
-    class="icon-link btn btn-primary btn-sm rounded-pill"
-    href="{% url 'forwarding:create_destination' %}"
-  >
-    <i class="fa fa-plus"></i>
-    {% trans "Add Your First Destination" %}
-  </a>
-{% endif  %}
-</section>
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Forwarding Destinations" %}</h1>
+    <h2 class="lead">
+      {% trans "Manage the API endpoints where data will be forwarded" %}
+    </h2>
+    {% if destinations.exists %}
+      <div class="alert alert-info">
+        {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
+      </div>
+      {% if user.is_superuser %}
+        <a
+          class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+          href="{% url 'forwarding:create_destination' %}"
+        >
+          <i class="fa fa-plus"></i>
+          {% trans "New Destination" %}
+        </a>
+      {% endif %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "API URL" %}</th>
+            <th>{% trans "Owner" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for destination in destinations %}
+            <tr>
+              <td>
+                {% if user.is_superuser %}
+                  <a
+                    href="{% url 'forwarding:edit_destination' destination.id %}"
+                  >
+                    {{ destination.name }}
+                  </a>
+                {% else %}
+                  {{ destination.name }}
+                {% endif %}
+              </td>
+              <td>{{ destination.api_url }}</td>
+              <td>
+                {% if request.user == destination.owner %}{% trans "You" %}{% else %}{{ destination.owner.get_display_name }}{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-warning">
+        {% trans "No forwarding destinations found!" %}
+      </div>
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'forwarding:create_destination' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Your First Destination" %}
+      </a>
+    {% endif %}
+  </section>
 {% endblock app %}

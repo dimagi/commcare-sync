@@ -3,7 +3,9 @@
 <section class="py-4 app-card">
   <div class="d-flex justify-content-between align-items-center">
     <div>
-      <h1 class="h2">{% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}</h1>
+      <h1 class="h2">
+        {% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}
+      </h1>
     </div>
     <div>
       <a
@@ -25,48 +27,42 @@
             href="{{ project.url }}"
             target="_blank"
             style="white-space: nowrap;"
-          >{{ project.domain }}
+            >{{ project.domain }}
             <span class="icon"><i class="fa fa-external-link"></i></span>
           </a>
-          {% if not forloop.last %}<br>{% endif %}
+          {% if not forloop.last %}<br />{% endif %}
         {% endfor %}
       </h2>
     </div>
     <div class="col">
       <span class="text-muted small">{% trans "Account" %}</span>
-      <h2 class="h5">
-        {{ export.account.username }}
-      </h2>
+      <h2 class="h5">{{ export.account.username }}</h2>
     </div>
     <div class="col">
       <span class="text-muted small">{% trans "Database" %}</span>
-      <h2 class="h5">
-        {{ export.database.name }}
-      </h2>
+      <h2 class="h5">{{ export.database.name }}</h2>
     </div>
     <div class="col">
       <span class="text-muted small">{% trans "Created By" %}</span>
       <h2 class="h5">
-        {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username}}{% endif %}
+        {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username }}{% endif %}
       </h2>
     </div>
     <div class="col">
       <span class="text-muted small">{% trans "Last Modified" %}</span>
-      <h2 class="h5">
-        {{ export.updated_at|naturaltime }}
-      </h2>
+      <h2 class="h5">{{ export.updated_at|naturaltime }}</h2>
     </div>
   </div>
   <div class="d-flex gap-2">
-  {% if show_back_button %}
-    <a
-      class="icon-link btn btn-primary btn-sm rounded-pill"
-      href="{% url 'exports:multi_export_details' export.id %}"
-    >
-      <i class="fa fa-arrow-left"></i>
-      {% trans "Back" %}
-    </a>
-  {% endif %}
+    {% if show_back_button %}
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'exports:multi_export_details' export.id %}"
+      >
+        <i class="fa fa-arrow-left"></i>
+        {% trans "Back" %}
+      </a>
+    {% endif %}
     <a
       class="icon-link btn btn-outline-primary btn-sm rounded-pill"
       href="{% url 'exports:download_multi_export_file' export.id %}"

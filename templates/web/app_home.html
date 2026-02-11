@@ -2,31 +2,33 @@
 {% load i18n %}
 {% load static %}
 {% block app %}
-<section class="py-4 app-card">
+  <section class="py-4 app-card">
     <div class="row flex-row-reverse">
-        <div class="col-md-6">
-            <img src="{% static 'images/undraw/undraw_outer_space.svg' %}" alt="{% trans 'Fly Away!' %}">
-        </div>
-        <div id="tagline" class="col-md-6">
-            <h1 class="display-4">{% trans "You're Signed In!" %}</h1>
-            <p class="lead">
-                {% trans "This is your application's logged in home page." %}
-            </p>
+      <div class="col-md-6">
+        <img
+          src="{% static 'images/undraw/undraw_outer_space.svg' %}"
+          alt="{% trans 'Fly Away!' %}"
+        />
+      </div>
+      <div id="tagline" class="col-md-6">
+        <h1 class="display-4">{% trans "You're Signed In!" %}</h1>
+        <p class="lead">
+          {% trans "This is your application's logged in home page." %}
+        </p>
 
-
-            <p>
-                {% trans "Now go make something great!" %}
-            </p>
-
-
-        </div>
+        <p>{% trans "Now go make something great!" %}</p>
+      </div>
     </div>
-</section>
-<section class="py-4 app-card">
+  </section>
+  <section class="py-4 app-card">
     <div>
-        <p>{% trans "To add more to this page you can make new sections like this one." %}</p>
-        <p>{% trans "Tip: the source of this page can be found at" %} <code>templates/web/app_home.html</code></p>
+      <p>
+        {% trans "To add more to this page you can make new sections like this one." %}
+      </p>
+      <p>
+        {% trans "Tip: the source of this page can be found at" %}
+        <code>templates/web/app_home.html</code>
+      </p>
     </div>
-</section>
+  </section>
 {% endblock %}
-

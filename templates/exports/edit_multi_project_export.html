@@ -1,21 +1,27 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n static %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% blocktrans with name=export.name %}Edit {{ name }}{% endblocktrans %}</h1>
-  <form
+  <section class="py-4 app-card">
+    <h1 class="h2">
+      {% blocktrans with name=export.name %}Edit {{ name }}{% endblocktrans %}
+    </h1>
+    <form
       method="post"
       enctype="multipart/form-data"
       id="export-config-form"
       data-fetch-config-url="{% url 'exports:fetch_config_files' %}"
-  >
-    {% include 'exports/partials/multi_project_export_form.html' %}
-    <div class="d-flex gap-2">
-      <div>
-        <input class="btn btn-primary" type="submit" value="{% trans 'Save' %}">
+    >
+      {% include 'exports/partials/multi_project_export_form.html' %}
+      <div class="d-flex gap-2">
+        <div>
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Save' %}"
+          />
+        </div>
       </div>
-    </div>
-  </form>
-</section>
-<script src="{% static 'js/export-config-fetch.js' %}"></script>
+    </form>
+  </section>
+  <script src="{% static 'js/export-config-fetch.js' %}"></script>
 {% endblock app %}

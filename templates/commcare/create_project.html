@@ -1,15 +1,19 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Add Project" %}</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% include 'commcare/partials/project_form.html' %}
-    <div class="d-flex gap-2">
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Add Project" %}</h1>
+    <form method="post" enctype="multipart/form-data">
+      {% include 'commcare/partials/project_form.html' %}
+      <div class="d-flex gap-2">
         <div>
-            <input class="btn btn-primary" type="submit" value="{% trans 'Add Project' %}">
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Add Project' %}"
+          />
         </div>
-    </div>
-  </form>
-</section>
+      </div>
+    </form>
+  </section>
 {% endblock app %}
