@@ -165,6 +165,27 @@ def export_details(request, export_id):
         'export': export,
         'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
+        'run_history_url': reverse('exports:run_history_table', args=[export.id]),
+    })
+
+
+@login_required
+def run_history_table(request, export_id):
+    """HTMX endpoint to refresh the run history table."""
+    export = get_object_or_404(ExportConfig, id=export_id)
+    runs = export.runs
+    hide_skipped = get_hide_skipped_from_request(request)
+    is_multi_project = request.GET.get('is_multi_project') == 'true'
+    if hide_skipped:
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+    run_history_url = reverse('exports:run_history_table', args=[export.id])
+    if is_multi_project:
+        run_history_url += '?is_multi_project=true'
+    return render(request, 'exports/partials/run_history_table.html', {
+        'export': export,
+        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
+        'is_multi_project': is_multi_project,
+        'run_history_url': run_history_url,
     })
 
 
@@ -199,13 +220,16 @@ def multi_export_details(request, export_id):
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
-
+    run_history_url = (
+        reverse('exports:run_history_table', args=[export.id])
+        + '?is_multi_project=true'
+    )
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
         'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
-
+        'run_history_url': run_history_url,
     })
 
 
