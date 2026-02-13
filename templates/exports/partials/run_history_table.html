@@ -1,7 +1,15 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="export-run-table" class="table my-2">
+<table
+  id="run-table"
+  class="table my-2"
+  {# multi‑project export run shows a static snapshot of partial runs, so #}
+  {# `run_history_url` is not set for that page; there's nothing to refresh. #}
+  {% if run_history_url %}hx-get="{{ run_history_url }}"{% endif %}
+  hx-trigger="refresh from:body"
+  hx-swap="outerHTML"
+>
   <thead>
     <tr>
       <th>{% trans "Queued" %}</th>
