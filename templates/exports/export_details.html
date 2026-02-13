@@ -4,90 +4,84 @@
 {% load static %}
 {% load dateformat_tags %}
 {% block app %}
-<section class="py-4 app-card">
-  <div class="d-flex justify-content-between align-items-center">
-    <div>
-      <h1 class="h2">{% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}</h1>
-    </div>
-    <div>
-      <div class="d-flex gap-2">
-      <a
-        class="icon-link btn btn-outline-danger btn-sm rounded-pill"
-        href="{% url 'exports:delete_export_config' export.id %}"
-      >
-        <i class="fa fa-times"></i>
-        {% trans "Delete" %}
-      </a>
+  <section class="py-4 app-card">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="h2">
+          {% blocktrans with name=export.name %}{{ name }} - Details{% endblocktrans %}
+        </h1>
+      </div>
+      <div>
+        <div class="d-flex gap-2">
+          <a
+            class="icon-link btn btn-outline-danger btn-sm rounded-pill"
+            href="{% url 'exports:delete_export_config' export.id %}"
+          >
+            <i class="fa fa-times"></i>
+            {% trans "Delete" %}
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <span class="text-muted small">{% trans "Project Space" %}</span>
-      <h2 class="h5">
-        <a
-          class="icon-link"
-          href="{{ export.project.url }}"
-          target="_blank"
-        >{{ export.project.domain }}
-          <span class="icon"><i class="fa fa-external-link"></i></span>
-        </a>
-      </h2>
+    <div class="row">
+      <div class="col">
+        <span class="text-muted small">{% trans "Project Space" %}</span>
+        <h2 class="h5">
+          <a class="icon-link" href="{{ export.project.url }}" target="_blank"
+            >{{ export.project.domain }}
+            <span class="icon"><i class="fa fa-external-link"></i></span>
+          </a>
+        </h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Account" %}</span>
+        <h2 class="h5">{{ export.account.username }}</h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Database" %}</span>
+        <h2 class="h5">{{ export.database.name }}</h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Created By" %}</span>
+        <h2 class="h5">
+          {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username }}{% endif %}
+        </h2>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Last Modified" %}</span>
+        <h2 class="h5">{{ export.updated_at|naturaltime }}</h2>
+      </div>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Account" %}</span>
-      <h2 class="h5">
-        {{ export.account.username }}
-      </h2>
+    <div class="d-flex gap-2">
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'exports:download_export_file' export.id %}"
+      >
+        <i class="fa fa-download"></i>
+        {% trans "Download Config File" %}
+      </a>
+      <a
+        class="icon-link btn btn-outline-primary btn-sm rounded-pill"
+        href="{% url 'exports:edit_export_config' export.id %}"
+      >
+        <i class="fa fa-edit"></i>
+        {% trans "Edit" %}
+      </a>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Database" %}</span>
-      <h2 class="h5">
-        {{ export.database.name }}
-      </h2>
-    </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Created By" %}</span>
-      <h2 class="h5">
-        {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.username}}{% endif %}
-      </h2>
-    </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Last Modified" %}</span>
-      <h2 class="h5">
-        {{ export.updated_at|naturaltime }}
-      </h2>
-    </div>
-  </div>
-  <div class="d-flex gap-2">
-    <a
-      class="icon-link btn btn-primary btn-sm rounded-pill"
-      href="{% url 'exports:download_export_file' export.id %}"
-    >
-      <i class="fa fa-download"></i>
-      {% trans "Download Config File" %}
-    </a>
-    <a
-      class="icon-link btn btn-outline-primary btn-sm rounded-pill"
-      href="{% url 'exports:edit_export_config' export.id %}"
-    >
-      <i class="fa fa-edit"></i>
-      {% trans "Edit" %}
-    </a>
-  </div>
-</section>
-{% include 'exports/partials/run_history.html' %}
+  </section>
+  {% include 'exports/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
-<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-<script src="{% static 'js/app-bundle.js' %}"></script>
-<script>
+  <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+  <script src="{% static 'js/app-bundle.js' %}"></script>
+  <script>
     const apiUrl = "{% url 'exports:run_export' export.id %}";
-    const progressUrl = "{% url 'celery_progress:task_status' 'task-id-stub' %}";
+    const progressUrl =
+      "{% url 'celery_progress:task_status' 'task-id-stub' %}";
     const Exports = SiteJS.app.Exports;
     document.addEventListener("DOMContentLoaded", function () {
       Exports.initializeExportRunButton(apiUrl, progressUrl);
     });
-    document.addEventListener('DOMContentLoaded', Exports.setupLogTriggers);
-</script>
+    document.addEventListener("DOMContentLoaded", Exports.setupLogTriggers);
+  </script>
 {% endblock page_js %}

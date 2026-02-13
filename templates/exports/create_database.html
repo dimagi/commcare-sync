@@ -1,30 +1,36 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Create Database" %}</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div class="mb-3">
-      <label for="{{ form.name.id_for_label }}" class="form-label">{% trans "Name" %}</label>
-      <div>
-        {{ form.name }}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Create Database" %}</h1>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="mb-3">
+        <label for="{{ form.name.id_for_label }}" class="form-label"
+          >{% trans "Name" %}</label
+        >
+        <div>{{ form.name }}</div>
+        {{ form.name.errors }}
       </div>
-      {{ form.name.errors }}
-    </div>
-    <div class="mb-3">
-      <label for="{{ form.connection_string.id_for_label }}" class="form-label">{% trans "Connection String" %}</label>
-      <div>
-        {{ form.connection_string }}
+      <div class="mb-3">
+        <label
+          for="{{ form.connection_string.id_for_label }}"
+          class="form-label"
+          >{% trans "Connection String" %}</label
+        >
+        <div>{{ form.connection_string }}</div>
+        {{ form.connection_string.errors }}
       </div>
-      {{ form.connection_string.errors }}
-    </div>
-    <div class="d-flex gap-2">
+      <div class="d-flex gap-2">
         <div>
-            <input class="btn btn-primary" type="submit" value="{% trans 'Create' %}">
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Create' %}"
+          />
         </div>
-    </div>
-  </form>
-</section>
+      </div>
+    </form>
+  </section>
 {% endblock app %}

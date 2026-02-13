@@ -1,44 +1,48 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Create Destination" %}</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div class="mb-3">
-      <label for="{{ form.name.id_for_label }}" class="form-label">{% trans "Name" %}</label>
-      <div>
-        {{ form.name }}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Create Destination" %}</h1>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="mb-3">
+        <label for="{{ form.name.id_for_label }}" class="form-label"
+          >{% trans "Name" %}</label
+        >
+        <div>{{ form.name }}</div>
+        {{ form.name.errors }}
       </div>
-      {{ form.name.errors }}
-    </div>
-    <div class="mb-3">
-      <label for="{{ form.api_url.id_for_label }}" class="form-label">{% trans "API URL" %}</label>
-      <div>
-        {{ form.api_url }}
+      <div class="mb-3">
+        <label for="{{ form.api_url.id_for_label }}" class="form-label"
+          >{% trans "API URL" %}</label
+        >
+        <div>{{ form.api_url }}</div>
+        {{ form.api_url.errors }}
       </div>
-      {{ form.api_url.errors }}
-    </div>
-    <div class="mb-3">
-      <label for="{{ form.api_username.id_for_label }}" class="form-label">{% trans "API Username" %}</label>
-      <div>
-        {{ form.api_username }}
+      <div class="mb-3">
+        <label for="{{ form.api_username.id_for_label }}" class="form-label"
+          >{% trans "API Username" %}</label
+        >
+        <div>{{ form.api_username }}</div>
+        {{ form.api_username.errors }}
       </div>
-      {{ form.api_username.errors }}
-    </div>
-    <div class="mb-3">
-      <label for="{{ form.api_password.id_for_label }}" class="form-label">{% trans "API Password" %}</label>
-      <div>
-        {{ form.api_password }}
+      <div class="mb-3">
+        <label for="{{ form.api_password.id_for_label }}" class="form-label"
+          >{% trans "API Password" %}</label
+        >
+        <div>{{ form.api_password }}</div>
+        {{ form.api_password.errors }}
       </div>
-      {{ form.api_password.errors }}
-    </div>
-    <div class="d-flex gap-2">
+      <div class="d-flex gap-2">
         <div>
-            <input class="btn btn-primary" type="submit" value="{% trans 'Create' %}">
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Create' %}"
+          />
         </div>
-    </div>
-  </form>
-</section>
+      </div>
+    </form>
+  </section>
 {% endblock app %}

@@ -10,27 +10,37 @@
         <span>{% trans "Run Now" %}</span>
       </button>
       {% if show_force_sync %}
-      <label for="force-sync-checkbox" class="form-check-label mx-2">
-        <input type="checkbox" class="form-check-input" id="force-sync-checkbox">
-        {% trans "Force sync of all data" %}
-      </label>
+        <label for="force-sync-checkbox" class="form-check-label mx-2">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="force-sync-checkbox"
+          />
+          {% trans "Force sync of all data" %}
+        </label>
       {% endif %}
     </div>
     <div class="d-flex align-items-center gap-2">
       <label>{% trans "Filter" %}</label>
       {% if hide_skipped %}
-        <a class="btn btn-outline-primary btn-sm rounded-pill mx-2" href="?hide_skipped=n">
+        <a
+          class="btn btn-outline-primary btn-sm rounded-pill mx-2"
+          href="?hide_skipped=n"
+        >
           <span>{% trans "Show Queued and Skipped Items" %}</span>
         </a>
       {% else %}
-      <a class="btn btn-outline-primary btn-sm rounded-pill mx-2" href="?hide_skipped=y">
-        <span>{% trans "Hide Queued and Skipped Items" %}</span>
-      </a>
+        <a
+          class="btn btn-outline-primary btn-sm rounded-pill mx-2"
+          href="?hide_skipped=y"
+        >
+          <span>{% trans "Hide Queued and Skipped Items" %}</span>
+        </a>
       {% endif %}
     </div>
   </div>
   <div id="run-status-progress" class="my-2" style="display: none;">
-    <div class='progress-wrapper'>
+    <div class="progress-wrapper">
       <div class="progress" style="height: 20px;">
         <div
           id="progress-bar"
@@ -43,7 +53,9 @@
         ></div>
       </div>
     </div>
-    <div id="progress-bar-message" class="text-muted">{% trans "Waiting for task to start..." %}</div>
+    <div id="progress-bar-message" class="text-muted">
+      {% trans "Waiting for task to start..." %}
+    </div>
   </div>
-{% include table_include_path %}
+  {% include table_include_path %}
 </section>

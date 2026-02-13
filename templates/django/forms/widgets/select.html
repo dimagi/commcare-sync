@@ -1,8 +1,8 @@
 <select
   name="{{ widget.name }}"
-  class="form-select{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %}"
+  class="form-select {% if widget.attrs.class %}{{ widget.attrs.class }}{% endif %}"
   {% for key, value in widget.attrs.items %}
-    {% if key != 'class' %}{{ key }}{% if value != True %}="{{ value }}"{% endif %} {% endif %}
+    {% if key != 'class' %}{{ key }}{% if value != True %}="{{ value }}"{% endif %}{% endif %}
   {% endfor %}
 >
   {% for group_name, group_choices, group_index in widget.optgroups %}

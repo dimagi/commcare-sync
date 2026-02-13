@@ -4,39 +4,43 @@
 {% load dateformat_tags %}
 {% load exports_tags %}
 {% block app %}
-{% with True as show_back_button %}
-{% include 'exports/partials/multi_export_details.html' %}
-{% endwith %}
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Run Details" %}</h1>
-  <div class="row">
-    <div class="col">
-      <span class="text-muted small">{% trans "Queued" %}</span>
-      <p>{{ export_run.created_at }}</p>
+  {% with True as show_back_button %}
+    {% include 'exports/partials/multi_export_details.html' %}
+  {% endwith %}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Run Details" %}</h1>
+    <div class="row">
+      <div class="col">
+        <span class="text-muted small">{% trans "Queued" %}</span>
+        <p>{{ export_run.created_at }}</p>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Started" %}</span>
+        <p>{{ export_run.started_at|default:"---" }}</p>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Duration" %}</span>
+        <p>{{ export_run.duration|readable_timedelta }}</p>
+      </div>
+      <div class="col">
+        <span class="text-muted small">{% trans "Status" %}</span>
+        <p>{{ export_run.status|to_status_icon }} {{ export_run.status }}</p>
+      </div>
     </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Started" %}</span>
-      <p>{{ export_run.started_at|default:"---" }}</p>
-    </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Duration" %}</span>
-      <p>{{ export_run.duration|readable_timedelta }}</p>
-    </div>
-    <div class="col">
-      <span class="text-muted small">{% trans "Status" %}</span>
-      <p>{{ export_run.status|to_status_icon }} {{ export_run.status }}</p>
-    </div>
-  </div>
-</section>
-<section class="py-4 app-card">
-  <h1 class="h2">{% trans "Project-Level Runs" %}</h1>
-{% with True as is_partial_list %}
-  {% include 'exports/partials/run_history_table.html' %}
-{% endwith %}
+  </section>
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Project-Level Runs" %}</h1>
+    {% with True as is_partial_list %}
+      {% include 'exports/partials/run_history_table.html' %}
+    {% endwith %}
+  </section>
 {% endblock app %}
 {% block page_js %}
-<script src="{% static 'js/app-bundle.js' %}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', SiteJS.app.Exports.setupLogTriggers);
-</script>
+  <script src="{% static 'js/app-bundle.js' %}"></script>
+  <script>
+    document.addEventListener(
+      "DOMContentLoaded",
+      SiteJS.app.Exports.setupLogTriggers,
+    );
+  </script>
 {% endblock %}

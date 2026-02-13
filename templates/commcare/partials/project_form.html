@@ -3,10 +3,10 @@
 {{ form.non_field_errors }}
 {% include 'commcare/partials/commcare_server_field.html' %}
 <div class="mb-3">
-  <label for="{{ form.domain.id_for_label }}" class="form-label">{% trans "Domain" %}</label>
-  <div>
-    {{ form.domain }}
-  </div>
+  <label for="{{ form.domain.id_for_label }}" class="form-label">
+    {% trans "Domain" %}
+  </label>
+  {{ form.domain }}
   <p class="form-text">{{ form.domain.help_text }}</p>
   {{ form.domain.errors }}
 </div>
