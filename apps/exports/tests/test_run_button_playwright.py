@@ -8,7 +8,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from playwright.sync_api import Route, expect
+from playwright.sync_api import expect
 from unmagic import get_request
 
 from apps.exports.models import ExportConfig
@@ -255,7 +255,7 @@ class TestRunButtonWithMocks:
         data = test_data()
         export = create_export_config(data)
 
-        def mock_run_export(route: Route):
+        def mock_run_export(route):
             # Delay response to keep button disabled longer
             route.fulfill(
                 status=200,
@@ -263,7 +263,7 @@ class TestRunButtonWithMocks:
                 body='test-task-id-12345'
             )
 
-        def mock_celery_progress(route: Route):
+        def mock_celery_progress(route):
             route.fulfill(
                 status=200,
                 content_type='application/json',

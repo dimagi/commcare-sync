@@ -4,14 +4,14 @@ Playwright tests with API mocking for Export form.
 Tests Alpine.js and HTMX functionality with mocked API responses.
 """
 import pytest
-from playwright.sync_api import Route, expect
+from playwright.sync_api import expect
 from unmagic import get_request
 
 from .fixtures import test_data
 from .helpers import login, navigate_to_create_export
 
 
-def mock_config_files_response(route: Route):
+def mock_config_files_response(route):
     """Mock the fetch_config_files HTMX endpoint."""
     html_response = """
         <option value="">Select a config file...</option>
@@ -29,7 +29,7 @@ def mock_config_files_response(route: Route):
     )
 
 
-def mock_config_files_error(route: Route):
+def mock_config_files_error(route):
     """Mock an error response from fetch_config_files."""
     html_response = """
         <option value="">Error loading configs</option>
