@@ -19,7 +19,7 @@
       {% endif %}
     </tr>
   </thead>
-  <tbody>
+  <tbody x-data="{ expandedLogs: {} }">
     {% for export_run in runs %}
       <tr>
         <td>
@@ -57,10 +57,16 @@
         {% if not is_multi_project %}
           <td>
             <a
-              class="icon-link log-trigger"
-              data-open-status="closed"
-              data-export-run-id="{{ export_run.id }}"
-              ><span class="icon"><i class="fa fa-chevron-down"></i></span>
+              class="icon-link"
+              @click="expandedLogs[{{ export_run.id }}] = !expandedLogs[{{ export_run.id }}]"
+              role="button"
+            >
+              <span class="icon">
+                <i
+                  class="fa"
+                  :class="expandedLogs[{{ export_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                ></i>
+              </span>
               {% trans "View log" %}
             </a>
           </td>
@@ -84,8 +90,9 @@
       {% if not is_multi_project %}
         <tr
           class="export-log my-1"
-          id="export-log-{{ export_run.id }}"
-          style="display: none;"
+          x-show="expandedLogs[{{ export_run.id }}]"
+          x-transition
+          x-cloak
         >
           <td colspan="{% if is_multi_project %}7{% else %}6{% endif %}">
             <pre class="wrapped">
