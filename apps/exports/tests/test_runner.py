@@ -1,18 +1,32 @@
 from apps.exports.runner import _compile_export_command
-from apps.exports.tests.test_utils import BaseSimpleExportTestCase, BaseExportTestCase
+from apps.exports.tests.conftest import (
+    export_config_fixture,
+    export_config_db_fixture,
+    project_fixture,
+    project_db_fixture,
+    server_fixture,
+)
 
 
-class TestRunnerArguments(BaseSimpleExportTestCase):
+@export_config_fixture
+@project_fixture
+@server_fixture
+def test_custom_server_url():
+    config = export_config_fixture()
+    project = project_fixture()
+    server = server_fixture()
 
-    def test_custom_server_url(self):
-        command = _compile_export_command(self.export_config, self.project, force=False)
+    command = _compile_export_command(config, project, force=False)
 
-        assert self.server.url in command
+    assert server.url in command
 
 
-class RunnerArgumentsDbTest(BaseExportTestCase):
+@export_config_db_fixture
+@project_db_fixture
+def test_default_server_url():
+    config = export_config_db_fixture()
+    project = project_db_fixture()
 
-    def test_default_server_url(self):
-        command = _compile_export_command(self.export_config, self.project, force=False)
+    command = _compile_export_command(config, project, force=False)
 
-        assert 'https://www.commcarehq.org' in command
+    assert 'https://www.commcarehq.org' in command
