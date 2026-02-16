@@ -86,58 +86,69 @@
       <i class="fa fa-arrow-right text-primary"></i>
     </div>
 
-    <!-- Stage 2: Aggregation (Placeholder) -->
+    <!-- Stage 2: Aggregation & Transformation -->
     <div class="pipeline-stage">
-      <div class="card pipeline-card is-placeholder h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <h5 class="card-title mb-0 text-muted">
-            <i class="fa fa-table me-2"></i>
-            <span>{% trans "Aggregation" %}</span>
+      <div class="card pipeline-card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center {% if refresh_stats.status == 'healthy' %}bg-success-subtle{% elif refresh_stats.status == 'error' %}bg-danger-subtle{% elif refresh_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
+          <h5 class="card-title mb-0">
+            <i class="fa fa-refresh me-2"></i>
+            <span>{% trans "Aggregation & Transformation" %}</span>
           </h5>
           <div>
-            <span class="badge bg-light text-dark">{% trans "Coming Soon" %}</span>
+            {% if refresh_stats.status == 'healthy' %}
+              <span class="badge bg-success">{% trans "Healthy" %}</span>
+            {% elif refresh_stats.status == 'warning' %}
+              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+            {% elif refresh_stats.status == 'error' %}
+              <span class="badge bg-danger">{% trans "Issues" %}</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+            {% endif %}
           </div>
         </div>
         <div class="card-body">
-          <div class="text-muted">
-            <p class="small">
-              <i class="fa fa-info-circle"></i>
-              {% trans "Scheduled materialized view rebuilds will appear here." %}
-            </p>
-            <p class="small mb-0">
-              {% trans "This stage will automatically rebuild database views to aggregate data from exports." %}
-            </p>
+          <div class="d-flex justify-content-around text-center mb-3">
+            <div>
+              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Configs" %}</p>
+              <p class="h5 mb-0">{{ refresh_stats.total_configs }}</p>
+            </div>
+            <div>
+              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Last 24h" %}</p>
+              <p class="h5 mb-0">{{ refresh_stats.last_24h_runs }}</p>
+            </div>
+            <div>
+              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Success" %}</p>
+              <p class="h5 mb-0 {% if refresh_stats.status == 'healthy' %}text-success{% elif refresh_stats.status == 'error' %}text-danger{% elif refresh_stats.status == 'warning' %}text-warning{% endif %}">
+                {{ refresh_stats.success_rate }}%
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="pipeline-arrow">
-      <i class="fa fa-arrow-right text-muted"></i>
-    </div>
-
-    <!-- Stage 3: Transformation (Placeholder) -->
-    <div class="pipeline-stage">
-      <div class="card pipeline-card is-placeholder h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <h5 class="card-title mb-0 text-muted">
-            <i class="fa fa-cogs me-2"></i>
-            <span>{% trans "Transformation" %}</span>
-          </h5>
-          <div>
-            <span class="badge bg-light text-dark">{% trans "Coming Soon" %}</span>
+          {% if refresh_stats.recent_runs %}
+          <div class="recent-runs">
+            <p class="text-uppercase fw-bold small text-muted mb-2">{% trans "Recent Refreshes" %}</p>
+            <table class="table table-sm w-100 small mb-0">
+              <tbody>
+                {% for run in refresh_stats.recent_runs|slice:":5" %}
+                <tr>
+                  <td>
+                    <a href="{% url 'refreshes:refresh_details' run.refresh_config.id %}">
+                      {{ run.refresh_config.name|truncatechars:30 }}
+                    </a>
+                  </td>
+                  <td>{{ run.status|to_status_icon }}</td>
+                  <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
+          {% endif %}
         </div>
-        <div class="card-body">
-          <div class="text-muted">
-            <p class="small">
-              <i class="fa fa-info-circle"></i>
-              {% trans "Scheduled view transformations will appear here." %}
-            </p>
-            <p class="small mb-0">
-              {% trans "This stage will transform aggregated data into payloads for external systems." %}
-            </p>
-          </div>
+        <div class="card-footer">
+          <a href="{% url 'refreshes:refresh_configs' %}" class="text-decoration-none d-block text-center">
+            {% trans "Manage Refreshes" %}
+          </a>
         </div>
       </div>
     </div>
@@ -216,7 +227,7 @@
   </div>
 
   <!-- Empty State (when no data) -->
-  {% if export_stats.total_configs == 0 and forwarding_stats.total_configs == 0 %}
+  {% if export_stats.total_configs == 0 and refresh_stats.total_configs == 0 and forwarding_stats.total_configs == 0 %}
   <div class="alert alert-info mt-5">
     <h5 class="alert-heading">{% trans "Welcome to CommCare Sync!" %}</h5>
     <p>{% trans "Get started by configuring your CommCare connection and creating your first data export." %}</p>
