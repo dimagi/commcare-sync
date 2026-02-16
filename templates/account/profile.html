@@ -85,6 +85,9 @@
       }
 
       function uploadImage(file) {
+        const csrfHeaders = JSON.parse(
+          document.body.getAttribute("hx-headers") || "{}",
+        );
         // update UI
         let uploadlabel = document.getElementById("profile-upload-label");
         uploadlabel.innerHTML =
@@ -95,14 +98,13 @@
         // upload to server
         let formData = new FormData();
         formData.append("avatar", file);
-        formData.append(
-          "csrfmiddlewaretoken",
-          document.querySelector('[name=csrfmiddlewaretoken]').value,
-        );
         fetch(uploadUrl, {
           method: "POST",
           body: formData,
           credentials: "same-origin",
+          headers: {
+            ...csrfHeaders,
+          },
         }).then(function (response) {
           if (response.ok) {
             response.text().then(function (text) {

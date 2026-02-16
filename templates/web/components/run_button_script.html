@@ -20,12 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const forceSync = document.getElementById('force-sync-checkbox')?.checked || false;
     {% endif %}
 
+    const csrfHeaders = JSON.parse(document.body.getAttribute('hx-headers') || '{}');
     fetch('{% url run_url_name object_id %}', {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        ...csrfHeaders,
       },
       body: JSON.stringify({% if include_force_sync %}{ forceSync: forceSync }{% else %}{}{% endif %}),
     })
