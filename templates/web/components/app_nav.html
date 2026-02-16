@@ -1,6 +1,20 @@
 {% load i18n %}
 <aside class="nav flex-column">
   <h6 class="text-muted text-uppercase small fw-bold mt-3 d-md-none d-lg-block">
+    {% trans "Overview" %}
+  </h6>
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a
+        class="nav-link icon-link {% if active_tab == 'dashboard' %}active{% endif %}"
+        href="{% url 'web:dashboard' %}"
+      >
+        <i class="fa fa-tachometer"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Dashboard" %}</span>
+      </a>
+    </li>
+  </ul>
+  <h6 class="text-muted text-uppercase small fw-bold mt-3 d-md-none d-lg-block">
     {% trans "CommCare Management" %}
   </h6>
   <ul class="nav flex-column">
