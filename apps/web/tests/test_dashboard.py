@@ -87,6 +87,7 @@ class TestExportStatistics:
             server=self.server,
             username='test@account.com',
             api_key_encrypted='encrypted_key',
+            owner=self.user,
         )
         self.project = CommCareProject.objects.create(
             domain='test-domain',
