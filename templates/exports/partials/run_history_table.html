@@ -27,7 +27,7 @@
       {% endif %}
     </tr>
   </thead>
-  <tbody x-data="{ expandedLogs: {} }">
+  <tbody x-data="expandableLogs()">
     {% for export_run in runs %}
       <tr>
         <td>
@@ -66,13 +66,13 @@
           <td>
             <a
               class="icon-link"
-              @click="expandedLogs[{{ export_run.id }}] = !expandedLogs[{{ export_run.id }}]"
+              @click="toggleLogs({{ export_run.id }})"
               role="button"
             >
               <span class="icon">
                 <i
                   class="fa"
-                  :class="expandedLogs[{{ export_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                  :class="isExpanded({{ export_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
                 ></i>
               </span>
               {% trans "View log" %}
@@ -98,7 +98,7 @@
       {% if not is_multi_project %}
         <tr
           class="export-log my-1"
-          x-show="expandedLogs[{{ export_run.id }}]"
+          x-show="isExpanded({{ export_run.id }})"
           x-transition
           x-cloak
         >

@@ -17,7 +17,7 @@
       <th>{% trans "Log" %}</th>
     </tr>
   </thead>
-  <tbody x-data="{ expandedLogs: {} }">
+  <tbody x-data="expandableLogs()">
     {% for forwarding_run in runs %}
       <tr>
         <td>
@@ -50,13 +50,13 @@
         <td>
           <a
             class="icon-link"
-            @click="expandedLogs[{{ forwarding_run.id }}] = !expandedLogs[{{ forwarding_run.id }}]"
+            @click="toggleLogs({{ forwarding_run.id }})"
             role="button"
           >
             <span class="icon">
               <i
                 class="fa"
-                :class="expandedLogs[{{ forwarding_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                :class="isExpanded({{ forwarding_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
               ></i>
             </span>
             {% trans "View log" %}
@@ -65,7 +65,7 @@
       </tr>
       <tr
         class="forwarding-log my-1"
-        x-show="expandedLogs[{{ forwarding_run.id }}]"
+        x-show="isExpanded({{ forwarding_run.id }})"
         x-transition
         x-cloak
       >

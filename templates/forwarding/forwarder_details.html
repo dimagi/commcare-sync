@@ -75,4 +75,5 @@
 {% block page_js %}
   <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
   {% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id progress_message='Running Forwarding...' include_force_sync=False %}
+  {% include 'web/components/expandable_logs_script.html' %}
 {% endblock page_js %}
