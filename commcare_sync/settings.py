@@ -63,6 +63,7 @@ PROJECT_APPS = [
     'apps.commcare.apps.CommCareConfig',
     'apps.exports.apps.ExportsConfig',
     'apps.forwarding.apps.ForwardingConfig',
+    'apps.refreshes.apps.RefreshesConfig',
     'apps.schedules.apps.SchedulesConfig',
     'apps.users.apps.UserConfig',
     'apps.web',

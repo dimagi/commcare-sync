@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.commcare.models import RunBaseModel
+
 
 class ScheduleMixin(models.Model):
     """
@@ -98,7 +100,7 @@ class ScheduleMixin(models.Model):
     def has_queued_runs(self):
         last_run = self.runs.order_by('-created_at').first()
         if last_run:
-            return last_run.status == 'queued'
+            return last_run.status == RunBaseModel.Status.QUEUED
         return False
 
     @property

@@ -15,6 +15,27 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class RunBaseModel(BaseModel):
+    """
+    Base model that includes run status
+    """
+    class Status(models.TextChoices):
+        QUEUED = 'queued', _('Queued')
+        STARTED = 'started', _('Started')
+        COMPLETED = 'completed', _('Completed')
+        FAILED = 'failed', _('Failed')
+        SKIPPED = 'skipped', _('Skipped')
+
+    status = models.CharField(
+        max_length=10,
+        default=Status.QUEUED,
+        choices=Status.choices,
+    )
+
+    class Meta:
+        abstract = True
+
+
 class CommCareServer(BaseModel):
     name = models.CharField(max_length=100, default='CommCare HQ')
     url = models.CharField(

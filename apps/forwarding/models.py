@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
-from apps.commcare.models import BaseModel
+from apps.commcare.models import BaseModel, RunBaseModel
 from apps.exports.models import ExportDatabase
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 from apps.schedules.mixin import ScheduleMixin
@@ -91,15 +91,8 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
             super().save(*args, **kwargs)
 
 
-class ForwardingRun(BaseModel):
+class ForwardingRun(RunBaseModel):
     """Record of a single forwarding run."""
-
-    class Status(models.TextChoices):
-        QUEUED = 'queued', _('Queued')
-        STARTED = 'started', _('Started')
-        COMPLETED = 'completed', _('Completed')
-        FAILED = 'failed', _('Failed')
-        SKIPPED = 'skipped', _('Skipped')
 
     forwarding_config = models.ForeignKey(
         ForwardingConfig,
@@ -124,9 +117,6 @@ class ForwardingRun(BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-    )
-    status = models.CharField(
-        max_length=10, default=Status.QUEUED, choices=Status.choices
     )
     log = models.TextField(null=True, blank=True)
 
