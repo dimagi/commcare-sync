@@ -39,10 +39,15 @@ def run_scheduled_refresh_task(refresh_config_id):
         logger.error(f'RefreshConfig {refresh_config_id} does not exist')
         return None
 
-    if refresh_config.has_queued_runs():
+    if refresh_config.runs.filter(
+        status__in=[
+            RefreshRun.Status.QUEUED,
+            RefreshRun.Status.STARTED,
+        ]
+    ).exists():
         logger.info(
             f'Skipping scheduled refresh for {refresh_config} - '
-            f'already has queued run'
+            f'already has queued or running run'
         )
         return None
 

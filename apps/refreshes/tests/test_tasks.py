@@ -52,6 +52,21 @@ def test_run_scheduled_refresh_task_skips_if_queued(
     mock_run_refresh.assert_not_called()
 
 
+@patch('apps.refreshes.tasks.run_refresh')
+def test_run_scheduled_refresh_task_skips_if_started(
+    mock_run_refresh, refresh_config
+):
+    RefreshRun.objects.create(
+        refresh_config=refresh_config,
+        status=RefreshRun.Status.STARTED,
+    )
+
+    result = run_scheduled_refresh_task(refresh_config.id)
+
+    assert result is None
+    mock_run_refresh.assert_not_called()
+
+
 @pytest.mark.django_db
 @patch('apps.refreshes.tasks.run_refresh')
 def test_run_scheduled_refresh_task_nonexistent_config(mock_run_refresh):
