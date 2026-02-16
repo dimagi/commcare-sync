@@ -55,6 +55,10 @@ class TestRefreshConfig:
         assert version is not None
         assert isinstance(version, Version)
 
+    def test_details_url(self, refresh_config):
+        expected = f'/refreshes/{refresh_config.id}/'
+        assert refresh_config.details_url == expected
+
     def test_save_creates_revision(self, refresh_config):
         initial_count = Version.objects.get_for_object(refresh_config).count()
         refresh_config.materialized_views = ['public.view1']

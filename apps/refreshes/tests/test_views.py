@@ -1,0 +1,243 @@
+import json
+from unittest.mock import MagicMock, patch
+
+import pytest
+from django.urls import reverse
+
+from apps.exports.models import ExportDatabase
+
+from ..models import RefreshConfig, RefreshRun
+
+SCHEDULE_DEFAULTS = {
+    'first_run_time': '00:00',
+    'timezone': 'UTC',
+}
+
+
+@pytest.fixture
+def client(client, user):
+    client.force_login(user)
+    return client
+
+
+@pytest.fixture
+def non_pg_database(db, user):
+    return ExportDatabase.objects.create(
+        name='MySQL DB',
+        connection_string='mysql://localhost/test',
+        owner=user,
+    )
+
+
+class TestRefreshConfigsListView:
+    def test_requires_login(self, client, user):
+        client.logout()
+        url = reverse('refreshes:refresh_configs')
+        response = client.get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url
+
+    def test_list_configs(self, client, refresh_config):
+        url = reverse('refreshes:refresh_configs')
+        response = client.get(url)
+        assert response.status_code == 200
+        assert refresh_config.name in response.content.decode()
+
+
+class TestCreateRefreshConfigView:
+    def test_get_form(self, client):
+        url = reverse('refreshes:create_refresh_config')
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_create_valid(self, client, database):
+        url = reverse('refreshes:create_refresh_config')
+        response = client.post(
+            url,
+            {
+                'name': 'New Config',
+                'database': database.id,
+                'materialized_views': json.dumps(['public.my_view']),
+                'concurrently': '',
+                **SCHEDULE_DEFAULTS,
+            },
+        )
+        assert response.status_code == 302
+        config = RefreshConfig.objects.get(name='New Config')
+        assert config.materialized_views == ['public.my_view']
+        assert config.concurrently is False
+        assert response.url == reverse(
+            'refreshes:refresh_details', args=[config.id]
+        )
+
+    def test_create_missing_views(self, client, database):
+        url = reverse('refreshes:create_refresh_config')
+        response = client.post(
+            url,
+            {
+                'name': 'Bad Config',
+                'database': database.id,
+                'materialized_views': '',
+                **SCHEDULE_DEFAULTS,
+            },
+        )
+        assert response.status_code == 200
+        assert not RefreshConfig.objects.filter(name='Bad Config').exists()
+
+
+class TestEditRefreshConfigView:
+    def test_get_form(self, client, refresh_config):
+        url = reverse(
+            'refreshes:edit_refresh_config', args=[refresh_config.id]
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_edit_valid(self, client, refresh_config):
+        url = reverse(
+            'refreshes:edit_refresh_config', args=[refresh_config.id]
+        )
+        response = client.post(
+            url,
+            {
+                'name': 'Updated Name',
+                'database': refresh_config.database.id,
+                'materialized_views': json.dumps(['public.view1']),
+                'concurrently': 'on',
+                **SCHEDULE_DEFAULTS,
+            },
+        )
+        assert response.status_code == 302
+        refresh_config.refresh_from_db()
+        assert refresh_config.name == 'Updated Name'
+        assert refresh_config.materialized_views == ['public.view1']
+        assert refresh_config.concurrently is True
+
+    def test_edit_nonexistent_returns_404(self, client):
+        url = reverse('refreshes:edit_refresh_config', args=[9999])
+        response = client.get(url)
+        assert response.status_code == 404
+
+
+class TestDeleteRefreshConfigView:
+    def test_get_confirmation(self, client, refresh_config):
+        url = reverse(
+            'refreshes:delete_refresh_config', args=[refresh_config.id]
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_post_deletes(self, client, refresh_config):
+        config_id = refresh_config.id
+        url = reverse('refreshes:delete_refresh_config', args=[config_id])
+        response = client.post(url)
+        assert response.status_code == 302
+        assert not RefreshConfig.objects.filter(id=config_id).exists()
+
+
+class TestRefreshDetailsView:
+    def test_details_page(self, client, refresh_config):
+        url = reverse('refreshes:refresh_details', args=[refresh_config.id])
+        response = client.get(url)
+        assert response.status_code == 200
+        assert refresh_config.name in response.content.decode()
+
+    def test_hide_skipped(self, client, refresh_config):
+        RefreshRun.objects.create(
+            refresh_config=refresh_config,
+            status=RefreshRun.Status.SKIPPED,
+        )
+        url = reverse('refreshes:refresh_details', args=[refresh_config.id])
+        response = client.get(url, {'hide_skipped': 'y'})
+        assert response.status_code == 200
+
+
+class TestRunHistoryTableView:
+    def test_returns_partial(self, client, refresh_config):
+        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_post_not_allowed(self, client, refresh_config):
+        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
+        response = client.post(url)
+        assert response.status_code == 405
+
+
+class TestRunRefreshView:
+    @patch('apps.refreshes.views.run_refresh_task')
+    def test_triggers_task(self, mock_task, client, refresh_config):
+        mock_result = MagicMock()
+        mock_result.task_id = 'test-task-id'
+        mock_task.delay.return_value = mock_result
+
+        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        response = client.post(url)
+
+        assert response.status_code == 200
+        assert response.content.decode() == 'test-task-id'
+        mock_task.delay.assert_called_once()
+        assert RefreshRun.objects.filter(
+            refresh_config=refresh_config,
+            triggered_from_ui=True,
+        ).exists()
+
+    def test_get_not_allowed(self, client, refresh_config):
+        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        response = client.get(url)
+        assert response.status_code == 405
+
+
+class TestFetchMaterializedViewsView:
+    def test_missing_database_id(self, client):
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.get(url)
+        assert response.status_code == 400
+
+    def test_nonexistent_database(self, client):
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.get(url, {'database_id': 9999})
+        assert response.status_code == 404
+
+    def test_non_postgresql_database(self, client, non_pg_database):
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.get(url, {'database_id': non_pg_database.id})
+        assert response.status_code == 400
+        data = response.json()
+        assert 'PostgreSQL' in data['error']
+
+    @patch('apps.refreshes.views.check_connection')
+    @patch('apps.refreshes.views.get_materialized_views')
+    def test_success(self, mock_get_views, mock_check_conn, client, database):
+        mock_check_conn.return_value = (True, 'OK')
+        mock_get_views.return_value = [
+            {
+                'schema': 'public',
+                'name': 'view1',
+                'full_name': 'public.view1',
+                'has_unique_index': True,
+            },
+        ]
+
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.get(url, {'database_id': database.id})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data['views']) == 1
+        assert data['views'][0]['full_name'] == 'public.view1'
+
+    @patch('apps.refreshes.views.check_connection')
+    def test_connection_failure(self, mock_check_conn, client, database):
+        mock_check_conn.return_value = (False, 'Connection refused')
+
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.get(url, {'database_id': database.id})
+
+        assert response.status_code == 500
+        assert 'error' in response.json()
+
+    def test_post_not_allowed(self, client):
+        url = reverse('refreshes:fetch_materialized_views')
+        response = client.post(url)
+        assert response.status_code == 405

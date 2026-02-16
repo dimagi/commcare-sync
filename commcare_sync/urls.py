@@ -23,6 +23,7 @@ urlpatterns = [
     path('commcare/', include('apps.commcare.urls')),
     path('exports/', include('apps.exports.urls')),
     path('forwarding/', include('apps.forwarding.urls')),
+    path('refreshes/', include('apps.refreshes.urls')),
     path('users/', include('apps.users.urls')),
 
     path('', include('apps.web.urls')),
