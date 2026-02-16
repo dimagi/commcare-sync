@@ -30,8 +30,9 @@ from apps.web.views import _get_export_statistics, _get_refresh_statistics, _get
 User = get_user_model()
 
 
-class DashboardViewTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestDashboardView:
+    def setup_method(self):
         self.client = Client()
         self.user = User.objects.create_user(
             username='testuser',
@@ -69,8 +70,9 @@ class DashboardViewTestCase:
         assert response.context['forwarding_stats']['total_configs'] == 0
 
 
-class ExportStatisticsTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestExportStatistics:
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
@@ -210,8 +212,9 @@ class ExportStatisticsTestCase:
         assert stats['status'] == expected_status
 
 
-class RefreshStatisticsTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestRefreshStatistics:
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
@@ -335,8 +338,9 @@ class RefreshStatisticsTestCase:
         assert stats['status'] == expected_status
 
 
-class ForwardingStatisticsTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestForwardingStatistics:
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
