@@ -21,13 +21,22 @@ from apps.forwarding.models import (
     ForwardingDestination,
     ForwardingRun,
 )
-from apps.web.views import _get_export_statistics, _get_forwarding_statistics
+from apps.refreshes.models import (
+    RefreshConfig,
+    RefreshRun,
+)
+from apps.web.views import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
 
 User = get_user_model()
 
 
-class DashboardViewTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestDashboardView:
+    def setup_method(self):
         self.client = Client()
         self.user = User.objects.create_user(
             username='testuser',
@@ -58,13 +67,16 @@ class DashboardViewTestCase:
         response = self.client.get(reverse('web:dashboard'))
         assert response.status_code == 200
         assert 'export_stats' in response.context
+        assert 'refresh_stats' in response.context
         assert 'forwarding_stats' in response.context
         assert response.context['export_stats']['total_configs'] == 0
+        assert response.context['refresh_stats']['total_configs'] == 0
         assert response.context['forwarding_stats']['total_configs'] == 0
 
 
-class ExportStatisticsTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestExportStatistics:
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
@@ -79,6 +91,7 @@ class ExportStatisticsTestCase:
             server=self.server,
             username='test@account.com',
             api_key_encrypted='encrypted_key',
+            owner=self.user,
         )
         self.project = CommCareProject.objects.create(
             domain='test-domain',
@@ -204,8 +217,135 @@ class ExportStatisticsTestCase:
         assert stats['status'] == expected_status
 
 
-class ForwardingStatisticsTestCase:
-    def setup(self):
+@pytest.mark.django_db
+class TestRefreshStatistics:
+    def setup_method(self):
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123',
+        )
+
+        self.database = ExportDatabase.objects.create(
+            name='Test DB', owner=self.user
+        )
+        self.database.connection_string = (
+            'postgresql://user:pass@localhost:5432/db'
+        )
+        self.database.save()
+
+        self.refresh_config = RefreshConfig.objects.create(
+            name='Test Refresh',
+            database=self.database,
+            materialized_views=['public.test_view'],
+            created_by=self.user,
+        )
+
+    def test_refresh_statistics_with_no_runs(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+        stats = _get_refresh_statistics(last_24h)
+
+        assert stats['total_configs'] == 1
+        assert stats['last_24h_runs'] == 0
+        assert stats['success_rate'] == 0
+        assert stats['status'] == 'neutral'
+
+    def test_refresh_statistics_with_completed_runs(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        for i in range(4):
+            RefreshRun.objects.create(
+                refresh_config=self.refresh_config,
+                status=RefreshRun.Status.COMPLETED,
+                created_at=timezone.now() - timedelta(hours=i),
+            )
+
+        stats = _get_refresh_statistics(last_24h)
+
+        assert stats['total_configs'] == 1
+        assert stats['last_24h_runs'] == 4
+        assert stats['success_rate'] == 100.0
+        assert stats['successful_count'] == 4
+        assert stats['failed_count'] == 0
+        assert stats['status'] == 'healthy'
+
+    def test_refresh_statistics_with_failed_runs(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        RefreshRun.objects.create(
+            refresh_config=self.refresh_config,
+            status=RefreshRun.Status.COMPLETED,
+            created_at=timezone.now() - timedelta(hours=1),
+        )
+        RefreshRun.objects.create(
+            refresh_config=self.refresh_config,
+            status=RefreshRun.Status.FAILED,
+            created_at=timezone.now() - timedelta(hours=2),
+        )
+
+        stats = _get_refresh_statistics(last_24h)
+
+        assert stats['last_24h_runs'] == 2
+        assert stats['success_rate'] == 50.0
+        assert stats['successful_count'] == 1
+        assert stats['failed_count'] == 1
+        assert stats['status'] == 'error'
+
+    def test_refresh_statistics_excludes_queued_runs(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        RefreshRun.objects.create(
+            refresh_config=self.refresh_config,
+            status=RefreshRun.Status.QUEUED,
+            created_at=timezone.now() - timedelta(hours=1),
+        )
+        RefreshRun.objects.create(
+            refresh_config=self.refresh_config,
+            status=RefreshRun.Status.COMPLETED,
+            created_at=timezone.now() - timedelta(hours=2),
+        )
+
+        stats = _get_refresh_statistics(last_24h)
+
+        assert stats['last_24h_runs'] == 1
+        assert stats['success_rate'] == 100.0
+
+    @pytest.mark.parametrize(
+        'successful,failed,expected_rate,expected_status',
+        [
+            (19, 1, 95.0, 'healthy'),
+            (17, 3, 85.0, 'warning'),
+            (15, 5, 75.0, 'error'),
+            (16, 4, 80.0, 'warning'),
+            (20, 0, 100.0, 'healthy'),
+        ],
+    )
+    def test_refresh_statistics_status_thresholds(
+        self, successful, failed, expected_rate, expected_status
+    ):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        for i in range(successful):
+            RefreshRun.objects.create(
+                refresh_config=self.refresh_config,
+                status=RefreshRun.Status.COMPLETED,
+                created_at=timezone.now() - timedelta(hours=i),
+            )
+        for i in range(failed):
+            RefreshRun.objects.create(
+                refresh_config=self.refresh_config,
+                status=RefreshRun.Status.FAILED,
+                created_at=timezone.now() - timedelta(hours=successful + i),
+            )
+
+        stats = _get_refresh_statistics(last_24h)
+        assert stats['success_rate'] == expected_rate
+        assert stats['status'] == expected_status
+
+
+@pytest.mark.django_db
+class TestForwardingStatistics:
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
