@@ -110,7 +110,8 @@ On Ubuntu, `uv sync --dev` (above) will automatically install Playwright
 and the host operating system packages it needs.
 
 If the host OS packages are not installed automatically, use an LLM to
-find your operating system's equivalent of the following packages:
+find your operating system's equivalent of the following packages, and
+install them:
 
 * libicu74
 * libxml2
@@ -119,20 +120,6 @@ find your operating system's equivalent of the following packages:
 * libmanette-0.2-0
 * libwoff1
 * gstreamer1.0-libav
-
-For OpenSUSE Tumbleweed that works out to be:
-
-```shell
-sudo zypper install libicu78 \
-    libxml2 \
-    gstreamer-plugins-bad \
-    flite \
-    libmanette-0_2-0 \
-    libwoff2common1_0_2 \
-    libwoff2dec1_0_2 \
-    libwoff2enc1_0_2 \
-    gstreamer-plugins-libav
-```
 
 By default Playwright will be installed with all browsers. To install
 with a specific browser only (Chromium, for example):
