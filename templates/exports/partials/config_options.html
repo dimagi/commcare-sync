@@ -11,12 +11,9 @@
 {% else %}
   <option value="">{% trans "No configs available" %}</option>
 {% endif %}
-{% if errors %}
-  <ul class="errorlist" id="config-fetch-errors" hx-swap-oob="true">
-    {% for error in errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <ul class="errorlist" id="config-fetch-errors" hx-swap-oob="true"></ul>
-{% endif %}
+
+<ul class="errorlist" id="config-fetch-errors" hx-swap-oob="true">
+  {% for error in errors %}
+    <li>{{ error }}</li>
+  {% endfor %}
+</ul>
