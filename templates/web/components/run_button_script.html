@@ -1,10 +1,10 @@
+{% load i18n %}
 {% comment %}
 Shared JavaScript for run button functionality.
 
 Parameters:
   - run_url_name: Django URL name (e.g., 'exports:run_export')
   - object_id: ID of the object to run
-  - progress_message: Message to show during execution (e.g., 'Running Export...')
   - include_force_sync: Whether to include forceSync checkbox value (default: false)
 {% endcomment %}
 <script>
@@ -39,18 +39,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
       CeleryProgressBar.initProgressBar(taskUrl, {
         onProgress: function() {
-          progressMessage.textContent = '{{ progress_message }}';
+          progressMessage.textContent = '{% trans "Running..." %}';
         },
         onSuccess: function() {
           progressBar.style.width = '100%';
           progressBar.classList.add('bg-success');
-          progressMessage.textContent = 'Complete!';
+          progressMessage.textContent = '{% trans "Complete!" %}';
         },
         onResult: function(resultElement, result) {
           if (result.status === 'failed') {
             progressBar.classList.add('bg-danger');
             progressBar.style.width = '100%';
-            progressMessage.textContent = 'Failed!';
+            progressMessage.textContent = '{% trans "Failed!" %}';
           }
 
           // Trigger HTMX table refresh
