@@ -19,8 +19,10 @@ from ..models import (
 User = get_user_model()
 
 
-class ForwardingConfigTestCase:
-    def setUp(self):
+@pytest.mark.django_db(transaction=True)
+class TestForwardingConfig:
+
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
@@ -134,8 +136,10 @@ class ForwardingConfigTestCase:
         assert new_version_count == initial_version_count + 1
 
 
-class ForwardingRunTestCase:
-    def setUp(self):
+@pytest.mark.django_db
+class TestForwardingRun:
+
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
@@ -265,8 +269,10 @@ class ForwardingRunTestCase:
         assert run.status == ForwardingRun.Status.QUEUED
 
 
-class ExportDatabaseTestCase:
-    def setUp(self):
+@pytest.mark.django_db
+class TestExportDatabase:
+
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
@@ -281,8 +287,10 @@ class ExportDatabaseTestCase:
         assert str(database) == 'Production DB'
 
 
-class ForwardingDestinationTestCase:
-    def setUp(self):
+@pytest.mark.django_db
+class TestForwardingDestination:
+
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
@@ -319,10 +327,10 @@ class ForwardingDestinationTestCase:
         assert destination.api_password == 'secret'
 
 
-class ForwardingSchedulingTestCase:
-    """Test automatic scheduling of ForwardingConfig runs."""
+@pytest.mark.django_db(transaction=True)
+class TestForwardingScheduling:
 
-    def setUp(self):
+    def setup_method(self):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )

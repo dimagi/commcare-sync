@@ -9,6 +9,14 @@ register = template.Library()
 
 @register.filter()
 def to_status_icon(export_status):
+    """
+    Convert export status to an HTML icon with appropriate styling.
+
+    >>> 'fa-check-circle' in to_status_icon('completed')
+    True
+    >>> 'text-success' in to_status_icon('completed')
+    True
+    """
     text_modifiers = {
         ExportRunBase.COMPLETED: 'text-success',
         ExportRunBase.FAILED: 'text-danger',
