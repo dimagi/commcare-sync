@@ -32,7 +32,8 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: commcare_sync_test
         ports:
           - 5432:5432
         options: >-
@@ -43,6 +44,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: psql -c 'create database commcare_sync_test;' -U postgres -h localhost
-      - run: cp commcare_sync/{settings_travis.py,settings_local.py}
+      - run: cp commcare_sync/{settings_github.py,settings_local.py}
       - run: uv run --python ${{ matrix.python-version }} pytest
