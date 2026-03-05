@@ -2,6 +2,7 @@
 <div
   class="mb-3"
   x-data="{
+    databaseSelected: false,
     availableViews: [],
     selectedViews: JSON.parse('{{ config_form.initial.materialized_views|default:"[]"|escapejs }}'),
     concurrently: {% if config_form.instance.pk %}{{ config_form.concurrently.value|yesno:'true,false' }}{% else %}true{% endif %},
@@ -16,10 +17,12 @@
     },
     fetchViews(databaseId, clearSelection = true) {
       if (!databaseId) {
+        this.databaseSelected = false;
         this.availableViews = [];
         this.error = '';
         return;
       }
+      this.databaseSelected = true;
       this.loading = true;
       this.error = '';
       if (clearSelection) {
@@ -81,6 +84,7 @@
       '{{ config_form.database.id_for_label }}'
     );
     if (databaseSelect && databaseSelect.value) {
+      databaseSelected = true;
       fetchViews(databaseSelect.value, false);
     }
     databaseSelect.addEventListener('change', (e) => {
@@ -89,6 +93,7 @@
     updateHiddenField();
   }"
 >
+  <div x-show="databaseSelected">
   <label class="form-label">{% trans "Materialized Views" %}</label>
   <p class="form-text">
     {% blocktrans %}
@@ -180,6 +185,7 @@
   <div x-show="selectedViews.length === 0" class="text-danger mt-2">
     {% trans "You must select at least one materialized view." %}
   </div>
+  </div>{# /x-show="databaseSelected" #}
 
   <div
     class="form-check mt-3"
