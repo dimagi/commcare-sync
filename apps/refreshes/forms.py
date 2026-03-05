@@ -35,6 +35,14 @@ class RefreshConfigForm(ScheduleFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        pg_ids = [
+            db.pk for db in Database.objects.all()
+            if db.dialect == 'postgresql'
+        ]
+        self.fields['database'].queryset = Database.objects.filter(
+            pk__in=pg_ids
+        ).order_by('name')
+
         if self.instance and self.instance.pk:
             views_json = json.dumps(self.instance.materialized_views)
             self.fields['materialized_views'].initial = views_json
