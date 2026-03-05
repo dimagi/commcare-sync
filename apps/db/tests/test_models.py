@@ -1,3 +1,5 @@
+import doctest
+
 from cryptography.fernet import Fernet
 from django.test import override_settings
 
@@ -57,3 +59,10 @@ class TestDatabaseConnectionString:
         fernet = Fernet(current_key)
         decrypted_bytes = fernet.decrypt(encrypted_bytes)
         assert decrypted_bytes.decode() == test_connection_string
+
+
+def test_doctests():
+    import apps.exports.models as module
+
+    results = doctest.testmod(module)
+    assert results.failed == 0

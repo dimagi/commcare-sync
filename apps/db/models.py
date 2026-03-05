@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
@@ -38,3 +40,17 @@ class Database(BaseModel):
         fernet = Fernet(key.encode() if isinstance(key, str) else key)
         encrypted_bytes = fernet.encrypt(value.encode())
         self.connection_string_encrypted = encrypted_bytes.decode()
+
+    @property
+    def dialect(self):
+        """
+        Returns the SQLAlchemy dialect of the database URL.
+
+        >>> db = Database(name='example')
+        >>> db.connection_string = 'mysql+pymysql://user:pwd@localhost/db'
+        >>> db.dialect
+        'mysql'
+
+        """
+        scheme = urlsplit(self.connection_string).scheme
+        return scheme.split('+')[0] if '+' in scheme else scheme
