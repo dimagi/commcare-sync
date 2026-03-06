@@ -24,23 +24,28 @@
 <!-- Stats Boxes -->
 <div class="row g-3 mb-4">
   <div class="col-md-4">
-    <div class="border rounded p-3 text-center">
-      <span class="text-uppercase fw-bold small text-muted">{% trans "Configs" %}</span>
-      <p class="h3 mb-0 mt-1">{{ stats.total_configs }}</p>
+    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
+      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Configs" %}</span>
+      <span class="stat-box-value">{{ stats.total_configs }}</span>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="border rounded p-3 text-center">
-      <span class="text-uppercase fw-bold small text-muted">{% trans "Last 24 H" %}</span>
-      <p class="h3 mb-0 mt-1">{{ stats.last_24h_runs }}</p>
+    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
+      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Last 24 H" %}</span>
+      <span class="stat-box-value">{{ stats.last_24h_runs }}</span>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="border rounded p-3 text-center">
-      <span class="text-uppercase fw-bold small text-muted">{% trans "Success %" %}</span>
-      <p class="h3 mb-0 mt-1 {% if stats.status == 'healthy' %}text-success{% elif stats.status == 'error' %}text-danger{% elif stats.status == 'warning' %}text-warning{% endif %}">
-        {{ stats.success_rate }}%
-      </p>
+    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
+      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Success %" %}</span>
+      <span class="stat-box-value stat-trend-{{ stats.success_trend }}">{{ stats.success_rate }}%</span>
+      {% if stats.success_trend == 'up' %}
+        <span class="stat-trend-up"><i class="fa fa-long-arrow-up"></i></span>
+      {% elif stats.success_trend == 'down' %}
+        <span class="stat-trend-down"><i class="fa fa-long-arrow-down"></i></span>
+      {% else %}
+        <span class="stat-trend-flat"><i class="fa fa-long-arrow-right"></i></span>
+      {% endif %}
     </div>
   </div>
 </div>
