@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
@@ -25,7 +23,7 @@ def dashboard(request):
     Main dashboard showing pipeline status overview.
     """
     now = timezone.now()
-    last_24h = now - timedelta(hours=24)
+    last_24h = now - settings.DASHBOARD_STATS_PERIOD
     export_stats = _get_export_statistics(last_24h)
     refresh_stats = _get_refresh_statistics(last_24h)
     forwarding_stats = _get_forwarding_statistics(last_24h)
@@ -69,6 +67,7 @@ def _get_export_statistics(since_datetime):
             'base_export_config',
             'base_export_config__project',
         )
+        .filter(created_at__gte=since_datetime)
         .exclude(status=ExportRun.QUEUED)
         .order_by('-created_at')[:10]
     )
@@ -114,6 +113,7 @@ def _get_refresh_statistics(since_datetime):
             'refresh_config',
             'refresh_config__database',
         )
+        .filter(created_at__gte=since_datetime)
         .exclude(status=RefreshRun.Status.QUEUED)
         .order_by('-created_at')[:10]
     )
@@ -159,6 +159,7 @@ def _get_forwarding_statistics(since_datetime):
             'forwarding_config',
             'forwarding_config__destination',
         )
+        .filter(created_at__gte=since_datetime)
         .exclude(status=ForwardingRun.Status.QUEUED)
         .order_by('-created_at')[:10]
     )
