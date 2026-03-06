@@ -7,6 +7,7 @@ HTMX table refresh, and integration with Celery progress tracking.
 import json
 
 import pytest
+from django.test import Client
 from django.urls import reverse
 from playwright.sync_api import expect
 from unmagic import get_request
@@ -95,34 +96,33 @@ class TestRunButtonStructure:
         expect(force_sync).to_be_visible()
         expect(force_sync).to_have_attribute('x-model', 'forceSync')
 
-    def test_run_history_table_has_htmx_attributes(self):
-        """Test that run history table has HTMX refresh attributes."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
-        data = test_data()
-        export = create_export_config(data)
-
-        login(page, live_server, data['user'])
-        navigate_to_export_details(page, live_server, export.id)
-
-        # Verify run history table has HTMX attributes
-        run_table = page.locator('#run-table')
-        expect(run_table).to_have_attribute(
-            'hx-get',
-            reverse('exports:run_history_table', args=[export.id])
-        )
-        expect(run_table).to_have_attribute('hx-trigger', 'refresh from:body')
-        expect(run_table).to_have_attribute('hx-swap', 'outerHTML')
-
 
 @pytest.mark.django_db
 class TestRunHistoryTableEndpoint:
     """Test run history table HTMX endpoint configuration."""
 
-    def test_run_history_table_endpoint_exists(self):
-        """Test that run_history_table endpoint is properly configured."""
-        url = reverse('exports:run_history_table', args=[1])
-        assert url == '/exports/view/1/run-history-table/'
+    def test_run_table_htmx_attributes(self):
+        """Verify the run history table renders with correct HTMX attributes.
+
+        The hx-get URL and hx-trigger string must be exact — a wrong URL means
+        the table never refreshes after a run, and a wrong trigger string means
+        the refresh event fired by run_button_script.html is never caught.
+        """
+        data = test_data()
+        export = create_export_config(data)
+
+        client = Client()
+        client.force_login(data['user'])
+        response = client.get(
+            reverse('exports:run_history_table', args=[export.id])
+        )
+        assert response.status_code == 200
+
+        content = response.content.decode()
+        expected_url = reverse('exports:run_history_table', args=[export.id])
+        assert f'hx-get="{expected_url}"' in content
+        assert 'hx-trigger="refresh from:body"' in content
+        assert 'hx-swap="outerHTML"' in content
 
 
 @pytest.mark.django_db(transaction=True)
