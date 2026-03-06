@@ -7,7 +7,7 @@
       name="{{ form.account.html_name }}"
       id="{{ form.account.id_for_label }}"
       class="form-select"
-      @change="htmx.trigger('#id_config_file_select', 'refresh')"
+      onchange="htmx.trigger('#id_config_file_select', 'refresh')"
     >
       {% for value, label in form.account.field.choices %}
         <option value="{{ value }}"{% if form.account.value == value %} selected{% endif %}>{{ label }}</option>

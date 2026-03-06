@@ -68,10 +68,10 @@ class TestExportFormStructure:
         expect(config_select).to_have_attribute('hx-swap', 'innerHTML')
         expect(config_select).to_have_attribute('hx-target', 'this')
 
-        # Check @change event on project select (triggers refresh)
+        # Check onchange event on project select (triggers refresh)
         project_select = page.locator('#id_project')
         expect(project_select).to_have_attribute(
-            '@change',
+            'onchange',
             "htmx.trigger('#id_config_file_select', 'refresh')"
         )
 

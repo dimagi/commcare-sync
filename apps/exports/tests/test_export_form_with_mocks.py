@@ -69,9 +69,6 @@ class TestExportFormWithMockedAPI:
         # Select account and project to trigger HTMX config fetch
         page.select_option('#id_account', str(data['account'].id))
         page.select_option('#id_project', str(data['project'].id))
-        # Playwright's select_option doesn't fire Alpine @change handlers,
-        # so manually trigger the HTMX refresh event
-        page.evaluate("htmx.trigger('#id_config_file_select', 'refresh')")
 
         # Wait for HTMX to populate config options from our mock
         # (3 total: 1 placeholder + 2 configs)
@@ -146,9 +143,6 @@ class TestExportFormWithMockedAPI:
         # Trigger HTMX request
         page.select_option('#id_account', str(data['account'].id))
         page.select_option('#id_project', str(data['project'].id))
-        # Playwright's select_option doesn't fire Alpine @change handlers,
-        # so manually trigger the HTMX refresh event
-        page.evaluate("htmx.trigger('#id_config_file_select', 'refresh')")
 
         # Wait for HTMX to update the select with error option
         # Check that the error message appears in the select's HTML content
