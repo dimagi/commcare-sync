@@ -50,29 +50,78 @@
   </div>
 </div>
 
-<!-- Recent Runs -->
-{% if stats.recent_runs %}
+<!-- Configurations Table -->
+{% if stats.configs %}
 <table class="table table-sm small mb-0">
+  <thead>
+    <tr>
+      <th>{{ label }}</th>
+      {% if tab_type == 'exports' %}
+        <th>{% trans "Project" %}</th>
+      {% elif tab_type == 'refreshes' %}
+        <th>{% trans "Database" %}</th>
+      {% elif tab_type == 'forwarders' %}
+        <th>{% trans "Destination" %}</th>
+      {% endif %}
+      <th>{% trans "Creator" %}</th>
+      <th>{% trans "Schedule" %}</th>
+      <th>{% trans "Status" %}</th>
+      <th>{% trans "Action" %}</th>
+    </tr>
+  </thead>
   <tbody>
-    {% for run in stats.recent_runs|slice:":5" %}
+    {% for config in stats.configs %}
     <tr>
       <td>
         {% if tab_type == 'exports' %}
-          <a href="{% url 'exports:export_details' run.base_export_config.id %}">
-            {{ run.base_export_config.name|truncatechars:30 }}
-          </a>
+          <a href="{% url 'exports:export_details' config.id %}">{{ config.name|truncatechars:30 }}</a>
         {% elif tab_type == 'refreshes' %}
-          <a href="{% url 'refreshes:refresh_details' run.refresh_config.id %}">
-            {{ run.refresh_config.name|truncatechars:30 }}
-          </a>
+          <a href="{% url 'refreshes:refresh_details' config.id %}">{{ config.name|truncatechars:30 }}</a>
         {% elif tab_type == 'forwarders' %}
-          <a href="{% url 'forwarding:forwarder_details' run.forwarding_config.id %}">
-            {{ run.forwarding_config.name|truncatechars:30 }}
-          </a>
+          <a href="{% url 'forwarding:forwarder_details' config.id %}">{{ config.name|truncatechars:30 }}</a>
         {% endif %}
       </td>
-      <td>{{ run.status|to_status_icon }}</td>
-      <td class="text-muted">{{ run.created_at|naturaltime }}</td>
+      <td>
+        {% if tab_type == 'exports' %}
+          {{ config.project.domain }}
+        {% elif tab_type == 'refreshes' %}
+          {{ config.database.name }}
+        {% elif tab_type == 'forwarders' %}
+          {{ config.destination.name }}
+        {% endif %}
+      </td>
+      <td>
+        {% if request.user == config.created_by %}{% trans "You" %}{% else %}{{ config.created_by.get_display_name }}{% endif %}
+      </td>
+      <td>
+        {% if config.is_paused %}
+          <i class="fa fa-pause-circle text-muted" title="{% trans 'Paused' %}"></i>
+          <span class="text-muted">{% trans "Paused" %}</span>
+        {% elif config.schedule_display %}
+          {{ config.schedule_display }}
+        {% else %}
+          <span class="text-muted">-</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if config.last_run %}
+          {{ config.last_run.status|to_status_icon }}
+        {% else %}
+          <span class="text-muted">-</span>
+        {% endif %}
+      </td>
+      <td class="text-nowrap">
+        {% if tab_type == 'exports' %}
+          <a href="{% url 'exports:edit_export_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
+          <a href="{% url 'exports:export_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+        {% elif tab_type == 'refreshes' %}
+          <a href="{% url 'refreshes:edit_refresh_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
+          <a href="{% url 'refreshes:refresh_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+        {% elif tab_type == 'forwarders' %}
+          <a href="{% url 'forwarding:edit_forwarding_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
+          <a href="{% url 'forwarding:forwarder_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>
