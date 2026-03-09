@@ -1,7 +1,7 @@
 from django import forms
 
-from apps.schedules.forms import ScheduleForm
 from apps.exports.models import ExportDatabase
+from apps.schedules.forms import ScheduleFormMixin
 
 from .models import ForwardingConfig, ForwardingDestination
 
@@ -25,7 +25,7 @@ class EditForwardingDestinationForm(forms.ModelForm):
         fields = ('name', 'api_url', 'api_username')
 
 
-class ForwardingConfigForm(forms.ModelForm):
+class ForwardingConfigForm(ScheduleFormMixin, forms.ModelForm):
     """Form for creating and editing ForwardingConfig objects."""
 
     database = forms.ModelChoiceField(
@@ -37,28 +37,15 @@ class ForwardingConfigForm(forms.ModelForm):
 
     class Meta:
         model = ForwardingConfig
-        fields = ('name', 'database', 'destination', 'query', 'query_params')
+        fields = (
+            'name',
+            'database',
+            'destination',
+            'query',
+            'query_params',
+            *ScheduleFormMixin.SCHEDULE_FIELDS,
+        )
         widgets = {
             'query': forms.Textarea(attrs={'rows': 2}),
             'query_params': forms.Textarea(attrs={'rows': 3}),
         }
-
-    def __init__(self, *args, **kwargs):
-        # Pop schedule_data if provided (used for creating schedule)
-        self.schedule_data = kwargs.pop('schedule_data', None)
-        super().__init__(*args, **kwargs)
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-
-        # Create and associate schedule if schedule_data is provided
-        if self.schedule_data and commit:
-            schedule_form = ScheduleForm(self.schedule_data)
-            if schedule_form.is_valid():
-                schedule = schedule_form.save()
-                instance.schedule = schedule
-
-        if commit:
-            instance.save()
-
-        return instance

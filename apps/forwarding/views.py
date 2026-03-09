@@ -1,12 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from apps.schedules.forms import ScheduleForm
 from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
 
 from .forms import (
@@ -38,17 +38,12 @@ def create_forwarding_config(request):
 
     if request.method == 'POST':
         config_form = ForwardingConfigForm(request.POST)
-        schedule_form = ScheduleForm(request.POST)
 
-        if config_form.is_valid() and schedule_form.is_valid():
-            # Save the schedule first
-            schedule = schedule_form.save()
-
-            # Save the forwarding config and associate the schedule
-            config = config_form.save(commit=False)
-            config.created_by = request.user
-            config.schedule = schedule
-            config.save()
+        if config_form.is_valid():
+            with transaction.atomic():
+                config = config_form.save(commit=False)
+                config.created_by = request.user
+                config.save()
 
             messages.success(
                 request,
@@ -61,7 +56,6 @@ def create_forwarding_config(request):
             )
     else:
         config_form = ForwardingConfigForm()
-        schedule_form = ScheduleForm()
 
     return render(
         request,
@@ -69,7 +63,6 @@ def create_forwarding_config(request):
         {
             'active_tab': 'create_forwarder',
             'config_form': config_form,
-            'schedule_form': schedule_form,
         },
     )
 
@@ -81,31 +74,22 @@ def edit_forwarding_config(request, forwarder_id):
 
     if request.method == 'POST':
         config_form = ForwardingConfigForm(request.POST, instance=forwarder)
-        schedule_form = ScheduleForm(
-            request.POST,
-            instance=forwarder.schedule if forwarder.schedule else None,
-        )
 
-        if config_form.is_valid() and schedule_form.is_valid():
-            schedule = schedule_form.save()
-            config = config_form.save(commit=False)
-            config.schedule = schedule
-            config.save()
+        if config_form.is_valid():
+            with transaction.atomic():
+                config_form.save()
 
             messages.success(
                 request,
                 _('Forwarding configuration "{}" was successfully updated.').format(
-                    config.name
+                    forwarder.name
                 ),
             )
             return HttpResponseRedirect(
-                reverse('forwarding:forwarder_details', args=[config.id])
+                reverse('forwarding:forwarder_details', args=[forwarder.id])
             )
     else:
         config_form = ForwardingConfigForm(instance=forwarder)
-        schedule_form = ScheduleForm(
-            instance=forwarder.schedule if forwarder.schedule else None
-        )
 
     return render(
         request,
@@ -113,7 +97,6 @@ def edit_forwarding_config(request, forwarder_id):
         {
             'active_tab': 'forwarders',
             'config_form': config_form,
-            'schedule_form': schedule_form,
             'forwarder': forwarder,
         },
     )
