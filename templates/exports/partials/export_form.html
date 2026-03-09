@@ -12,7 +12,23 @@
   <label for="{{ form.project.id_for_label }}" class="form-label"
     >{% trans "Project" %}</label
   >
-  <div>{{ form.project }}</div>
+  <div>
+    <select
+      name="{{ form.project.html_name }}"
+      id="{{ form.project.id_for_label }}"
+      class="form-select"
+      onchange="htmx.trigger('#id_config_file_select', 'refresh')"
+    >
+      {% for value, label in form.project.field.choices %}
+        <option
+          value="{{ value }}"
+          {% if form.project.value == value %}selected{% endif %}
+        >
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
   {{ form.project.errors }}
 </div>
 {% include 'exports/partials/export_form_shared.html' %}

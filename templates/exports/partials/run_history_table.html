@@ -1,7 +1,15 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="export-run-table" class="table my-2">
+<table
+  id="run-table"
+  class="table my-2"
+  {# multi‑project export run shows a static snapshot of partial runs, so #}
+  {# `run_history_url` is not set for that page; there's nothing to refresh. #}
+  {% if run_history_url %}hx-get="{{ run_history_url }}"{% endif %}
+  hx-trigger="refresh from:body"
+  hx-swap="outerHTML"
+>
   <thead>
     <tr>
       <th>{% trans "Queued" %}</th>
@@ -19,7 +27,7 @@
       {% endif %}
     </tr>
   </thead>
-  <tbody>
+  <tbody x-data="expandableLogs()">
     {% for export_run in runs %}
       <tr>
         <td>
@@ -57,10 +65,16 @@
         {% if not is_multi_project %}
           <td>
             <a
-              class="icon-link log-trigger"
-              data-open-status="closed"
-              data-export-run-id="{{ export_run.id }}"
-              ><span class="icon"><i class="fa fa-chevron-down"></i></span>
+              class="icon-link"
+              @click="toggleLogs({{ export_run.id }})"
+              role="button"
+            >
+              <span class="icon">
+                <i
+                  class="fa"
+                  :class="isExpanded({{ export_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
+                ></i>
+              </span>
               {% trans "View log" %}
             </a>
           </td>
@@ -84,8 +98,9 @@
       {% if not is_multi_project %}
         <tr
           class="export-log my-1"
-          id="export-log-{{ export_run.id }}"
-          style="display: none;"
+          x-show="isExpanded({{ export_run.id }})"
+          x-transition
+          x-cloak
         >
           <td colspan="{% if is_multi_project %}7{% else %}6{% endif %}">
             <pre class="wrapped">

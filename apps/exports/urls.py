@@ -17,6 +17,11 @@ urlpatterns = [
         name='export_details',
     ),
     path(
+        r'view/<int:export_id>/run-history-table/',
+        views.run_history_table,
+        name='run_history_table',
+    ),
+    path(
         r'view/<int:export_id>/edit/',
         views.edit_export_config,
         name='edit_export_config',

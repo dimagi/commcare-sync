@@ -26,13 +26,13 @@ shell: ## Get a Django shell
 
 init: start migrate  ## Quickly get up and running (start containers and migrate DB)
 
-npm-install: ## Runs npm install in the container
+npm-install: ## Install npm dependencies (Alpine, HTMX, Bootstrap, Sass, etc.)
 	@docker-compose exec web npm install
 
-npm-build: ## Bundle JS files for production in the container
+static-build: ## Build static files for production (compile CSS, copy vendor files)
 	@docker-compose exec web npm run build
 
-npm-watch: ## Bundle JS files and watch for changes in the container
+static-watch: ## Watch and compile CSS changes for development
 	@docker-compose exec web npm run dev-watch
 
 .PHONY: help

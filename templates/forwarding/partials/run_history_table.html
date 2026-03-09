@@ -1,7 +1,13 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table id="forwarding-run-table" class="table my-2">
+<table
+  id="run-table"
+  class="table my-2"
+  hx-get="{% url 'forwarding:run_history_table' forwarder.id %}"
+  hx-trigger="refresh from:body"
+  hx-swap="outerHTML"
+>
   <thead>
     <tr>
       <th>{% trans "Queued" %}</th>
@@ -11,7 +17,7 @@
       <th>{% trans "Log" %}</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody x-data="expandableLogs()">
     {% for forwarding_run in runs %}
       <tr>
         <td>
@@ -43,18 +49,25 @@
         </td>
         <td>
           <a
-            class="icon-link log-trigger"
-            data-open-status="closed"
-            data-forwarding-run-id="{{ forwarding_run.id }}"
-            ><span class="icon"><i class="fa fa-chevron-down"></i></span>
+            class="icon-link"
+            @click="toggleLogs({{ forwarding_run.id }})"
+            role="button"
+          >
+            <span class="icon">
+              <i
+                class="fa"
+                :class="isExpanded({{ forwarding_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
+              ></i>
+            </span>
             {% trans "View log" %}
           </a>
         </td>
       </tr>
       <tr
         class="forwarding-log my-1"
-        id="forwarding-log-{{ forwarding_run.id }}"
-        style="display: none;"
+        x-show="isExpanded({{ forwarding_run.id }})"
+        x-transition
+        x-cloak
       >
         <td colspan="5">
           <pre class="wrapped">

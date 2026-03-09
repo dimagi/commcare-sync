@@ -32,10 +32,15 @@ would clarify the type or purpose of a variable.
 
 ### Tests
 
-#### Pythonic pytest
+Tests can be an excellent reference for the behavior of a codebase when
+they are simple, and readable, and comprehensive. Tests must meet those
+criteria.
 
-Don't use docstrings for test functions. The function's name should
-explain what it is testing.
+If it is difficult to write tests that are simple, and readable, and
+comprehensive, often that is because the code to be tested needs to be
+refactored. Refactor it, for the benefit of the code, and the tests.
+
+#### Pythonic pytest
 
 Take advantage of pytest features where possible. e.g. Combine
 repetitive tests using pytest parametrized tests.

@@ -85,6 +85,9 @@
       }
 
       function uploadImage(file) {
+        const csrfHeaders = JSON.parse(
+          document.body.getAttribute("hx-headers") || "{}",
+        );
         // update UI
         let uploadlabel = document.getElementById("profile-upload-label");
         uploadlabel.innerHTML =
@@ -95,11 +98,13 @@
         // upload to server
         let formData = new FormData();
         formData.append("avatar", file);
-        formData.append("csrfmiddlewaretoken", getCookie("csrftoken"));
         fetch(uploadUrl, {
           method: "POST",
           body: formData,
           credentials: "same-origin",
+          headers: {
+            ...csrfHeaders,
+          },
         }).then(function (response) {
           if (response.ok) {
             response.text().then(function (text) {
@@ -123,25 +128,6 @@
             });
           }
         });
-      }
-
-      function getCookie(name) {
-        // see: https://docs.djangoproject.com/en/2.2/ref/csrf/
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          let cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            let cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1),
-              );
-              break;
-            }
-          }
-        }
-        return cookieValue;
       }
     });
   </script>

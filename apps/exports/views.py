@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 from django.conf import settings
@@ -8,7 +9,6 @@ from django.http import (
     Http404,
     HttpResponse,
     HttpResponseRedirect,
-    JsonResponse,
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -33,6 +33,8 @@ from .models import (
     MultiProjectExportRun,
 )
 from .tasks import run_export_task, run_multi_project_export_task
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -163,6 +165,27 @@ def export_details(request, export_id):
         'export': export,
         'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
+        'run_history_url': reverse('exports:run_history_table', args=[export.id]),
+    })
+
+
+@login_required
+def run_history_table(request, export_id):
+    """HTMX endpoint to refresh the run history table."""
+    export = get_object_or_404(ExportConfig, id=export_id)
+    runs = export.runs
+    hide_skipped = get_hide_skipped_from_request(request)
+    is_multi_project = request.GET.get('is_multi_project') == 'true'
+    if hide_skipped:
+        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+    run_history_url = reverse('exports:run_history_table', args=[export.id])
+    if is_multi_project:
+        run_history_url += '?is_multi_project=true'
+    return render(request, 'exports/partials/run_history_table.html', {
+        'export': export,
+        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
+        'is_multi_project': is_multi_project,
+        'run_history_url': run_history_url,
     })
 
 
@@ -197,13 +220,16 @@ def multi_export_details(request, export_id):
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
         runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
-
+    run_history_url = (
+        reverse('exports:run_history_table', args=[export.id])
+        + '?is_multi_project=true'
+    )
     return render(request, 'exports/multi_project_export_details.html', {
         'active_tab': 'exports',
         'export': export,
         'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
         'hide_skipped': hide_skipped,
-
+        'run_history_url': run_history_url,
     })
 
 
@@ -307,24 +333,54 @@ def edit_database(request, database_id):
 @login_required
 def fetch_config_files(request):
     """
-    AJAX endpoint to fetch available config files from CommCare HQ.
+    HTMX endpoint to fetch available config files from CommCare HQ.
 
-    Expects GET parameters: ``account_id`` and comma-separated ``project_ids``.
+    Expects GET parameters ``account`` and ``project`` or ``projects``.
+    Returns HTML fragment with config options.
     """
-    account_id = request.GET.get('account_id')
-    project_ids = request.GET.get('project_ids', '').split(',')
-    project_ids = [pid for pid in project_ids if pid]
+    account_id = request.GET.get('account')
+    # Handle both single project and multi-project forms
+    project_id = request.GET.get('project')
+    projects = request.GET.get('projects')
+
+    if project_id:
+        project_ids = [project_id]
+    elif projects:
+        project_ids = [pid for pid in projects.split(',') if pid]
+    else:
+        project_ids = []
+
+    current_value = request.GET.get('det_config_url', '')
 
     if not account_id or not project_ids:
-        return JsonResponse(
-            {'error': 'Missing account_id or project_ids'},
-            status=400,
+        logger.error(
+            "Missing required params for fetch_config_files: "
+            "account_id=%s project_ids=%s",
+            account_id,
+            project_ids,
         )
+        return render(request, 'exports/partials/config_options.html', {
+            'configs': [],
+            'errors': ['Missing account_id or project_ids'],
+            'is_multi_project': False,
+            'current_value': current_value,
+        })
 
     account = get_object_or_404(CommCareAccount, id=account_id)
     projects = CommCareProject.objects.filter(id__in=project_ids)
     if not projects.exists():
-        return JsonResponse({'error': 'No valid projects found'}, status=400)
+        logger.error(
+            "No valid projects found for fetch_config_files: "
+            "account_id=%s project_ids=%s",
+            account_id,
+            project_ids,
+        )
+        return render(request, 'exports/partials/config_options.html', {
+            'configs': [],
+            'errors': ['No valid projects found'],
+            'is_multi_project': False,
+            'current_value': current_value,
+        })
 
     all_configs = []
     errors = []
@@ -343,12 +399,21 @@ def fetch_config_files(request):
                     'det_config_url': config.get('det_config_url'),
                 })
         except Exception as err:
-            errors.append(f"{type(err).__name__}: {err}")
+            error_msg = (
+                "Error fetching configs for "
+                f"{project.domain}: {type(err).__name__}: {err}"
+            )
+            logger.error(error_msg)
+            errors.append(error_msg)
 
-    data = {'configs': all_configs}
-    if errors:
-        data['errors'] = errors
-    return JsonResponse(data)
+    is_multi_project = len(projects) > 1
+
+    return render(request, 'exports/partials/config_options.html', {
+        'configs': all_configs,
+        'errors': errors,
+        'is_multi_project': is_multi_project,
+        'current_value': current_value,
+    })
 
 
 @login_required

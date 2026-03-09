@@ -103,3 +103,51 @@ To run tests:
 ```shell
 pytest
 ```
+
+### Testing with Playwright
+
+On Ubuntu, `uv sync --dev` (above) will automatically install Playwright
+and the host operating system packages it needs.
+
+If the host OS packages are not installed automatically, use an LLM to
+find your operating system's equivalent of the following packages, and
+install them:
+
+* libicu74
+* libxml2
+* libgstreamer-plugins-bad1.0-0
+* libflite1
+* libmanette-0.2-0
+* libwoff1
+* gstreamer1.0-libav
+
+By default Playwright will be installed with all browsers. To install
+with a specific browser only (Chromium, for example):
+
+```shell
+uv run playwright install chromium
+```
+
+To (re)install with all browsers:
+
+```shell
+uv run playwright install
+```
+
+Run tests in headed mode, to see the browser:
+
+```shell
+uv run pytest apps/example/tests/test_example.py --headed
+```
+
+Run tests in slow motion, for debugging:
+
+```shell
+uv run pytest apps/example/tests/test_example.py --headed --slowmo 1000
+```
+
+Run with Playwright Inspector, the step-through debugger:
+
+```shell
+PWDEBUG=1 uv run pytest apps/example/tests/test_example.py
+```

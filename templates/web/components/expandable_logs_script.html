@@ -1,0 +1,13 @@
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("expandableLogs", () => ({
+      expandedLogs: {},
+      toggleLogs(id) {
+        this.expandedLogs[id] = !this.expandedLogs[id];
+      },
+      isExpanded(id) {
+        return !!this.expandedLogs[id];
+      },
+    }));
+  });
+</script>
