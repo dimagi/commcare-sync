@@ -14,7 +14,7 @@ dependencies = [
     "cryptography",
     "django-celery-beat",
     "django-reversion>=5.0.4",
-    "commcare-export[postgres,mysql,odbc]",
+    "commcare-export",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
     "db-query-fwd",
 ]
@@ -22,6 +22,15 @@ dependencies = [
 [project.optional-dependencies]
 prod = [
     "gunicorn[eventlet]",
+]
+postgres = [
+    "commcare-export[postgres]",
+]
+mysql = [
+    "commcare-export[mysql]",
+]
+odbc = [
+    "commcare-export[odbc]",
 ]
 
 [build-system]

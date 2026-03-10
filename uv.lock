@@ -335,7 +335,7 @@ source = { editable = "." }
 dependencies = [
     { name = "celery", extra = ["redis"] },
     { name = "celery-progress" },
-    { name = "commcare-export", extra = ["mysql", "odbc", "postgres"] },
+    { name = "commcare-export" },
     { name = "cryptography" },
     { name = "db-query-fwd" },
     { name = "django" },
@@ -348,6 +348,15 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+mysql = [
+    { name = "commcare-export", extra = ["mysql"] },
+]
+odbc = [
+    { name = "commcare-export", extra = ["odbc"] },
+]
+postgres = [
+    { name = "commcare-export", extra = ["postgres"] },
+]
 prod = [
     { name = "gunicorn", extra = ["eventlet"] },
 ]
@@ -386,7 +395,10 @@ test = [
 requires-dist = [
     { name = "celery", extras = ["redis"] },
     { name = "celery-progress" },
-    { name = "commcare-export", extras = ["postgres", "mysql", "odbc"], git = "https://github.com/dimagi/commcare-export.git?branch=master" },
+    { name = "commcare-export", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
+    { name = "commcare-export", extras = ["mysql"], marker = "extra == 'mysql'", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
+    { name = "commcare-export", extras = ["odbc"], marker = "extra == 'odbc'", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
+    { name = "commcare-export", extras = ["postgres"], marker = "extra == 'postgres'", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
     { name = "cryptography" },
     { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git" },
     { name = "django", specifier = "~=5.2" },
@@ -398,7 +410,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"] },
     { name = "pyopenssl", specifier = ">=20.0.1" },
 ]
-provides-extras = ["prod"]
+provides-extras = ["prod", "postgres", "mysql", "odbc"]
 
 [package.metadata.requires-dev]
 dev = [
