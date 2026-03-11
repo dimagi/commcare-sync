@@ -12,7 +12,7 @@
         class="icon-link btn btn-outline-danger btn-sm rounded-pill"
         href="{% url 'exports:delete_multi_export_config' export.id %}"
       >
-        <i class="fa fa-times"></i>
+        <i class="fa-solid fa-xmark"></i>
         {% trans "Delete" %}
       </a>
     </div>
@@ -28,7 +28,7 @@
             target="_blank"
             style="white-space: nowrap;"
             >{{ project.domain }}
-            <span class="icon"><i class="fa fa-external-link"></i></span>
+            <span class="icon"><i class="fa-solid fa-up-right-from-square"></i></span>
           </a>
           {% if not forloop.last %}<br />{% endif %}
         {% endfor %}
@@ -53,7 +53,7 @@
         class="icon-link btn btn-primary btn-sm rounded-pill"
         href="{% url 'exports:multi_export_details' export.id %}"
       >
-        <i class="fa fa-arrow-left"></i>
+        <i class="fa-solid fa-arrow-left"></i>
         {% trans "Back" %}
       </a>
     {% endif %}
@@ -61,14 +61,14 @@
       class="icon-link btn btn-outline-primary btn-sm rounded-pill"
       href="{% url 'exports:download_multi_export_file' export.id %}"
     >
-      <i class="fa fa-download"></i>
+      <i class="fa-solid fa-download"></i>
       {% trans "Download Config File" %}
     </a>
     <a
       class="icon-link btn btn-outline-primary btn-sm rounded-pill"
       href="{% url 'exports:edit_multi_export_config' export.id %}"
     >
-      <i class="fa fa-edit"></i>
+      <i class="fa-solid fa-pen-to-square"></i>
       {% trans "Edit" %}
     </a>
   </div>

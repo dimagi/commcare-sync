@@ -59,7 +59,7 @@
             >
               <li>
                 <a class="dropdown-item" href="{% url 'users:user_profile' %}">
-                  <i class="fa fa-user"></i> {% trans "Profile" %}
+                  <i class="fa-solid fa-user"></i> {% trans "Profile" %}
                 </a>
               </li>
               <li>
@@ -67,12 +67,12 @@
                   class="dropdown-item"
                   href="{% url 'account_change_password' %}"
                 >
-                  <i class="fa fa-unlock-alt"></i> {% trans "Change Password" %}
+                  <i class="fa-solid fa-unlock-keyhole"></i> {% trans "Change Password" %}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{% url 'account_logout' %}">
-                  <i class="fa fa-sign-out"></i> {% trans "Sign out" %}
+                  <i class="fa-solid fa-right-from-bracket"></i> {% trans "Sign out" %}
                 </a>
               </li>
             </ul>
