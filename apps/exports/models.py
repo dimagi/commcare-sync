@@ -44,6 +44,11 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
 
     @property
     def last_run(self):
+        all_runs = getattr(self, '_all_runs', None)
+        if all_runs is not None:
+            # Use prefetched data: filter out QUEUED in Python
+            non_queued = [r for r in all_runs if r.status != self.QUEUED]
+            return non_queued[0] if non_queued else None
         return (
             self.runs.exclude(status=ExportRun.Status.QUEUED)
             .order_by('-created_at')

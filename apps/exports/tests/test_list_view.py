@@ -136,16 +136,6 @@ class TestExportsHomeView:
         assert export_config.name in response.content.decode()
 
 
-import hashlib
-from unittest.mock import patch
-
-from apps.exports.models import (
-    ExportRun,
-    MultiProjectExportConfig,
-    MultiProjectExportRun,
-)
-
-
 class TestConfigTableView:
     def test_requires_login(self, client, user):
         client.logout()
@@ -248,6 +238,11 @@ class TestRunLogView:
 
 
 class TestMultiRunLogView:
+    def test_requires_login(self, client, user, multi_export_run):
+        client.logout()
+        response = client.get(reverse('exports:multi_run_log', args=[multi_export_run.id]))
+        assert response.status_code == 302
+
     def test_returns_log_content(self, client, multi_export_run):
         multi_export_run.log = 'Multi log output'
         multi_export_run.save()
