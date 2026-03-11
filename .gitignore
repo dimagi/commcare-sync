@@ -1,8 +1,6 @@
-.idea
 *.pyc
 *~
 db.sqlite3
-celerybeat-schedule.db
 .sass-cache/
 node_modules/
 media/
@@ -10,6 +8,17 @@ docs/_build
 _dist/
 commcare_sync/settings_local.py
 static_root/
+logs/
 
 # uv
 .venv/
+
+# IDE
+.idea
+
+# Celery
+celerybeat-schedule*
+
+# Tools
+.playwright-mcp/
+
