@@ -31,7 +31,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-class TestDashboardView:
+class TestHomeView:
     def setup_method(self):
         self.client = Client()
         self.user = User.objects.create_user(
@@ -40,34 +40,20 @@ class TestDashboardView:
             password='testpass123',
         )
 
-    def test_dashboard_requires_authentication(self):
-        response = self.client.get(reverse('web:dashboard'))
-        assert response.status_code == 302
-        assert '/accounts/login/' in response.url
-
-    def test_dashboard_accessible_when_authenticated(self):
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('web:dashboard'))
-        assert response.status_code == 200
-        assert 'active_tab' in response.context
-        assert response.context['active_tab'] == 'dashboard'
-
-    def test_home_redirects_to_dashboard(self):
+    def test_home_redirects_to_exports_when_authenticated(self):
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('web:home'))
         assert response.status_code == 302
-        assert response.url == reverse('web:dashboard')
+        assert response.url == reverse('exports:home')
 
-    def test_dashboard_displays_with_no_data(self):
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('web:dashboard'))
+    def test_home_shows_landing_page_when_unauthenticated(self):
+        response = self.client.get(reverse('web:home'))
         assert response.status_code == 200
-        assert 'export_stats' in response.context
-        assert 'refresh_stats' in response.context
-        assert 'forwarding_stats' in response.context
-        assert response.context['export_stats']['total_configs'] == 0
-        assert response.context['refresh_stats']['total_configs'] == 0
-        assert response.context['forwarding_stats']['total_configs'] == 0
+
+    def test_dashboard_redirects_to_exports(self):
+        response = self.client.get(reverse('web:dashboard'))
+        assert response.status_code == 302
+        assert response.url == reverse('exports:home')
 
 
 @pytest.mark.django_db
