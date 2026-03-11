@@ -34,18 +34,18 @@
           <span class="icon">
             {% if export_run.triggered_from_ui %}
               <i
-                class="fa fa-user"
+                class="fa-solid fa-user"
                 title="{% blocktrans with user=export_run.triggered_by|default:'unknown' %}Triggered
                 from UI by {{ user }}{% endblocktrans %}"
               ></i>
             {% elif export_run.triggered_from_ui == False %}
               <i
-                class="fa fa-clock-o text-muted"
+                class="fa-regular fa-clock text-muted"
                 title="{% trans 'Scheduled Run' %}"
               ></i>
             {% else %}
               <i
-                class="fa fa-question text-muted"
+                class="fa-solid fa-question text-muted"
                 title="{% trans 'Unknown' %}"
               ></i>
             {% endif %}
@@ -87,7 +87,7 @@
                 class="icon-link btn btn-outline-primary btn-sm rounded-pill"
                 href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}"
               >
-                <i class="fa fa-download"></i>
+                <i class="fa-solid fa-download"></i>
               </a>
             {% else %}
               <span class="text-muted">{% trans "Not available" %}</span>

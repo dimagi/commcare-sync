@@ -17,7 +17,7 @@
         class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
         href="{% url 'commcare:create_project' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Project" %}
       </a>
       <table class="table table-striped">
@@ -35,7 +35,7 @@
               <td>
                 <a class="icon-link" href="{{ project.url }}" target="_blank"
                   >{% trans "View in CommCare" %}
-                  <span class="icon"><i class="fa fa-external-link"></i></span>
+                  <span class="icon"><i class="fa-solid fa-up-right-from-square"></i></span>
                 </a>
               </td>
               <td>
@@ -43,7 +43,7 @@
                   class="icon-link btn btn-sm btn-outline-primary rounded-pill"
                   href="{% url 'commcare:edit_project' project.id %}"
                 >
-                  <i class="fa fa-edit"></i>
+                  <i class="fa-solid fa-pen-to-square"></i>
                   {% trans "Edit" %}
                 </a>
               </td>
@@ -57,7 +57,7 @@
         class="icon-link btn btn-primary btn-sm rounded-pill"
         href="{% url 'commcare:create_project' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Your First Project" %}
       </a>
     {% endif %}
@@ -72,7 +72,7 @@
         class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
         href="{% url 'commcare:create_account' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Account" %}
       </a>
       <table class="table table-striped">
@@ -98,7 +98,7 @@
                     class="icon-link btn btn-sm btn-outline-primary rounded-pill"
                     href="{% url 'commcare:edit_account' account.id %}"
                   >
-                    <i class="fa fa-edit"></i>
+                    <i class="fa-solid fa-pen-to-square"></i>
                     {% trans "Edit" %}
                   </a>
                 {% else %}
@@ -115,7 +115,7 @@
         class="icon-link btn btn-primary btn-sm rounded-pill"
         href="{% url 'commcare:create_account' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Your First Account" %}
       </a>
     {% endif %}

@@ -24,19 +24,19 @@
           <span class="icon">
             {% if refresh_run.triggered_from_ui %}
               <i
-                class="fa fa-user"
+                class="fa-solid fa-user"
                 title="{% blocktrans with user=refresh_run.triggered_by|default:'unknown' %}
                   Triggered from UI by {{ user }}
                 {% endblocktrans %}"
               ></i>
             {% elif refresh_run.triggered_from_ui == False %}
               <i
-                class="fa fa-clock-o text-muted"
+                class="fa-regular fa-clock text-muted"
                 title="{% trans 'Scheduled Run' %}"
               ></i>
             {% else %}
               <i
-                class="fa fa-question text-muted"
+                class="fa-solid fa-question text-muted"
                 title="{% trans 'Unknown' %}"
               ></i>
             {% endif %}
@@ -111,10 +111,10 @@
                     <td><code>{{ view_name }}</code></td>
                     <td>
                       {% if result.status == 'success' %}
-                        <i class="fa fa-check-circle text-success"></i>
+                        <i class="fa-solid fa-circle-check text-success"></i>
                         {% trans "Success" %}
                       {% else %}
-                        <i class="fa fa-times-circle text-danger"></i>
+                        <i class="fa-solid fa-circle-xmark text-danger"></i>
                         {% trans "Failed" %}
                       {% endif %}
                     </td>

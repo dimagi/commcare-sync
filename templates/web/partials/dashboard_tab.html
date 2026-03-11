@@ -17,7 +17,7 @@
     {% endif %}
   </div>
   <a href="{% url manage_url %}" class="btn btn-outline-primary btn-sm">
-    <i class="fa fa-plus me-1"></i> {{ manage_label }}
+    <i class="fa-solid fa-plus me-1"></i> {{ manage_label }}
   </a>
 </div>
 
@@ -40,11 +40,11 @@
       <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Success %" %}</span>
       <span class="stat-box-value stat-trend-{{ stats.success_trend }}">{{ stats.success_rate }}%</span>
       {% if stats.success_trend == 'up' %}
-        <span class="stat-trend-up"><i class="fa fa-long-arrow-up"></i></span>
+        <span class="stat-trend-up"><i class="fa-solid fa-arrow-up-long"></i></span>
       {% elif stats.success_trend == 'down' %}
-        <span class="stat-trend-down"><i class="fa fa-long-arrow-down"></i></span>
+        <span class="stat-trend-down"><i class="fa-solid fa-arrow-down-long"></i></span>
       {% else %}
-        <span class="stat-trend-flat"><i class="fa fa-long-arrow-right"></i></span>
+        <span class="stat-trend-flat"><i class="fa-solid fa-arrow-right-long"></i></span>
       {% endif %}
     </div>
   </div>
@@ -95,7 +95,7 @@
       </td>
       <td>
         {% if config.is_paused %}
-          <i class="fa fa-pause-circle text-muted" title="{% trans 'Paused' %}"></i>
+          <i class="fa-solid fa-circle-pause text-muted" title="{% trans 'Paused' %}"></i>
           <span class="text-muted">{% trans "Paused" %}</span>
         {% elif config.schedule_display %}
           {{ config.schedule_display }}
@@ -112,14 +112,14 @@
       </td>
       <td class="text-nowrap">
         {% if tab_type == 'exports' %}
-          <a href="{% url 'exports:edit_export_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
-          <a href="{% url 'exports:export_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+          <a href="{% url 'exports:edit_export_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa-solid fa-pencil"></i></a>
+          <a href="{% url 'exports:export_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa-solid fa-up-right-from-square"></i></a>
         {% elif tab_type == 'refreshes' %}
-          <a href="{% url 'refreshes:edit_refresh_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
-          <a href="{% url 'refreshes:refresh_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+          <a href="{% url 'refreshes:edit_refresh_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa-solid fa-pencil"></i></a>
+          <a href="{% url 'refreshes:refresh_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa-solid fa-up-right-from-square"></i></a>
         {% elif tab_type == 'forwarders' %}
-          <a href="{% url 'forwarding:edit_forwarding_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa fa-pencil"></i></a>
-          <a href="{% url 'forwarding:forwarder_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa fa-external-link"></i></a>
+          <a href="{% url 'forwarding:edit_forwarding_config' config.id %}" class="text-muted me-2" title="{% trans 'Edit' %}"><i class="fa-solid fa-pencil"></i></a>
+          <a href="{% url 'forwarding:forwarder_details' config.id %}" class="text-muted" title="{% trans 'View Details' %}"><i class="fa-solid fa-up-right-from-square"></i></a>
         {% endif %}
       </td>
     </tr>
