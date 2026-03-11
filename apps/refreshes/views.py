@@ -1,9 +1,12 @@
+import hashlib
 import logging
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, Paginator
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -18,7 +21,9 @@ from apps.web.stats import (
     _get_refresh_statistics,
 )
 from commcare_sync.views import (
+    get_config_page_size,
     get_hide_skipped_from_request,
+    get_page_from_request,
     get_ui_page_size,
 )
 
@@ -30,6 +35,19 @@ from .tasks import run_refresh_task
 logger = logging.getLogger(__name__)
 
 
+def _compute_refresh_etag(configs_list):
+    parts = []
+    for config in configs_list:
+        # Use prefetched _all_runs if available, else DB query
+        all_runs = getattr(config, '_all_runs', None)
+        run = all_runs[0] if all_runs else config.runs.order_by('-created_at').first()
+        if run:
+            parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
+        else:
+            parts.append(f"config:{config.id}:no-runs")
+    return hashlib.md5('|'.join(parts).encode()).hexdigest()
+
+
 @login_required
 def refresh_configs(request):
     """List all refresh configurations."""
@@ -38,18 +56,70 @@ def refresh_configs(request):
     current_start = now - period
     previous_start = current_start - period
 
-    configs = RefreshConfig.objects.order_by('-updated_at')
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
+        Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    )
+    paginator = Paginator(configs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    etag = _compute_refresh_etag(page_obj.object_list)
+
     return render(
         request,
         'refreshes/refresh_configs.html',
         {
             'active_tab': 'refreshes',
-            'refresh_configs': configs,
+            'configs': page_obj,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
+            'etag': etag,
             'export_stats': _get_export_statistics(current_start, previous_start),
             'refresh_stats': _get_refresh_statistics(current_start, previous_start),
             'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
         },
     )
+
+
+@login_required
+@require_GET
+def config_table(request):
+    """HTMX endpoint: paginated + ETag-guarded refresh config table partial."""
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
+        Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    )
+    paginator = Paginator(configs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    etag = _compute_refresh_etag(page_obj.object_list)
+    if request.GET.get('etag') == etag:
+        response = HttpResponse()
+        response['HX-Reswap'] = 'none'
+        return response
+
+    return render(request, 'refreshes/partials/config_table.html', {
+        'configs': page_obj,
+        'page_size': page_size,
+        'page_sizes': [10, 20, 50],
+        'etag': etag,
+    })
+
+
+@login_required
+@require_GET
+def run_log(request, run_id):
+    """HTMX endpoint: log fragment for a RefreshRun."""
+    run = get_object_or_404(RefreshRun, id=run_id)
+    return render(request, 'refreshes/partials/run_log.html', {'run': run})
 
 
 @login_required

@@ -247,3 +247,73 @@ class TestFetchMaterializedViewsView:
         url = reverse('refreshes:fetch_materialized_views')
         response = client.post(url)
         assert response.status_code == 405
+
+
+import re
+
+
+class TestRefreshConfigTableView:
+    def test_requires_login(self, client, user):
+        client.logout()
+        response = client.get(reverse('refreshes:config_table'))
+        assert response.status_code == 302
+
+    def test_returns_200(self, client, db):
+        response = client.get(reverse('refreshes:config_table'))
+        assert response.status_code == 200
+
+    def test_config_appears(self, client, refresh_config):
+        response = client.get(reverse('refreshes:config_table'))
+        assert refresh_config.name in response.content.decode()
+
+    def test_pagination_default_10(self, client, user, database):
+        for i in range(15):
+            from ..models import RefreshConfig
+            RefreshConfig.objects.create(
+                name=f'Refresh {i}',
+                database=database,
+                materialized_views=['public.view1'],
+                created_by=user,
+            )
+        response = client.get(reverse('refreshes:config_table'))
+        shown = response.content.decode().count('Refresh ')
+        assert shown == 10
+
+    def test_etag_match_returns_no_swap(self, client, refresh_config):
+        response = client.get(reverse('refreshes:config_table'))
+        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
+        assert match
+        etag = match.group(1)
+        response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})
+        assert response2.get('HX-Reswap') == 'none'
+
+    def test_etag_mismatch_returns_content(self, client, refresh_config):
+        response = client.get(reverse('refreshes:config_table'), {'etag': 'stale'})
+        assert response.get('HX-Reswap') is None
+        assert refresh_config.name in response.content.decode()
+
+
+class TestRefreshRunLogView:
+    def test_requires_login(self, client, user, refresh_config):
+        run = RefreshRun.objects.create(
+            refresh_config=refresh_config,
+            status=RefreshRun.Status.COMPLETED,
+            log='hello log',
+        )
+        client.logout()
+        response = client.get(reverse('refreshes:run_log', args=[run.id]))
+        assert response.status_code == 302
+
+    def test_returns_log(self, client, refresh_config):
+        run = RefreshRun.objects.create(
+            refresh_config=refresh_config,
+            status=RefreshRun.Status.COMPLETED,
+            log='refresh log content',
+        )
+        response = client.get(reverse('refreshes:run_log', args=[run.id]))
+        assert response.status_code == 200
+        assert 'refresh log content' in response.content.decode()
+
+    def test_404_for_missing(self, client):
+        response = client.get(reverse('refreshes:run_log', args=[9999]))
+        assert response.status_code == 404
