@@ -12,7 +12,7 @@ def to_status_icon(export_status):
     """
     Convert export status to an HTML icon with appropriate styling.
 
-    >>> 'fa-check-circle' in to_status_icon('completed')
+    >>> 'fa-circle-check' in to_status_icon('completed')
     True
     >>> 'text-success' in to_status_icon('completed')
     True
