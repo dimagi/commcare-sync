@@ -21,7 +21,7 @@
           :class="{ active: activeTab === 'exports' }"
           @click="activeTab = 'exports'"
         >
-          <i class="fa fa-download me-1"></i> {% trans "Exports" %}
+          <i class="fa-solid fa-download me-1"></i> {% trans "Exports" %}
         </button>
       </li>
       <li class="nav-item">
@@ -30,7 +30,7 @@
           :class="{ active: activeTab === 'refreshes' }"
           @click="activeTab = 'refreshes'"
         >
-          <i class="fa fa-refresh me-1"></i> {% trans "Refreshes" %}
+          <i class="fa-solid fa-arrows-rotate me-1"></i> {% trans "Refreshes" %}
         </button>
       </li>
       <li class="nav-item">
@@ -39,7 +39,7 @@
           :class="{ active: activeTab === 'forwarders' }"
           @click="activeTab = 'forwarders'"
         >
-          <i class="fa fa-paper-plane me-1"></i> {% trans "Forwarders" %}
+          <i class="fa-solid fa-paper-plane me-1"></i> {% trans "Forwarders" %}
         </button>
       </li>
     </ul>
@@ -67,11 +67,11 @@
     <p>{% trans "Get started by configuring your CommCare connection and creating your first data export." %}</p>
     <div class="d-flex gap-2 mt-3">
       <a class="btn btn-primary" href="{% url 'commcare:home' %}">
-        <i class="fa fa-cog me-2"></i>
+        <i class="fa-solid fa-gear me-2"></i>
         <span>{% trans "Configure CommCare" %}</span>
       </a>
       <a class="btn btn-outline-primary" href="{% url 'exports:create_export_config' %}">
-        <i class="fa fa-plus me-2"></i>
+        <i class="fa-solid fa-plus me-2"></i>
         <span>{% trans "Create Export" %}</span>
       </a>
     </div>

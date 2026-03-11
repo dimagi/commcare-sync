@@ -17,7 +17,7 @@
             class="icon-link btn btn-outline-danger btn-sm rounded-pill"
             href="{% url 'refreshes:delete_refresh_config' config.id %}"
           >
-            <i class="fa fa-times"></i>
+            <i class="fa-solid fa-xmark"></i>
             {% trans "Delete" %}
           </a>
         </div>
@@ -50,7 +50,7 @@
         class="icon-link btn btn-outline-primary btn-sm rounded-pill mt-2"
         href="{% url 'refreshes:edit_refresh_config' config.id %}"
       >
-        <i class="fa fa-edit"></i>
+        <i class="fa-solid fa-pen-to-square"></i>
         {% trans "Edit" %}
       </a>
     </div>
