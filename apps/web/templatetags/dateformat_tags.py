@@ -48,3 +48,8 @@ def readable_timedelta(timedelta_obj, short=False):
     if secs:
         strings.append(f'{secs}s' if short else f'{secs} seconds')
     return ' '.join(strings)
+
+
+@register.filter()
+def readable_timedelta_short(timedelta_obj):
+    return readable_timedelta(timedelta_obj, short=True)
