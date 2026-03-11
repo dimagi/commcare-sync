@@ -26,7 +26,7 @@ from apps.refreshes.models import (
     RefreshConfig,
     RefreshRun,
 )
-from apps.web.views import _get_export_statistics, _get_refresh_statistics, _get_forwarding_statistics
+from apps.web.stats import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
 
 User = get_user_model()
 
