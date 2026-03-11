@@ -1,7 +1,5 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
-{% load humanize %}
-{% load exports_tags %}
 
 {% block app %}
 <section class="app-card">
@@ -12,57 +10,144 @@
     </div>
   </div>
 
-  <div x-data="{ activeTab: 'exports' }">
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-4">
-      <li class="nav-item">
-        <button
-          class="nav-link"
-          :class="{ active: activeTab === 'exports' }"
-          @click="activeTab = 'exports'"
-        >
-          <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> {% trans "Exports" %}
-        </button>
-      </li>
-      <li class="nav-item">
-        <button
-          class="nav-link"
-          :class="{ active: activeTab === 'refreshes' }"
-          @click="activeTab = 'refreshes'"
-        >
-          <i class="fa-solid fa-arrows-rotate me-1"></i> {% trans "Refreshes" %}
-        </button>
-      </li>
-      <li class="nav-item">
-        <button
-          class="nav-link"
-          :class="{ active: activeTab === 'forwarders' }"
-          @click="activeTab = 'forwarders'"
-        >
-          <i class="fa-solid fa-share me-1"></i> {% trans "Forwarders" %}
-        </button>
-      </li>
-    </ul>
+  <!-- Tab Cards -->
+  <div class="row g-3" role="tablist">
 
-    <!-- Exports Tab -->
-    <div x-show="activeTab === 'exports'" x-cloak>
-      {% include 'web/partials/dashboard_tab.html' with stats=export_stats label="Export" manage_url='exports:home' manage_label="Manage Exports" tab_type="exports" %}
+    <div class="col-md-4">
+      <div class="card dashboard-tab-card active"
+           role="tab"
+           data-bs-toggle="tab"
+           data-bs-target="#exports-pane"
+           aria-controls="exports-pane"
+           aria-selected="true"
+           tabindex="0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> {% trans "Exports" %}
+            </h5>
+            {% if export_stats.status == 'healthy' %}
+              <span class="badge bg-success">{% trans "Healthy" %}</span>
+            {% elif export_stats.status == 'warning' %}
+              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+            {% elif export_stats.status == 'error' %}
+              <span class="badge bg-danger">{% trans "Issue" %}</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+            {% endif %}
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ export_stats.success_rate }}%</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ export_stats.last_24h_runs }}</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
+            <span class="dashboard-stat-value">{{ export_stats.avg_runtime }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Refreshes Tab -->
-    <div x-show="activeTab === 'refreshes'" x-cloak>
-      {% include 'web/partials/dashboard_tab.html' with stats=refresh_stats label="Refresh" manage_url='refreshes:refresh_configs' manage_label="Manage Refreshes" tab_type="refreshes" %}
+    <div class="col-md-4">
+      <div class="card dashboard-tab-card"
+           role="tab"
+           data-bs-toggle="tab"
+           data-bs-target="#refreshes-pane"
+           aria-controls="refreshes-pane"
+           aria-selected="false"
+           tabindex="-1">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="fa-solid fa-arrows-rotate me-1"></i> {% trans "Refreshes" %}
+            </h5>
+            {% if refresh_stats.status == 'healthy' %}
+              <span class="badge bg-success">{% trans "Healthy" %}</span>
+            {% elif refresh_stats.status == 'warning' %}
+              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+            {% elif refresh_stats.status == 'error' %}
+              <span class="badge bg-danger">{% trans "Issue" %}</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+            {% endif %}
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ refresh_stats.success_rate }}%</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ refresh_stats.last_24h_runs }}</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
+            <span class="dashboard-stat-value">{{ refresh_stats.avg_runtime }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Forwarders Tab -->
-    <div x-show="activeTab === 'forwarders'" x-cloak>
-      {% include 'web/partials/dashboard_tab.html' with stats=forwarding_stats label="Forwarder" manage_url='forwarding:forwarders' manage_label="Manage Forwarding" tab_type="forwarders" %}
+    <div class="col-md-4">
+      <div class="card dashboard-tab-card"
+           role="tab"
+           data-bs-toggle="tab"
+           data-bs-target="#forwarders-pane"
+           aria-controls="forwarders-pane"
+           aria-selected="false"
+           tabindex="-1">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="fa-solid fa-share me-1"></i> {% trans "Forwarders" %}
+            </h5>
+            {% if forwarding_stats.status == 'healthy' %}
+              <span class="badge bg-success">{% trans "Healthy" %}</span>
+            {% elif forwarding_stats.status == 'warning' %}
+              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+            {% elif forwarding_stats.status == 'error' %}
+              <span class="badge bg-danger">{% trans "Issue" %}</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+            {% endif %}
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ forwarding_stats.success_rate }}%</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
+            <span class="dashboard-stat-value">{{ forwarding_stats.last_24h_runs }}</span>
+          </div>
+          <div class="dashboard-stat-row">
+            <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
+            <span class="dashboard-stat-value">{{ forwarding_stats.avg_runtime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="exports-pane" role="tabpanel">
+      {% include 'web/partials/dashboard_tab.html' with stats=export_stats label="Export" tab_type="exports" %}
+    </div>
+    <div class="tab-pane fade" id="refreshes-pane" role="tabpanel">
+      {% include 'web/partials/dashboard_tab.html' with stats=refresh_stats label="Refresh" tab_type="refreshes" %}
+    </div>
+    <div class="tab-pane fade" id="forwarders-pane" role="tabpanel">
+      {% include 'web/partials/dashboard_tab.html' with stats=forwarding_stats label="Forwarder" tab_type="forwarders" %}
     </div>
   </div>
 
   <!-- Empty State (when no data) -->
   {% if export_stats.total_configs == 0 and refresh_stats.total_configs == 0 and forwarding_stats.total_configs == 0 %}
-  <div class="alert alert-info mt-5">
+  <div class="alert alert-info mt-4">
     <h5 class="alert-heading">{% trans "Welcome to CommCare Sync!" %}</h5>
     <p>{% trans "Get started by configuring your CommCare connection and creating your first data export." %}</p>
     <div class="d-flex gap-2 mt-3">

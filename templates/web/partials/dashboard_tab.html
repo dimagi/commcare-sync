@@ -1,54 +1,28 @@
 {% load i18n %}
-{% load humanize %}
 {% load exports_tags %}
 
-<!-- Snapshot Header -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <h4 class="mb-0">{{ label }} {% trans "Snapshot" %}</h4>
-    {% if stats.status == 'healthy' %}
-      <span class="badge bg-success">{% trans "Healthy" %}</span>
-    {% elif stats.status == 'warning' %}
-      <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-    {% elif stats.status == 'error' %}
-      <span class="badge bg-danger">{% trans "Issue" %}</span>
-    {% else %}
-      <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-    {% endif %}
-  </div>
-  <a href="{% url manage_url %}" class="btn btn-outline-primary btn-sm">
-    <i class="fa-solid fa-plus me-1"></i> {{ manage_label }}
-  </a>
+<!-- Status Banner -->
+{% if stats.status == 'healthy' %}
+<div class="alert alert-success d-flex align-items-center mt-3 mb-3">
+  <i class="fa-solid fa-circle-check me-2 flex-shrink-0"></i>
+  <span>{% with label_lower=label|lower %}{% blocktrans %}All {{ label_lower }}s running successfully{% endblocktrans %}{% endwith %}</span>
 </div>
-
-<!-- Stats Boxes -->
-<div class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
-      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Configs" %}</span>
-      <span class="stat-box-value">{{ stats.total_configs }}</span>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
-      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Last 24 H" %}</span>
-      <span class="stat-box-value">{{ stats.last_24h_runs }}</span>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="stat-box border rounded p-2 d-flex align-items-center justify-content-between">
-      <span class="stat-box-label text-uppercase fw-bold text-muted">{% trans "Success %" %}</span>
-      <span class="stat-box-value stat-trend-{{ stats.success_trend }}">{{ stats.success_rate }}%</span>
-      {% if stats.success_trend == 'up' %}
-        <span class="stat-trend-up"><i class="fa-solid fa-arrow-up-long"></i></span>
-      {% elif stats.success_trend == 'down' %}
-        <span class="stat-trend-down"><i class="fa-solid fa-arrow-down-long"></i></span>
-      {% else %}
-        <span class="stat-trend-flat"><i class="fa-solid fa-arrow-right-long"></i></span>
-      {% endif %}
-    </div>
-  </div>
+{% elif stats.status == 'warning' %}
+<div class="alert alert-warning d-flex align-items-center mt-3 mb-3">
+  <i class="fa-solid fa-triangle-exclamation me-2 flex-shrink-0"></i>
+  <span>{% with failed=stats.failed_count label_lower=label|lower %}{% blocktrans %}{{ failed }} {{ label_lower }}(s) failed in the last 24 hours{% endblocktrans %}{% endwith %}</span>
 </div>
+{% elif stats.status == 'error' %}
+<div class="alert alert-danger d-flex align-items-center mt-3 mb-3">
+  <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
+  <span>{% with failed=stats.failed_count label_lower=label|lower %}{% blocktrans %}{{ failed }} {{ label_lower }}(s) failed in the last 24 hours{% endblocktrans %}{% endwith %}</span>
+</div>
+{% elif stats.status == 'neutral' %}
+<div class="alert alert-light d-flex align-items-center mt-3 mb-3">
+  <i class="fa-solid fa-circle-info me-2 flex-shrink-0"></i>
+  <span>{% trans "No runs in the last 24 hours." %}</span>
+</div>
+{% endif %}
 
 <!-- Configurations Table -->
 {% if stats.configs %}
