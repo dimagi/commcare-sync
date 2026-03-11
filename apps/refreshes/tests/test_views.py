@@ -36,6 +36,13 @@ class TestRefreshConfigsListView:
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
+    def test_stats_in_context(self, client, db):
+        url = reverse('refreshes:refresh_configs')
+        response = client.get(url)
+        assert 'export_stats' in response.context
+        assert 'refresh_stats' in response.context
+        assert 'forwarding_stats' in response.context
+
     def test_list_configs(self, client, refresh_config):
         url = reverse('refreshes:refresh_configs')
         response = client.get(url)
