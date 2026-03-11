@@ -3,7 +3,13 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
-from apps.exports.models import ExportConfig, ExportDatabase, ExportRun
+from apps.exports.models import (
+    ExportConfig,
+    ExportDatabase,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+)
 
 User = get_user_model()
 
@@ -57,6 +63,49 @@ def export_config(db, user, project, account, database):
         database=database,
         created_by=user,
     )
+
+
+@pytest.fixture
+def multi_export_config(db, user, account, database):
+    config = MultiProjectExportConfig.objects.create(
+        name='Multi Export Config',
+        account=account,
+        database=database,
+        created_by=user,
+    )
+    return config
+
+
+@pytest.fixture
+def export_run(db, export_config):
+    return ExportRun.objects.create(
+        base_export_config=export_config,
+        status=ExportRun.COMPLETED,
+    )
+
+
+@pytest.fixture
+def multi_export_run(db, multi_export_config):
+    return MultiProjectExportRun.objects.create(
+        base_export_config=multi_export_config,
+        status=MultiProjectExportRun.COMPLETED,
+    )
+
+
+class TestExportConfigBaseProperties:
+    def test_export_config_edit_url(self, export_config):
+        expected = reverse('exports:edit_export_config', args=[export_config.id])
+        assert export_config.edit_url == expected
+
+    def test_multi_export_config_edit_url(self, multi_export_config):
+        expected = reverse('exports:edit_multi_export_config', args=[multi_export_config.id])
+        assert multi_export_config.edit_url == expected
+
+    def test_last_run_log_url_none_when_no_run(self, export_config):
+        assert export_config.last_run_log_url is None
+
+    def test_last_run_log_url_none_when_no_run_multi(self, multi_export_config):
+        assert multi_export_config.last_run_log_url is None
 
 
 class TestExportsHomeView:
