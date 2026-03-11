@@ -262,6 +262,14 @@ class TestRunLogView:
 
 class TestMultiRunLogView:
     @use(authed_client, multi_export_run)
+    def test_requires_login(self):
+        run = multi_export_run()
+        client = authed_client()
+        client.logout()
+        response = client.get(reverse('exports:multi_run_log', args=[run.id]))
+        assert response.status_code == 302
+
+    @use(authed_client, multi_export_run)
     def test_returns_log_content(self):
         run = multi_export_run()
         run.log = 'Multi log output'
