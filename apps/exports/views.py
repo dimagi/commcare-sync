@@ -5,6 +5,7 @@ import os
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 from django.http import (
     Http404,
     HttpResponse,
@@ -12,10 +13,16 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.web.stats import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
 from commcare_sync.views import get_hide_skipped_from_request, get_ui_page_size
 
 from .api_client import fetch_available_configs
@@ -36,20 +43,29 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def home(request):
-    exports = ExportConfig.objects.order_by('-updated_at')
+    now = timezone.now()
+    period = settings.DASHBOARD_STATS_PERIOD
+    current_start = now - period
+    previous_start = current_start - period
+
+    exports = (
+        ExportConfig.objects
+        .select_related('project')
+        .annotate(last_run_at=Max('runs__created_at'))
+        .order_by('-last_run_at', '-updated_at')
+    )
     multi_project_exports = MultiProjectExportConfig.objects.order_by(
         '-updated_at'
     )
 
-    return render(
-        request,
-        'exports/exports_home.html',
-        {
-            'active_tab': 'exports',
-            'exports': exports,
-            'multi_project_exports': multi_project_exports,
-        },
-    )
+    return render(request, 'exports/exports_home.html', {
+        'active_tab': 'exports',
+        'exports': exports,
+        'multi_project_exports': multi_project_exports,
+        'export_stats': _get_export_statistics(current_start, previous_start),
+        'refresh_stats': _get_refresh_statistics(current_start, previous_start),
+        'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+    })
 
 
 @login_required
