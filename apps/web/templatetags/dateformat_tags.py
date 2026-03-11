@@ -4,38 +4,47 @@ register = template.Library()
 
 
 @register.filter()
-def readable_timedelta(timedeltaobj):
+def readable_timedelta(timedelta_obj, short=False):
     """
-    Convert a datetime.timedelta object into Days, Hours, Minutes, Seconds.
+    Convert a datetime.timedelta object into days, hours, minutes and
+    seconds. If ``short`` is ``True``, use abbreviations "d", "h", "m"
+    and "s".
 
     >>> from datetime import timedelta
     >>> readable_timedelta(timedelta(days=1, hours=2, minutes=3, seconds=4))
     '1 days 2 hours 3 minutes 4 seconds'
     >>> readable_timedelta(timedelta(seconds=90))
-    ' 1 minutes 30 seconds'
+    '1 minutes 30 seconds'
+    >>> readable_timedelta(
+    ...    timedelta(days=1, hours=2, minutes=3, seconds=4),
+    ...    short=True,
+    ... )
+    '1d 2h 3m 4s'
+    >>> readable_timedelta(timedelta(seconds=7204), short=True)
+    '2h 4s'
     >>> readable_timedelta(None)
     '---'
     """
-    # stolen from https://stackoverflow.com/a/46928226/8207
-    if not timedeltaobj:
+    # adapted from https://stackoverflow.com/a/46928226/8207
+    if not timedelta_obj:
         return '---'
-    secs = timedeltaobj.total_seconds()
-    timetot = ""
+    secs = int(timedelta_obj.total_seconds())
+    strings = []
     if secs > 86400:  # 60sec * 60min * 24hrs
         days = secs // 86400
-        timetot += "{} days".format(int(days))
+        if days:
+            strings.append(f'{days}d' if short else f'{days} days')
         secs = secs - days * 86400
-
     if secs > 3600:
         hrs = secs // 3600
-        timetot += " {} hours".format(int(hrs))
+        if hrs:
+            strings.append(f'{hrs}h' if short else f'{hrs} hours')
         secs = secs - hrs * 3600
-
     if secs > 60:
         mins = secs // 60
-        timetot += " {} minutes".format(int(mins))
+        if mins:
+            strings.append(f'{mins}m' if short else f'{mins} minutes')
         secs = secs - mins * 60
-
-    if secs > 0:
-        timetot += " {} seconds".format(int(secs))
-    return timetot
+    if secs:
+        strings.append(f'{secs}s' if short else f'{secs} seconds')
+    return ' '.join(strings)
