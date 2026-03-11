@@ -8,7 +8,12 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.exports.models import ExportConfig, ExportRun, MultiProjectExportConfig, MultiProjectExportRun
+from apps.exports.models import (
+    ExportConfig,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+)
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.refreshes.models import RefreshConfig, RefreshRun
@@ -145,7 +150,7 @@ def _get_export_statistics(since_datetime, previous_start=None):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
-        'avg_runtime': readable_timedelta(avg_runtime),
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
 
 
@@ -203,7 +208,7 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
-        'avg_runtime': readable_timedelta(avg_runtime),
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
 
 
@@ -261,7 +266,7 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
-        'avg_runtime': readable_timedelta(avg_runtime),
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
 
 

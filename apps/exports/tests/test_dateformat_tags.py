@@ -15,13 +15,13 @@ def test_doctests():
     ('delta', 'expected'),
     [
         (timedelta(days=7), '7 days'),
-        (timedelta(seconds=45), ' 45 seconds'),
-        (timedelta(minutes=3, seconds=4), ' 3 minutes 4 seconds'),
+        (timedelta(seconds=45), '45 seconds'),
+        (timedelta(minutes=3, seconds=4), '3 minutes 4 seconds'),
         (timedelta(days=1, seconds=30), '1 days 30 seconds'),
         (timedelta(hours=25, minutes=30), '1 days 1 hours 30 minutes'),
         (
             timedelta(hours=2, minutes=3, seconds=4),
-            ' 2 hours 3 minutes 4 seconds',
+            '2 hours 3 minutes 4 seconds',
         ),
         (
             timedelta(days=1, hours=2, minutes=3, seconds=4),
