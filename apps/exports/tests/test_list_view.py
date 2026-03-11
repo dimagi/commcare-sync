@@ -251,3 +251,14 @@ class TestMultiRunLogView:
         )
         assert response.status_code == 200
         assert 'Multi log output' in response.content.decode()
+
+
+class TestExportsHomeViewUpdated:
+    def test_home_includes_config_table_div(self, client, db):
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert 'id="exports-config-table"' in response.content.decode()
+
+    def test_multi_config_appears_in_merged_table(self, client, multi_export_config):
+        response = client.get(reverse('exports:home'))
+        assert multi_export_config.name in response.content.decode()
