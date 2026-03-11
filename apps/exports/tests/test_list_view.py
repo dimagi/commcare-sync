@@ -1,9 +1,15 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
 
-from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
+from apps.commcare.models import (
+    CommCareAccount,
+    CommCareProject,
+    CommCareServer,
+)
 from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
@@ -33,7 +39,9 @@ def authed_client():
 @fixture
 @use('db')
 def server():
-    server, _ = CommCareServer.objects.get_or_create(url='https://www.commcarehq.org')
+    server, _ = CommCareServer.objects.get_or_create(
+        url='https://www.commcarehq.org'
+    )
     yield server
 
 
@@ -103,7 +111,9 @@ class TestExportConfigBaseProperties:
     @use(multi_export_config)
     def test_multi_export_config_edit_url(self):
         config = multi_export_config()
-        expected = reverse('exports:edit_multi_export_config', args=[config.id])
+        expected = reverse(
+            'exports:edit_multi_export_config', args=[config.id]
+        )
         assert config.edit_url == expected
 
     @use(export_config)
@@ -129,3 +139,135 @@ class TestExportsHomeView:
         response = authed_client().get(reverse('exports:home'))
         assert response.status_code == 200
         assert export_config().name in response.content.decode()
+
+
+class TestConfigTableView:
+    @use(authed_client)
+    def test_requires_login(self):
+        client = authed_client()
+        client.logout()
+        response = client.get(reverse('exports:config_table'))
+        assert response.status_code == 302
+
+    @use(authed_client)
+    def test_returns_200(self):
+        response = authed_client().get(reverse('exports:config_table'))
+        assert response.status_code == 200
+
+    @use(authed_client, export_config)
+    def test_config_appears(self):
+        response = authed_client().get(reverse('exports:config_table'))
+        assert export_config().name in response.content.decode()
+
+    @use(authed_client, project, account, database)
+    def test_pagination_default_page_size_10(self):
+        proj = project()
+        acct = account()
+        db_ = database()
+        for i in range(15):
+            ExportConfig.objects.create(
+                name=f'Config {i}',
+                project=proj,
+                account=acct,
+                database=db_,
+            )
+        response = authed_client().get(reverse('exports:config_table'))
+        assert response.status_code == 200
+        shown = response.content.decode().count('Config ')
+        assert shown == 10
+
+    @use(authed_client, project, account, database)
+    def test_page_size_param_respected(self):
+        proj = project()
+        acct = account()
+        db_ = database()
+        for i in range(25):
+            ExportConfig.objects.create(
+                name=f'Config {i}',
+                project=proj,
+                account=acct,
+                database=db_,
+            )
+        response = authed_client().get(
+            reverse('exports:config_table'), {'page_size': 20}
+        )
+        assert response.status_code == 200
+        shown = response.content.decode().count('Config ')
+        assert shown == 20
+
+    @use(authed_client, export_config)
+    def test_etag_match_returns_no_swap(self):
+        export_config()
+        client = authed_client()
+        # First request — get a valid etag
+        response = client.get(reverse('exports:config_table'))
+        assert response.status_code == 200
+        match = re.search(
+            r'data-etag="([a-f0-9]+)"', response.content.decode()
+        )
+        assert match, 'data-etag not found in response'
+        etag = match.group(1)
+
+        # Second request with matching etag — should return HX-Reswap: none
+        response2 = client.get(
+            reverse('exports:config_table'), {'etag': etag}
+        )
+        assert response2.status_code == 200
+        assert response2.get('HX-Reswap') == 'none'
+
+    @use(authed_client, export_config)
+    def test_etag_mismatch_returns_full_content(self):
+        config = export_config()
+        response = authed_client().get(
+            reverse('exports:config_table'), {'etag': 'stale'}
+        )
+        assert response.status_code == 200
+        assert response.get('HX-Reswap') is None
+        assert config.name in response.content.decode()
+
+    @use(authed_client, export_config)
+    def test_page_clamped_when_out_of_range(self):
+        export_config()
+        response = authed_client().get(
+            reverse('exports:config_table'), {'page': 999}
+        )
+        assert response.status_code == 200
+
+
+class TestRunLogView:
+    @use(authed_client, export_run)
+    def test_requires_login(self):
+        run = export_run()
+        client = authed_client()
+        client.logout()
+        response = client.get(reverse('exports:run_log', args=[run.id]))
+        assert response.status_code == 302
+
+    @use(authed_client, export_run)
+    def test_returns_log_content(self):
+        run = export_run()
+        run.log = 'Test log output'
+        run.save()
+        response = authed_client().get(
+            reverse('exports:run_log', args=[run.id])
+        )
+        assert response.status_code == 200
+        assert 'Test log output' in response.content.decode()
+
+    @use(authed_client)
+    def test_404_for_invalid_run(self):
+        response = authed_client().get(reverse('exports:run_log', args=[9999]))
+        assert response.status_code == 404
+
+
+class TestMultiRunLogView:
+    @use(authed_client, multi_export_run)
+    def test_returns_log_content(self):
+        run = multi_export_run()
+        run.log = 'Multi log output'
+        run.save()
+        response = authed_client().get(
+            reverse('exports:multi_run_log', args=[run.id])
+        )
+        assert response.status_code == 200
+        assert 'Multi log output' in response.content.decode()
