@@ -74,7 +74,9 @@ class TestForwarderDetailsSmoke:
         response = client.get(
             reverse('forwarding:forwarder_details', args=[forwarding_config.id])
         )
-        assert 'status-filter-form' in response.content.decode()
+        content = response.content.decode()
+        assert 'status-filter-form' in content
+        assert 'has_status_filter' in content
 
 
 @pytest.mark.django_db
@@ -103,3 +105,26 @@ class TestForwardingRunHistoryTableEndpoint:
         # Use log-{id} marker which only appears in rendered run rows
         assert f'log-{completed_run.id}' in content
         assert f'log-{failed_run.id}' not in content
+
+    def test_no_filter_shows_all_statuses(self, client, forwarding_config):
+        completed_run = ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        failed_run = ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.FAILED,
+        )
+        url = reverse('forwarding:run_history_table', args=[forwarding_config.id])
+        content = client.get(url).content.decode()
+        assert f'log-{completed_run.id}' in content
+        assert f'log-{failed_run.id}' in content
+
+    def test_empty_filter_shows_nothing(self, client, forwarding_config):
+        run = ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        url = reverse('forwarding:run_history_table', args=[forwarding_config.id])
+        content = client.get(url, QUERY_STRING='has_status_filter=1').content.decode()
+        assert f'log-{run.id}' not in content

@@ -64,7 +64,9 @@ class TestRefreshDetailsSmoke:
         response = client.get(
             reverse('refreshes:refresh_details', args=[refresh_config.id])
         )
-        assert 'status-filter-form' in response.content.decode()
+        content = response.content.decode()
+        assert 'status-filter-form' in content
+        assert 'has_status_filter' in content
 
 
 @pytest.mark.django_db
@@ -91,3 +93,23 @@ class TestRefreshRunHistoryTableEndpoint:
         # Use log-{id} marker which only appears in rendered run rows
         assert f'log-{completed_run.id}' in content
         assert f'log-{failed_run.id}' not in content
+
+    def test_no_filter_shows_all_statuses(self, client, refresh_config):
+        completed_run = RefreshRun.objects.create(
+            refresh_config=refresh_config, status=RefreshRun.Status.COMPLETED
+        )
+        failed_run = RefreshRun.objects.create(
+            refresh_config=refresh_config, status=RefreshRun.Status.FAILED
+        )
+        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
+        content = client.get(url).content.decode()
+        assert f'log-{completed_run.id}' in content
+        assert f'log-{failed_run.id}' in content
+
+    def test_empty_filter_shows_nothing(self, client, refresh_config):
+        run = RefreshRun.objects.create(
+            refresh_config=refresh_config, status=RefreshRun.Status.COMPLETED
+        )
+        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
+        content = client.get(url, QUERY_STRING='has_status_filter=1').content.decode()
+        assert f'log-{run.id}' not in content
