@@ -5,35 +5,44 @@
 {% load dateformat_tags %}
 {% block app %}
   <section class="py-4 app-card">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h1 class="h2">
-          {% blocktrans with name=config.name %}{{ name }} - Details{% endblocktrans %}
-        </h1>
-      </div>
-      <div>
-        <div class="d-flex gap-2">
-          <a
-            class="icon-link btn btn-outline-danger btn-sm rounded-pill"
-            href="{% url 'refreshes:delete_refresh_config' config.id %}"
-          >
-            <i class="fa-solid fa-xmark"></i>
-            {% trans "Delete" %}
-          </a>
-        </div>
+    <div
+      class="d-flex justify-content-between align-items-start flex-wrap gap-2"
+    >
+      <h1 class="h2 mb-0">{{ config.name }}</h1>
+      <div class="d-flex gap-2 flex-wrap">
+        <a
+          class="icon-link btn btn-outline-primary btn-sm"
+          href="{% url 'refreshes:edit_refresh_config' config.id %}"
+        >
+          <i class="fa-solid fa-pen-to-square"></i>
+          {% trans "Edit" %}
+        </a>
+        <a
+          class="icon-link btn btn-outline-danger btn-sm"
+          href="{% url 'refreshes:delete_refresh_config' config.id %}"
+        >
+          <i class="fa-solid fa-xmark"></i>
+          {% trans "Delete" %}
+        </a>
       </div>
     </div>
-    <div class="row">
+    <div class="row mt-2">
       <div class="col">
         <span class="text-muted small">{% trans "Database" %}</span>
         <h2 class="h5">{{ config.database.name }}</h2>
       </div>
       <div class="col">
-        <span class="text-muted small">{% trans "Last Modified" %}</span>
-        <h2 class="h5">{{ config.updated_at|naturaltime }}</h2>
+        <span class="text-muted small">{% trans "Schedule" %}</span>
+        <h2 class="h5">
+          {% if config.schedule_display %}
+            {{ config.schedule_display }}
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </h2>
       </div>
     </div>
-    <div class="row">
+    <div class="row mt-2">
       <div class="col">
         <span class="text-muted small"
           >{% trans "Materialized Views (in refresh order)" %}</span
@@ -44,15 +53,6 @@
           {% endfor %}
         </ul>
       </div>
-    </div>
-    <div class="d-flex gap-2">
-      <a
-        class="icon-link btn btn-outline-primary btn-sm rounded-pill mt-2"
-        href="{% url 'refreshes:edit_refresh_config' config.id %}"
-      >
-        <i class="fa-solid fa-pen-to-square"></i>
-        {% trans "Edit" %}
-      </a>
     </div>
   </section>
   {% include 'refreshes/partials/run_history.html' %}
