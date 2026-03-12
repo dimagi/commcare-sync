@@ -135,3 +135,59 @@ class TestForwardingRunLogView:
     def test_404_for_missing(self, client):
         response = client.get(reverse('forwarding:run_log', args=[9999]))
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+class TestForwardersListPageSmoke:
+    """Smoke tests: full-page renders with configs in various run states."""
+
+    def test_renders_200(self, client, db):
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+
+    def test_includes_config_table_div(self, client, db):
+        response = client.get(reverse('forwarding:forwarders'))
+        assert 'id="forwarding-config-table"' in response.content.decode()
+
+    def test_config_appears(self, client, forwarding_config):
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert forwarding_config.name in response.content.decode()
+
+    def test_renders_with_no_runs(self, client, forwarding_config):
+        """Template handles configs with no runs (Never / — paths)."""
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert forwarding_config.name in response.content.decode()
+
+    def test_renders_with_completed_run(self, client, forwarding_config):
+        """Completed run: status icon, log button enabled, duration displayed."""
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.COMPLETED,
+            log='Forwarded 50 rows.',
+        )
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'completed' in response.content.decode()
+
+    def test_renders_with_failed_run(self, client, forwarding_config):
+        """Failed run: log button enabled."""
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.FAILED,
+            log='Error: API returned 500.',
+        )
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'failed' in response.content.decode()
+
+    def test_renders_with_started_run(self, client, forwarding_config):
+        """In-progress run: log button disabled."""
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.STARTED,
+        )
+        response = client.get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'started' in response.content.decode()

@@ -262,3 +262,66 @@ class TestExportsHomeViewUpdated:
     def test_multi_config_appears_in_merged_table(self, client, multi_export_config):
         response = client.get(reverse('exports:home'))
         assert multi_export_config.name in response.content.decode()
+
+
+@pytest.mark.django_db
+class TestExportsHomeSmoke:
+    """Smoke tests: full-page renders with configs in various run states."""
+
+    def test_renders_with_no_runs(self, client, export_config):
+        """Template handles configs with no runs (Never / — paths)."""
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert export_config.name in response.content.decode()
+
+    def test_renders_with_completed_run(self, client, export_config):
+        """Template handles completed run: status icon, log button enabled, duration."""
+        run = ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.COMPLETED,
+            log='Exported 100 rows.',
+        )
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert export_config.name in content
+        assert 'completed' in content
+
+    def test_renders_with_failed_run(self, client, export_config):
+        """Template handles failed run: log button enabled."""
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.FAILED,
+            log='Error: connection refused.',
+        )
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert 'failed' in response.content.decode()
+
+    def test_renders_with_started_run(self, client, export_config):
+        """Template handles in-progress run: log button disabled."""
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.STARTED,
+        )
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert 'started' in response.content.decode()
+
+    def test_renders_multi_config_with_completed_run(self, client, multi_export_config):
+        """Template handles multi-project config with a completed run."""
+        run = MultiProjectExportRun.objects.create(
+            base_export_config=multi_export_config,
+            status=MultiProjectExportRun.COMPLETED,
+        )
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert multi_export_config.name in response.content.decode()
+
+    def test_new_export_split_dropdown_present(self, client, db):
+        """Split dropdown for New Export / Multi-Project Export is rendered."""
+        response = client.get(reverse('exports:home'))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert 'dropdown-toggle-split' in content
+        assert 'Multi-Project Export' in content
