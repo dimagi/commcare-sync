@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('commcare/', include('apps.commcare.urls')),
+    path('databases/', include('apps.db.urls')),
     path('exports/', include('apps.exports.urls')),
     path('forwarding/', include('apps.forwarding.urls')),
     path('refreshes/', include('apps.refreshes.urls')),
