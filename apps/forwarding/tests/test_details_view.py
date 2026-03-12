@@ -86,6 +86,22 @@ class TestForwarderDetailsSmoke:
         assert 'status-filter-form' in content
         assert 'has_status_filter' in content
 
+    @use(authed_client, forwarding_config)
+    def test_run_history_section_present(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        content = response.content.decode()
+        assert 'Run History' in content
+        assert 'id="run-table"' in content
+
+    @use(authed_client, forwarding_config)
+    def test_schedule_column_present(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        assert 'Schedule' in response.content.decode()
+
 
 class TestForwardingRunHistoryTableEndpoint:
     @use(authed_client, forwarding_config)
@@ -102,7 +118,7 @@ class TestForwardingRunHistoryTableEndpoint:
         )
 
     @use(authed_client, forwarding_config)
-    def test_status_filter_works(self):
+    def test_status_filter_excludes_unchecked(self):
         config = forwarding_config()
         completed_run = ForwardingRun.objects.create(
             forwarding_config=config,
@@ -148,3 +164,16 @@ class TestForwardingRunHistoryTableEndpoint:
             url, QUERY_STRING='has_status_filter=1'
         ).content.decode()
         assert f'log-{run.id}' not in content
+
+    @use(authed_client, forwarding_config)
+    def test_pagination_default_10(self):
+        config = forwarding_config()
+        for _ in range(15):
+            ForwardingRun.objects.create(
+                forwarding_config=config,
+                status=ForwardingRun.Status.COMPLETED,
+            )
+        url = reverse('forwarding:run_history_table', args=[config.id])
+        response = authed_client().get(url)
+        assert response.status_code == 200
+        assert 'pagination' in response.content.decode()
