@@ -1,0 +1,119 @@
+from django.contrib.auth import get_user_model
+from django.test import Client
+from django.urls import reverse
+from unmagic import fixture, use
+
+from apps.db.models import Database
+from apps.forwarding.models import (
+    ForwardingConfig,
+    ForwardingDestination,
+    ForwardingRun,
+)
+
+User = get_user_model()
+
+
+@fixture
+@use('db')
+def user():
+    yield User.objects.create_user(
+        username='detailsuser_fwd', email='dfwd@example.com', password='pass'
+    )
+
+
+@fixture
+def authed_client():
+    client = Client()
+    client.force_login(user())
+    yield client
+
+
+@fixture
+@use('db')
+def database():
+    yield Database.objects.create(
+        name='TestDB',
+        connection_string='postgresql://localhost/test',
+    )
+
+
+@fixture
+def destination():
+    yield ForwardingDestination.objects.create(
+        name='Test API',
+        api_url='https://example.com/api',
+    )
+
+
+@fixture
+def forwarding_config():
+    yield ForwardingConfig.objects.create(
+        name='Test Forwarder',
+        database=database(),
+        destination=destination(),
+        query='SELECT 1',
+    )
+
+
+class TestForwarderDetailsSmoke:
+    @use(authed_client, forwarding_config)
+    def test_returns_200(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        assert response.status_code == 200
+
+    @use(authed_client, forwarding_config)
+    def test_no_details_suffix_in_heading(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        assert '- Details' not in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_run_table_present(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        assert 'id="run-table"' in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_status_filter_dropdown_present(self):
+        response = authed_client().get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config().id])
+        )
+        assert 'status-filter-form' in response.content.decode()
+
+
+class TestForwardingRunHistoryTableEndpoint:
+    @use(authed_client, forwarding_config)
+    def test_returns_200(self):
+        assert (
+            authed_client()
+            .get(
+                reverse(
+                    'forwarding:run_history_table', args=[forwarding_config().id]
+                )
+            )
+            .status_code
+            == 200
+        )
+
+    @use(authed_client, forwarding_config)
+    def test_status_filter_works(self):
+        config = forwarding_config()
+        completed_run = ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        failed_run = ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.FAILED,
+        )
+        url = reverse('forwarding:run_history_table', args=[config.id])
+        content = authed_client().get(
+            url, QUERY_STRING='has_status_filter=1&status_filter=completed'
+        ).content.decode()
+        # Use log-{id} marker which only appears in rendered run rows
+        assert f'log-{completed_run.id}' in content
+        assert f'log-{failed_run.id}' not in content
