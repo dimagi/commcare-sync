@@ -1,0 +1,62 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+  {% load humanize %}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Database Connections" %}</h1>
+    <h2 class="lead">
+      {% trans "Manage the databases that you export data to here" %}
+    </h2>
+    {% if databases.exists %}
+      <div class="alert alert-info">
+        {% trans "Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases." %}
+      </div>
+      {% if user.is_superuser %}
+        <a
+          class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+          href="{% url 'db:create_database' %}"
+        >
+          <i class="fa fa-plus"></i>
+          {% trans "New Database Connection" %}
+        </a>
+      {% endif %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Database" %}</th>
+            <th>{% trans "Owner" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for database in databases %}
+            <tr>
+              <td>
+                {% if user.is_superuser %}
+                  <a href="{% url 'db:edit_database' database.id %}">
+                    {{ database.name }}
+                  </a>
+                {% else %}
+                  {{ database.name }}
+                {% endif %}
+              </td>
+              <td>
+                {% if request.user == database.owner %}{% trans "You" %}{% else %}{{ database.owner.get_display_name }}{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-warning">
+        {% trans "No database connections found!" %}
+      </div>
+      <a
+        class="icon-link btn btn-primary btn-sm rounded-pill"
+        href="{% url 'db:create_database' %}"
+      >
+        <i class="fa fa-plus"></i>
+        {% trans "Add Your First Database Connection" %}
+      </a>
+    {% endif %}
+  </section>
+{% endblock app %}
