@@ -4,8 +4,6 @@ from reversion.admin import VersionAdmin
 from . import models
 
 
-admin.site.register(models.ExportDatabase)
-
 
 @admin.register(models.ExportConfig)
 class ExportConfigAdmin(VersionAdmin):

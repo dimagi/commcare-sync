@@ -1,8 +1,8 @@
 from django import forms
-from django.utils.translation import gettext_lazy as _
 
 from apps.commcare.models import CommCareProject, CommCareAccount
-from .models import ExportConfig, MultiProjectExportConfig, ExportDatabase
+from apps.db.models import Database
+from .models import ExportConfig, MultiProjectExportConfig
 from .api_client import download_config_file
 
 
@@ -42,7 +42,7 @@ class ConfigFileFetchMixin:
 class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
     project = forms.ModelChoiceField(CommCareProject.objects.order_by('domain'))
     account = forms.ModelChoiceField(CommCareAccount.objects.order_by('username'))
-    database = forms.ModelChoiceField(ExportDatabase.objects.order_by('name'))
+    database = forms.ModelChoiceField(Database.objects.order_by('name'))
     extra_args = forms.CharField(widget=forms.TextInput, required=False)
     det_config_url = forms.CharField(widget=forms.HiddenInput(), required=False)
 
@@ -81,28 +81,3 @@ class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
         )
 
 
-class CreateExportDatabaseForm(forms.ModelForm):
-    connection_string = forms.CharField()
-
-    class Meta:
-        model = ExportDatabase
-        fields = ('name', 'connection_string')
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.cleaned_data['connection_string']:
-            # Set connection_string through the property setter to encrypt it
-            instance.connection_string = self.cleaned_data['connection_string']
-        if commit:
-            instance.save()
-        return instance
-
-
-class EditExportDatabaseForm(CreateExportDatabaseForm):
-    connection_string = forms.CharField(
-        required=False,
-        help_text=(_(
-            'Connection strings are not prepopulated in the form because they '
-            'may contain passwords.'
-        ))
-    )
