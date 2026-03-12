@@ -78,6 +78,20 @@ class TestForwarderDetailsSmoke:
         assert 'status-filter-form' in content
         assert 'has_status_filter' in content
 
+    def test_run_history_section_present(self, client, forwarding_config):
+        response = client.get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config.id])
+        )
+        content = response.content.decode()
+        assert 'Run History' in content
+        assert 'id="run-table"' in content
+
+    def test_schedule_column_present(self, client, forwarding_config):
+        response = client.get(
+            reverse('forwarding:forwarder_details', args=[forwarding_config.id])
+        )
+        assert 'Schedule' in response.content.decode()
+
 
 @pytest.mark.django_db
 class TestForwardingRunHistoryTableEndpoint:
@@ -89,7 +103,7 @@ class TestForwardingRunHistoryTableEndpoint:
             == 200
         )
 
-    def test_status_filter_works(self, client, forwarding_config):
+    def test_status_filter_excludes_unchecked(self, client, forwarding_config):
         completed_run = ForwardingRun.objects.create(
             forwarding_config=forwarding_config,
             status=ForwardingRun.Status.COMPLETED,
@@ -128,3 +142,14 @@ class TestForwardingRunHistoryTableEndpoint:
         url = reverse('forwarding:run_history_table', args=[forwarding_config.id])
         content = client.get(url, QUERY_STRING='has_status_filter=1').content.decode()
         assert f'log-{run.id}' not in content
+
+    def test_pagination_default_10(self, client, forwarding_config):
+        for _ in range(15):
+            ForwardingRun.objects.create(
+                forwarding_config=forwarding_config,
+                status=ForwardingRun.Status.COMPLETED,
+            )
+        url = reverse('forwarding:run_history_table', args=[forwarding_config.id])
+        response = client.get(url)
+        assert response.status_code == 200
+        assert 'pagination' in response.content.decode()

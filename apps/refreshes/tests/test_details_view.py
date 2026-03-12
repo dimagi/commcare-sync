@@ -68,6 +68,20 @@ class TestRefreshDetailsSmoke:
         assert 'status-filter-form' in content
         assert 'has_status_filter' in content
 
+    def test_run_history_section_present(self, client, refresh_config):
+        response = client.get(
+            reverse('refreshes:refresh_details', args=[refresh_config.id])
+        )
+        content = response.content.decode()
+        assert 'Run History' in content
+        assert 'id="run-table"' in content
+
+    def test_schedule_column_present(self, client, refresh_config):
+        response = client.get(
+            reverse('refreshes:refresh_details', args=[refresh_config.id])
+        )
+        assert 'Schedule' in response.content.decode()
+
 
 @pytest.mark.django_db
 class TestRefreshRunHistoryTableEndpoint:
@@ -79,7 +93,7 @@ class TestRefreshRunHistoryTableEndpoint:
             == 200
         )
 
-    def test_status_filter_works(self, client, refresh_config):
+    def test_status_filter_excludes_unchecked(self, client, refresh_config):
         completed_run = RefreshRun.objects.create(
             refresh_config=refresh_config, status=RefreshRun.Status.COMPLETED
         )
@@ -113,3 +127,13 @@ class TestRefreshRunHistoryTableEndpoint:
         url = reverse('refreshes:run_history_table', args=[refresh_config.id])
         content = client.get(url, QUERY_STRING='has_status_filter=1').content.decode()
         assert f'log-{run.id}' not in content
+
+    def test_pagination_default_10(self, client, refresh_config):
+        for _ in range(15):
+            RefreshRun.objects.create(
+                refresh_config=refresh_config, status=RefreshRun.Status.COMPLETED
+            )
+        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
+        response = client.get(url)
+        assert response.status_code == 200
+        assert 'pagination' in response.content.decode()
