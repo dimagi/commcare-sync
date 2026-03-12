@@ -1,5 +1,4 @@
 import reversion
-from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
@@ -9,47 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel
+from apps.db.models import Database as ExportDatabase
 from apps.exports.scheduling import export_is_scheduled_to_run
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
-
-
-class ExportDatabase(BaseModel):
-    name = models.CharField(max_length=100)
-    connection_string_encrypted = models.CharField(max_length=1000)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-    )
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def connection_string(self):
-        """Decrypt and return the connection string."""
-        if not self.connection_string_encrypted:
-            return ''
-
-        fernet_keys = (  # Include rotated keys for decryption
-            key.encode() if isinstance(key, str) else key
-            for key in settings.FERNET_KEYS
-        )
-        fernet = MultiFernet([Fernet(k) for k in fernet_keys])
-        encrypted_bytes = self.connection_string_encrypted.encode()
-        decrypted_bytes = fernet.decrypt(encrypted_bytes)
-        return decrypted_bytes.decode()
-
-    @connection_string.setter
-    def connection_string(self, value):
-        """Encrypt and store the connection string."""
-        if not value:
-            self.connection_string_encrypted = ''
-            return
-
-        key = settings.FERNET_KEYS[0]  # Encrypt using the current key
-        fernet = Fernet(key.encode() if isinstance(key, str) else key)
-        encrypted_bytes = fernet.encrypt(value.encode())
-        self.connection_string_encrypted = encrypted_bytes.decode()
 
 
 class ExportConfigBase(BaseModel):
@@ -58,7 +19,7 @@ class ExportConfigBase(BaseModel):
         'commcare.CommCareAccount',
         on_delete=models.CASCADE,
     )
-    database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
+    database = models.ForeignKey('db.Database', on_delete=models.CASCADE)
     config_file = models.FileField(upload_to='export-configs/')
     batch_size = models.PositiveIntegerField(
         default=500,

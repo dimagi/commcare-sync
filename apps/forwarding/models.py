@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 from apps.schedules.mixin import ScheduleMixin
 
