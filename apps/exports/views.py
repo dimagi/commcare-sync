@@ -27,8 +27,8 @@ from apps.web.stats import (
 )
 from commcare_sync.views import (
     get_config_page_size,
-    get_hide_skipped_from_request,
     get_page_from_request,
+    get_run_statuses_from_request,
     get_ui_page_size,
 )
 
@@ -317,39 +317,44 @@ def delete_multi_export_config(request, export_id):
 @login_required
 def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
-    runs = export.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
-        )
-
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(export.runs.order_by('-created_at'), page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     return render(
         request,
         'exports/export_details.html',
         {
             'active_tab': 'exports',
             'export': export,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
-            'hide_skipped': hide_skipped,
-            'run_history_url': reverse(
-                'exports:run_history_table', args=[export.id]
-            ),
+            'runs': page_obj,
+            'run_history_url': reverse('exports:run_history_table', args=[export.id]),
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 
 
 @login_required
+@require_GET
 def run_history_table(request, export_id):
     """HTMX endpoint to refresh the run history table."""
     export = get_object_or_404(ExportConfig, id=export_id)
-    runs = export.runs
-    hide_skipped = get_hide_skipped_from_request(request)
     is_multi_project = request.GET.get('is_multi_project') == 'true'
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
-        )
+    runs_qs = export.runs.order_by('-created_at')
+    statuses = get_run_statuses_from_request(request)
+    if statuses is not None:
+        runs_qs = runs_qs.filter(status__in=statuses)
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(runs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     run_history_url = reverse('exports:run_history_table', args=[export.id])
     if is_multi_project:
         run_history_url += '?is_multi_project=true'
@@ -358,9 +363,11 @@ def run_history_table(request, export_id):
         'exports/partials/run_history_table.html',
         {
             'export': export,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'runs': page_obj,
             'is_multi_project': is_multi_project,
             'run_history_url': run_history_url,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 
@@ -396,12 +403,13 @@ def _download_config_file(export_file_field):
 @login_required
 def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
-    runs = export.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
-        )
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(export.runs.order_by('-created_at'), page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     run_history_url = (
         reverse('exports:run_history_table', args=[export.id])
         + '?is_multi_project=true'
@@ -412,9 +420,10 @@ def multi_export_details(request, export_id):
         {
             'active_tab': 'exports',
             'export': export,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
-            'hide_skipped': hide_skipped,
+            'runs': page_obj,
             'run_history_url': run_history_url,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 

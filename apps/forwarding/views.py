@@ -20,9 +20,8 @@ from apps.web.stats import (
 )
 from commcare_sync.views import (
     get_config_page_size,
-    get_hide_skipped_from_request,
     get_page_from_request,
-    get_ui_page_size,
+    get_run_statuses_from_request,
 )
 
 from .forms import (
@@ -288,43 +287,52 @@ def edit_destination(request, destination_id):
 def forwarder_details(request, forwarder_id):
     """Display details for a forwarding configuration."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-    runs = forwarder.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
-        )
-
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(forwarder.runs.order_by('-created_at'), page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     return render(
         request,
         'forwarding/forwarder_details.html',
         {
             'active_tab': 'forwarders',
             'forwarder': forwarder,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
-            'hide_skipped': hide_skipped,
+            'runs': page_obj,
+            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 
 
 @login_required
+@require_GET
 def run_history_table(request, forwarder_id):
     """HTMX endpoint to refresh the run history table."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-    runs = forwarder.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
-        )
-
+    runs_qs = forwarder.runs.order_by('-created_at')
+    statuses = get_run_statuses_from_request(request)
+    if statuses is not None:
+        runs_qs = runs_qs.filter(status__in=statuses)
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(runs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     return render(
         request,
         'forwarding/partials/run_history_table.html',
         {
             'forwarder': forwarder,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'runs': page_obj,
+            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 

@@ -1,7 +1,11 @@
 import pytest
 from django.test import RequestFactory
 
-from commcare_sync.views import get_config_page_size, get_page_from_request
+from commcare_sync.views import (
+    get_config_page_size,
+    get_page_from_request,
+    get_run_statuses_from_request,
+)
 
 VALID_PAGE_SIZES = [10, 20, 50]
 
@@ -44,3 +48,27 @@ class TestGetPageFromRequest:
 
     def test_non_integer_returns_1(self):
         assert get_page_from_request(self._req('page=abc')) == 1
+
+
+class TestGetRunStatusesFromRequest:
+    def test_returns_none_when_no_param(self, rf):
+        request = rf.get('/')
+        assert get_run_statuses_from_request(request) is None
+
+    def test_returns_empty_list_when_sentinel_but_no_statuses(self, rf):
+        request = rf.get('/', {'has_status_filter': '1'})
+        assert get_run_statuses_from_request(request) == []
+
+    def test_returns_checked_statuses(self, rf):
+        request = rf.get(
+            '/',
+            QUERY_STRING='has_status_filter=1&status_filter=queued&status_filter=completed',
+        )
+        assert set(get_run_statuses_from_request(request)) == {'queued', 'completed'}
+
+    def test_ignores_invalid_status_values(self, rf):
+        request = rf.get(
+            '/',
+            QUERY_STRING='has_status_filter=1&status_filter=bogus&status_filter=completed',
+        )
+        assert get_run_statuses_from_request(request) == ['completed']
