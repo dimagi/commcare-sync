@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from commcare_sync.views import (
     get_hide_skipped_from_request,
     get_ui_page_size,

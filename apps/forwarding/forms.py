@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from apps.schedules.forms import ScheduleFormMixin
 
 from .models import ForwardingConfig, ForwardingDestination
