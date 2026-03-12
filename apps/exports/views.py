@@ -102,17 +102,6 @@ def home(request):
     page_obj = _merged_export_configs(page_size, page_num)
     etag = _compute_exports_etag(page_obj.object_list)
 
-    # Legacy variables kept for template compatibility until Task 4 updates exports_home.html
-    exports = (
-        ExportConfig.objects
-        .select_related('project')
-        .annotate(last_run_at=Max('runs__created_at'))
-        .order_by('-last_run_at', '-updated_at')
-    )
-    multi_project_exports = MultiProjectExportConfig.objects.order_by(
-        '-updated_at'
-    )
-
     return render(
         request,
         'exports/exports_home.html',
@@ -122,8 +111,6 @@ def home(request):
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
             'etag': etag,
-            'exports': exports,
-            'multi_project_exports': multi_project_exports,
             'export_stats': _get_export_statistics(
                 current_start, previous_start
             ),
