@@ -340,3 +340,56 @@ class TestRefreshRunLogView:
     def test_404_for_missing(self):
         response = _client().get(reverse('refreshes:run_log', args=[9999]))
         assert response.status_code == 404
+
+
+class TestRefreshesListPageSmoke:
+    """Smoke tests: full-page renders with configs in various run states."""
+
+    @use(_client, 'db')
+    def test_renders_200(self):
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert response.status_code == 200
+
+    @use(_client, 'db')
+    def test_includes_config_table_div(self):
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert 'id="refreshes-config-table"' in response.content.decode()
+
+    @use(_client, _refresh_config)
+    def test_renders_with_no_runs(self):
+        config = _refresh_config()
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert response.status_code == 200
+        assert config.name in response.content.decode()
+
+    @use(_client, _refresh_config)
+    def test_renders_with_completed_run(self):
+        RefreshRun.objects.create(
+            refresh_config=_refresh_config(),
+            status=RefreshRun.Status.COMPLETED,
+            log='Refreshed 2 views.',
+        )
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert response.status_code == 200
+        assert 'completed' in response.content.decode()
+
+    @use(_client, _refresh_config)
+    def test_renders_with_failed_run(self):
+        RefreshRun.objects.create(
+            refresh_config=_refresh_config(),
+            status=RefreshRun.Status.FAILED,
+            log='Error refreshing.',
+        )
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert response.status_code == 200
+        assert 'failed' in response.content.decode()
+
+    @use(_client, _refresh_config)
+    def test_renders_with_started_run(self):
+        RefreshRun.objects.create(
+            refresh_config=_refresh_config(),
+            status=RefreshRun.Status.STARTED,
+        )
+        response = _client().get(reverse('refreshes:refresh_configs'))
+        assert response.status_code == 200
+        assert 'started' in response.content.decode()

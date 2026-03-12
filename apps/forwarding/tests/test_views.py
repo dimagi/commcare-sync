@@ -159,3 +159,63 @@ class TestForwardingRunLogView:
             reverse('forwarding:run_log', args=[9999])
         )
         assert response.status_code == 404
+
+
+class TestForwardersListPageSmoke:
+    """Smoke tests: full-page renders with configs in various run states."""
+
+    @use(authed_client)
+    def test_renders_200(self):
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+
+    @use(authed_client)
+    def test_includes_config_table_div(self):
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert 'id="forwarding-config-table"' in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_config_appears(self):
+        config = forwarding_config()
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert config.name in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_renders_with_no_runs(self):
+        config = forwarding_config()
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert config.name in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_renders_with_completed_run(self):
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config(),
+            status=ForwardingRun.Status.COMPLETED,
+            log='Forwarded 50 rows.',
+        )
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'completed' in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_renders_with_failed_run(self):
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config(),
+            status=ForwardingRun.Status.FAILED,
+            log='Error: API returned 500.',
+        )
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'failed' in response.content.decode()
+
+    @use(authed_client, forwarding_config)
+    def test_renders_with_started_run(self):
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config(),
+            status=ForwardingRun.Status.STARTED,
+        )
+        response = authed_client().get(reverse('forwarding:forwarders'))
+        assert response.status_code == 200
+        assert 'started' in response.content.decode()
