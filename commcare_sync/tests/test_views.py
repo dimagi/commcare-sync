@@ -2,12 +2,13 @@ import pytest
 from django.test import RequestFactory
 
 from commcare_sync.views import (
+    _VALID_CONFIG_PAGE_SIZES,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
 )
 
-VALID_PAGE_SIZES = [10, 20, 50]
+VALID_PAGE_SIZES = list(_VALID_CONFIG_PAGE_SIZES)
 
 
 class TestGetConfigPageSize:
@@ -71,4 +72,4 @@ class TestGetRunStatusesFromRequest:
             '/',
             QUERY_STRING='has_status_filter=1&status_filter=bogus&status_filter=completed',
         )
-        assert get_run_statuses_from_request(request) == ['completed']
+        assert set(get_run_statuses_from_request(request)) == {'completed'}

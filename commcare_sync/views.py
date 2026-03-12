@@ -38,6 +38,11 @@ def get_page_from_request(request):
         return 1
 
 
+# Valid run status values for filtering.
+# These must match the status field constants in ExportRunBase and equivalent models
+# (exports.models.ExportRunBase, refreshes.models.RefreshRunBase, etc.).
+# The model constants are: QUEUED='queued', STARTED='started', COMPLETED='completed',
+# FAILED='failed', SKIPPED='skipped', MULTIPLE='multiple'.
 # Note: 'multiple' (ExportRunBase.MULTIPLE) is intentionally excluded — it is
 # an aggregate status for multi-project parent runs, not a per-run filter state.
 _VALID_RUN_STATUSES = {'queued', 'started', 'completed', 'failed', 'skipped'}
