@@ -11,7 +11,8 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
-from apps.exports.models import ExportConfig, ExportDatabase
+from apps.db.models import Database as ExportDatabase
+from apps.exports.models import ExportConfig
 
 
 def pytest_configure(config):

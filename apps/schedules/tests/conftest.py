@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from apps.forwarding.models import ForwardingDestination
 
 User = get_user_model()

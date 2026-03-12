@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 
 from ..forms import RefreshConfigForm
 from ..models import RefreshConfig

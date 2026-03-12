@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from unmagic import fixture, use
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 
 User = get_user_model()
 

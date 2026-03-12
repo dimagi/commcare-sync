@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.urls import reverse
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 
 from ..models import RefreshConfig, RefreshRun
 

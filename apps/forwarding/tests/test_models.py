@@ -7,7 +7,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from reversion.models import Version
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from apps.schedules.mixin import ScheduleMixin
 
 from ..models import (

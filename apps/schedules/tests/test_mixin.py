@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 from apps.forwarding.models import ForwardingConfig, ForwardingDestination
 from apps.schedules.mixin import ScheduleMixin
 

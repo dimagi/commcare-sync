@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from reversion.models import Version
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database as ExportDatabase
 
 from ..models import RefreshConfig, RefreshRun
 
