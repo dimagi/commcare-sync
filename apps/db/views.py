@@ -22,9 +22,7 @@ def create_database(request):
     if request.method == 'POST':
         form = CreateDatabaseForm(request.POST, request.FILES)
         if form.is_valid():
-            db = form.save(commit=False)
-            db.owner = request.user
-            db.save()
+            db = form.save()
             messages.success(request, f'Database {db.name} was successfully created.')
             return HttpResponseRedirect(reverse('db:databases'))
     else:
