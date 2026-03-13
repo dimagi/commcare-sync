@@ -251,7 +251,7 @@ def run_forwarding(request, forwarder_id):
         forwarding_config=forwarder,
         forwarding_config_version=forwarder.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user,
+        triggered_by=request.user,
     )
 
     result = run_forwarding_task.delay(forwarding_run.id)
