@@ -66,28 +66,25 @@ class TestRefreshConfig:
         new_count = Version.objects.get_for_object(refresh_config).count()
         assert new_count == initial_count + 1
 
-    def test_validation_rejects_non_postgresql(self, user):
+    def test_validation_rejects_non_postgresql(self):
         db = Database.objects.create(
             name='MySQL DB',
             connection_string='mysql://localhost/test',
-            owner=user,
         )
         config = RefreshConfig(
             name='Invalid',
             database=db,
             materialized_views=['view1'],
-            created_by=user,
         )
         with pytest.raises(ValidationError) as exc_info:
             config.full_clean()
         assert 'database' in exc_info.value.error_dict
 
-    def test_validation_rejects_empty_views(self, user, database):
+    def test_validation_rejects_empty_views(self, database):
         config = RefreshConfig(
             name='Invalid',
             database=database,
             materialized_views=[],
-            created_by=user,
         )
         with pytest.raises(ValidationError) as exc_info:
             config.full_clean()

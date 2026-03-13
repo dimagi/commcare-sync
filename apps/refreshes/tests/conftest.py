@@ -16,21 +16,19 @@ def user(db):
 
 
 @pytest.fixture
-def database(db, user):
+def database(db):
     return Database.objects.create(
         name='Test PostgreSQL',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 
 @pytest.fixture
-def refresh_config(db, user, database):
+def refresh_config(db, database):
     return RefreshConfig.objects.create(
         name='Test Refresh Config',
         database=database,
         materialized_views=['public.view1', 'public.view2'],
-        created_by=user,
     )
 
 
