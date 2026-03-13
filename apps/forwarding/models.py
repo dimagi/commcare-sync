@@ -29,9 +29,6 @@ class ForwardingDestination(BaseModel):
         blank=True,
         help_text=_('Password for basic authentication'),
     )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
 
     def __str__(self):
         return self.name
@@ -45,9 +42,9 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
     PERIODIC_TASK_PREFIX = 'Run forwarding'
 
     name = models.CharField(max_length=100)
-    database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    database = models.ForeignKey(Database, on_delete=models.PROTECT)
     destination = models.ForeignKey(
-        ForwardingDestination, on_delete=models.CASCADE
+        ForwardingDestination, on_delete=models.PROTECT
     )
     query = models.TextField(
         help_text=_(
@@ -61,9 +58,6 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
             'Query parameters (one per line). Mapped to :param1, :param2, '
             'etc. in the query.'
         ),
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
 
     def __str__(self):

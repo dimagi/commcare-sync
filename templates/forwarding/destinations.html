@@ -24,7 +24,6 @@
           <tr>
             <th>{% trans "Name" %}</th>
             <th>{% trans "API URL" %}</th>
-            <th>{% trans "Owner" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -42,9 +41,6 @@
                 {% endif %}
               </td>
               <td>{{ destination.api_url }}</td>
-              <td>
-                {% if request.user == destination.owner %}{% trans "You" %}{% else %}{{ destination.owner.get_display_name }}{% endif %}
-              </td>
             </tr>
           {% endfor %}
         </tbody>
