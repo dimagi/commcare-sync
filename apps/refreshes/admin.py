@@ -69,7 +69,7 @@ class RefreshRunAdmin(admin.ModelAdmin):
         'started_at',
         'completed_at',
         'triggered_from_ui',
-        'triggering_user',
+        'triggered_by',
         'log',
         'view_results',
         'created_at',
@@ -94,7 +94,7 @@ class RefreshRunAdmin(admin.ModelAdmin):
                     'started_at',
                     'completed_at',
                     'triggered_from_ui',
-                    'triggering_user',
+                    'triggered_by',
                 )
             },
         ),

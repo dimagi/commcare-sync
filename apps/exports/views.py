@@ -250,7 +250,7 @@ def run_export(request, export_id):
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user,
+        triggered_by=request.user,
     )
 
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
@@ -268,7 +268,7 @@ def run_multi_export(request, export_id):
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user
+        triggered_by=request.user
     )
 
     result = run_multi_project_export_task.delay(
