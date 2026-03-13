@@ -23,7 +23,7 @@ class RefreshConfig(ScheduleMixin, BaseModel):
     name = models.CharField(max_length=100)
     database = models.ForeignKey(
         Database,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         help_text=_('PostgreSQL database connection'),
     )
     materialized_views = models.JSONField(
@@ -40,10 +40,6 @@ class RefreshConfig(ScheduleMixin, BaseModel):
             'the view during refresh. Requires a unique index on each view.'
         ),
     )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
-
     class Meta:
         ordering = ['-updated_at']
 
@@ -101,7 +97,7 @@ class RefreshRun(RunBaseModel):
     )
     refresh_config_version = models.ForeignKey(
         Version,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
     )
     started_at = models.DateTimeField(

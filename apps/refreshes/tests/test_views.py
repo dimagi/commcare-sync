@@ -21,11 +21,10 @@ def client(client, user):
 
 
 @pytest.fixture
-def non_pg_database(db, user):
+def non_pg_database(db):
     return Database.objects.create(
         name='MySQL DB',
         connection_string='mysql://localhost/test',
-        owner=user,
     )
 
 
