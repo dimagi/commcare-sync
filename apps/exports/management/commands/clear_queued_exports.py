@@ -10,8 +10,8 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         queued_runs = chain(
-            ExportRun.objects.filter(status=ExportRun.QUEUED),
-            MultiProjectExportRun.objects.filter(status=ExportRun.QUEUED)
+            ExportRun.objects.filter(status=ExportRun.Status.QUEUED),
+            MultiProjectExportRun.objects.filter(status=ExportRun.Status.QUEUED)
         )
         for export_run in queued_runs:
 

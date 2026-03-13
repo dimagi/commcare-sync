@@ -29,7 +29,7 @@ def run_all_exports_task(self):
 def run_export_task(self, export_run_id, force_sync_all_data, ignore_schedule_checks=False):
     export_run = ExportRun.objects.select_related('base_export_config').get(id=export_run_id)
     export = export_run.base_export_config
-    if export_run.status != ExportRun.QUEUED:
+    if export_run.status != ExportRun.Status.QUEUED:
         # this export has already been run, ignore
         return
     if ignore_schedule_checks or export.is_scheduled_to_run():

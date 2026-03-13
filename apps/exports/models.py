@@ -45,7 +45,7 @@ class ExportConfigBase(BaseModel):
     def last_run(self):
         return (
             self.runs
-            .exclude(status=ExportRun.QUEUED)
+            .exclude(status=ExportRun.Status.QUEUED)
             .order_by('-created_at')
             .first()
         )
@@ -59,7 +59,7 @@ class ExportConfigBase(BaseModel):
         # the latest queued run.
         last_run = self.runs.order_by('-created_at').first()
         if last_run:
-            return last_run.status == ExportRun.QUEUED
+            return last_run.status == ExportRun.Status.QUEUED
         return False
 
     def should_create_export_run(self):
