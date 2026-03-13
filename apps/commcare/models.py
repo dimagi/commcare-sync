@@ -1,7 +1,10 @@
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 
 
 class BaseModel(models.Model):
@@ -17,7 +20,7 @@ class BaseModel(models.Model):
 
 class RunBaseModel(BaseModel):
     """
-    Base model that includes run status
+    Base model for all run records (exports, forwarding, refreshes).
     """
     class Status(models.TextChoices):
         QUEUED = 'queued', _('Queued')
@@ -31,9 +34,45 @@ class RunBaseModel(BaseModel):
         default=Status.QUEUED,
         choices=Status.choices,
     )
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_(
+            'When the run actually started. It may have been '
+            'created/queued earlier.'
+        ),
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+    triggered_from_ui = models.BooleanField(null=True, default=None)
+    triggered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    log = models.TextField(null=True, blank=True)
 
     class Meta:
         abstract = True
+
+    @property
+    def duration(self):
+        if self.completed_at and self.started_at:
+            return self.completed_at - self.started_at
+        return None
+
+    def get_duration_display(self):
+        return readable_timedelta(self.duration)
+
+    def mark_skipped(self):
+        if self.status != self.Status.QUEUED:
+            raise ValueError(
+                _('Can\'t mark a run "skipped" after it has been started.')
+            )
+        self.status = self.Status.SKIPPED
+        self.completed_at = timezone.now()
+        self.save()
 
 
 class CommCareServer(BaseModel):
