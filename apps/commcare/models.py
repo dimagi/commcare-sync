@@ -49,10 +49,6 @@ class RunBaseModel(BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        # Tell Django not to create reverse accessors for this foreign
-        # key, because they will clash with `triggering_user` FKs on
-        # subclasses:
-        related_name='+',
     )
     log = models.TextField(null=True, blank=True)
 
