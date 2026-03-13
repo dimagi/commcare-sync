@@ -2,7 +2,7 @@ from django.utils import timezone
 
 from celery import shared_task
 
-from apps.exports.templatetags.dateformat_tags import readable_timedelta
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from .models import ExportConfig, MultiProjectExportConfig, ExportRun, MultiProjectExportRun
 from .runner import run_export, run_multi_project_export
 

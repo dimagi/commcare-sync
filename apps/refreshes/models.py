@@ -9,7 +9,7 @@ from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
 from apps.db.models import Database
-from apps.exports.templatetags.dateformat_tags import readable_timedelta
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from apps.schedules.mixin import ScheduleMixin
 
 
