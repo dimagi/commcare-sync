@@ -14,12 +14,12 @@ def test_doctests():
 @pytest.mark.parametrize(
     ('status', 'expected_icon', 'expected_class'),
     [
-        (ExportRunBase.COMPLETED, 'fa-check-circle', 'text-success'),
-        (ExportRunBase.FAILED, 'fa-exclamation-circle', 'text-danger'),
-        (ExportRunBase.STARTED, 'fa-play-circle', 'text-primary'),
-        (ExportRunBase.MULTIPLE, 'fa-exclamation-triangle', 'text-warning'),
-        (ExportRunBase.QUEUED, 'fa-ellipsis-h', 'text-muted'),
-        (ExportRunBase.SKIPPED, 'fa-ban', 'text-muted'),
+        (ExportRunBase.Status.COMPLETED, 'fa-check-circle', 'text-success'),
+        (ExportRunBase.Status.FAILED, 'fa-exclamation-circle', 'text-danger'),
+        (ExportRunBase.Status.STARTED, 'fa-play-circle', 'text-primary'),
+        (ExportRunBase.Status.MULTIPLE, 'fa-exclamation-triangle', 'text-warning'),
+        (ExportRunBase.Status.QUEUED, 'fa-ellipsis-h', 'text-muted'),
+        (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-muted'),
     ],
 )
 def test_to_status_icon(status, expected_icon, expected_class):
@@ -44,5 +44,5 @@ def test_to_status_icon_unknown_status():
 def test_to_status_icon_returns_safe_string():
     from django.utils.safestring import SafeString
 
-    result = exports_tags.to_status_icon(ExportRunBase.COMPLETED)
+    result = exports_tags.to_status_icon(ExportRunBase.Status.COMPLETED)
     assert isinstance(result, SafeString)
