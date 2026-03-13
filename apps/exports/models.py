@@ -9,7 +9,7 @@ from reversion.models import Version
 
 from apps.commcare.models import BaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
-from apps.exports.templatetags.dateformat_tags import readable_timedelta
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 
 
 class ExportConfigBase(BaseModel):
