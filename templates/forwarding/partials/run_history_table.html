@@ -25,7 +25,7 @@
             {% if forwarding_run.triggered_from_ui %}
               <i
                 class="fa fa-user"
-                title="{% blocktrans with user=forwarding_run.triggering_user|default:'unknown' %}Triggered
+                title="{% blocktrans with user=forwarding_run.triggered_by|default:'unknown' %}Triggered
                 from UI by {{ user }}{% endblocktrans %}"
               ></i>
             {% elif forwarding_run.triggered_from_ui == False %}
