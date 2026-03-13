@@ -16,9 +16,9 @@ class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey(
         'commcare.CommCareAccount',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
-    database = models.ForeignKey('db.Database', on_delete=models.CASCADE)
+    database = models.ForeignKey('db.Database', on_delete=models.PROTECT)
     config_file = models.FileField(upload_to='export-configs/')
     batch_size = models.PositiveIntegerField(
         default=500,
@@ -26,10 +26,6 @@ class ExportConfigBase(BaseModel):
             'How many cases to fetch at a time from CommCare. Try increasing '
             'this number if your export gets stuck.'
         ),
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
     )
     time_between_runs = models.PositiveIntegerField(
         default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
@@ -94,7 +90,7 @@ class ExportConfigBase(BaseModel):
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey(
         'commcare.CommCareProject',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
 
     def __str__(self):

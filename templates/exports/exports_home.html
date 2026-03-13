@@ -29,7 +29,6 @@
           <tr>
             <th>{% trans "Export" %}</th>
             <th>{% trans "Project" %}</th>
-            <th>{% trans "Created By" %}</th>
             <th>{% trans "Last Run" %}</th>
           </tr>
         </thead>
@@ -48,9 +47,6 @@
                 {% endif %}
               </td>
               <td>{{ export.project.domain }}</td>
-              <td>
-                {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.get_display_name }}{% endif %}
-              </td>
               <td>
                 {{ export.last_run.status|to_status_icon }}
                 {{ export.last_run.created_at|naturaltime }}
@@ -93,7 +89,6 @@
           <tr>
             <th>{% trans "Export" %}</th>
             <th>{% trans "Projects" %}</th>
-            <th>{% trans "Created By" %}</th>
             <th>{% trans "Last Run" %}</th>
           </tr>
         </thead>
@@ -112,9 +107,6 @@
                 {% endif %}
               </td>
               <td>{{ export.get_projects_display_short }}</td>
-              <td>
-                {% if request.user == export.created_by %}{% trans "You" %}{% else %}{{ export.created_by.get_display_name }}{% endif %}
-              </td>
               <td>
                 {{ export.last_run.status|to_status_icon }}
                 {{ export.last_run.created_at|naturaltime }}
