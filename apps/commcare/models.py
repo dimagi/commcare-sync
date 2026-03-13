@@ -49,7 +49,6 @@ class RunBaseModel(BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='+',
     )
     log = models.TextField(null=True, blank=True)
 
