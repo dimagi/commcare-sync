@@ -7,10 +7,10 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
-from apps.exports.scheduling import export_is_scheduled_to_run
+from apps.schedules.mixin import ScheduleMixin
 
 
-class ExportConfigBase(BaseModel):
+class ExportConfigBase(ScheduleMixin, BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey(
         'commcare.CommCareAccount',
@@ -25,6 +25,7 @@ class ExportConfigBase(BaseModel):
             'this number if your export gets stuck.'
         ),
     )
+    # Legacy fields — will be removed after data migration
     time_between_runs = models.PositiveIntegerField(
         default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
         help_text=_('How regularly to sync this export, in minutes.'),
@@ -50,22 +51,6 @@ class ExportConfigBase(BaseModel):
             .first()
         )
 
-    def is_scheduled_to_run(self):
-        return export_is_scheduled_to_run(self, self.last_run)
-
-    def has_queued_runs(self):
-        # Each run will ingest all new data when it is available, so we
-        # only need one run at a time. We can therefore ignore all but
-        # the latest queued run.
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == ExportRun.Status.QUEUED
-        return False
-
-    def should_create_export_run(self):
-        """If a new export_run should be created and celery task spawned"""
-        return self.is_scheduled_to_run() and not self.has_queued_runs()
-
     @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
@@ -86,6 +71,9 @@ class ExportConfigBase(BaseModel):
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):
+    CELERY_TASK = 'apps.exports.tasks.run_scheduled_export_task'
+    PERIODIC_TASK_PREFIX = 'Run export'
+
     project = models.ForeignKey(
         'commcare.CommCareProject',
         on_delete=models.PROTECT,
@@ -97,6 +85,9 @@ class ExportConfig(ExportConfigBase):
 
 @reversion.register()
 class MultiProjectExportConfig(ExportConfigBase):
+    CELERY_TASK = 'apps.exports.tasks.run_scheduled_multi_export_task'
+    PERIODIC_TASK_PREFIX = 'Run multi-project export'
+
     projects = models.ManyToManyField('commcare.CommCareProject')
 
     def __str__(self):
