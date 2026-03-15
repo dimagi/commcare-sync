@@ -3,11 +3,7 @@
 {% block app %}
   <section class="py-4 app-card">
     <h1 class="h2">{% trans "Create Export Configuration" %}</h1>
-    <form
-      method="post"
-      enctype="multipart/form-data"
-      id="export-config-form"
-    >
+    <form method="post" enctype="multipart/form-data" id="export-config-form">
       {% include 'exports/partials/multi_project_export_form.html' %}
       {% include 'schedules/partials/schedule_form.html' %}
       <div class="d-flex gap-2">
