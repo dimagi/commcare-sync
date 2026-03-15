@@ -1,5 +1,4 @@
 import reversion
-from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -23,18 +22,6 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
         help_text=_(
             'How many cases to fetch at a time from CommCare. Try increasing '
             'this number if your export gets stuck.'
-        ),
-    )
-    # Legacy fields — will be removed after data migration
-    time_between_runs = models.PositiveIntegerField(
-        default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
-        help_text=_('How regularly to sync this export, in minutes.'),
-    )
-    is_paused = models.BooleanField(
-        default=False,
-        help_text=_(
-            'Pausing an export will disable automatic syncing. You can still '
-            'manually run it.'
         ),
     )
     extra_args = models.TextField(blank=True)
