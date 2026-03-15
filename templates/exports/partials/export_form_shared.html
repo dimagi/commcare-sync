@@ -10,7 +10,12 @@
       onchange="htmx.trigger('#id_config_file_select', 'refresh')"
     >
       {% for value, label in config_form.account.field.choices %}
-        <option value="{{ value }}"{% if config_form.account.value == value %} selected{% endif %}>{{ label }}</option>
+        <option
+          value="{{ value }}"
+          {% if config_form.account.value == value %}selected{% endif %}
+        >
+          {{ label }}
+        </option>
       {% endfor %}
     </select>
   </div>
@@ -30,7 +35,7 @@
         x-model="selectedConfig"
         :disabled="loading"
         hx-get="{% url 'exports:fetch_config_files' %}"
-        hx-trigger="{% if config_form.instance.pk %}load, {% endif %}refresh"
+        hx-trigger="{% if config_form.instance.pk %}load,{% endif %}refresh"
         hx-include="[name='{{ config_form.account.html_name }}'], [name='{{ config_form.project.html_name }}'], [name='projects'], [name='{{ config_form.det_config_url.html_name }}']"
         hx-swap="innerHTML"
         hx-target="this"
