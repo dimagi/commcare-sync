@@ -75,6 +75,12 @@ commands.
 | `apps/exports/tests/fixtures.py` | Reusable test data fixtures               |
 | `apps/exports/tests/helpers.py`  | Test helper functions (login, navigation) |
 
+### Designs and Plans
+
+| Path                                    | Purpose                    |
+|-----------------------------------------|----------------------------|
+| `.claude/plans/YYYY-MM-DD_plan-name.md` | Designs & plans for agents |
+
 ### Key Patterns
 
 - **HTMX partials**: Templates in `{app}/partials/` return HTML fragments
