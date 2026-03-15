@@ -31,7 +31,7 @@ class ConfigFileFetchMixin:
             config_file = download_config_file(
                 url=det_config_url,
                 username=account.username,
-                api_key=account.api_key
+                api_key=account.api_key,
             )
             instance.config_file = config_file
 
@@ -40,12 +40,20 @@ class ConfigFileFetchMixin:
         return instance
 
 
-class ExportConfigForm(ScheduleFormMixin, ConfigFileFetchMixin, forms.ModelForm):
-    project = forms.ModelChoiceField(CommCareProject.objects.order_by('domain'))
-    account = forms.ModelChoiceField(CommCareAccount.objects.order_by('username'))
+class ExportConfigForm(
+    ScheduleFormMixin, ConfigFileFetchMixin, forms.ModelForm
+):
+    project = forms.ModelChoiceField(
+        CommCareProject.objects.order_by('domain')
+    )
+    account = forms.ModelChoiceField(
+        CommCareAccount.objects.order_by('username')
+    )
     database = forms.ModelChoiceField(Database.objects.order_by('name'))
     extra_args = forms.CharField(widget=forms.TextInput, required=False)
-    det_config_url = forms.CharField(widget=forms.HiddenInput(), required=False)
+    det_config_url = forms.CharField(
+        widget=forms.HiddenInput(), required=False
+    )
 
     class Meta:
         model = ExportConfig
@@ -59,12 +67,16 @@ class ExportConfigForm(ScheduleFormMixin, ConfigFileFetchMixin, forms.ModelForm)
         ) + ScheduleFormMixin.SCHEDULE_FIELDS
 
 
-class MultiProjectExportConfigForm(ScheduleFormMixin, ConfigFileFetchMixin, forms.ModelForm):
+class MultiProjectExportConfigForm(
+    ScheduleFormMixin, ConfigFileFetchMixin, forms.ModelForm
+):
     projects = forms.ModelMultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple(attrs={"class": "checkbox"}),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox'}),
         queryset=CommCareProject.objects.order_by('domain'),
     )
-    det_config_url = forms.CharField(widget=forms.HiddenInput(), required=False)
+    det_config_url = forms.CharField(
+        widget=forms.HiddenInput(), required=False
+    )
 
     class Meta:
         model = MultiProjectExportConfig
@@ -76,5 +88,3 @@ class MultiProjectExportConfigForm(ScheduleFormMixin, ConfigFileFetchMixin, form
             'batch_size',
             'extra_args',
         ) + ScheduleFormMixin.SCHEDULE_FIELDS
-
-
