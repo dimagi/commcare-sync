@@ -6,165 +6,179 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("django_celery_beat", "0019_alter_periodictasks_options"),
-        ("exports", "0023_rename_triggering_user_exportrun_triggered_by_and_more"),
+        ('django_celery_beat', '0019_alter_periodictasks_options'),
+        (
+            'exports',
+            '0023_rename_triggering_user_exportrun_triggered_by_and_more',
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="exportconfig",
-            name="days_of_week",
+            model_name='exportconfig',
+            name='days_of_week',
             field=models.JSONField(
                 blank=True,
                 default=list,
-                help_text="List of day numbers: 0=Sunday, 1=Monday, ..., 6=Saturday",
+                help_text='List of day numbers: 0=Sunday, 1=Monday, ..., 6=Saturday',
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="first_run_date",
+            model_name='exportconfig',
+            name='first_run_date',
             field=models.DateField(
                 blank=True, help_text="Don't run before this date", null=True
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="first_run_time",
+            model_name='exportconfig',
+            name='first_run_time',
             field=models.TimeField(
                 default=datetime.time(0, 0),
-                help_text="Time of day for first/recurring runs",
+                help_text='Time of day for first/recurring runs',
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="interval_unit",
+            model_name='exportconfig',
+            name='interval_unit',
             field=models.CharField(
                 blank=True,
-                choices=[("minutes", "Minutes"), ("hours", "Hours"), ("days", "Days")],
-                help_text="Time unit for interval",
+                choices=[
+                    ('minutes', 'Minutes'),
+                    ('hours', 'Hours'),
+                    ('days', 'Days'),
+                ],
+                help_text='Time unit for interval',
                 max_length=10,
                 null=True,
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="interval_value",
+            model_name='exportconfig',
+            name='interval_value',
             field=models.PositiveIntegerField(
-                blank=True, help_text="Number of time units between runs", null=True
+                blank=True,
+                help_text='Number of time units between runs',
+                null=True,
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="periodic_task",
+            model_name='exportconfig',
+            name='periodic_task',
             field=models.OneToOneField(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                to="django_celery_beat.periodictask",
+                to='django_celery_beat.periodictask',
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="schedule_type",
+            model_name='exportconfig',
+            name='schedule_type',
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ("interval", "Every N minutes/hours/days"),
-                    ("weekly", "Weekly on specific days"),
-                    ("monthly", "Monthly on specific day"),
-                    ("quarterly", "Quarterly"),
-                    ("semi-annually", "Semi-annually (twice per year)"),
-                    ("annually", "Annually"),
+                    ('interval', 'Every N minutes/hours/days'),
+                    ('weekly', 'Weekly on specific days'),
+                    ('monthly', 'Monthly on specific day'),
+                    ('quarterly', 'Quarterly'),
+                    ('semi-annually', 'Semi-annually (twice per year)'),
+                    ('annually', 'Annually'),
                 ],
                 max_length=20,
                 null=True,
             ),
         ),
         migrations.AddField(
-            model_name="exportconfig",
-            name="timezone",
+            model_name='exportconfig',
+            name='timezone',
             field=models.CharField(
-                default="UTC",
+                default='UTC',
                 help_text="Timezone for scheduled runs (e.g., 'America/New_York', 'UTC')",
                 max_length=63,
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="days_of_week",
+            model_name='multiprojectexportconfig',
+            name='days_of_week',
             field=models.JSONField(
                 blank=True,
                 default=list,
-                help_text="List of day numbers: 0=Sunday, 1=Monday, ..., 6=Saturday",
+                help_text='List of day numbers: 0=Sunday, 1=Monday, ..., 6=Saturday',
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="first_run_date",
+            model_name='multiprojectexportconfig',
+            name='first_run_date',
             field=models.DateField(
                 blank=True, help_text="Don't run before this date", null=True
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="first_run_time",
+            model_name='multiprojectexportconfig',
+            name='first_run_time',
             field=models.TimeField(
                 default=datetime.time(0, 0),
-                help_text="Time of day for first/recurring runs",
+                help_text='Time of day for first/recurring runs',
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="interval_unit",
+            model_name='multiprojectexportconfig',
+            name='interval_unit',
             field=models.CharField(
                 blank=True,
-                choices=[("minutes", "Minutes"), ("hours", "Hours"), ("days", "Days")],
-                help_text="Time unit for interval",
+                choices=[
+                    ('minutes', 'Minutes'),
+                    ('hours', 'Hours'),
+                    ('days', 'Days'),
+                ],
+                help_text='Time unit for interval',
                 max_length=10,
                 null=True,
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="interval_value",
+            model_name='multiprojectexportconfig',
+            name='interval_value',
             field=models.PositiveIntegerField(
-                blank=True, help_text="Number of time units between runs", null=True
+                blank=True,
+                help_text='Number of time units between runs',
+                null=True,
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="periodic_task",
+            model_name='multiprojectexportconfig',
+            name='periodic_task',
             field=models.OneToOneField(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                to="django_celery_beat.periodictask",
+                to='django_celery_beat.periodictask',
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="schedule_type",
+            model_name='multiprojectexportconfig',
+            name='schedule_type',
             field=models.CharField(
                 blank=True,
                 choices=[
-                    ("interval", "Every N minutes/hours/days"),
-                    ("weekly", "Weekly on specific days"),
-                    ("monthly", "Monthly on specific day"),
-                    ("quarterly", "Quarterly"),
-                    ("semi-annually", "Semi-annually (twice per year)"),
-                    ("annually", "Annually"),
+                    ('interval', 'Every N minutes/hours/days'),
+                    ('weekly', 'Weekly on specific days'),
+                    ('monthly', 'Monthly on specific day'),
+                    ('quarterly', 'Quarterly'),
+                    ('semi-annually', 'Semi-annually (twice per year)'),
+                    ('annually', 'Annually'),
                 ],
                 max_length=20,
                 null=True,
             ),
         ),
         migrations.AddField(
-            model_name="multiprojectexportconfig",
-            name="timezone",
+            model_name='multiprojectexportconfig',
+            name='timezone',
             field=models.CharField(
-                default="UTC",
+                default='UTC',
                 help_text="Timezone for scheduled runs (e.g., 'America/New_York', 'UTC')",
                 max_length=63,
             ),

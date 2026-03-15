@@ -3,7 +3,12 @@ from django.utils import timezone
 from celery import shared_task
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
-from .models import ExportConfig, MultiProjectExportConfig, ExportRun, MultiProjectExportRun
+from .models import (
+    ExportConfig,
+    MultiProjectExportConfig,
+    ExportRun,
+    MultiProjectExportRun,
+)
 from .runner import run_export, run_multi_project_export
 
 
@@ -32,12 +37,16 @@ def run_scheduled_multi_export_task(self, export_config_id):
         export_config_version=export.latest_version,
         triggered_from_ui=False,
     )
-    run_multi_project_export_task.delay(export_record.id, force_sync_all_data=False)
+    run_multi_project_export_task.delay(
+        export_record.id, force_sync_all_data=False
+    )
 
 
 @shared_task(bind=True)
 def run_export_task(self, export_run_id, force_sync_all_data):
-    export_run = ExportRun.objects.select_related('base_export_config').get(id=export_run_id)
+    export_run = ExportRun.objects.select_related('base_export_config').get(
+        id=export_run_id
+    )
     if export_run.status != ExportRun.Status.QUEUED:
         return
     export_run = run_export(export_run, force_sync_all_data)
@@ -52,7 +61,9 @@ def run_export_task(self, export_run_id, force_sync_all_data):
 @shared_task(bind=True)
 def run_multi_project_export_task(self, export_run_id, force_sync_all_data):
     run_start = timezone.now()
-    export_run = MultiProjectExportRun.objects.select_related('base_export_config').get(id=export_run_id)
+    export_run = MultiProjectExportRun.objects.select_related(
+        'base_export_config'
+    ).get(id=export_run_id)
     export_runs = run_multi_project_export(export_run, force_sync_all_data)
     export_run = export_runs[-1] if export_runs else None
     if export_run:

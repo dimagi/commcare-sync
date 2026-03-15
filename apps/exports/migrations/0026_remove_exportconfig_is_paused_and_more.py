@@ -4,26 +4,25 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("exports", "0025_migrate_export_schedules"),
+        ('exports', '0025_migrate_export_schedules'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="exportconfig",
-            name="is_paused",
+            model_name='exportconfig',
+            name='is_paused',
         ),
         migrations.RemoveField(
-            model_name="exportconfig",
-            name="time_between_runs",
+            model_name='exportconfig',
+            name='time_between_runs',
         ),
         migrations.RemoveField(
-            model_name="multiprojectexportconfig",
-            name="is_paused",
+            model_name='multiprojectexportconfig',
+            name='is_paused',
         ),
         migrations.RemoveField(
-            model_name="multiprojectexportconfig",
-            name="time_between_runs",
+            model_name='multiprojectexportconfig',
+            name='time_between_runs',
         ),
     ]

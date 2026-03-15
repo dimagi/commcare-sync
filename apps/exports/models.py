@@ -32,8 +32,7 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
     @property
     def last_run(self):
         return (
-            self.runs
-            .exclude(status=ExportRun.Status.QUEUED)
+            self.runs.exclude(status=ExportRun.Status.QUEUED)
             .order_by('-created_at')
             .first()
         )

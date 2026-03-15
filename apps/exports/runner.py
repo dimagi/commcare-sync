@@ -48,7 +48,9 @@ def run_export(
     force: bool = False,
 ) -> ExportRun:
     export_config = export_run.base_export_config
-    return _run_export_for_project(export_config, export_config.project, export_run, force)
+    return _run_export_for_project(
+        export_config, export_config.project, export_run, force
+    )
 
 
 def _run_export_for_project(export_config, project, export_record, force):
@@ -70,7 +72,7 @@ def _run_export_for_project(export_config, project, export_record, force):
         export_record.log = str(e)
     else:
         export_record.status = _process_status_to_status_field(result)
-        export_record.log = "\n".join(log_buffer)
+        export_record.log = '\n'.join(log_buffer)
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
@@ -86,10 +88,12 @@ def _stream_log(process, export_record):
             break
         if output:
             log_buffer.append(output)
-        if datetime.utcnow() - start_time >= timedelta(seconds=LOG_STREAM_DELAY):
-            export_record.log = "{}\n\n{}".format(
-                "\n".join(log_buffer),
-                "Job still running, refresh the page to see more…"
+        if datetime.utcnow() - start_time >= timedelta(
+            seconds=LOG_STREAM_DELAY
+        ):
+            export_record.log = '{}\n\n{}'.format(
+                '\n'.join(log_buffer),
+                'Job still running, refresh the page to see more…',
             )
             export_record.save()
     return log_buffer
@@ -98,22 +102,32 @@ def _stream_log(process, export_record):
 def _compile_export_command(export_config, project, force):
     command = [
         settings.COMMCARE_EXPORT,
-        '--project', project.domain,
-        '--username', export_config.account.username,
-        '--auth-mode', 'apikey',
-        '--password', export_config.account.api_key,
-        '--output-format', 'sql',
-        '--output', export_config.database.connection_string,
-        '--batch-size', str(export_config.batch_size),
+        '--project',
+        project.domain,
+        '--username',
+        export_config.account.username,
+        '--auth-mode',
+        'apikey',
+        '--password',
+        export_config.account.api_key,
+        '--output-format',
+        'sql',
+        '--output',
+        export_config.database.connection_string,
+        '--batch-size',
+        str(export_config.batch_size),
         '--verbose',
-        '--query', export_config.config_file.path,
-        '--commcare-hq', project.server.get_url_base(),
-        '--log-dir', settings.LOG_DIR,
+        '--query',
+        export_config.config_file.path,
+        '--commcare-hq',
+        project.server.get_url_base(),
+        '--log-dir',
+        settings.LOG_DIR,
     ]
     if force:
         command.append('--start-over')
 
-    for extra_arg in export_config.extra_args.split(" "):
+    for extra_arg in export_config.extra_args.split(' '):
         if extra_arg:
             command.append(extra_arg)
 
