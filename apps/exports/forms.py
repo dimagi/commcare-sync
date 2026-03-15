@@ -6,6 +6,7 @@ from apps.commcare.models import (
     CommCareServer,
 )
 from apps.db.models import Database
+from apps.schedules.forms import ScheduleFormMixin
 
 from .api_client import download_config_file
 from .models import ExportConfig, MultiProjectExportConfig
@@ -57,7 +58,11 @@ class ConfigFileFetchMixin:
         return instance
 
 
-class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
+class ExportConfigForm(
+    ScheduleFormMixin,
+    ConfigFileFetchMixin,
+    forms.ModelForm,
+):
     project = forms.ModelChoiceField(
         CommCareProject.objects.order_by('domain')
     )
@@ -79,10 +84,14 @@ class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
             'database',
             'batch_size',
             'extra_args',
-        )
+        ) + ScheduleFormMixin.SCHEDULE_FIELDS
 
 
-class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
+class MultiProjectExportConfigForm(
+    ScheduleFormMixin,
+    ConfigFileFetchMixin,
+    forms.ModelForm,
+):
     projects = forms.ModelMultipleChoiceField(
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox'}),
         queryset=CommCareProject.objects.order_by('domain'),
@@ -100,4 +109,4 @@ class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
             'database',
             'batch_size',
             'extra_args',
-        )
+        ) + ScheduleFormMixin.SCHEDULE_FIELDS
