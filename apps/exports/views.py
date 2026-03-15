@@ -340,7 +340,6 @@ def run_export(request, export_id):
     result = run_export_task.delay(
         export_record.id,
         force_sync_all_data=force_sync,
-        ignore_schedule_checks=True,
     )
     return HttpResponse(result.task_id)
 
@@ -362,7 +361,6 @@ def run_multi_export(request, export_id):
     result = run_multi_project_export_task.delay(
         export_record.id,
         force_sync_all_data=force_sync,
-        ignore_schedule_checks=True,
     )
     return HttpResponse(result.task_id)
 

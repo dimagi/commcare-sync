@@ -1,7 +1,6 @@
 import subprocess
 from datetime import datetime, timedelta
 
-from apps.exports.scheduling import export_is_scheduled_to_run
 from django.conf import settings
 from django.utils import timezone
 
@@ -17,7 +16,6 @@ LOG_STREAM_DELAY = 30  # write the log every 30 seconds
 def run_multi_project_export(
     multi_export_run: MultiProjectExportRun,
     force_sync_all_data: bool = False,
-    ignore_schedule_checks: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
     multi_export_config = multi_export_run.base_export_config
     multi_export_run.status = MultiProjectExportRun.Status.STARTED
@@ -25,18 +23,15 @@ def run_multi_project_export(
     multi_export_run.save()
     runs = []
     for project in multi_export_config.projects.all():
-        if ignore_schedule_checks or (
-                export_is_scheduled_to_run(multi_export_config,
-                                           multi_export_config.get_last_run_for_project(project))):
-            export_record = MultiProjectPartialExportRun.objects.create(
-                parent_run=multi_export_run,
-                project=project,
-                triggered_from_ui=multi_export_run.triggered_from_ui,
-            )
-            export_record = _run_export_for_project(
-                multi_export_config, project, export_record, force_sync_all_data
-            )
-            runs.append(export_record)
+        export_record = MultiProjectPartialExportRun.objects.create(
+            parent_run=multi_export_run,
+            project=project,
+            triggered_from_ui=multi_export_run.triggered_from_ui,
+        )
+        export_record = _run_export_for_project(
+            multi_export_config, project, export_record, force_sync_all_data
+        )
+        runs.append(export_record)
 
     run_statuses = set([run.status for run in runs])
     if len(run_statuses) == 1:
