@@ -1,34 +1,34 @@
 {% load i18n %}
 {% csrf_token %}
-{{ form.non_field_errors }}
+{{ config_form.non_field_errors }}
 <div class="mb-3">
-  <label for="{{ form.name.id_for_label }}" class="form-label"
+  <label for="{{ config_form.name.id_for_label }}" class="form-label"
     >{% trans "Name" %}</label
   >
-  <div>{{ form.name }}</div>
-  {{ form.name.errors }}
+  <div>{{ config_form.name }}</div>
+  {{ config_form.name.errors }}
 </div>
 <div class="mb-3">
-  <label for="{{ form.project.id_for_label }}" class="form-label"
+  <label for="{{ config_form.project.id_for_label }}" class="form-label"
     >{% trans "Project" %}</label
   >
   <div>
     <select
-      name="{{ form.project.html_name }}"
-      id="{{ form.project.id_for_label }}"
+      name="{{ config_form.project.html_name }}"
+      id="{{ config_form.project.id_for_label }}"
       class="form-select"
       onchange="htmx.trigger('#id_config_file_select', 'refresh')"
     >
-      {% for value, label in form.project.field.choices %}
+      {% for value, label in config_form.project.field.choices %}
         <option
           value="{{ value }}"
-          {% if form.project.value == value %}selected{% endif %}
+          {% if config_form.project.value == value %}selected{% endif %}
         >
           {{ label }}
         </option>
       {% endfor %}
     </select>
   </div>
-  {{ form.project.errors }}
+  {{ config_form.project.errors }}
 </div>
 {% include 'exports/partials/export_form_shared.html' %}
