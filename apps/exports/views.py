@@ -50,35 +50,35 @@ def home(request):
 def create_export_config(request):
 
     if request.method == 'POST':
-        form = ExportConfigForm(request.POST, request.FILES)
-        if form.is_valid():
-            export = form.save()
+        config_form = ExportConfigForm(request.POST, request.FILES)
+        if config_form.is_valid():
+            export = config_form.save()
             messages.success(request, f'Export "{export.name}" was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
-        form = ExportConfigForm()
+        config_form = ExportConfigForm()
 
     return render(request, 'exports/create_export.html', {
         'active_tab': 'create_export',
-        'form': form,
+        'config_form': config_form,
     })
 
 
 @login_required
 def create_multi_export_config(request):
     if request.method == 'POST':
-        form = MultiProjectExportConfigForm(request.POST, request.FILES)
-        if form.is_valid():
-            export = form.save()
-            form.save_m2m()
+        config_form = MultiProjectExportConfigForm(request.POST, request.FILES)
+        if config_form.is_valid():
+            export = config_form.save()
+            config_form.save_m2m()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
-        form = MultiProjectExportConfigForm()
+        config_form = MultiProjectExportConfigForm()
 
     return render(request, 'exports/create_multi_project_export.html', {
         'active_tab': 'create_multi_export',
-        'form': form,
+        'config_form': config_form,
     })
 
 
@@ -86,17 +86,17 @@ def create_multi_export_config(request):
 def edit_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     if request.method == 'POST':
-        form = ExportConfigForm(request.POST, request.FILES, instance=export)
-        if form.is_valid():
-            export = form.save()
+        config_form = ExportConfigForm(request.POST, request.FILES, instance=export)
+        if config_form.is_valid():
+            export = config_form.save()
             messages.success(request, f'Export {export.name} was successfully saved.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
-        form = ExportConfigForm(instance=export)
+        config_form = ExportConfigForm(instance=export)
 
     return render(request, 'exports/edit_export.html', {
         'active_tab': 'exports',
-        'form': form,
+        'config_form': config_form,
         'export': export,
     })
 
@@ -105,17 +105,17 @@ def edit_export_config(request, export_id):
 def edit_multi_export_config(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     if request.method == 'POST':
-        form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
-        if form.is_valid():
-            export = form.save()
+        config_form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
+        if config_form.is_valid():
+            export = config_form.save()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
-        form = MultiProjectExportConfigForm(instance=export)
+        config_form = MultiProjectExportConfigForm(instance=export)
 
     return render(request, 'exports/edit_multi_project_export.html', {
         'active_tab': 'create_multi_export',
-        'form': form,
+        'config_form': config_form,
     })
 
 
