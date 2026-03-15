@@ -7,7 +7,7 @@ from . import models
 
 @admin.register(models.ExportConfig)
 class ExportConfigAdmin(VersionAdmin):
-    list_display = ['name', 'project', 'account', 'database', 'created_at',
+    list_display = ['name', 'project', 'account', 'database', 'schedule_display', 'created_at',
                     'updated_at']
     list_filter = ['project', 'database', 'created_at', 'updated_at']
 
@@ -20,7 +20,7 @@ class ExportRunAdmin(admin.ModelAdmin):
 
 @admin.register(models.MultiProjectExportConfig)
 class MultiProjectExportConfigAdmin(VersionAdmin):
-    list_display = ['name', 'account', 'database', 'created_at', 'updated_at']
+    list_display = ['name', 'account', 'database', 'schedule_display', 'created_at', 'updated_at']
     list_filter = ['database', 'created_at', 'updated_at']
 
 
