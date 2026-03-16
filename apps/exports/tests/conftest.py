@@ -11,7 +11,7 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
-from apps.db.models import Database as ExportDatabase
+from apps.db.models import Database
 from apps.exports.models import ExportConfig
 
 
@@ -71,7 +71,7 @@ def account_fixture():
 
 @fixture
 def database_fixture():
-    yield ExportDatabase(
+    yield Database(
         name='Test DB',
         connection_string='postgresql://foo:bar@123.4.0.0/test',
     )
@@ -146,7 +146,7 @@ def account_db_fixture():
 @fixture
 def database_db_fixture():
     user = user_fixture()
-    yield ExportDatabase.objects.create(
+    yield Database.objects.create(
         name='Test DB',
         connection_string='postgresql://foo:bar@123.4.0.0/test',
         owner=user,

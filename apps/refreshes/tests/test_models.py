@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from reversion.models import Version
 
-from apps.db.models import Database as ExportDatabase
+from apps.db.models import Database
 
 from ..models import RefreshConfig, RefreshRun
 
@@ -67,7 +67,7 @@ class TestRefreshConfig:
         assert new_count == initial_count + 1
 
     def test_validation_rejects_non_postgresql(self, user):
-        db = ExportDatabase.objects.create(
+        db = Database.objects.create(
             name='MySQL DB',
             connection_string='mysql://localhost/test',
             owner=user,

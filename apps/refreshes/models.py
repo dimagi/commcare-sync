@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
-from apps.db.models import Database as ExportDatabase
+from apps.db.models import Database
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
 from apps.schedules.mixin import ScheduleMixin
 
@@ -22,7 +22,7 @@ class RefreshConfig(ScheduleMixin, BaseModel):
 
     name = models.CharField(max_length=100)
     database = models.ForeignKey(
-        ExportDatabase,
+        Database,
         on_delete=models.CASCADE,
         help_text=_('PostgreSQL database connection'),
     )

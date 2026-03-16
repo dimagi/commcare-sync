@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.urls import reverse
 
-from apps.db.models import Database as ExportDatabase
+from apps.db.models import Database
 
 from ..models import RefreshConfig, RefreshRun
 
@@ -22,7 +22,7 @@ def client(client, user):
 
 @pytest.fixture
 def non_pg_database(db, user):
-    return ExportDatabase.objects.create(
+    return Database.objects.create(
         name='MySQL DB',
         connection_string='mysql://localhost/test',
         owner=user,

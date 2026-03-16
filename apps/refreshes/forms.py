@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from apps.db.models import Database as ExportDatabase
+from apps.db.models import Database
 from apps.schedules.forms import ScheduleFormMixin
 
 from .models import RefreshConfig
@@ -13,7 +13,7 @@ from .models import RefreshConfig
 class RefreshConfigForm(ScheduleFormMixin, forms.ModelForm):
 
     database = forms.ModelChoiceField(
-        queryset=ExportDatabase.objects.order_by('name'),
+        queryset=Database.objects.order_by('name'),
         help_text=_('Select a PostgreSQL database connection'),
     )
 
