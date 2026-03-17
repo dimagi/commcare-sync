@@ -1,6 +1,7 @@
 """Runner for executing materialized view refreshes."""
 import logging
 
+import psycopg
 from django.utils import timezone
 
 from .db_utils import refresh_materialized_view
@@ -63,7 +64,7 @@ def run_refresh(refresh_run):
                     f'in {view_duration:.2f}s'
                 )
 
-            except Exception as view_error:
+            except psycopg.Error as view_error:
                 view_duration = (
                     timezone.now() - view_start_time
                 ).total_seconds()
