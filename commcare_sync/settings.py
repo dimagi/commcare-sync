@@ -61,6 +61,7 @@ THIRD_PARTY_APPS = [
 
 PROJECT_APPS = [
     'apps.commcare.apps.CommCareConfig',
+    'apps.db.apps.DatabasesConfig',
     'apps.exports.apps.ExportsConfig',
     'apps.forwarding.apps.ForwardingConfig',
     'apps.refreshes.apps.RefreshesConfig',

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 
 from ..forms import RefreshConfigForm
 from ..models import RefreshConfig
@@ -67,7 +67,7 @@ class TestRefreshConfigForm:
         assert 'materialized_views' in form.errors
 
     def test_create_rejects_non_postgresql_database(self, user):
-        mysql_db = ExportDatabase.objects.create(
+        mysql_db = Database.objects.create(
             name='MySQL DB',
             connection_string='mysql://localhost/test',
             owner=user,

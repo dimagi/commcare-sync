@@ -77,13 +77,6 @@ urlpatterns = [
         views.fetch_config_files,
         name='fetch_config_files',
     ),
-    path(r'databases/', views.databases, name='databases'),
-    path(r'databases/create/', views.create_database, name='create_database'),
-    path(
-        r'databases/<int:database_id>/edit/',
-        views.edit_database,
-        name='edit_database',
-    ),
     path(
         r'download/commcare-export-log/',
         views.download_commcare_export_log,

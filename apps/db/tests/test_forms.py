@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from apps.exports.forms import CreateExportDatabaseForm, EditExportDatabaseForm
-from apps.exports.models import ExportDatabase
+from apps.db.forms import CreateDatabaseForm, EditDatabaseForm
+from apps.db.models import Database
 
 
-class TestExportDatabaseForm(TestCase):
+class TestDatabaseForm(TestCase):
 
     def setUp(self):
         User = get_user_model()
@@ -16,7 +16,7 @@ class TestExportDatabaseForm(TestCase):
         )
 
     def test_create_form_requires_connection_string(self):
-        form = CreateExportDatabaseForm(data={
+        form = CreateDatabaseForm(data={
             'name': 'Test DB',
             'connection_string': '',
         })
@@ -25,21 +25,21 @@ class TestExportDatabaseForm(TestCase):
         assert 'This field is required.' in str(form.errors['connection_string'])
 
     def test_create_form_with_connection_string(self):
-        form = CreateExportDatabaseForm(data={
+        form = CreateDatabaseForm(data={
             'name': 'Test DB',
             'connection_string': 'postgresql://localhost/test',
         })
         assert form.is_valid()
 
     def test_edit_form_allows_empty_connection_string(self):
-        db = ExportDatabase.objects.create(
+        db = Database.objects.create(
             name='Existing DB',
             owner=self.user,
         )
         db.connection_string = 'postgresql://localhost/original'
         db.save()
 
-        form = EditExportDatabaseForm(
+        form = EditDatabaseForm(
             data={
                 'name': 'Updated Name',
                 'connection_string': '',
@@ -54,14 +54,14 @@ class TestExportDatabaseForm(TestCase):
         assert updated_db.connection_string == 'postgresql://localhost/original'
 
     def test_edit_form_updates_connection_string_when_provided(self):
-        db = ExportDatabase.objects.create(
+        db = Database.objects.create(
             name='Existing DB',
             owner=self.user,
         )
         db.connection_string = 'postgresql://localhost/original'
         db.save()
 
-        form = EditExportDatabaseForm(
+        form = EditDatabaseForm(
             data={
                 'name': 'Updated Name',
                 'connection_string': 'postgresql://localhost/updated',

@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 from apps.forwarding.models import ForwardingConfig, ForwardingDestination
 from apps.schedules.mixin import ScheduleMixin
 
@@ -25,7 +25,7 @@ class ScheduleMixinTestBase(TestCase):
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,

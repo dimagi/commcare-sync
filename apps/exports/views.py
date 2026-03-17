@@ -4,7 +4,7 @@ import os
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.http import (
     Http404,
     HttpResponse,
@@ -20,14 +20,11 @@ from commcare_sync.views import get_hide_skipped_from_request, get_ui_page_size
 
 from .api_client import fetch_available_configs
 from .forms import (
-    CreateExportDatabaseForm,
-    EditExportDatabaseForm,
     ExportConfigForm,
     MultiProjectExportConfigForm,
 )
 from .models import (
     ExportConfig,
-    ExportDatabase,
     ExportRun,
     MultiProjectExportConfig,
     MultiProjectExportRun,
@@ -282,52 +279,6 @@ def run_multi_export(request, export_id):
         export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
     )
     return HttpResponse(result.task_id)
-
-
-@login_required
-def databases(request):
-    databases = ExportDatabase.objects.order_by('name')
-    return render(request, 'exports/databases.html', {
-        'active_tab': 'databases',
-        'databases': databases,
-    })
-
-
-@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
-def create_database(request):
-    if request.method == 'POST':
-        form = CreateExportDatabaseForm(request.POST, request.FILES)
-        if form.is_valid():
-            db = form.save(commit=False)
-            db.owner = request.user
-            db.save()
-            messages.success(request, f'Database {db.name} was successfully created.')
-            return HttpResponseRedirect(reverse('exports:databases'))
-    else:
-        form = CreateExportDatabaseForm()
-
-    return render(request, 'exports/create_database.html', {
-        'active_tab': 'create_export',
-        'form': form,
-    })
-
-
-@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
-def edit_database(request, database_id):
-    db = get_object_or_404(ExportDatabase, id=database_id)
-    if request.method == 'POST':
-        form = EditExportDatabaseForm(request.POST, instance=db)
-        if form.is_valid():
-            db = form.save()
-            messages.success(request, f'Database "{db.name}" was successfully updated.')
-            return HttpResponseRedirect(reverse('exports:databases'))
-    else:
-        form = EditExportDatabaseForm(instance=db)
-
-    return render(request, 'exports/edit_database.html', {
-        'active_tab': 'create_export',
-        'form': form,
-    })
 
 
 @login_required

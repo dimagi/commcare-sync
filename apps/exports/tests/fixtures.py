@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from unmagic import fixture, use
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 
 User = get_user_model()
 
@@ -61,7 +61,7 @@ def commcare_project():
 def export_database():
     """Create an export database."""
     user = test_user()
-    yield ExportDatabase.objects.create(
+    yield Database.objects.create(
         name='Test Database',
         connection_string='postgresql://testuser:password@localhost:5432/testdb',
         owner=user
@@ -95,7 +95,7 @@ def test_data():
         server=server
     )
 
-    database = ExportDatabase.objects.create(
+    database = Database.objects.create(
         name='Test Database',
         connection_string='postgresql://testuser:password@localhost:5432/testdb',
         owner=user

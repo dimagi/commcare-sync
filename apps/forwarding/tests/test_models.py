@@ -7,7 +7,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from reversion.models import Version
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 from apps.schedules.mixin import ScheduleMixin
 
 from ..models import (
@@ -26,7 +26,7 @@ class TestForwardingConfig:
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,
@@ -143,7 +143,7 @@ class TestForwardingRun:
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,
@@ -270,7 +270,7 @@ class TestForwardingRun:
 
 
 @pytest.mark.django_db
-class TestExportDatabase:
+class TestDatabase:
 
     def setup_method(self):
         self.user = User.objects.create_user(
@@ -278,7 +278,7 @@ class TestExportDatabase:
         )
 
     def test_str_method(self):
-        database = ExportDatabase.objects.create(
+        database = Database.objects.create(
             name='Production DB',
             connection_string='postgresql://localhost/prod',
             owner=self.user,
@@ -334,7 +334,7 @@ class TestForwardingScheduling:
         self.user = User.objects.create_user(
             username='testuser', email='test@example.com', password='testpass'
         )
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
             owner=self.user,

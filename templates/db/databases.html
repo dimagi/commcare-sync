@@ -1,7 +1,6 @@
 {% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% block app %}
-  {% load exports_tags %}
   {% load humanize %}
   <section class="py-4 app-card">
     <h1 class="h2">{% trans "Database Connections" %}</h1>
@@ -15,7 +14,7 @@
       {% if user.is_superuser %}
         <a
           class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-          href="{% url 'exports:create_database' %}"
+          href="{% url 'db:create_database' %}"
         >
           <i class="fa fa-plus"></i>
           {% trans "New Database Connection" %}
@@ -33,7 +32,7 @@
             <tr>
               <td>
                 {% if user.is_superuser %}
-                  <a href="{% url 'exports:edit_database' database.id %}">
+                  <a href="{% url 'db:edit_database' database.id %}">
                     {{ database.name }}
                   </a>
                 {% else %}
@@ -53,7 +52,7 @@
       </div>
       <a
         class="icon-link btn btn-primary btn-sm rounded-pill"
-        href="{% url 'exports:create_database' %}"
+        href="{% url 'db:create_database' %}"
       >
         <i class="fa fa-plus"></i>
         {% trans "Add Your First Database Connection" %}

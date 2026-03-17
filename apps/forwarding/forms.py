@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 from apps.schedules.forms import ScheduleFormMixin
 
 from .models import ForwardingConfig, ForwardingDestination
@@ -29,7 +29,7 @@ class ForwardingConfigForm(ScheduleFormMixin, forms.ModelForm):
     """Form for creating and editing ForwardingConfig objects."""
 
     database = forms.ModelChoiceField(
-        queryset=ExportDatabase.objects.order_by('name')
+        queryset=Database.objects.order_by('name')
     )
     destination = forms.ModelChoiceField(
         queryset=ForwardingDestination.objects.order_by('name')
