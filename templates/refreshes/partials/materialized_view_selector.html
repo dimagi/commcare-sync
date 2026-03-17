@@ -123,7 +123,6 @@
             class="list-group-item list-group-item-action"
             @click="addView(view.full_name)"
             :disabled="selectedViews.includes(view.full_name)"
-            :class="{ 'disabled': selectedViews.includes(view.full_name) }"
           >
             <code x-text="view.full_name"></code>
           </button>
