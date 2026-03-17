@@ -31,11 +31,9 @@
       {% csrf_token %}
       <div class="d-flex gap-2">
         <div>
-          <input
-            class="btn btn-danger"
-            type="submit"
-            value="{% trans 'Delete Refresh Configuration' %}"
-          />
+          <button class="btn btn-danger" type="submit">
+            {% trans "Delete Refresh Configuration" %}
+          </button>
         </div>
         <div>
           <a class="btn btn-outline-primary" href="{{ config.details_url }}"
