@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import psycopg
 import pytest
 
 from ..models import RefreshRun
@@ -25,7 +26,7 @@ class TestRunRefresh:
     def test_partial_failure(self, mock_refresh_view, refresh_run):
         mock_refresh_view.side_effect = [
             None,
-            Exception('View does not exist'),
+            psycopg.Error('View does not exist'),
         ]
 
         result = run_refresh(refresh_run)
@@ -42,7 +43,7 @@ class TestRunRefresh:
 
     @patch('apps.refreshes.runner.refresh_materialized_view')
     def test_all_views_fail(self, mock_refresh_view, refresh_run):
-        mock_refresh_view.side_effect = Exception('Database error')
+        mock_refresh_view.side_effect = psycopg.Error('Database error')
 
         result = run_refresh(refresh_run)
 
@@ -99,7 +100,7 @@ class TestRunRefresh:
         self, mock_refresh_view, refresh_run
     ):
         mock_refresh_view.side_effect = [
-            Exception('First view failed'),
+            psycopg.Error('First view failed'),
             None,
         ]
 
