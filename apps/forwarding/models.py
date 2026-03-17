@@ -6,9 +6,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
-from apps.commcare.models import BaseModel
+from apps.commcare.models import BaseModel, RunBaseModel
 from apps.exports.models import ExportDatabase
 from apps.exports.templatetags.dateformat_tags import readable_timedelta
+from apps.schedules.mixin import ScheduleMixin
 
 
 class ForwardingDestination(BaseModel):
@@ -37,8 +38,11 @@ class ForwardingDestination(BaseModel):
 
 
 @reversion.register()
-class ForwardingConfig(BaseModel):
+class ForwardingConfig(ScheduleMixin, BaseModel):
     """Configuration for a data forwarding job."""
+
+    CELERY_TASK = 'apps.forwarding.tasks.run_scheduled_forwarding_task'
+    PERIODIC_TASK_PREFIX = 'Run forwarding'
 
     name = models.CharField(max_length=100)
     database = models.ForeignKey(ExportDatabase, on_delete=models.CASCADE)
@@ -61,13 +65,6 @@ class ForwardingConfig(BaseModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
-    schedule = models.OneToOneField(
-        'schedules.Schedule',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        help_text=_('Scheduling configuration for automatic forwarding.'),
-    )
 
     def __str__(self):
         return self.name
@@ -82,26 +79,6 @@ class ForwardingConfig(BaseModel):
         )
 
     @property
-    def is_paused(self):
-        """
-        Returns True if forwarding is paused.
-
-        A forwarding config is considered paused if:
-        - It has no schedule, or
-        - The schedule has no periodic_task, or
-        - The periodic_task is disabled
-        """
-        if not self.schedule or not self.schedule.periodic_task:
-            return True
-        return not self.schedule.periodic_task.enabled
-
-    def has_queued_runs(self):
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == ForwardingRun.Status.QUEUED
-        return False
-
-    @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
 
@@ -109,20 +86,13 @@ class ForwardingConfig(BaseModel):
     def details_url(self):
         return reverse('forwarding:forwarder_details', args=[self.id])
 
-    def save(self, **kwargs):
+    def save(self, *args, **kwargs):
         with reversion.create_revision():
-            super().save(**kwargs)
+            super().save(*args, **kwargs)
 
 
-class ForwardingRun(BaseModel):
+class ForwardingRun(RunBaseModel):
     """Record of a single forwarding run."""
-
-    class Status(models.TextChoices):
-        QUEUED = 'queued', _('Queued')
-        STARTED = 'started', _('Started')
-        COMPLETED = 'completed', _('Completed')
-        FAILED = 'failed', _('Failed')
-        SKIPPED = 'skipped', _('Skipped')
 
     forwarding_config = models.ForeignKey(
         ForwardingConfig,
@@ -147,9 +117,6 @@ class ForwardingRun(BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-    )
-    status = models.CharField(
-        max_length=10, default=Status.QUEUED, choices=Status.choices
     )
     log = models.TextField(null=True, blank=True)
 

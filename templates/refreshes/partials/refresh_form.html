@@ -1,0 +1,21 @@
+{% load i18n %}
+{% csrf_token %}
+{{ config_form.non_field_errors }}
+<div class="mb-3">
+  <label for="{{ config_form.name.id_for_label }}" class="form-label"
+    >{% trans "Name" %}</label
+  >
+  {{ config_form.name }}
+  <p class="form-text">{{ config_form.name.help_text }}</p>
+  {{ config_form.name.errors }}
+</div>
+<div class="mb-3">
+  <label for="{{ config_form.database.id_for_label }}" class="form-label"
+    >{% trans "Database" %}</label
+  >
+  {{ config_form.database }}
+  <p class="form-text">{{ config_form.database.help_text }}</p>
+  {{ config_form.database.errors }}
+</div>
+{% include 'refreshes/partials/materialized_view_selector.html' %}
+{{ config_form.materialized_views }}

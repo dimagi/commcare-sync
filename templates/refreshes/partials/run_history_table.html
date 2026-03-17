@@ -1,0 +1,132 @@
+{% load i18n %}
+{% load dateformat_tags %}
+{% load exports_tags %}
+<table
+  id="run-table"
+  class="table w-100 my-2"
+  hx-get="{% url 'refreshes:run_history_table' config.id %}"
+  hx-trigger="refresh from:body"
+  hx-swap="outerHTML"
+>
+  <thead>
+    <tr>
+      <th>{% trans "Queued" %}</th>
+      <th>{% trans "Started" %}</th>
+      <th>{% trans "Duration" %}</th>
+      <th>{% trans "Status" %}</th>
+      <th>{% trans "Log" %}</th>
+    </tr>
+  </thead>
+  <tbody x-data="{ expandedLogs: {}, expandedViews: {} }">
+    {% for refresh_run in runs %}
+      <tr>
+        <td>
+          <span class="icon">
+            {% if refresh_run.triggered_from_ui %}
+              <i
+                class="fa fa-user"
+                title="{% blocktrans with user=refresh_run.triggering_user|default:'unknown' %}
+                  Triggered from UI by {{ user }}
+                {% endblocktrans %}"
+              ></i>
+            {% elif refresh_run.triggered_from_ui == False %}
+              <i
+                class="fa fa-clock-o text-muted"
+                title="{% trans 'Scheduled Run' %}"
+              ></i>
+            {% else %}
+              <i
+                class="fa fa-question text-muted"
+                title="{% trans 'Unknown' %}"
+              ></i>
+            {% endif %}
+          </span>
+          {{ refresh_run.created_at }}
+        </td>
+        <td>{{ refresh_run.started_at|default:'-' }}</td>
+        <td>{{ refresh_run.duration|readable_timedelta }}</td>
+        <td>
+          {{ refresh_run.status|to_status_icon }} {{ refresh_run.status }}
+        </td>
+        <td>
+          <a
+            class="icon-link"
+            @click="expandedLogs[{{ refresh_run.id }}] = !expandedLogs[{{ refresh_run.id }}]"
+            role="button"
+            ><span class="icon"
+              ><i
+                class="fa"
+                :class="expandedLogs[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+              ></i
+            ></span>
+            {% trans "View log" %}
+          </a>
+          {% if refresh_run.view_results %}
+            <a
+              class="icon-link ms-2"
+              @click="expandedViews[{{ refresh_run.id }}] = !expandedViews[{{ refresh_run.id }}]"
+              role="button"
+              ><span class="icon"
+                ><i
+                  class="fa"
+                  :class="expandedViews[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                ></i
+              ></span>
+              {% trans "View details" %}
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      <tr
+        class="refresh-log my-1"
+        x-show="expandedLogs[{{ refresh_run.id }}]"
+        x-transition
+      >
+        <td colspan="5">
+          <pre class="wrapped">
+{% if refresh_run.log %}{{ refresh_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre
+          >
+        </td>
+      </tr>
+      {% if refresh_run.view_results %}
+        <tr
+          class="view-results my-1"
+          x-show="expandedViews[{{ refresh_run.id }}]"
+          x-transition
+        >
+          <td colspan="5">
+            <h6 class="text-muted small">{% trans "Per-View Results" %}</h6>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>{% trans "View" %}</th>
+                  <th>{% trans "Status" %}</th>
+                  <th>{% trans "Duration" %}</th>
+                  <th>{% trans "Message" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for view_name, result in refresh_run.view_results.items %}
+                  <tr>
+                    <td><code>{{ view_name }}</code></td>
+                    <td>
+                      {% if result.status == 'success' %}
+                        <i class="fa fa-check-circle text-success"></i>
+                        {% trans "Success" %}
+                      {% else %}
+                        <i class="fa fa-times-circle text-danger"></i>
+                        {% trans "Failed" %}
+                      {% endif %}
+                    </td>
+                    <td>{{ result.duration|floatformat:2 }}s</td>
+                    <td>{{ result.message|default:'-' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,27 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Edit Refresh Configuration" %}</h1>
+    <form method="post" enctype="multipart/form-data">
+      {% include 'refreshes/partials/refresh_form.html' %}
+      {% include 'schedules/partials/schedule_form.html' %}
+      <div class="d-flex gap-2">
+        <div>
+          <input
+            class="btn btn-primary"
+            type="submit"
+            value="{% trans 'Update' %}"
+          />
+        </div>
+        <div>
+          <a
+            class="btn btn-outline-secondary"
+            href="{% url 'refreshes:refresh_details' config.id %}"
+            >{% trans "Cancel" %}</a
+          >
+        </div>
+      </div>
+    </form>
+  </section>
+{% endblock app %}
