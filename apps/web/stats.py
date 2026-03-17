@@ -55,26 +55,26 @@ def _get_export_statistics(since_datetime, previous_start=None):
 
     recent_export_runs = ExportRun.objects.filter(
         created_at__gte=since_datetime
-    ).exclude(status=ExportRun.QUEUED)
+    ).exclude(status=ExportRun.Status.QUEUED)
 
     recent_multi_runs = MultiProjectExportRun.objects.filter(
         created_at__gte=since_datetime
-    ).exclude(status=MultiProjectExportRun.QUEUED)
+    ).exclude(status=MultiProjectExportRun.Status.QUEUED)
 
     total_runs = recent_export_runs.count() + recent_multi_runs.count()
     successful_runs = (
-        recent_export_runs.filter(status=ExportRun.COMPLETED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.COMPLETED).count()
+        recent_export_runs.filter(status=ExportRun.Status.COMPLETED).count() +
+        recent_multi_runs.filter(status=MultiProjectExportRun.Status.COMPLETED).count()
     )
     failed_runs = (
-        recent_export_runs.filter(status=ExportRun.FAILED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.FAILED).count()
+        recent_export_runs.filter(status=ExportRun.Status.FAILED).count() +
+        recent_multi_runs.filter(status=MultiProjectExportRun.Status.FAILED).count()
     )
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        ExportConfig.objects.select_related('project', 'created_by')
+        ExportConfig.objects.select_related('project')
         .order_by('-updated_at')[:10]
     )
 
@@ -91,21 +91,21 @@ def _get_export_statistics(since_datetime, previous_start=None):
     if previous_start is not None:
         prev_export_runs = ExportRun.objects.filter(
             created_at__gte=previous_start, created_at__lt=since_datetime,
-        ).exclude(status=ExportRun.QUEUED)
+        ).exclude(status=ExportRun.Status.QUEUED)
         prev_multi_runs = MultiProjectExportRun.objects.filter(
             created_at__gte=previous_start, created_at__lt=since_datetime,
-        ).exclude(status=MultiProjectExportRun.QUEUED)
+        ).exclude(status=MultiProjectExportRun.Status.QUEUED)
         prev_total = prev_export_runs.count() + prev_multi_runs.count()
         if prev_total > 0:
             prev_successful = (
-                prev_export_runs.filter(status=ExportRun.COMPLETED).count() +
-                prev_multi_runs.filter(status=MultiProjectExportRun.COMPLETED).count()
+                prev_export_runs.filter(status=ExportRun.Status.COMPLETED).count() +
+                prev_multi_runs.filter(status=MultiProjectExportRun.Status.COMPLETED).count()
             )
             prev_success_rate = prev_successful / prev_total * 100
 
     avg_runtime = _avg_runtime_for_runs(
-        (recent_export_runs, ExportRun.COMPLETED),
-        (recent_multi_runs, MultiProjectExportRun.COMPLETED),
+        (recent_export_runs, ExportRun.Status.COMPLETED),
+        (recent_multi_runs, MultiProjectExportRun.Status.COMPLETED),
     )
     return {
         'total_configs': total_configs,
@@ -137,7 +137,7 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        RefreshConfig.objects.select_related('database', 'created_by')
+        RefreshConfig.objects.select_related('database')
         .order_by('-updated_at')[:10]
     )
 
@@ -195,7 +195,7 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        ForwardingConfig.objects.select_related('destination', 'created_by')
+        ForwardingConfig.objects.select_related('destination')
         .order_by('-updated_at')[:10]
     )
 

@@ -29,25 +29,25 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
     class Meta:
         abstract = True
 
-    @property
-    def schedule_display(self):
-        if self.is_paused:
-            return ''
-        minutes = self.time_between_runs
-        if minutes % (60 * 24) == 0:
-            days = minutes // (60 * 24)
-            return f'Every {days} day{"s" if days != 1 else ""}'
-        elif minutes % 60 == 0:
-            hours = minutes // 60
-            return f'Every {hours} hour{"s" if hours != 1 else ""}'
-        return f'Every {minutes} minutes'
+    # @property
+    # def schedule_display(self):
+    #     if self.is_paused:
+    #         return ''
+    #     minutes = self.time_between_runs
+    #     if minutes % (60 * 24) == 0:
+    #         days = minutes // (60 * 24)
+    #         return f'Every {days} day{"s" if days != 1 else ""}'
+    #     elif minutes % 60 == 0:
+    #         hours = minutes // 60
+    #         return f'Every {hours} hour{"s" if hours != 1 else ""}'
+    #     return f'Every {minutes} minutes'
 
     @property
     def last_run(self):
         all_runs = getattr(self, '_all_runs', None)
         if all_runs is not None:
             # Use prefetched data: filter out QUEUED in Python
-            non_queued = [r for r in all_runs if r.status != ExportRun.QUEUED]
+            non_queued = [r for r in all_runs if r.status != ExportRun.Status.QUEUED]
             return non_queued[0] if non_queued else None
         return (
             self.runs.exclude(status=ExportRun.Status.QUEUED)
