@@ -31,13 +31,6 @@
     <div class="collapse navbar-collapse" id="nav-menu">
       <ul class="navbar-nav ms-auto">
         {% if user.is_authenticated %}
-          {% if user.is_superuser and user.is_staff %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin:index' %}">
-                {% trans "Admin Site" %}
-              </a>
-            </li>
-          {% endif %}
           <li class="nav-item dropdown">
             <a
               class="nav-link dropdown-toggle"
@@ -47,16 +40,31 @@
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              <img
-                class="avatar d-none d-lg-inline-block"
-                src="{{ user.avatar_url }}"
-              />
-              <span class="d-lg-none">{% trans "My Account" %}</span>
+              <i class="fa-solid fa-bars"></i>
+              <span class="visually-hidden">{% trans "Menu" %}</span>
             </a>
             <ul
               class="dropdown-menu dropdown-menu-end"
               aria-labelledby="navbarDropdown"
             >
+              {% if user.is_superuser and user.is_staff %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'admin:index' %}">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    {% trans "Admin Site" %}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'exports:download_commcare_export_log' %}"
+                  >
+                    <i class="fa-solid fa-download"></i>
+                    {% trans "Download Logs" %}
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+              {% endif %}
               <li>
                 <a class="dropdown-item" href="{% url 'users:user_profile' %}">
                   <i class="fa-solid fa-user"></i> {% trans "Profile" %}
@@ -67,12 +75,14 @@
                   class="dropdown-item"
                   href="{% url 'account_change_password' %}"
                 >
-                  <i class="fa-solid fa-unlock-keyhole"></i> {% trans "Change Password" %}
+                  <i class="fa-solid fa-unlock-keyhole"></i>
+                  {% trans "Change Password" %}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{% url 'account_logout' %}">
-                  <i class="fa-solid fa-right-from-bracket"></i> {% trans "Sign out" %}
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  {% trans "Sign out" %}
                 </a>
               </li>
             </ul>
