@@ -36,10 +36,10 @@ class RefreshConfigForm(ScheduleFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         pg_ids = [
-            db.pk for db in ExportDatabase.objects.all()
+            db.pk for db in Database.objects.all()
             if db.dialect == 'postgresql'
         ]
-        self.fields['database'].queryset = ExportDatabase.objects.filter(
+        self.fields['database'].queryset = Database.objects.filter(
             pk__in=pg_ids
         ).order_by('name')
 
