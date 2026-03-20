@@ -74,7 +74,7 @@ def _get_export_statistics(since_datetime, previous_start=None):
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        ExportConfig.objects.select_related('project', 'created_by')
+        ExportConfig.objects.select_related('project')
         .order_by('-updated_at')[:10]
     )
 
@@ -137,7 +137,7 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        RefreshConfig.objects.select_related('database', 'created_by')
+        RefreshConfig.objects.select_related('database')
         .order_by('-updated_at')[:10]
     )
 
@@ -195,7 +195,7 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
     configs = list(
-        ForwardingConfig.objects.select_related('destination', 'created_by')
+        ForwardingConfig.objects.select_related('destination')
         .order_by('-updated_at')[:10]
     )
 
