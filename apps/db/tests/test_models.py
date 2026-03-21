@@ -1,5 +1,6 @@
 import doctest
 
+import pytest
 from cryptography.fernet import Fernet
 from django.test import override_settings
 
@@ -66,3 +67,12 @@ def test_doctests():
 
     results = doctest.testmod(module)
     assert results.failed == 0
+
+
+@pytest.mark.django_db
+class TestDatabaseIsInUse:
+    def test_not_in_use_when_no_configs(self, db):
+        db_obj = Database(name='Test DB IsInUse')
+        db_obj.connection_string = 'postgresql://localhost/testdb'
+        db_obj.save()
+        assert db_obj.is_in_use() is False
