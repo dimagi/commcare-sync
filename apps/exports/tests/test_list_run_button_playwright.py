@@ -89,8 +89,8 @@ class TestListPageRunButton:
         edit_link = page.locator('a.btn-outline-secondary:has-text("Edit")').first
         expect(edit_link).not_to_have_attribute('disabled', '')
 
-    def test_htmx_poll_refreshes_table_content(self):
-        """Triggering the HTMX poll fetches fresh table HTML from the server."""
+    def test_htmx_poll_resets_running_state(self):
+        """Triggering the HTMX poll (outerHTML swap) resets Alpine running state."""
         page = get_request().getfixturevalue('page')
         live_server = get_request().getfixturevalue('live_server')
         data = test_data()
@@ -107,30 +107,23 @@ class TestListPageRunButton:
             status=204, body=''
         ))
 
-        # Capture requests to the config_table endpoint
-        config_table_requests = []
-        page.on('request', lambda req: config_table_requests.append(req.url)
-                if 'config-table' in req.url else None)
-
         run_button = page.locator('button.btn-outline-success').first
         run_button.click()
         page.wait_for_timeout(100)
-
         expect(run_button).to_be_disabled()
 
-        # Simulate the HTMX poll by directly issuing an HTMX GET to the
-        # config-table endpoint and swapping the result into the container.
+        # Simulate the 60-second HTMX poll: replace the outer container via outerHTML swap
+        # (This is what hx-trigger="every 60s" + hx-swap="outerHTML" does)
+        from django.urls import reverse
+        config_table_url = reverse('exports:config_table')
         page.evaluate(
-            "htmx.ajax('GET', '/exports/config-table/', {target: '#exports-config-table', swap: 'outerHTML'})"
+            f"htmx.ajax('GET', '{config_table_url}', "
+            f"{{target: '#exports-config-table', swap: 'outerHTML'}})"
         )
-        # Wait for the network request to complete.
-        page.wait_for_load_state('networkidle')
+        # Wait for HTMX to complete the outerHTML swap and Alpine to re-initialize
+        page.wait_for_timeout(1000)
 
-        # Verify a request was made to the config_table endpoint.
-        assert any('config-table' in url for url in config_table_requests), (
-            f"Expected a request to the config-table endpoint; got: {config_table_requests}"
-        )
-
-        # The table container should still be present in the DOM after the swap.
-        table = page.locator('#exports-config-table')
-        expect(table).to_be_visible()
+        # After the swap, the new tbody has fresh Alpine state (running=false)
+        # Locate the re-rendered Run button
+        new_run_button = page.locator('button.btn-outline-success').first
+        expect(new_run_button).not_to_be_disabled(timeout=2000)
