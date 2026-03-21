@@ -78,11 +78,8 @@ class TestExportStatistics:
 
         self.database = Database.objects.create(
             name='Test DB',
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
-        )
-        self.database.save()
 
         config_file = TemporaryUploadedFile(
             name='config_file',
@@ -210,11 +207,10 @@ class TestRefreshStatistics:
             password='testpass123',
         )
 
-        self.database = Database.objects.create(name='Test DB')
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
+        self.database = Database.objects.create(
+            name='Test DB',
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.save()
 
         self.refresh_config = RefreshConfig.objects.create(
             name='Test Refresh',
@@ -333,11 +329,10 @@ class TestForwardingStatistics:
             password='testpass123',
         )
 
-        self.database = Database.objects.create(name='Test DB')
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
+        self.database = Database.objects.create(
+            name='Test DB',
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.save()
 
         self.destination = ForwardingDestination.objects.create(
             name='Test Destination',
