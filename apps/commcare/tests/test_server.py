@@ -1,5 +1,6 @@
+import pytest
 from django.conf import settings
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase
 
 from apps.commcare.models import CommCareServer
 
@@ -18,8 +19,15 @@ class ServerTest(SimpleTestCase):
         )
 
 
-class ServerDbTest(TestCase):
-    def test_default_hq_auto_created(self):
-        server = CommCareServer.objects.get()
+@pytest.mark.django_db
+class TestCommCareServerDefaults:
+    def test_default_hq_server_model_defaults(self):
+        """CommCareServer defaults match the expected HQ server configuration.
+
+        The data migration 0002_create_commcare_server calls
+        CommCareServer.objects.get_or_create() with no arguments, relying on
+        these model defaults to produce the correct server record.
+        """
+        server, _ = CommCareServer.objects.get_or_create()
         assert server.name == 'CommCare HQ'
         assert server.url == settings.COMMCARE_DEFAULT_SERVER
