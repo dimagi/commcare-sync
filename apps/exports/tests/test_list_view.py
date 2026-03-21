@@ -317,6 +317,71 @@ class TestIsMultiProject:
 
 
 @pytest.mark.django_db
+class TestRunExportHtmxBranch:
+    def test_htmx_request_returns_204(self, client, export_config):
+        url = reverse('exports:run_export', args=[export_config.id])
+        response = client.post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_creates_export_run(self, client, export_config):
+        url = reverse('exports:run_export', args=[export_config.id])
+        client.post(url, HTTP_HX_REQUEST='true')
+        assert ExportRun.objects.filter(
+            base_export_config=export_config,
+            triggered_from_ui=True,
+        ).exists()
+
+    def test_non_htmx_request_returns_200_with_task_id(
+        self, client, export_config
+    ):
+        import json
+        url = reverse('exports:run_export', args=[export_config.id])
+        response = client.post(
+            url,
+            data=json.dumps({'forceSync': False}),
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert len(response.content) > 0  # task ID in body
+
+    def test_non_htmx_force_sync_true_passes_flag(
+        self, client, export_config
+    ):
+        """forceSync: true in JSON body passes force_sync_all_data=True to task."""
+        import json
+        from unittest.mock import patch
+        url = reverse('exports:run_export', args=[export_config.id])
+        with patch('apps.exports.views.run_export_task') as mock_task:
+            mock_task.delay.return_value.task_id = 'fake-id'
+            client.post(
+                url,
+                data=json.dumps({'forceSync': True}),
+                content_type='application/json',
+            )
+        mock_task.delay.assert_called_once()
+        _, kwargs = mock_task.delay.call_args
+        assert kwargs['force_sync_all_data'] is True
+
+
+@pytest.mark.django_db
+class TestRunMultiExportHtmxBranch:
+    def test_htmx_request_returns_204(self, client, multi_export_config):
+        url = reverse('exports:run_multi_export', args=[multi_export_config.id])
+        response = client.post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_creates_multi_export_run(
+        self, client, multi_export_config
+    ):
+        url = reverse('exports:run_multi_export', args=[multi_export_config.id])
+        client.post(url, HTTP_HX_REQUEST='true')
+        assert MultiProjectExportRun.objects.filter(
+            base_export_config=multi_export_config,
+            triggered_from_ui=True,
+        ).exists()
+
+
+@pytest.mark.django_db
 class TestExportsHomeSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 
