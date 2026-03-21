@@ -16,11 +16,11 @@ Actions column order: **▶ Run · 📋 Log · ✏ Edit** (Run is leftmost).
 
 ### Row states
 
-| State | Status cell | Run button | Log button | Edit button |
-|---|---|---|---|---|
-| Normal | Existing badge (Completed / Failed / —) | Active, `btn-outline-success` | Active if last_run has completed/failed status | Active |
-| Running (optimistic) | Spinner + "Running…" | Disabled (HTML attribute) | Disabled | Active |
-| Already queued / started (server) | Previous badge or — | Disabled (server-rendered) | Unchanged (existing server-side logic) | Active |
+| State                             | Status cell                             | Run button                    | Log button                                     | Edit button |
+|-----------------------------------|-----------------------------------------|-------------------------------|------------------------------------------------|-------------|
+| Normal                            | Existing badge (Completed / Failed / —) | Active, `btn-outline-success` | Active if last_run has completed/failed status | Active      |
+| Running (optimistic)              | Spinner + "Running…"                    | Disabled (HTML attribute)     | Disabled                                       | Active      |
+| Already queued / started (server) | Previous badge or —                     | Disabled (server-rendered)    | Unchanged (existing server-side logic)         | Active      |
 
 **Notes on the "already queued/started" state:**
 
@@ -193,10 +193,10 @@ branch is needed (it does not parse a JSON body today):
 
 ### Affected files
 
-| App | Partial |
-|---|---|
-| Exports | `templates/exports/partials/config_table.html` |
-| Refreshes | `templates/refreshes/partials/config_table.html` |
+| App        | Partial                                           |
+|------------|---------------------------------------------------|
+| Exports    | `templates/exports/partials/config_table.html`    |
+| Refreshes  | `templates/refreshes/partials/config_table.html`  |
 | Forwarding | `templates/forwarding/partials/config_table.html` |
 
 ### `<tbody>` x-data — merge `running` into existing scope
