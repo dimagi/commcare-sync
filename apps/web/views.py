@@ -13,7 +13,7 @@ def home(request):
 
 
 @login_required
-def admin_required(request):
+def admin_access_denied(request):
     if request.user.is_superuser:
         return HttpResponseRedirect(request.GET.get('next', reverse('web:home')))
     else:
