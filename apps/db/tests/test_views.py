@@ -141,3 +141,62 @@ class TestDeleteDatabaseView:
         response = admin_client().post(url)
         assert response.status_code == 302
         assert reverse('db:databases') in response.url
+
+
+class TestDeleteDatabaseViewInUseGuard:
+    @pytest.fixture
+    def database_in_use(self, admin_user, db):
+        from cryptography.fernet import Fernet
+        from django.test import override_settings
+
+        from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
+        from apps.db.models import Database
+        from apps.exports.models import ExportConfig
+
+        with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+            server = CommCareServer.objects.create(
+                name='Test', url='https://test.commcarehq.org'
+            )
+            project = CommCareProject.objects.create(server=server, domain='test')
+            account = CommCareAccount(
+                server=server, username='test@example.com', owner=admin_user
+            )
+            account.api_key = 'dummy'
+            account.save()
+
+            db_obj = Database(name='In Use DB')
+            db_obj.connection_string = 'postgresql://localhost/testdb'
+            db_obj.save()
+
+            from django.core.files.base import ContentFile
+            config = ExportConfig(
+                name='Test Export',
+                account=account,
+                database=db_obj,
+                project=project,
+            )
+            config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+            config.save()
+
+        return db_obj
+
+    def test_post_on_in_use_database_redirects_with_error(
+        self, admin_client, database_in_use
+    ):
+        from django.urls import reverse
+        url = reverse('db:delete_database', args=[database_in_use.id])
+        response = admin_client.post(url)
+        assert response.status_code == 302
+        assert reverse('db:databases') in response.url
+        # Database must still exist
+        from apps.db.models import Database
+        assert Database.objects.filter(id=database_in_use.id).exists()
+
+    def test_get_on_in_use_database_redirects_with_error(
+        self, admin_client, database_in_use
+    ):
+        from django.urls import reverse
+        url = reverse('db:delete_database', args=[database_in_use.id])
+        response = admin_client.get(url)
+        assert response.status_code == 302
+        assert reverse('db:databases') in response.url
