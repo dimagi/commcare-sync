@@ -1,1 +1,30 @@
-{% extends "web/app/app_base.html" %}{% block app %}{% endblock %}
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+  <section class="py-4 app-card">
+    <h1 class="h2">{% trans "Delete Project" %}</h1>
+    <p>
+      {% blocktrans with domain=project.domain %}
+        Are you sure you want to delete the project
+        <strong>{{ domain }}</strong>?
+      {% endblocktrans %}
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex gap-2">
+        <div>
+          <input
+            class="btn btn-danger"
+            type="submit"
+            value="{% trans 'Delete' %}"
+          />
+        </div>
+        <div>
+          <a class="btn btn-secondary" href="{% url 'commcare:projects' %}">
+            {% trans "Cancel" %}
+          </a>
+        </div>
+      </div>
+    </form>
+  </section>
+{% endblock app %}
