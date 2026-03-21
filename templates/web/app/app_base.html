@@ -1,5 +1,14 @@
 {% extends "web/base.html" %}
 {% load static %}
+{% block page_js %}
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document
+        .querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach((el) => new bootstrap.Tooltip(el));
+    });
+  </script>
+{% endblock %}
 {% block body %}
   {% block notifications %}
   {% endblock %}
