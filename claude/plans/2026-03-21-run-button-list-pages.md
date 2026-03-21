@@ -42,20 +42,22 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `TestExportConfigBaseProperties` in `apps/exports/tests/test_list_view.py`:
+Add a **new** test class in `apps/exports/tests/test_list_view.py` (do not add to `TestExportConfigBaseProperties` — that class has no `@pytest.mark.django_db` decorator):
 
 ```python
-def test_export_config_is_not_multi_project(self, export_config):
-    assert export_config.is_multi_project is False
+@pytest.mark.django_db
+class TestIsMultiProject:
+    def test_export_config_is_not_multi_project(self, export_config):
+        assert export_config.is_multi_project is False
 
-def test_multi_export_config_is_multi_project(self, multi_export_config):
-    assert multi_export_config.is_multi_project is True
+    def test_multi_export_config_is_multi_project(self, multi_export_config):
+        assert multi_export_config.is_multi_project is True
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-uv run pytest apps/exports/tests/test_list_view.py::TestExportConfigBaseProperties -v --no-migrations
+uv run pytest apps/exports/tests/test_list_view.py::TestIsMultiProject -v --no-migrations
 ```
 
 Expected: FAIL — `AttributeError: 'ExportConfig' object has no attribute 'is_multi_project'`
@@ -81,7 +83,7 @@ def is_multi_project(self):
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-uv run pytest apps/exports/tests/test_list_view.py::TestExportConfigBaseProperties -v --no-migrations
+uv run pytest apps/exports/tests/test_list_view.py::TestIsMultiProject -v --no-migrations
 ```
 
 Expected: PASS
@@ -140,42 +142,18 @@ class TestExportConfigHasActiveRun:
         assert export_config.has_active_run is True
 
     def test_uses_prefetched_runs_without_db_query(self, export_config):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
         run = ExportRun.objects.create(
             base_export_config=export_config,
             status=ExportRun.Status.QUEUED,
         )
         export_config._all_runs = [run]
-        with self.assertNumQueries(0):
+        with CaptureQueriesContext(connection) as ctx:
             result = export_config.has_active_run
+        assert len(ctx) == 0
         assert result is True
-
-    # assertNumQueries is a TestCase method; use pytest-django's approach instead:
-    # replace the line above with:
-    #   from django.test.utils import CaptureQueriesContext
-    #   from django.db import connection
-    #   with CaptureQueriesContext(connection) as ctx:
-    #       result = export_config.has_active_run
-    #   assert len(ctx) == 0
-    #   assert result is True
-```
-
-> **Note on assertNumQueries:** `TestExportConfigHasActiveRun` uses pytest-django (`@pytest.mark.django_db`), not `django.test.TestCase`. The `assertNumQueries` context manager is not available directly. Use `django.test.utils.CaptureQueriesContext` instead:
->
-> ```python
-> from django.test.utils import CaptureQueriesContext
-> from django.db import connection
->
-> def test_uses_prefetched_runs_without_db_query(self, export_config):
->     run = ExportRun.objects.create(
->         base_export_config=export_config,
->         status=ExportRun.Status.QUEUED,
->     )
->     export_config._all_runs = [run]
->     with CaptureQueriesContext(connection) as ctx:
->         result = export_config.has_active_run
->     assert len(ctx) == 0
->     assert result is True
-> ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -634,35 +612,47 @@ class TestRunRefreshHtmxBranch:
         assert len(response.content) > 0
 ```
 
-In `apps/forwarding/tests/test_views.py`, add:
+In `apps/forwarding/tests/test_views.py`, first add a `forwarding_config` fixture near the top of the file alongside the existing `destination` and `database` fixtures:
+
+```python
+@pytest.fixture
+def forwarding_config(db, database, destination):
+    return ForwardingConfig.objects.create(
+        name='Test Config',
+        database=database,
+        destination=destination,
+        query='SELECT 1',
+    )
+```
+
+Then add the test class. Use `regular_client` (already defined in the file) — `run_forwarding` is `@login_required`, not admin-only:
 
 ```python
 @pytest.mark.django_db
 class TestRunForwardingHtmxBranch:
-    def test_htmx_request_returns_204(self, client, forwarding_config):
+    def test_htmx_request_returns_204(self, regular_client, forwarding_config):
         url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
-        response = client.post(url, HTTP_HX_REQUEST='true')
+        response = regular_client.post(url, HTTP_HX_REQUEST='true')
         assert response.status_code == 204
 
     def test_htmx_request_creates_forwarding_run(
-        self, client, forwarding_config
+        self, regular_client, forwarding_config
     ):
-        from apps.forwarding.models import ForwardingRun
         url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
-        client.post(url, HTTP_HX_REQUEST='true')
+        regular_client.post(url, HTTP_HX_REQUEST='true')
         assert ForwardingRun.objects.filter(
             forwarding_config=forwarding_config,
             triggered_from_ui=True,
         ).exists()
 
-    def test_non_htmx_request_returns_200(self, client, forwarding_config):
+    def test_non_htmx_request_returns_200(
+        self, regular_client, forwarding_config
+    ):
         url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
-        response = client.post(url)
+        response = regular_client.post(url)
         assert response.status_code == 200
         assert len(response.content) > 0
 ```
-
-> Check `apps/refreshes/tests/conftest.py` and `apps/forwarding/tests/conftest.py` for the `client` and `refresh_config`/`forwarding_config` fixture names before writing — use whatever exists. If no `forwarding_config` fixture exists in conftest, create it inline in the test class or add it to conftest.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
