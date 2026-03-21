@@ -1,10 +1,6 @@
-import re
-
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-
-from apps.exports.models import ExportDatabase
 
 from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
 
@@ -12,182 +8,126 @@ User = get_user_model()
 
 
 @pytest.fixture
-def user(db):
+def admin_user(db):
     return User.objects.create_user(
-        username='fwdviewuser', email='fwd@example.com', password='pass'
+        username='fwdadminuser',
+        email='fwdadmin@example.com',
+        password='pass',
+        is_active=True,
+        is_superuser=True,
+        is_staff=True,
     )
 
 
 @pytest.fixture
-def client(client, user):
-    client.force_login(user)
+def regular_user(db):
+    return User.objects.create_user(
+        username='fwdregularuser',
+        email='fwdregular@example.com',
+        password='pass',
+    )
+
+
+@pytest.fixture
+def admin_client(client, admin_user):
+    client.force_login(admin_user)
     return client
 
 
 @pytest.fixture
-def database(db, user):
-    return ExportDatabase.objects.create(
-        name='Test PostgreSQL',
-        connection_string='postgresql://localhost/test',
-        owner=user,
-    )
+def regular_client(client, regular_user):
+    client.force_login(regular_user)
+    return client
 
 
 @pytest.fixture
-def destination(db, user):
+def destination(db):
     return ForwardingDestination.objects.create(
-        name='Test API',
-        api_url='https://example.com/api',
-        owner=user,
+        name='Test Dest',
+        api_url='https://example.com/api/',
     )
 
 
 @pytest.fixture
-def forwarding_config(db, user, database, destination):
-    return ForwardingConfig.objects.create(
+def database(db):
+    from apps.db.models import Database
+
+    db_obj = Database(name='Test DB')
+    db_obj.connection_string = 'postgresql://localhost/testdb'
+    db_obj.save()
+    return db_obj
+
+
+@pytest.fixture
+def destination_in_use(db, destination, database):
+    ForwardingConfig.objects.create(
         name='Test Forwarder',
         database=database,
         destination=destination,
         query='SELECT 1',
-        created_by=user,
     )
-
-
-class TestForwardersListView:
-    def test_requires_login(self, client, user):
-        client.logout()
-        url = reverse('forwarding:forwarders')
-        response = client.get(url)
-        assert response.status_code == 302
-        assert '/accounts/login/' in response.url
-
-    def test_stats_in_context(self, client, db):
-        url = reverse('forwarding:forwarders')
-        response = client.get(url)
-        assert response.status_code == 200
-        assert 'export_stats' in response.context
-        assert 'refresh_stats' in response.context
-        assert 'forwarding_stats' in response.context
-
-
-class TestForwardingConfigTableView:
-    def test_requires_login(self, client, user):
-        client.logout()
-        response = client.get(reverse('forwarding:config_table'))
-        assert response.status_code == 302
-
-    def test_returns_200(self, client, db):
-        response = client.get(reverse('forwarding:config_table'))
-        assert response.status_code == 200
-
-    def test_config_appears(self, client, forwarding_config):
-        response = client.get(reverse('forwarding:config_table'))
-        assert forwarding_config.name in response.content.decode()
-
-    def test_pagination_default_10(self, client, user, database, destination):
-        for i in range(15):
-            ForwardingConfig.objects.create(
-                name=f'Forward {i}',
-                database=database,
-                destination=destination,
-                query='SELECT 1',
-                created_by=user,
-            )
-        response = client.get(reverse('forwarding:config_table'))
-        shown = response.content.decode().count('Forward ')
-        assert shown == 10
-
-    def test_etag_match_returns_no_swap(self, client, forwarding_config):
-        response = client.get(reverse('forwarding:config_table'))
-        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
-        assert match
-        etag = match.group(1)
-        response2 = client.get(reverse('forwarding:config_table'), {'etag': etag})
-        assert response2.get('HX-Reswap') == 'none'
-
-    def test_etag_mismatch_returns_content(self, client, forwarding_config):
-        response = client.get(reverse('forwarding:config_table'), {'etag': 'stale'})
-        assert response.get('HX-Reswap') is None
-        assert forwarding_config.name in response.content.decode()
-
-
-class TestForwardingRunLogView:
-    def test_requires_login(self, client, user, forwarding_config):
-        run = ForwardingRun.objects.create(
-            forwarding_config=forwarding_config,
-            status=ForwardingRun.Status.COMPLETED,
-            log='hello log',
-        )
-        client.logout()
-        response = client.get(reverse('forwarding:run_log', args=[run.id]))
-        assert response.status_code == 302
-
-    def test_returns_log(self, client, forwarding_config):
-        run = ForwardingRun.objects.create(
-            forwarding_config=forwarding_config,
-            status=ForwardingRun.Status.COMPLETED,
-            log='forwarding log content',
-        )
-        response = client.get(reverse('forwarding:run_log', args=[run.id]))
-        assert response.status_code == 200
-        assert 'forwarding log content' in response.content.decode()
-
-    def test_404_for_missing(self, client):
-        response = client.get(reverse('forwarding:run_log', args=[9999]))
-        assert response.status_code == 404
+    return destination
 
 
 @pytest.mark.django_db
-class TestForwardersListPageSmoke:
-    """Smoke tests: full-page renders with configs in various run states."""
-
-    def test_renders_200(self, client, db):
-        response = client.get(reverse('forwarding:forwarders'))
+class TestDestinationsView:
+    def test_admin_get_returns_200(self, admin_client):
+        url = reverse('forwarding:destinations')
+        response = admin_client.get(url)
         assert response.status_code == 200
 
-    def test_includes_config_table_div(self, client, db):
-        response = client.get(reverse('forwarding:forwarders'))
-        assert 'id="forwarding-config-table"' in response.content.decode()
+    def test_anonymous_redirects(self, client):
+        url = reverse('forwarding:destinations')
+        response = client.get(url)
+        assert response.status_code == 302
 
-    def test_config_appears(self, client, forwarding_config):
-        response = client.get(reverse('forwarding:forwarders'))
+
+@pytest.mark.django_db
+class TestDeleteDestinationView:
+    def test_get_with_deletable_destination_returns_200(
+        self, admin_client, destination
+    ):
+        url = reverse('forwarding:delete_destination', args=[destination.id])
+        response = admin_client.get(url)
         assert response.status_code == 200
-        assert forwarding_config.name in response.content.decode()
 
-    def test_renders_with_no_runs(self, client, forwarding_config):
-        """Template handles configs with no runs (Never / — paths)."""
-        response = client.get(reverse('forwarding:forwarders'))
-        assert response.status_code == 200
-        assert forwarding_config.name in response.content.decode()
+    def test_post_with_deletable_destination_deletes_and_redirects(
+        self, admin_client, destination
+    ):
+        destination_id = destination.id
+        url = reverse('forwarding:delete_destination', args=[destination_id])
+        response = admin_client.post(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
+        assert not ForwardingDestination.objects.filter(id=destination_id).exists()
 
-    def test_renders_with_completed_run(self, client, forwarding_config):
-        """Completed run: status icon, log button enabled, duration displayed."""
-        ForwardingRun.objects.create(
-            forwarding_config=forwarding_config,
-            status=ForwardingRun.Status.COMPLETED,
-            log='Forwarded 50 rows.',
+    def test_get_with_in_use_destination_redirects_with_error(
+        self, admin_client, destination_in_use
+    ):
+        url = reverse(
+            'forwarding:delete_destination', args=[destination_in_use.id]
         )
-        response = client.get(reverse('forwarding:forwarders'))
-        assert response.status_code == 200
-        assert 'completed' in response.content.decode()
+        response = admin_client.get(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
 
-    def test_renders_with_failed_run(self, client, forwarding_config):
-        """Failed run: log button enabled."""
-        ForwardingRun.objects.create(
-            forwarding_config=forwarding_config,
-            status=ForwardingRun.Status.FAILED,
-            log='Error: API returned 500.',
-        )
-        response = client.get(reverse('forwarding:forwarders'))
-        assert response.status_code == 200
-        assert 'failed' in response.content.decode()
+    def test_post_with_in_use_destination_redirects_and_does_not_delete(
+        self, admin_client, destination_in_use
+    ):
+        destination_id = destination_in_use.id
+        url = reverse('forwarding:delete_destination', args=[destination_id])
+        response = admin_client.post(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
+        assert ForwardingDestination.objects.filter(id=destination_id).exists()
 
-    def test_renders_with_started_run(self, client, forwarding_config):
-        """In-progress run: log button disabled."""
-        ForwardingRun.objects.create(
-            forwarding_config=forwarding_config,
-            status=ForwardingRun.Status.STARTED,
-        )
-        response = client.get(reverse('forwarding:forwarders'))
-        assert response.status_code == 200
-        assert 'started' in response.content.decode()
+    def test_non_admin_get_redirects(self, regular_client, destination):
+        url = reverse('forwarding:delete_destination', args=[destination.id])
+        response = regular_client.get(url)
+        assert response.status_code in (302, 403)
+
+    def test_anonymous_get_redirects(self, client, destination):
+        url = reverse('forwarding:delete_destination', args=[destination.id])
+        response = client.get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url

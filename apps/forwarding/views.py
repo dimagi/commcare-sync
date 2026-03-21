@@ -314,6 +314,33 @@ def edit_destination(request, destination_id):
     )
 
 
+@admin_required
+def delete_destination(request, destination_id):
+    """Delete an existing forwarding destination."""
+    destination = get_object_or_404(ForwardingDestination, id=destination_id)
+    if destination.is_in_use():
+        messages.error(
+            request,
+            f'Cannot delete "{destination.name}": It is used by one or more forwarder configurations.',
+        )
+        return HttpResponseRedirect(reverse('forwarding:destinations'))
+    if request.method == 'POST':
+        destination.delete()
+        messages.success(
+            request,
+            f'Destination "{destination.name}" was successfully deleted.',
+        )
+        return HttpResponseRedirect(reverse('forwarding:destinations'))
+    return render(
+        request,
+        'forwarding/delete_destination.html',
+        {
+            'active_tab': 'destinations',
+            'destination': destination,
+        },
+    )
+
+
 @login_required
 def forwarder_details(request, forwarder_id):
     """Display details for a forwarding configuration."""
