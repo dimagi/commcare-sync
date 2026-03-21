@@ -531,3 +531,67 @@ class TestForwardingDestinationIsInUse:
             query='SELECT 1',
         )
         assert destination.is_in_use() is True
+
+
+@pytest.mark.django_db(transaction=True)
+class TestForwardingConfigHasActiveRun:
+    def setup_method(self):
+        self.database = Database.objects.create(
+            name='Test DB',
+            connection_string='postgresql://localhost/test',
+        )
+        self.destination = ForwardingDestination.objects.create(
+            name='Test API',
+            api_url='https://example.com/api',
+        )
+        self.config = ForwardingConfig.objects.create(
+            name='Test Config',
+            database=self.database,
+            destination=self.destination,
+            query='SELECT 1',
+        )
+
+    def test_false_with_no_runs(self):
+        assert self.config.has_active_run is False
+
+    def test_false_when_run_is_completed(self):
+        ForwardingRun.objects.create(
+            forwarding_config=self.config,
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        assert self.config.has_active_run is False
+
+    def test_false_when_run_is_failed(self):
+        ForwardingRun.objects.create(
+            forwarding_config=self.config,
+            status=ForwardingRun.Status.FAILED,
+        )
+        assert self.config.has_active_run is False
+
+    def test_true_when_run_is_queued(self):
+        ForwardingRun.objects.create(
+            forwarding_config=self.config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        assert self.config.has_active_run is True
+
+    def test_true_when_run_is_started(self):
+        ForwardingRun.objects.create(
+            forwarding_config=self.config,
+            status=ForwardingRun.Status.STARTED,
+        )
+        assert self.config.has_active_run is True
+
+    def test_uses_prefetched_runs_without_db_query(self):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        run = ForwardingRun.objects.create(
+            forwarding_config=self.config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        self.config._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = self.config.has_active_run
+        assert len(ctx) == 0
+        assert result is True
