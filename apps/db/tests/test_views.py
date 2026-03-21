@@ -30,11 +30,6 @@ def admin_user():
 
 
 @fixture
-def anon_client():
-    yield Client()
-
-
-@fixture
 def regular_client():
     client = Client()
     client.force_login(regular_user())
@@ -58,10 +53,9 @@ def database():
 
 
 class TestCreateDatabaseView:
-    @use(anon_client)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:create_database')
-        response = anon_client().get(url)
+        response = Client().get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
@@ -92,10 +86,10 @@ class TestCreateDatabaseView:
 
 
 class TestEditDatabaseView:
-    @use(anon_client, database)
+    @use(database)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:edit_database', args=[database().id])
-        response = anon_client().get(url)
+        response = Client().get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
@@ -122,10 +116,10 @@ class TestEditDatabaseView:
 
 
 class TestDeleteDatabaseView:
-    @use(anon_client, database)
+    @use(database)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:delete_database', args=[database().id])
-        response = anon_client().get(url)
+        response = Client().get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 

@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 
 def admin_required(view_func):
-    """Restrict a view to active superusers who also have staff status.
+    """Restrict a view to users with is_active, is_superuser, and is_staff.
 
     - Unauthenticated requests are redirected to settings.LOGIN_URL.
     - Authenticated requests that fail the test receive a 403 response.
