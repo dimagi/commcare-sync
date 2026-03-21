@@ -6,7 +6,7 @@
       <h1 class="h2 mb-0">{% trans "Forwarding Destinations" %}</h1>
       {% if user.is_admin %}
         <a
-          class="icon-link btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm"
           href="{% url 'forwarding:create_destination' %}"
         >
           <i class="fa-solid fa-plus"></i>
@@ -39,19 +39,16 @@
                     class="btn btn-outline-secondary btn-sm"
                     href="{% url 'forwarding:edit_destination' destination.id %}"
                   >
-                    {% trans "Edit" %}
+                    <i class="fa-solid fa-pencil"></i> {% trans "Edit" %}
                   </a>
                   {% if destination.is_in_use %}
                     <span
                       data-bs-toggle="tooltip"
                       title="{% trans 'Cannot delete: This destination is in use by one or more configurations' %}"
                     >
-                      <button
-                        class="btn btn-outline-danger btn-sm disabled"
-                        disabled
+                      <a class="btn btn-outline-danger btn-sm disabled" disabled
+                        >{% trans "Delete" %}</a
                       >
-                        {% trans "Delete" %}
-                      </button>
                     </span>
                   {% else %}
                     <a
@@ -73,7 +70,7 @@
       </div>
       {% if user.is_admin %}
         <a
-          class="icon-link btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm"
           href="{% url 'forwarding:create_destination' %}"
         >
           <i class="fa-solid fa-plus"></i>
