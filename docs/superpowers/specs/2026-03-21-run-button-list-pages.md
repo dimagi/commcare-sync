@@ -175,9 +175,10 @@ def run_export(request, export_id):
 ```
 
 Apply the same HTMX branch to `run_multi_export` (which creates
-`MultiProjectExportRun`, not `ExportRun`) and `run_refresh`. For
-`run_forwarding`, only the 204 return branch is needed (it does not
-parse a JSON body today):
+`MultiProjectExportRun.objects.create(...)` and calls
+`run_multi_project_export_task.delay(...)` — preserve both, only add the
+branch) and `run_refresh`. For `run_forwarding`, only the 204 return
+branch is needed (it does not parse a JSON body today):
 
 ```python
     result = run_forwarding_task.delay(...)
@@ -288,9 +289,19 @@ in step 1 to select the correct run URL):
 {# Edit — unchanged #}
 ```
 
-**Refreshes** and **Forwarding**: identical structure with
-`refreshes:run_refresh` / `forwarding:run_forwarding` (single config
-type each, no `is_multi_project` conditional needed).
+**Refreshes** and **Forwarding**: identical structure with a single run
+URL per app (no `is_multi_project` conditional needed). Use positional
+`{% url %}` syntax — the URL kwarg names differ from exports
+(`config_id` for refresh, `forwarder_id` for forwarding) but positional
+resolution works:
+
+```html
+{# Refreshes #}
+<button ... hx-post="{% url 'refreshes:run_refresh' config.id %}" hx-swap="none">▶ Run</button>
+
+{# Forwarding #}
+<button ... hx-post="{% url 'forwarding:run_forwarding' config.id %}" hx-swap="none">▶ Run</button>
+```
 
 ---
 
@@ -327,8 +338,14 @@ One test class per model (`ExportConfig`, `RefreshConfig`,
 - Returns `True` when a run has status QUEUED
 - Returns `True` when a run has status STARTED
 - Prefetch path: set `config._all_runs = [run_instance]` directly on the
-  instance and assert the property returns the correct result using
-  `django.test.utils.assertNumQueries(0)` (i.e. it does not query the DB)
+  instance and assert the property returns the correct result without
+  hitting the database. Use the `TestCase.assertNumQueries` context
+  manager:
+  ```python
+  with self.assertNumQueries(0):
+      result = config.has_active_run
+  assert result is True
+  ```
 
 ### Unit tests — run view HTMX branch
 
@@ -337,7 +354,9 @@ For each of the four views (`run_export`, `run_multi_export`,
 
 - HTMX request (`HTTP_HX_REQUEST=true` on test client) → status 204
 - HTMX request → a run record is created with `triggered_from_ui=True`
-  and the correct config
+  and the correct config (`ExportRun` for `run_export`,
+  `MultiProjectExportRun` for `run_multi_export`, `RefreshRun` for
+  `run_refresh`, `ForwardingRun` for `run_forwarding`)
 - Non-HTMX request → status 200, body equals the Celery task ID
   (existing behaviour unchanged)
 
