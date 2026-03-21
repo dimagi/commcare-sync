@@ -70,7 +70,7 @@ def edit_database(request, database_id):
     )
 
 
-@login_required
+@admin_required
 def delete_database(request, database_id):
     db = get_object_or_404(Database, id=database_id)
     if request.method == 'POST':
