@@ -5,7 +5,7 @@ import os
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Max, Prefetch
 from django.http import (
@@ -20,6 +20,7 @@ from django.views.decorators.http import require_GET, require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.web.decorators import admin_required
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -609,7 +610,7 @@ def fetch_config_files(request):
     )
 
 
-@user_passes_test(lambda u: u.is_active and u.is_superuser and u.is_staff)
+@admin_required
 def download_commcare_export_log(request):
     """
     Download the commcare_export.log file from the configured log directory.
