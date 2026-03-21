@@ -74,6 +74,10 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
         else:
             raise ValueError(f"Can't find details URL for {self}")
 
+    @property
+    def is_multi_project(self):
+        return False
+
     def save(self, **kwargs):
         with reversion.create_revision():
             super().save(**kwargs)
@@ -122,6 +126,10 @@ class MultiProjectExportConfig(ExportConfigBase):
             return mark_safe(
                 '<br>'.join(p.domain for p in self.projects.all())
             )
+
+    @property
+    def is_multi_project(self):
+        return True
 
 
 class ExportRunBase(RunBaseModel):

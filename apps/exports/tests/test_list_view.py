@@ -260,6 +260,15 @@ class TestExportsHomeViewUpdated:
 
 
 @pytest.mark.django_db
+class TestIsMultiProject:
+    def test_export_config_is_not_multi_project(self, export_config):
+        assert export_config.is_multi_project is False
+
+    def test_multi_export_config_is_multi_project(self, multi_export_config):
+        assert multi_export_config.is_multi_project is True
+
+
+@pytest.mark.django_db
 class TestExportsHomeSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 
