@@ -176,3 +176,39 @@ class TestRunForwardingHtmxBranch:
         response = regular_client.post(url)
         assert response.status_code == 200
         assert len(response.content) > 0
+
+
+@pytest.mark.django_db
+class TestForwardingRunButtonRendering:
+    def test_run_button_present_when_no_active_run(
+        self, regular_client, forwarding_config
+    ):
+        url = reverse('forwarding:config_table')
+        response = regular_client.get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        run_url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    def test_run_button_disabled_when_active_run(
+        self, regular_client, forwarding_config
+    ):
+        ForwardingRun.objects.create(
+            forwarding_config=forwarding_config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        url = reverse('forwarding:config_table')
+        response = regular_client.get(url)
+        content = response.content.decode()
+        assert 'btn-outline-success' in content
+        run_url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
+        assert f'hx-post="{run_url}"' not in content
+
+    def test_edit_button_never_disabled(
+        self, regular_client, forwarding_config
+    ):
+        url = reverse('forwarding:config_table')
+        response = regular_client.get(url)
+        content = response.content.decode()
+        edit_url = reverse('forwarding:edit_forwarding_config', args=[forwarding_config.id])
+        assert edit_url in content

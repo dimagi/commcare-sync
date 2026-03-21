@@ -390,3 +390,35 @@ class TestRefreshesListPageSmoke:
         response = client.get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'started' in response.content.decode()
+
+
+@pytest.mark.django_db
+class TestRefreshesRunButtonRendering:
+    def test_run_button_present_when_no_active_run(
+        self, client, refresh_config
+    ):
+        url = reverse('refreshes:config_table')
+        response = client.get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        run_url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    def test_run_button_disabled_when_active_run(self, client, refresh_config):
+        RefreshRun.objects.create(
+            refresh_config=refresh_config,
+            status=RefreshRun.Status.QUEUED,
+        )
+        url = reverse('refreshes:config_table')
+        response = client.get(url)
+        content = response.content.decode()
+        assert 'btn-outline-success' in content
+        run_url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        assert f'hx-post="{run_url}"' not in content
+
+    def test_edit_button_never_disabled(self, client, refresh_config):
+        url = reverse('refreshes:config_table')
+        response = client.get(url)
+        content = response.content.decode()
+        edit_url = reverse('refreshes:edit_refresh_config', args=[refresh_config.id])
+        assert edit_url in content
