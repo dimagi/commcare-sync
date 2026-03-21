@@ -504,3 +504,30 @@ class TestForwardingScheduling:
         config.periodic_task.save()
 
         assert config.is_paused is True
+
+
+@pytest.mark.django_db
+class TestForwardingDestinationIsInUse:
+    def test_not_in_use_when_no_configs(self, db):
+        destination = ForwardingDestination.objects.create(
+            name='IsInUse Destination',
+            api_url='https://example.com/api/',
+        )
+        assert destination.is_in_use() is False
+
+    def test_is_in_use_when_forwarding_config_exists(self, db):
+        destination = ForwardingDestination.objects.create(
+            name='IsInUse Destination',
+            api_url='https://example.com/api/',
+        )
+        database = Database.objects.create(
+            name='IsInUse DB',
+            connection_string='postgresql://localhost/testdb',
+        )
+        ForwardingConfig.objects.create(
+            name='IsInUse Config',
+            database=database,
+            destination=destination,
+            query='SELECT 1',
+        )
+        assert destination.is_in_use() is True
