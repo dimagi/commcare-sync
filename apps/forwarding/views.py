@@ -2,17 +2,18 @@ import hashlib
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, Paginator
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.web.decorators import admin_required
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -25,9 +26,9 @@ from commcare_sync.views import (
 )
 
 from .forms import (
-    ForwardingConfigForm,
     CreateForwardingDestinationForm,
     EditForwardingDestinationForm,
+    ForwardingConfigForm,
 )
 from .models import ForwardingConfig, ForwardingDestination, ForwardingRun
 from .tasks import run_forwarding_task
@@ -37,11 +38,15 @@ def _compute_forwarding_etag(configs_list):
     parts = []
     for config in configs_list:
         all_runs = getattr(config, '_all_runs', None)
-        run = all_runs[0] if all_runs else config.runs.order_by('-created_at').first()
+        run = (
+            all_runs[0]
+            if all_runs
+            else config.runs.order_by('-created_at').first()
+        )
         if run:
-            parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
+            parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
         else:
-            parts.append(f"config:{config.id}:no-runs")
+            parts.append(f'config:{config.id}:no-runs')
     return hashlib.md5('|'.join(parts).encode()).hexdigest()
 
 
@@ -55,8 +60,14 @@ def forwarders(request):
 
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = ForwardingConfig.objects.order_by(
+        '-updated_at'
+    ).prefetch_related(
+        Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        )
     )
     paginator = Paginator(configs_qs, page_size)
     try:
@@ -75,9 +86,15 @@ def forwarders(request):
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
             'etag': etag,
-            'export_stats': _get_export_statistics(current_start, previous_start),
-            'refresh_stats': _get_refresh_statistics(current_start, previous_start),
-            'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+            'export_stats': _get_export_statistics(
+                current_start, previous_start
+            ),
+            'refresh_stats': _get_refresh_statistics(
+                current_start, previous_start
+            ),
+            'forwarding_stats': _get_forwarding_statistics(
+                current_start, previous_start
+            ),
         },
     )
 
@@ -88,8 +105,14 @@ def config_table(request):
     """HTMX endpoint: paginated + ETag-guarded forwarding config table partial."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = ForwardingConfig.objects.order_by(
+        '-updated_at'
+    ).prefetch_related(
+        Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        )
     )
     paginator = Paginator(configs_qs, page_size)
     try:
@@ -103,12 +126,16 @@ def config_table(request):
         response['HX-Reswap'] = 'none'
         return response
 
-    return render(request, 'forwarding/partials/config_table.html', {
-        'configs': page_obj,
-        'page_size': page_size,
-        'page_sizes': [10, 20, 50],
-        'etag': etag,
-    })
+    return render(
+        request,
+        'forwarding/partials/config_table.html',
+        {
+            'configs': page_obj,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
+            'etag': etag,
+        },
+    )
 
 
 @login_required
@@ -132,9 +159,9 @@ def create_forwarding_config(request):
 
             messages.success(
                 request,
-                _('Forwarding configuration "{}" was successfully created.').format(
-                    config.name
-                ),
+                _(
+                    'Forwarding configuration "{}" was successfully created.'
+                ).format(config.name),
             )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[config.id])
@@ -166,9 +193,9 @@ def edit_forwarding_config(request, forwarder_id):
 
             messages.success(
                 request,
-                _('Forwarding configuration "{}" was successfully updated.').format(
-                    forwarder.name
-                ),
+                _(
+                    'Forwarding configuration "{}" was successfully updated.'
+                ).format(forwarder.name),
             )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[forwarder.id])
@@ -197,9 +224,9 @@ def delete_forwarding_config(request, forwarder_id):
         forwarder.delete()
         messages.success(
             request,
-            _('Forwarding configuration "{}" was successfully deleted.').format(
-                forwarder_name
-            ),
+            _(
+                'Forwarding configuration "{}" was successfully deleted.'
+            ).format(forwarder_name),
         )
         return HttpResponseRedirect(reverse('forwarding:forwarders'))
 
@@ -227,7 +254,7 @@ def destinations(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
+@admin_required
 def create_destination(request):
     """Create a new forwarding destination."""
     if request.method == 'POST':
@@ -254,12 +281,14 @@ def create_destination(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
+@admin_required
 def edit_destination(request, destination_id):
     """Edit an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
     if request.method == 'POST':
-        form = EditForwardingDestinationForm(request.POST, instance=destination)
+        form = EditForwardingDestinationForm(
+            request.POST, instance=destination
+        )
         if form.is_valid():
             destination = form.save()
             messages.success(
@@ -301,7 +330,9 @@ def forwarder_details(request, forwarder_id):
             'active_tab': 'forwarders',
             'forwarder': forwarder,
             'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'run_history_url': reverse(
+                'forwarding:run_history_table', args=[forwarder.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
@@ -330,7 +361,9 @@ def run_history_table(request, forwarder_id):
         {
             'forwarder': forwarder,
             'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'run_history_url': reverse(
+                'forwarding:run_history_table', args=[forwarder.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
