@@ -11,9 +11,9 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
+from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
-    ExportDatabase,
     ExportRun,
 )
 from apps.forwarding.models import (
@@ -80,14 +80,10 @@ class TestExportStatistics:
             server=self.server,
         )
 
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
-            owner=self.user,
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
-        )
-        self.database.save()
 
         self.export_config = ExportConfig.objects.create(
             name='Test Export',
@@ -208,13 +204,10 @@ class TestRefreshStatistics:
             password='testpass123',
         )
 
-        self.database = ExportDatabase.objects.create(
-            name='Test DB', owner=self.user
+        self.database = Database.objects.create(
+            name='Test DB',
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
-        )
-        self.database.save()
 
         self.refresh_config = RefreshConfig.objects.create(
             name='Test Refresh',
@@ -334,18 +327,14 @@ class TestForwardingStatistics:
             password='testpass123',
         )
 
-        self.database = ExportDatabase.objects.create(
-            name='Test DB', owner=self.user
+        self.database = Database.objects.create(
+            name='Test DB',
+            connection_string='postgresql://user:pass@localhost:5432/db',
         )
-        self.database.connection_string = (
-            'postgresql://user:pass@localhost:5432/db'
-        )
-        self.database.save()
 
         self.destination = ForwardingDestination.objects.create(
             name='Test Destination',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
         self.forwarding_config = ForwardingConfig.objects.create(

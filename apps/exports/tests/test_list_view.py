@@ -7,9 +7,9 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
+from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
-    ExportDatabase,
     ExportRun,
     MultiProjectExportConfig,
     MultiProjectExportRun,
@@ -52,11 +52,10 @@ def account(db, server, user):
 
 
 @pytest.fixture
-def database(db, user):
-    return ExportDatabase.objects.create(
+def database(db):
+    return Database.objects.create(
         name='TestDB',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 

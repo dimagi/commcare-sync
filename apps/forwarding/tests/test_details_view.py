@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 from apps.forwarding.models import ForwardingConfig, ForwardingDestination, ForwardingRun
 
 User = get_user_model()
@@ -22,20 +22,18 @@ def client(client, user):
 
 
 @pytest.fixture
-def database(db, user):
-    return ExportDatabase.objects.create(
+def database(db):
+    return Database.objects.create(
         name='TestDB',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 
 @pytest.fixture
-def destination(db, user):
+def destination(db):
     return ForwardingDestination.objects.create(
         name='Test API',
         api_url='https://example.com/api',
-        owner=user,
     )
 
 

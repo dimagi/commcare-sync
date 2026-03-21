@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from apps.exports.models import ExportDatabase
+from apps.db.models import Database
 from apps.refreshes.models import RefreshConfig, RefreshRun
 
 User = get_user_model()
@@ -22,11 +22,10 @@ def client(client, user):
 
 
 @pytest.fixture
-def database(db, user):
-    return ExportDatabase.objects.create(
+def database(db):
+    return Database.objects.create(
         name='TestDB',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 

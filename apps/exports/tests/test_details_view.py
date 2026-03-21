@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
-from apps.exports.models import ExportConfig, ExportDatabase, ExportRun
+from apps.db.models import Database
+from apps.exports.models import ExportConfig, ExportRun
 
 User = get_user_model()
 
@@ -40,11 +41,10 @@ def account(db, server, user):
 
 
 @pytest.fixture
-def database(db, user):
-    return ExportDatabase.objects.create(
+def database(db):
+    return Database.objects.create(
         name='TestDB',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 
