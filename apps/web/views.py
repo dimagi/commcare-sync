@@ -8,7 +8,3 @@ def home(request):
         return HttpResponseRedirect(reverse('exports:home'))
     else:
         return render(request, 'web/landing_page.html')
-
-
-def dashboard(request):
-    return HttpResponseRedirect(reverse('exports:home'))
