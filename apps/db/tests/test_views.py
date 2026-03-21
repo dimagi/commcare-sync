@@ -27,11 +27,6 @@ def admin_user(db):
 
 
 @pytest.fixture
-def anon_client(client):
-    return client
-
-
-@pytest.fixture
 def regular_client(client, regular_user):
     client.force_login(regular_user)
     return client
@@ -52,9 +47,9 @@ def database(db):
 
 
 class TestCreateDatabaseView:
-    def test_anonymous_redirects_to_login(self, anon_client):
+    def test_anonymous_redirects_to_login(self, client):
         url = reverse('db:create_database')
-        response = anon_client.get(url)
+        response = client.get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
@@ -82,9 +77,9 @@ class TestCreateDatabaseView:
 
 
 class TestEditDatabaseView:
-    def test_anonymous_redirects_to_login(self, anon_client, database):
+    def test_anonymous_redirects_to_login(self, client, database):
         url = reverse('db:edit_database', args=[database.id])
-        response = anon_client.get(url)
+        response = client.get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
@@ -108,9 +103,9 @@ class TestEditDatabaseView:
 
 
 class TestDeleteDatabaseView:
-    def test_anonymous_redirects_to_login(self, anon_client, database):
+    def test_anonymous_redirects_to_login(self, client, database):
         url = reverse('db:delete_database', args=[database.id])
-        response = anon_client.get(url)
+        response = client.get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
