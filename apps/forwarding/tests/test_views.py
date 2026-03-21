@@ -186,3 +186,40 @@ class TestRunForwardingHtmxBranch:
         response = regular_client().post(url)
         assert response.status_code == 200
         assert len(response.content) > 0
+
+
+class TestForwardingRunButtonRendering:
+    @use(regular_client, forwarding_config)
+    def test_run_button_present_when_no_active_run(self):
+        config = forwarding_config()
+        url = reverse('forwarding:config_table')
+        response = regular_client().get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        run_url = reverse('forwarding:run_forwarding', args=[config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    @use(regular_client, forwarding_config)
+    def test_run_button_disabled_when_active_run(self):
+        config = forwarding_config()
+        ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        url = reverse('forwarding:config_table')
+        response = regular_client().get(url)
+        content = response.content.decode()
+        assert 'btn-outline-success' in content
+        run_url = reverse('forwarding:run_forwarding', args=[config.id])
+        assert f'hx-post="{run_url}"' not in content
+
+    @use(regular_client, forwarding_config)
+    def test_edit_button_never_disabled(self):
+        config = forwarding_config()
+        url = reverse('forwarding:config_table')
+        response = regular_client().get(url)
+        content = response.content.decode()
+        edit_url = reverse(
+            'forwarding:edit_forwarding_config', args=[config.id]
+        )
+        assert edit_url in content
