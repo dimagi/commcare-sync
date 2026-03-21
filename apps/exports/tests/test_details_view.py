@@ -55,7 +55,6 @@ def export_config(db, user, project, account, database):
         project=project,
         account=account,
         database=database,
-        created_by=user,
     )
 
 
@@ -104,10 +103,10 @@ class TestExportRunHistoryTableEndpoint:
 
     def test_no_filter_shows_all_statuses(self, client, export_config):
         completed_run = ExportRun.objects.create(
-            base_export_config=export_config, status=ExportRun.COMPLETED
+            base_export_config=export_config, status=ExportRun.Status.COMPLETED
         )
         failed_run = ExportRun.objects.create(
-            base_export_config=export_config, status=ExportRun.FAILED
+            base_export_config=export_config, status=ExportRun.Status.FAILED
         )
         url = reverse('exports:run_history_table', args=[export_config.id])
         content = client.get(url).content.decode()
@@ -117,10 +116,10 @@ class TestExportRunHistoryTableEndpoint:
 
     def test_status_filter_excludes_unchecked(self, client, export_config):
         completed_run = ExportRun.objects.create(
-            base_export_config=export_config, status=ExportRun.COMPLETED
+            base_export_config=export_config, status=ExportRun.Status.COMPLETED
         )
         failed_run = ExportRun.objects.create(
-            base_export_config=export_config, status=ExportRun.FAILED
+            base_export_config=export_config, status=ExportRun.Status.FAILED
         )
         url = reverse('exports:run_history_table', args=[export_config.id])
         content = client.get(
@@ -133,7 +132,7 @@ class TestExportRunHistoryTableEndpoint:
 
     def test_empty_filter_shows_nothing(self, client, export_config):
         run = ExportRun.objects.create(
-            base_export_config=export_config, status=ExportRun.COMPLETED
+            base_export_config=export_config, status=ExportRun.Status.COMPLETED
         )
         url = reverse('exports:run_history_table', args=[export_config.id])
         content = client.get(url, QUERY_STRING='has_status_filter=1').content.decode()
@@ -144,7 +143,7 @@ class TestExportRunHistoryTableEndpoint:
     def test_pagination_default_10(self, client, export_config):
         for _ in range(15):
             ExportRun.objects.create(
-                base_export_config=export_config, status=ExportRun.COMPLETED
+                base_export_config=export_config, status=ExportRun.Status.COMPLETED
             )
         url = reverse('exports:run_history_table', args=[export_config.id])
         response = client.get(url)

@@ -66,7 +66,6 @@ def export_config(db, user, project, account, database):
         project=project,
         account=account,
         database=database,
-        created_by=user,
     )
 
 
@@ -76,7 +75,6 @@ def multi_export_config(db, user, account, database):
         name='Multi Export Config',
         account=account,
         database=database,
-        created_by=user,
     )
     return config
 
@@ -85,7 +83,7 @@ def multi_export_config(db, user, account, database):
 def export_run(db, export_config):
     return ExportRun.objects.create(
         base_export_config=export_config,
-        status=ExportRun.COMPLETED,
+        status=ExportRun.Status.COMPLETED,
     )
 
 
@@ -93,7 +91,7 @@ def export_run(db, export_config):
 def multi_export_run(db, multi_export_config):
     return MultiProjectExportRun.objects.create(
         base_export_config=multi_export_config,
-        status=MultiProjectExportRun.COMPLETED,
+        status=MultiProjectExportRun.Status.COMPLETED,
     )
 
 
@@ -161,7 +159,6 @@ class TestConfigTableView:
                 project=project,
                 account=account,
                 database=database,
-                created_by=user,
             )
         response = client.get(reverse('exports:config_table'))
         assert response.status_code == 200
@@ -179,7 +176,6 @@ class TestConfigTableView:
                 project=project,
                 account=account,
                 database=database,
-                created_by=user,
             )
         response = client.get(
             reverse('exports:config_table'), {'page_size': 20}
@@ -277,7 +273,7 @@ class TestExportsHomeSmoke:
         """Template handles completed run: status icon, log button enabled, duration."""
         run = ExportRun.objects.create(
             base_export_config=export_config,
-            status=ExportRun.COMPLETED,
+            status=ExportRun.Status.COMPLETED,
             log='Exported 100 rows.',
         )
         response = client.get(reverse('exports:home'))
@@ -290,7 +286,7 @@ class TestExportsHomeSmoke:
         """Template handles failed run: log button enabled."""
         ExportRun.objects.create(
             base_export_config=export_config,
-            status=ExportRun.FAILED,
+            status=ExportRun.Status.FAILED,
             log='Error: connection refused.',
         )
         response = client.get(reverse('exports:home'))
@@ -301,7 +297,7 @@ class TestExportsHomeSmoke:
         """Template handles in-progress run: log button disabled."""
         ExportRun.objects.create(
             base_export_config=export_config,
-            status=ExportRun.STARTED,
+            status=ExportRun.Status.STARTED,
         )
         response = client.get(reverse('exports:home'))
         assert response.status_code == 200
@@ -311,7 +307,7 @@ class TestExportsHomeSmoke:
         """Template handles multi-project config with a completed run."""
         run = MultiProjectExportRun.objects.create(
             base_export_config=multi_export_config,
-            status=MultiProjectExportRun.COMPLETED,
+            status=MultiProjectExportRun.Status.COMPLETED,
         )
         response = client.get(reverse('exports:home'))
         assert response.status_code == 200

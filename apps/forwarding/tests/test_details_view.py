@@ -44,7 +44,6 @@ def forwarding_config(db, user, database, destination):
         database=database,
         destination=destination,
         query='SELECT 1',
-        created_by=user,
     )
 
 

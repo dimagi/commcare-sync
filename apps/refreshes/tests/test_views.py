@@ -266,14 +266,13 @@ class TestRefreshConfigTableView:
         response = client.get(reverse('refreshes:config_table'))
         assert refresh_config.name in response.content.decode()
 
-    def test_pagination_default_10(self, client, user, database):
+    def test_pagination_default_10(self, client, database):
         for i in range(15):
             from ..models import RefreshConfig
             RefreshConfig.objects.create(
                 name=f'Refresh {i}',
                 database=database,
                 materialized_views=['public.view1'],
-                created_by=user,
             )
         response = client.get(reverse('refreshes:config_table'))
         shown = response.content.decode().count('Refresh ')

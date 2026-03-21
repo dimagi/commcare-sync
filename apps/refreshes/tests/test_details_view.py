@@ -35,7 +35,6 @@ def refresh_config(db, user, database):
         name='Test Refresh',
         database=database,
         materialized_views=['public.mv_test'],
-        created_by=user,
     )
 
 

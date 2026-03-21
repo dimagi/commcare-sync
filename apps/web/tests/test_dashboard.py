@@ -50,10 +50,6 @@ class TestHomeView:
         response = self.client.get(reverse('web:home'))
         assert response.status_code == 200
 
-    def test_dashboard_redirects_to_exports(self):
-        response = self.client.get(reverse('web:dashboard'))
-        assert response.status_code == 302
-        assert response.url == reverse('exports:home')
 
 
 @pytest.mark.django_db
@@ -90,7 +86,6 @@ class TestExportStatistics:
             account=self.account,
             project=self.project,
             database=self.database,
-            created_by=self.user,
         )
 
     def test_export_statistics_with_no_runs(self):
@@ -108,7 +103,7 @@ class TestExportStatistics:
         for i in range(5):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.COMPLETED,
+                status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
 
@@ -126,12 +121,12 @@ class TestExportStatistics:
 
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.COMPLETED,
+            status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.FAILED,
+            status=ExportRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -148,12 +143,12 @@ class TestExportStatistics:
 
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.QUEUED,
+            status=ExportRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.COMPLETED,
+            status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -180,13 +175,13 @@ class TestExportStatistics:
         for i in range(successful):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.COMPLETED,
+                status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.FAILED,
+                status=ExportRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
 
@@ -213,7 +208,6 @@ class TestRefreshStatistics:
             name='Test Refresh',
             database=self.database,
             materialized_views=['public.test_view'],
-            created_by=self.user,
         )
 
     def test_refresh_statistics_with_no_runs(self):
@@ -342,7 +336,6 @@ class TestForwardingStatistics:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM table',
-            created_by=self.user,
         )
 
     def test_forwarding_statistics_with_no_runs(self):
