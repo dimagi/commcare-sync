@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
@@ -24,12 +25,13 @@ class TestAdminRequired:
         return self.factory.get('/some-protected-path/')
 
     def test_unauthenticated_redirects_to_login(self):
-        """Unauthenticated users are redirected to the login page."""
+        """Unauthenticated users are redirected to the login page with next= set."""
         request = self._get()
         request.user = AnonymousUser()
         response = _protected_view(request)
         assert response.status_code == 302
-        assert '/login' in response['Location']
+        assert response['Location'].startswith(settings.LOGIN_URL)
+        assert '/some-protected-path/' in response['Location']
 
     def test_authenticated_regular_user_gets_403(self):
         """Authenticated users without superuser+staff get 403, not a redirect."""
