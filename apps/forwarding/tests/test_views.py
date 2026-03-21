@@ -6,7 +6,7 @@ from unmagic import fixture, use
 
 from apps.db.models import Database
 
-from ..models import ForwardingConfig, ForwardingDestination
+from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
 
 User = get_user_model()
 
@@ -78,6 +78,16 @@ def destination_in_use():
     yield dest
 
 
+@fixture
+def forwarding_config():
+    yield ForwardingConfig.objects.create(
+        name='Test Config',
+        database=database(),
+        destination=destination(),
+        query='SELECT 1',
+    )
+
+
 class TestDestinationsView:
     @use(admin_client)
     def test_admin_get_returns_200(self):
@@ -147,3 +157,32 @@ class TestDeleteDestinationView:
         response = Client().get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
+
+
+class TestRunForwardingHtmxBranch:
+    @use(regular_client, forwarding_config)
+    def test_htmx_request_returns_204(self):
+        url = reverse(
+            'forwarding:run_forwarding', args=[forwarding_config().id]
+        )
+        response = regular_client().post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    @use(regular_client, forwarding_config)
+    def test_htmx_request_creates_forwarding_run(self):
+        config = forwarding_config()
+        url = reverse('forwarding:run_forwarding', args=[config.id])
+        regular_client().post(url, HTTP_HX_REQUEST='true')
+        assert ForwardingRun.objects.filter(
+            forwarding_config=config,
+            triggered_from_ui=True,
+        ).exists()
+
+    @use(regular_client, forwarding_config)
+    def test_non_htmx_request_returns_200(self):
+        url = reverse(
+            'forwarding:run_forwarding', args=[forwarding_config().id]
+        )
+        response = regular_client().post(url)
+        assert response.status_code == 200
+        assert len(response.content) > 0

@@ -284,6 +284,8 @@ def run_refresh(request, config_id):
     )
 
     result = run_refresh_task.delay(refresh_run.id)
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204)
     return HttpResponse(result.task_id)
 
 
