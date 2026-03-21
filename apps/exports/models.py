@@ -43,6 +43,14 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
         )
 
     @property
+    def has_active_run(self):
+        active = {ExportRun.Status.QUEUED, ExportRun.Status.STARTED}
+        all_runs = getattr(self, '_all_runs', None)
+        if all_runs is not None:
+            return any(r.status in active for r in all_runs)
+        return self.runs.filter(status__in=active).exists()
+
+    @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
 

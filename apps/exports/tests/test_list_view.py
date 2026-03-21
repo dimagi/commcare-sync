@@ -260,6 +260,54 @@ class TestExportsHomeViewUpdated:
 
 
 @pytest.mark.django_db
+class TestExportConfigHasActiveRun:
+    def test_false_with_no_runs(self, export_config):
+        assert export_config.has_active_run is False
+
+    def test_false_when_run_is_completed(self, export_config):
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.Status.COMPLETED,
+        )
+        assert export_config.has_active_run is False
+
+    def test_false_when_run_is_failed(self, export_config):
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.Status.FAILED,
+        )
+        assert export_config.has_active_run is False
+
+    def test_true_when_run_is_queued(self, export_config):
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.Status.QUEUED,
+        )
+        assert export_config.has_active_run is True
+
+    def test_true_when_run_is_started(self, export_config):
+        ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.Status.STARTED,
+        )
+        assert export_config.has_active_run is True
+
+    def test_uses_prefetched_runs_without_db_query(self, export_config):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        run = ExportRun.objects.create(
+            base_export_config=export_config,
+            status=ExportRun.Status.QUEUED,
+        )
+        export_config._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = export_config.has_active_run
+        assert len(ctx) == 0
+        assert result is True
+
+
+@pytest.mark.django_db
 class TestIsMultiProject:
     def test_export_config_is_not_multi_project(self, export_config):
         assert export_config.is_multi_project is False
