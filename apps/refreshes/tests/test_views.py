@@ -319,6 +319,29 @@ class TestRefreshRunLogView:
 
 
 @pytest.mark.django_db
+class TestRunRefreshHtmxBranch:
+    def test_htmx_request_returns_204(self, client, refresh_config):
+        # client fixture in conftest.py is already logged in
+        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        response = client.post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_creates_refresh_run(self, client, refresh_config):
+        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        client.post(url, HTTP_HX_REQUEST='true')
+        assert RefreshRun.objects.filter(
+            refresh_config=refresh_config,
+            triggered_from_ui=True,
+        ).exists()
+
+    def test_non_htmx_request_returns_200(self, client, refresh_config):
+        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
+        response = client.post(url)
+        assert response.status_code == 200
+        assert len(response.content) > 0
+
+
+@pytest.mark.django_db
 class TestRefreshesListPageSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 

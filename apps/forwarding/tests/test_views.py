@@ -70,6 +70,16 @@ def destination_in_use(db, destination, database):
     return destination
 
 
+@pytest.fixture
+def forwarding_config(db, database, destination):
+    return ForwardingConfig.objects.create(
+        name='Test Config',
+        database=database,
+        destination=destination,
+        query='SELECT 1',
+    )
+
+
 @pytest.mark.django_db
 class TestDestinationsView:
     def test_admin_get_returns_200(self, admin_client):
@@ -140,3 +150,29 @@ class TestDeleteDestinationView:
         response = client.get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
+
+
+@pytest.mark.django_db
+class TestRunForwardingHtmxBranch:
+    def test_htmx_request_returns_204(self, regular_client, forwarding_config):
+        url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
+        response = regular_client.post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_creates_forwarding_run(
+        self, regular_client, forwarding_config
+    ):
+        url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
+        regular_client.post(url, HTTP_HX_REQUEST='true')
+        assert ForwardingRun.objects.filter(
+            forwarding_config=forwarding_config,
+            triggered_from_ui=True,
+        ).exists()
+
+    def test_non_htmx_request_returns_200(
+        self, regular_client, forwarding_config
+    ):
+        url = reverse('forwarding:run_forwarding', args=[forwarding_config.id])
+        response = regular_client.post(url)
+        assert response.status_code == 200
+        assert len(response.content) > 0
