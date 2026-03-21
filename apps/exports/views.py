@@ -26,6 +26,7 @@ from apps.web.stats import (
     _get_forwarding_statistics,
     _get_refresh_statistics,
 )
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.views import (
     get_config_page_size,
     get_page_from_request,
@@ -119,6 +120,7 @@ def home(request):
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
             'etag': etag,
+            'stats_period': readable_timedelta(period, short=True),
             'export_stats': _get_export_statistics(
                 current_start, previous_start
             ),
