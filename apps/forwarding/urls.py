@@ -41,6 +41,11 @@ urlpatterns = [
         name='edit_destination',
     ),
     path(
+        'destinations/<int:destination_id>/delete/',
+        views.delete_destination,
+        name='delete_destination',
+    ),
+    path(
         '<int:forwarder_id>/',
         views.forwarder_details,
         name='forwarder_details',
