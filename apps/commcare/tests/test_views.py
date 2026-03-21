@@ -170,6 +170,54 @@ class TestDeleteAccountView:
         assert reverse('commcare:accounts') in response.url
         assert not CommCareAccount.objects.filter(id=account_id).exists()
 
+    def test_in_use_get_redirects_to_list(self, regular_client, account, db):
+        from apps.db.models import Database
+        from apps.exports.models import ExportConfig
+
+        with override_settings(FERNET_KEYS=[FERNET_KEY]):
+            db_obj = Database(name='Account In Use DB')
+            db_obj.connection_string = 'postgresql://localhost/testdb'
+            db_obj.save()
+            config = ExportConfig(
+                name='Account Test Export',
+                account=account,
+                database=db_obj,
+                project=CommCareProject.objects.create(
+                    server=account.server, domain='guard-test-domain'
+                ),
+            )
+            config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+            config.save()
+
+        url = reverse('commcare:delete_account', args=[account.id])
+        response = regular_client.get(url)
+        assert response.status_code == 302
+        assert reverse('commcare:accounts') in response.url
+
+    def test_in_use_post_does_not_delete(self, regular_client, account, db):
+        from apps.db.models import Database
+        from apps.exports.models import ExportConfig
+
+        with override_settings(FERNET_KEYS=[FERNET_KEY]):
+            db_obj = Database(name='Account In Use DB 2')
+            db_obj.connection_string = 'postgresql://localhost/testdb2'
+            db_obj.save()
+            config = ExportConfig(
+                name='Account Test Export 2',
+                account=account,
+                database=db_obj,
+                project=CommCareProject.objects.create(
+                    server=account.server, domain='guard-test-domain-2'
+                ),
+            )
+            config.config_file.save('test2.xlsx', ContentFile(b''), save=False)
+            config.save()
+
+        url = reverse('commcare:delete_account', args=[account.id])
+        response = regular_client.post(url)
+        assert response.status_code == 302
+        assert CommCareAccount.objects.filter(id=account.id).exists()
+
 
 class TestCreateProjectRedirect:
     def test_success_redirects_to_projects(self, regular_client, server):
@@ -191,3 +239,29 @@ class TestEditProjectRedirect:
         })
         assert response.status_code == 302
         assert reverse('commcare:projects') in response.url
+
+
+class TestCreateAccountRedirect:
+    def test_success_redirects_to_accounts(self, regular_client, server):
+        url = reverse('commcare:create_account')
+        with override_settings(FERNET_KEYS=[FERNET_KEY]):
+            response = regular_client.post(url, {
+                'server': server.id,
+                'username': 'newaccount@example.com',
+                'api_key': 'some-api-key',
+            })
+        assert response.status_code == 302
+        assert reverse('commcare:accounts') in response.url
+
+
+class TestEditAccountRedirect:
+    def test_success_redirects_to_accounts(self, regular_client, account, server):
+        url = reverse('commcare:edit_account', args=[account.id])
+        with override_settings(FERNET_KEYS=[FERNET_KEY]):
+            response = regular_client.post(url, {
+                'server': server.id,
+                'username': 'updated@example.com',
+                'api_key': 'updated-api-key',
+            })
+        assert response.status_code == 302
+        assert reverse('commcare:accounts') in response.url
