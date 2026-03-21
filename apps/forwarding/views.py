@@ -318,17 +318,19 @@ def edit_destination(request, destination_id):
 def delete_destination(request, destination_id):
     """Delete an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
+    # Guard runs on both GET and POST: in-use items are never reachable via the
+    # form submission path either, preventing direct POST bypasses.
     if destination.is_in_use():
         messages.error(
             request,
-            f'Cannot delete "{destination.name}": It is used by one or more forwarder configurations.',
+            _('Cannot delete "{}": It is used by one or more forwarder configurations.').format(destination.name),
         )
         return HttpResponseRedirect(reverse('forwarding:destinations'))
     if request.method == 'POST':
         destination.delete()
         messages.success(
             request,
-            f'Destination "{destination.name}" was successfully deleted.',
+            _('Destination "{}" was successfully deleted.').format(destination.name),
         )
         return HttpResponseRedirect(reverse('forwarding:destinations'))
     return render(

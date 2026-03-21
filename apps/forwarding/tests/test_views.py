@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.urls import reverse
 
 from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
@@ -120,11 +121,19 @@ class TestDeleteDestinationView:
         assert response.status_code == 302
         assert reverse('forwarding:destinations') in response.url
         assert ForwardingDestination.objects.filter(id=destination_id).exists()
+        messages_list = list(get_messages(response.wsgi_request))
+        assert any('Cannot delete' in str(m) for m in messages_list)
 
     def test_non_admin_get_redirects(self, regular_client, destination):
         url = reverse('forwarding:delete_destination', args=[destination.id])
         response = regular_client.get(url)
-        assert response.status_code in (302, 403)
+        assert response.status_code == 403
+
+    def test_non_admin_post_is_rejected(self, regular_client, destination):
+        url = reverse('forwarding:delete_destination', args=[destination.pk])
+        response = regular_client.post(url)
+        assert response.status_code == 403
+        assert ForwardingDestination.objects.filter(pk=destination.pk).exists()
 
     def test_anonymous_get_redirects(self, client, destination):
         url = reverse('forwarding:delete_destination', args=[destination.id])
