@@ -64,3 +64,10 @@ def test_doctests():
     results = doctest.testmod(module, optionflags=doctest.ELLIPSIS)
     assert results.failed == 0
 ```
+
+## Commits
+
+Commits should group changes logically and also make changes easier to
+review. Whenever code is moved and changed, or a file is renamed and
+changed, do the move or the rename in one commit and make the changes in
+another commit, so that the changes are clear.
