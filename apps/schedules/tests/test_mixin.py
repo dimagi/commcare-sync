@@ -28,12 +28,10 @@ class ScheduleMixinTestBase(TestCase):
         self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
-            owner=self.user,
         )
         self.destination = ForwardingDestination.objects.create(
             name='Test API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
     def _make_config(self, **schedule_kwargs):
@@ -43,7 +41,6 @@ class ScheduleMixinTestBase(TestCase):
             database=self.database,
             destination=self.destination,
             query='SELECT 1',
-            created_by=self.user,
             **schedule_kwargs,
         )
 
@@ -291,7 +288,6 @@ class ScheduleEdgeCasesTestCase(ScheduleMixinTestBase):
             database=self.database,
             destination=self.destination,
             query='SELECT 2',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
             first_run_date=date(2025, 1, 1),
             days_of_week=[1, 3, 5],
@@ -326,7 +322,6 @@ class ScheduleValidationTestCase(ScheduleMixinTestBase):
             database=self.database,
             destination=self.destination,
             query='SELECT 1',
-            created_by=self.user,
             **schedule_kwargs,
         )
 

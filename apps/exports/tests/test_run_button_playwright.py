@@ -24,7 +24,6 @@ def create_export_config(data):
         account=data['account'],
         project=data['project'],
         database=data['database'],
-        created_by=data['user'],
     )
     return export
 

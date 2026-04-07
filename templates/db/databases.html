@@ -24,7 +24,6 @@
         <thead>
           <tr>
             <th>{% trans "Database" %}</th>
-            <th>{% trans "Owner" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -38,9 +37,6 @@
                 {% else %}
                   {{ database.name }}
                 {% endif %}
-              </td>
-              <td>
-                {% if request.user == database.owner %}{% trans "You" %}{% else %}{{ database.owner.get_display_name }}{% endif %}
               </td>
             </tr>
           {% endfor %}

@@ -45,9 +45,7 @@ def create_refresh_config(request):
 
         if config_form.is_valid():
             with transaction.atomic():
-                config = config_form.save(commit=False)
-                config.created_by = request.user
-                config.save()
+                config = config_form.save()
 
             messages.success(
                 request,

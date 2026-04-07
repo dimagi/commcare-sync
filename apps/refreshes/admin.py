@@ -9,7 +9,6 @@ class RefreshConfigAdmin(VersionAdmin):
     list_display = [
         'name',
         'database',
-        'created_by',
         'created_at',
         'updated_at',
     ]
@@ -24,7 +23,6 @@ class RefreshConfigAdmin(VersionAdmin):
                     'name',
                     'database',
                     'materialized_views',
-                    'created_by',
                 )
             },
         ),

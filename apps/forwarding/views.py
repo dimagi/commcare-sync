@@ -41,9 +41,7 @@ def create_forwarding_config(request):
 
         if config_form.is_valid():
             with transaction.atomic():
-                config = config_form.save(commit=False)
-                config.created_by = request.user
-                config.save()
+                config = config_form.save()
 
             messages.success(
                 request,
@@ -148,9 +146,7 @@ def create_destination(request):
     if request.method == 'POST':
         form = CreateForwardingDestinationForm(request.POST)
         if form.is_valid():
-            destination = form.save(commit=False)
-            destination.owner = request.user
-            destination.save()
+            destination = form.save()
             messages.success(
                 request,
                 _('Destination "{}" was successfully created.').format(
