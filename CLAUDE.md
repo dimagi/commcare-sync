@@ -75,11 +75,12 @@ commands.
 | `apps/exports/tests/fixtures.py` | Reusable test data fixtures               |
 | `apps/exports/tests/helpers.py`  | Test helper functions (login, navigation) |
 
-### Designs and Plans
+### Agent documentation
 
-| Path                                    | Purpose                    |
-|-----------------------------------------|----------------------------|
-| `.claude/plans/YYYY-MM-DD_plan-name.md` | Designs & plans for agents |
+| Path                                   | Purpose              |
+|----------------------------------------|----------------------|
+| `claude/specs/YYYY-MM-DD_spec-name.md` | Design specs         |
+| `claude/plans/YYYY-MM-DD_plan-name.md` | Implementation plans |
 
 ### Key Patterns
 
