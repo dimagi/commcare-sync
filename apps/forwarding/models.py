@@ -1,14 +1,11 @@
 import reversion
-from django.conf import settings
 from django.db import models
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
 from apps.db.models import Database
-from apps.exports.templatetags.dateformat_tags import readable_timedelta
 from apps.schedules.mixin import ScheduleMixin
 
 
@@ -96,42 +93,6 @@ class ForwardingRun(RunBaseModel):
     forwarding_config_version = models.ForeignKey(
         Version, on_delete=models.CASCADE, null=True
     )
-    started_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text=_(
-            'When the forward actually started running. It may have been '
-            'created/queued earlier.'
-        ),
-    )
-    completed_at = models.DateTimeField(null=True, blank=True)
-    triggered_from_ui = models.BooleanField(null=True, default=None)
-    triggering_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    log = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.forwarding_config.name} ({self.created_at})'
-
-    @property
-    def duration(self):
-        if self.completed_at and self.started_at:
-            return self.completed_at - self.started_at
-        else:
-            return None
-
-    def get_duration_display(self):
-        return readable_timedelta(self.duration)
-
-    def mark_skipped(self):
-        if not self.status == ForwardingRun.Status.QUEUED:
-            raise ValueError(
-                _('Can\'t mark a run "skipped" after it has been started.')
-            )
-        self.status = ForwardingRun.Status.SKIPPED
-        self.completed_at = timezone.now()
-        self.save()

@@ -2,7 +2,7 @@
 *.pyc
 *~
 db.sqlite3
-celerybeat-schedule.db
+celerybeat-schedule*
 .sass-cache/
 node_modules/
 media/
@@ -10,6 +10,7 @@ docs/_build
 _dist/
 commcare_sync/settings_local.py
 static_root/
+logs/
 
 # uv
 .venv/

@@ -20,7 +20,7 @@ def run_multi_project_export(
     ignore_schedule_checks: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
     multi_export_config = multi_export_run.base_export_config
-    multi_export_run.status = MultiProjectExportRun.STARTED
+    multi_export_run.status = MultiProjectExportRun.Status.STARTED
     multi_export_run.started_at = timezone.now()
     multi_export_run.save()
     runs = []
@@ -42,7 +42,7 @@ def run_multi_project_export(
     if len(run_statuses) == 1:
         multi_export_run.status = list(run_statuses)[0]
     else:
-        multi_export_run.status = MultiProjectExportRun.MULTIPLE
+        multi_export_run.status = MultiProjectExportRun.Status.MULTIPLE
     multi_export_run.completed_at = timezone.now()
     multi_export_run.save()
     return runs
@@ -57,7 +57,7 @@ def run_export(
 
 
 def _run_export_for_project(export_config, project, export_record, force):
-    export_record.status = ExportRun.STARTED
+    export_record.status = ExportRun.Status.STARTED
     export_record.started_at = timezone.now()
     export_record.save()
     try:
@@ -71,7 +71,7 @@ def _run_export_for_project(export_config, project, export_record, force):
         log_buffer = _stream_log(process, export_record)
         result = process.poll()
     except Exception as e:
-        export_record.status = ExportRun.FAILED
+        export_record.status = ExportRun.Status.FAILED
         export_record.log = str(e)
     else:
         export_record.status = _process_status_to_status_field(result)
@@ -127,6 +127,6 @@ def _compile_export_command(export_config, project, force):
 
 def _process_status_to_status_field(process_status):
     if process_status == 0:
-        return ExportRun.COMPLETED
+        return ExportRun.Status.COMPLETED
     else:
-        return ExportRun.FAILED
+        return ExportRun.Status.FAILED
