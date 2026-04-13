@@ -86,7 +86,8 @@ def create_multi_export_config(request):
             export = config_form.save()
             config_form.save_m2m()
             messages.success(
-                request, f'Export {export.name} was successfully created.'
+                request,
+                f'Export {export.name} was successfully created.',
             )
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
@@ -108,11 +109,16 @@ def create_multi_export_config(request):
 def edit_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     if request.method == 'POST':
-        config_form = ExportConfigForm(request.POST, request.FILES, instance=export)
+        config_form = ExportConfigForm(
+            request.POST,
+            request.FILES,
+            instance=export,
+        )
         if config_form.is_valid():
             export = config_form.save()
             messages.success(
-                request, f'Export {export.name} was successfully saved.'
+                request,
+                f'Export {export.name} was successfully saved.',
             )
             return HttpResponseRedirect(
                 reverse('exports:export_details', args=[export.id])
@@ -141,7 +147,8 @@ def edit_multi_export_config(request, export_id):
         if config_form.is_valid():
             export = config_form.save()
             messages.success(
-                request, f'Export {export.name} was successfully saved.'
+                request,
+                f'Export {export.name} was successfully saved.',
             )
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
@@ -165,7 +172,8 @@ def delete_export_config(request, export_id):
     if request.method == 'POST':
         export.delete()
         messages.success(
-            request, f'Export file "{export.name}" was successfully deleted.'
+            request,
+            f'Export file "{export.name}" was successfully deleted.',
         )
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
@@ -184,7 +192,8 @@ def delete_multi_export_config(request, export_id):
     if request.method == 'POST':
         export.delete()
         messages.success(
-            request, f'Export file "{export.name}" was successfully deleted.'
+            request,
+            f'Export file "{export.name}" was successfully deleted.',
         )
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
@@ -268,7 +277,8 @@ def download_export_file_version(request, version_id):
 
 def _download_config_file(export_file_field):
     response = HttpResponse(
-        export_file_field.read(), content_type='application/force-download'
+        export_file_field.read(),
+        content_type='application/force-download',
     )
     response['Content-Disposition'] = (
         f'attachment; filename={os.path.basename(export_file_field.name)}'
@@ -307,7 +317,8 @@ def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
     if export_run.base_export_config.id != export_id:
         raise Http404(
-            f'Export id {export_id} did not match run value of {export_run.base_export_config.id}!'
+            f'Export id {export_id} did not match run value of '
+            f'{export_run.base_export_config.id}!'
         )
     return render(
         request,
