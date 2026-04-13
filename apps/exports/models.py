@@ -44,12 +44,7 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
 
     @property
     def details_url(self):
-        if isinstance(self, ExportConfig):
-            return reverse('exports:export_details', args=[self.id])
-        elif isinstance(self, MultiProjectExportConfig):
-            return reverse('exports:multi_export_details', args=[self.id])
-        else:
-            raise ValueError(f"Can't find details URL for {self}")
+        raise NotImplementedError
 
     def save(self, **kwargs):
         with reversion.create_revision():
@@ -66,6 +61,10 @@ class ExportConfig(ExportConfigBase):
         on_delete=models.PROTECT,
     )
 
+    @property
+    def details_url(self):
+        return reverse('exports:export_details', args=[self.id])
+
     def __str__(self):
         return f'{self.name} - {self.project}'
 
@@ -76,6 +75,10 @@ class MultiProjectExportConfig(ExportConfigBase):
     PERIODIC_TASK_PREFIX = 'Run multi-project export'
 
     projects = models.ManyToManyField('commcare.CommCareProject')
+
+    @property
+    def details_url(self):
+        return reverse('exports:multi_export_details', args=[self.id])
 
     def __str__(self):
         return f'{self.name} - {self.projects.count()} projects'
