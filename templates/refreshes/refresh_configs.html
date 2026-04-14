@@ -19,7 +19,6 @@
             <th>{% trans "Refresh Config" %}</th>
             <th>{% trans "Database" %}</th>
             <th>{% trans "Views" %}</th>
-            <th>{% trans "Created By" %}</th>
             <th>{% trans "Last Run" %}</th>
           </tr>
         </thead>
@@ -39,9 +38,6 @@
               </td>
               <td>{{ config.database.name }}</td>
               <td>{{ config.materialized_views|length }}</td>
-              <td>
-                {% if request.user == config.created_by %}{% trans "You" %}{% else %}{{ config.created_by.get_display_name }}{% endif %}
-              </td>
               <td>
                 {% if config.last_run %}
                   {{ config.last_run.status|to_status_icon }}

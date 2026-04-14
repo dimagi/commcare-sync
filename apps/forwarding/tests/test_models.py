@@ -29,19 +29,16 @@ class TestForwardingConfig:
         self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
-            owner=self.user,
         )
         self.destination = ForwardingDestination.objects.create(
             name='Test API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
         self.config = ForwardingConfig.objects.create(
             name='Test Config',
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
         )
 
     def test_str_method(self):
@@ -146,19 +143,16 @@ class TestForwardingRun:
         self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
-            owner=self.user,
         )
         self.destination = ForwardingDestination.objects.create(
             name='Test API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
         self.config = ForwardingConfig.objects.create(
             name='Test Config',
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
         )
 
     def test_str_method(self):
@@ -281,7 +275,6 @@ class TestDatabase:
         database = Database.objects.create(
             name='Production DB',
             connection_string='postgresql://localhost/prod',
-            owner=self.user,
         )
 
         assert str(database) == 'Production DB'
@@ -299,7 +292,6 @@ class TestForwardingDestination:
         destination = ForwardingDestination.objects.create(
             name='Example API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
         assert str(destination) == 'Example API'
@@ -308,7 +300,6 @@ class TestForwardingDestination:
         destination = ForwardingDestination.objects.create(
             name='Public API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
         assert destination.api_username == ''
@@ -320,7 +311,6 @@ class TestForwardingDestination:
             api_url='https://example.com/api',
             api_username='admin',
             api_password='secret',
-            owner=self.user,
         )
 
         assert destination.api_username == 'admin'
@@ -337,12 +327,10 @@ class TestForwardingScheduling:
         self.database = Database.objects.create(
             name='Test DB',
             connection_string='postgresql://localhost/test',
-            owner=self.user,
         )
         self.destination = ForwardingDestination.objects.create(
             name='Test API',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
     def test_creating_config_with_interval_schedule_creates_periodic_task(
@@ -353,7 +341,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -375,7 +362,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
             first_run_date=date(2025, 1, 1),
             first_run_time=time(14, 30),
@@ -397,7 +383,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
         )
 
         config.refresh_from_db()
@@ -409,7 +394,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -431,7 +415,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -449,7 +432,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -471,7 +453,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
         )
 
         assert config.is_paused is True
@@ -482,7 +463,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -500,7 +480,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
@@ -515,7 +494,6 @@ class TestForwardingScheduling:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM test',
-            created_by=self.user,
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
             interval_unit=ScheduleMixin.IntervalUnit.MINUTES,

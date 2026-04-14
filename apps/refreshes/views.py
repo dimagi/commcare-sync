@@ -45,9 +45,7 @@ def create_refresh_config(request):
 
         if config_form.is_valid():
             with transaction.atomic():
-                config = config_form.save(commit=False)
-                config.created_by = request.user
-                config.save()
+                config = config_form.save()
 
             messages.success(
                 request,
@@ -187,7 +185,7 @@ def run_refresh(request, config_id):
         refresh_config=config,
         refresh_config_version=config.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user,
+        triggered_by=request.user,
     )
 
     result = run_refresh_task.delay(refresh_run.id)
