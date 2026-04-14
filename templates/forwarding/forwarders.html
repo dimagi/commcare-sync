@@ -19,7 +19,6 @@
             <th>{% trans "Forwarder" %}</th>
             <th>{% trans "Database" %}</th>
             <th>{% trans "Destination" %}</th>
-            <th>{% trans "Created By" %}</th>
             <th>{% trans "Last Run" %}</th>
           </tr>
         </thead>
@@ -39,9 +38,6 @@
               </td>
               <td>{{ forwarder.database.name }}</td>
               <td>{{ forwarder.destination.name }}</td>
-              <td>
-                {% if request.user == forwarder.created_by %}{% trans "You" %}{% else %}{{ forwarder.created_by.get_display_name }}{% endif %}
-              </td>
               <td>
                 {% if forwarder.last_run %}
                   {{ forwarder.last_run.status|to_status_icon }}

@@ -2,23 +2,21 @@ import reversion
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
-from apps.commcare.models import BaseModel
+from apps.commcare.models import BaseModel, RunBaseModel
 from apps.exports.scheduling import export_is_scheduled_to_run
-from apps.exports.templatetags.dateformat_tags import readable_timedelta
 
 
 class ExportConfigBase(BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey(
         'commcare.CommCareAccount',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
-    database = models.ForeignKey('db.Database', on_delete=models.CASCADE)
+    database = models.ForeignKey('db.Database', on_delete=models.PROTECT)
     config_file = models.FileField(upload_to='export-configs/')
     batch_size = models.PositiveIntegerField(
         default=500,
@@ -26,10 +24,6 @@ class ExportConfigBase(BaseModel):
             'How many cases to fetch at a time from CommCare. Try increasing '
             'this number if your export gets stuck.'
         ),
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
     )
     time_between_runs = models.PositiveIntegerField(
         default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
@@ -51,7 +45,7 @@ class ExportConfigBase(BaseModel):
     def last_run(self):
         return (
             self.runs
-            .exclude(status=ExportRun.QUEUED)
+            .exclude(status=ExportRun.Status.QUEUED)
             .order_by('-created_at')
             .first()
         )
@@ -65,7 +59,7 @@ class ExportConfigBase(BaseModel):
         # the latest queued run.
         last_run = self.runs.order_by('-created_at').first()
         if last_run:
-            return last_run.status == ExportRun.QUEUED
+            return last_run.status == ExportRun.Status.QUEUED
         return False
 
     def should_create_export_run(self):
@@ -94,7 +88,7 @@ class ExportConfigBase(BaseModel):
 class ExportConfig(ExportConfigBase):
     project = models.ForeignKey(
         'commcare.CommCareProject',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
 
     def __str__(self):
@@ -129,68 +123,26 @@ class MultiProjectExportConfig(ExportConfigBase):
             )
 
 
-class ExportRunBase(BaseModel):
-    QUEUED = 'queued'
-    STARTED = 'started'
-    MULTIPLE = 'multiple'
-    COMPLETED = 'completed'
-    FAILED = 'failed'
-    SKIPPED = 'skipped'
-    STATUS_CHOICES = (
-        (QUEUED, 'queued'),
-        (STARTED, 'started'),
-        (COMPLETED, 'completed'),
-        (FAILED, 'failed'),
-        (MULTIPLE, 'multiple statuses'),  # MultiExport only
-        (SKIPPED, 'skipped'),
-    )
-    started_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text=_(
-            'When the export actually started running. It may have been '
-            'created/queued earlier.'
-        ),
-    )
-    completed_at = models.DateTimeField(null=True, blank=True)
-    triggered_from_ui = models.BooleanField(null=True, default=None)
-    triggering_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
+class ExportRunBase(RunBaseModel):
+    class Status(models.TextChoices):
+        QUEUED = 'queued', _('Queued')
+        STARTED = 'started', _('Started')
+        COMPLETED = 'completed', _('Completed')
+        FAILED = 'failed', _('Failed')
+        SKIPPED = 'skipped', _('Skipped')
+        MULTIPLE = 'multiple', _('Multiple statuses')
+
     status = models.CharField(
         max_length=10,
-        default=QUEUED,
-        choices=STATUS_CHOICES,
+        default=Status.QUEUED,
+        choices=Status.choices,
     )
-    log = models.TextField(null=True, blank=True)
 
     class Meta:
         abstract = True
 
     def __str__(self):
         return f'{self.base_export_config.name} ({self.created_at})'
-
-    @property
-    def duration(self):
-        if self.completed_at and self.started_at:
-            return self.completed_at - self.started_at
-        else:
-            return None
-
-    def get_duration_display(self):
-        return readable_timedelta(self.duration)
-
-    def mark_skipped(self):
-        if not self.status == ExportRun.QUEUED:
-            raise ValueError(
-                _('Can\'t mark a run "skipped" after it has been started.')
-            )
-        self.status = ExportRun.SKIPPED
-        self.completed_at = timezone.now()
-        self.save()
 
 
 class ExportRun(ExportRunBase):

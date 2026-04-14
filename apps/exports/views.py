@@ -52,9 +52,7 @@ def create_export_config(request):
     if request.method == 'POST':
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            export = form.save(commit=False)
-            export.created_by = request.user
-            export.save()
+            export = form.save()
             messages.success(request, f'Export "{export.name}" was successfully created.')
             return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
     else:
@@ -71,9 +69,7 @@ def create_multi_export_config(request):
     if request.method == 'POST':
         form = MultiProjectExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
-            export = form.save(commit=False)
-            export.created_by = request.user
-            export.save()
+            export = form.save()
             form.save_m2m()
             messages.success(request, f'Export {export.name} was successfully created.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
@@ -155,7 +151,7 @@ def export_details(request, export_id):
     runs = export.runs
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
 
     return render(request, 'exports/export_details.html', {
         'active_tab': 'exports',
@@ -174,7 +170,7 @@ def run_history_table(request, export_id):
     hide_skipped = get_hide_skipped_from_request(request)
     is_multi_project = request.GET.get('is_multi_project') == 'true'
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
     run_history_url = reverse('exports:run_history_table', args=[export.id])
     if is_multi_project:
         run_history_url += '?is_multi_project=true'
@@ -216,7 +212,7 @@ def multi_export_details(request, export_id):
     runs = export.runs
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.SKIPPED, ExportRun.QUEUED])
+        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
     run_history_url = (
         reverse('exports:run_history_table', args=[export.id])
         + '?is_multi_project=true'
@@ -254,7 +250,7 @@ def run_export(request, export_id):
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user,
+        triggered_by=request.user,
     )
 
     result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
@@ -272,7 +268,7 @@ def run_multi_export(request, export_id):
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
-        triggering_user=request.user
+        triggered_by=request.user
     )
 
     result = run_multi_project_export_task.delay(

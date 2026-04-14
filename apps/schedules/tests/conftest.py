@@ -19,7 +19,6 @@ def database(user):
     return Database.objects.create(
         name='Test DB',
         connection_string='postgresql://localhost/test',
-        owner=user,
     )
 
 
@@ -28,5 +27,4 @@ def destination(user):
     return ForwardingDestination.objects.create(
         name='Test API',
         api_url='https://example.com/api',
-        owner=user,
     )

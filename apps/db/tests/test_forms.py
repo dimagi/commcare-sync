@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from apps.db.forms import CreateDatabaseForm, EditDatabaseForm
@@ -6,14 +5,6 @@ from apps.db.models import Database
 
 
 class TestDatabaseForm(TestCase):
-
-    def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123',
-        )
 
     def test_create_form_requires_connection_string(self):
         form = CreateDatabaseForm(data={
@@ -34,7 +25,6 @@ class TestDatabaseForm(TestCase):
     def test_edit_form_allows_empty_connection_string(self):
         db = Database.objects.create(
             name='Existing DB',
-            owner=self.user,
         )
         db.connection_string = 'postgresql://localhost/original'
         db.save()
@@ -56,7 +46,6 @@ class TestDatabaseForm(TestCase):
     def test_edit_form_updates_connection_string_when_provided(self):
         db = Database.objects.create(
             name='Existing DB',
-            owner=self.user,
         )
         db.connection_string = 'postgresql://localhost/original'
         db.save()

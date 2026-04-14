@@ -145,11 +145,9 @@ def account_db_fixture():
 
 @fixture
 def database_db_fixture():
-    user = user_fixture()
     yield Database.objects.create(
         name='Test DB',
         connection_string='postgresql://foo:bar@123.4.0.0/test',
-        owner=user,
     )
 
 
@@ -158,7 +156,6 @@ def export_config_db_fixture():
     project = project_db_fixture()
     account = account_db_fixture()
     database = database_db_fixture()
-    user = user_fixture()
     config_file = TemporaryUploadedFile(
         name='config_file',
         content_type='application/xml',
@@ -172,7 +169,6 @@ def export_config_db_fixture():
         database=database,
         config_file=config_file,
         extra_args='',
-        created_by=user,
     )
     config_file.close()
     yield export_config

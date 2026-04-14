@@ -8,10 +8,6 @@ from apps.commcare.models import BaseModel
 class Database(BaseModel):
     name = models.CharField(max_length=100)
     connection_string_encrypted = models.CharField(max_length=1000)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-    )
 
     def __str__(self):
         return self.name

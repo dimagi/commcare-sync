@@ -9,7 +9,6 @@ class RefreshConfigAdmin(VersionAdmin):
     list_display = [
         'name',
         'database',
-        'created_by',
         'created_at',
         'updated_at',
     ]
@@ -24,7 +23,6 @@ class RefreshConfigAdmin(VersionAdmin):
                     'name',
                     'database',
                     'materialized_views',
-                    'created_by',
                 )
             },
         ),
@@ -71,7 +69,7 @@ class RefreshRunAdmin(admin.ModelAdmin):
         'started_at',
         'completed_at',
         'triggered_from_ui',
-        'triggering_user',
+        'triggered_by',
         'log',
         'view_results',
         'created_at',
@@ -96,7 +94,7 @@ class RefreshRunAdmin(admin.ModelAdmin):
                     'started_at',
                     'completed_at',
                     'triggered_from_ui',
-                    'triggering_user',
+                    'triggered_by',
                 )
             },
         ),

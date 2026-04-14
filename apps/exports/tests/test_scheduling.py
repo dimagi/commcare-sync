@@ -20,7 +20,7 @@ def test_export_is_scheduled_to_run():
     assert export_config.is_scheduled_to_run()
 
     # A completed export that is failed shouldn't be rescheduled
-    export_run.status = ExportRun.FAILED
+    export_run.status = ExportRun.Status.FAILED
     export_run.completed_at = timezone.now() - timedelta(minutes=5)
     export_run.save()
     assert not export_config.is_scheduled_to_run()

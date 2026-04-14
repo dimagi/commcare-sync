@@ -33,12 +33,6 @@
         <h2 class="h5">{{ forwarder.destination.name }}</h2>
       </div>
       <div class="col">
-        <span class="text-muted small">{% trans "Created By" %}</span>
-        <h2 class="h5">
-          {% if request.user == forwarder.created_by %}{% trans "You" %}{% else %}{{ forwarder.created_by.username }}{% endif %}
-        </h2>
-      </div>
-      <div class="col">
         <span class="text-muted small">{% trans "Last Modified" %}</span>
         <h2 class="h5">{{ forwarder.updated_at|naturaltime }}</h2>
       </div>

@@ -29,12 +29,6 @@
         <h2 class="h5">{{ config.database.name }}</h2>
       </div>
       <div class="col">
-        <span class="text-muted small">{% trans "Created By" %}</span>
-        <h2 class="h5">
-          {% if request.user == config.created_by %}{% trans "You" %}{% else %}{{ config.created_by.username }}{% endif %}
-        </h2>
-      </div>
-      <div class="col">
         <span class="text-muted small">{% trans "Last Modified" %}</span>
         <h2 class="h5">{{ config.updated_at|naturaltime }}</h2>
       </div>
