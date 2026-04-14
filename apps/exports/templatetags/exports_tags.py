@@ -18,20 +18,20 @@ def to_status_icon(export_status):
     True
     """
     text_modifiers = {
-        ExportRunBase.COMPLETED: 'text-success',
-        ExportRunBase.FAILED: 'text-danger',
-        ExportRunBase.STARTED: 'text-primary',
-        ExportRunBase.MULTIPLE: 'text-warning',
-        ExportRunBase.QUEUED: 'text-muted',
-        ExportRunBase.SKIPPED: 'text-muted',
+        ExportRunBase.Status.COMPLETED: 'text-success',
+        ExportRunBase.Status.FAILED: 'text-danger',
+        ExportRunBase.Status.STARTED: 'text-primary',
+        ExportRunBase.Status.MULTIPLE: 'text-warning',
+        ExportRunBase.Status.QUEUED: 'text-muted',
+        ExportRunBase.Status.SKIPPED: 'text-muted',
     }
     icons = {
-        ExportRunBase.COMPLETED: 'fa-check-circle',
-        ExportRunBase.FAILED: 'fa-exclamation-circle',
-        ExportRunBase.STARTED: 'fa-play-circle',
-        ExportRunBase.MULTIPLE: 'fa-exclamation-triangle',
-        ExportRunBase.QUEUED: 'fa-ellipsis-h',
-        ExportRunBase.SKIPPED: 'fa-ban',
+        ExportRunBase.Status.COMPLETED: 'fa-check-circle',
+        ExportRunBase.Status.FAILED: 'fa-exclamation-circle',
+        ExportRunBase.Status.STARTED: 'fa-play-circle',
+        ExportRunBase.Status.MULTIPLE: 'fa-exclamation-triangle',
+        ExportRunBase.Status.QUEUED: 'fa-ellipsis-h',
+        ExportRunBase.Status.SKIPPED: 'fa-ban',
     }
     return mark_safe(
         '<i'

@@ -60,11 +60,9 @@ def commcare_project():
 @use('db')
 def export_database():
     """Create an export database."""
-    user = test_user()
     yield Database.objects.create(
         name='Test Database',
         connection_string='postgresql://testuser:password@localhost:5432/testdb',
-        owner=user
     )
 
 
@@ -98,7 +96,6 @@ def test_data():
     database = Database.objects.create(
         name='Test Database',
         connection_string='postgresql://testuser:password@localhost:5432/testdb',
-        owner=user
     )
 
     yield {

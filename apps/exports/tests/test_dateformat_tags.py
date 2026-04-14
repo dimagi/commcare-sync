@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from apps.exports.templatetags import dateformat_tags
+from apps.web.templatetags import dateformat_tags
 
 
 def test_doctests():

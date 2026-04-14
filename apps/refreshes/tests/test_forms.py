@@ -21,7 +21,7 @@ class TestRefreshConfigForm:
         data.update(overrides)
         return data
 
-    def test_create_with_valid_data(self, user, database):
+    def test_create_with_valid_data(self, database):
         form_data = self._base_form_data(
             database,
             materialized_views=json.dumps(
@@ -32,9 +32,7 @@ class TestRefreshConfigForm:
 
         assert form.is_valid(), form.errors
 
-        config = form.save(commit=False)
-        config.created_by = user
-        config.save()
+        config = form.save()
 
         assert config.name == 'My Refresh'
         assert config.materialized_views == ['public.view1', 'public.view2']
@@ -66,11 +64,10 @@ class TestRefreshConfigForm:
         assert not form.is_valid()
         assert 'materialized_views' in form.errors
 
-    def test_create_rejects_non_postgresql_database(self, user):
+    def test_create_rejects_non_postgresql_database(self):
         mysql_db = Database.objects.create(
             name='MySQL DB',
             connection_string='mysql://localhost/test',
-            owner=user,
         )
         form_data = {
             'name': 'My Refresh',
@@ -84,12 +81,11 @@ class TestRefreshConfigForm:
         assert not form.is_valid()
         assert 'database' in form.errors
 
-    def test_edit_populates_materialized_views(self, user, database):
+    def test_edit_populates_materialized_views(self, database):
         config = RefreshConfig.objects.create(
             name='Existing',
             database=database,
             materialized_views=['public.view1', 'schema.view2'],
-            created_by=user,
         )
 
         form = RefreshConfigForm(instance=config)
@@ -98,12 +94,11 @@ class TestRefreshConfigForm:
             ['public.view1', 'schema.view2']
         )
 
-    def test_edit_saves_updated_views(self, user, database):
+    def test_edit_saves_updated_views(self, database):
         config = RefreshConfig.objects.create(
             name='Existing',
             database=database,
             materialized_views=['public.view1'],
-            created_by=user,
         )
 
         form_data = self._base_form_data(

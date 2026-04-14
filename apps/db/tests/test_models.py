@@ -1,5 +1,4 @@
 from cryptography.fernet import Fernet
-from django.contrib.auth import get_user_model
 from django.test import override_settings
 
 from apps.db.models import Database
@@ -8,15 +7,8 @@ from apps.db.models import Database
 class TestDatabaseConnectionString:
 
     def setup_method(self):
-        User = get_user_model()
-        user = User(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123',
-        )
         self.db = Database(
             name='Test Database',
-            owner=user,
         )
 
     def test_connection_string_encryption_and_decryption(self):

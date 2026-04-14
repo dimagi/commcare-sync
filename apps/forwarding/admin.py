@@ -9,7 +9,7 @@ admin.site.register(models.ForwardingDestination)
 
 @admin.register(models.ForwardingConfig)
 class ForwardingConfigAdmin(VersionAdmin):
-    list_display = ['name', 'database', 'destination', 'created_by', 'created_at', 'updated_at']
+    list_display = ['name', 'database', 'destination', 'created_at', 'updated_at']
     list_filter = ['database', 'destination', 'created_at', 'updated_at']
 
 

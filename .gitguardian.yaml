@@ -4,4 +4,4 @@ version: 2
 secret:
   ignored_paths:
     # Avoid false positives on secrets used for testing
-    - 'commcare_sync/settings_travis.py'
+    - 'commcare_sync/settings_github.py'
