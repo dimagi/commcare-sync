@@ -204,7 +204,7 @@ class ScheduleMixin(models.Model):
             self.IntervalUnit.DAYS: IntervalSchedule.DAYS,
         }
 
-        schedule, created = IntervalSchedule.objects.get_or_create(
+        schedule, __ = IntervalSchedule.objects.get_or_create(
             every=self.interval_value,
             period=period_mapping[self.interval_unit],
         )
@@ -220,7 +220,7 @@ class ScheduleMixin(models.Model):
         month = self.first_run_date.month if self.first_run_date else 1
 
         if self.schedule_type == self.ScheduleType.WEEKLY:
-            schedule, created = CrontabSchedule.objects.get_or_create(
+            schedule, __ = CrontabSchedule.objects.get_or_create(
                 minute=str(minute),
                 hour=str(hour),
                 day_of_week=','.join(
@@ -250,7 +250,7 @@ class ScheduleMixin(models.Model):
                 f'Unsupported schedule_type: {self.schedule_type}'
             )
 
-        schedule, created = CrontabSchedule.objects.get_or_create(
+        schedule, __ = CrontabSchedule.objects.get_or_create(
             minute=str(minute),
             hour=str(hour),
             day_of_month=str(day),
