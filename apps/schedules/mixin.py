@@ -7,6 +7,17 @@ from django.utils.translation import gettext_lazy as _
 from apps.commcare.models import RunBaseModel
 
 
+def _validate_days_of_week(value):
+    if not isinstance(value, list):
+        raise ValidationError(_('days_of_week must be a list.'))
+    for day in value:
+        if not isinstance(day, int) or not (0 <= day <= 6):
+            raise ValidationError(
+                _('Invalid day of week: %(day)s. Must be an integer 0–6.'),
+                params={'day': day},
+            )
+
+
 class ScheduleMixin(models.Model):
     """
     Abstract model mixin that adds scheduling fields to any config model.
@@ -68,6 +79,7 @@ class ScheduleMixin(models.Model):
         help_text=_(
             'List of day numbers: 0=Sunday, 1=Monday, ..., 6=Saturday'
         ),
+        validators=[_validate_days_of_week],
     )
     periodic_task = models.OneToOneField(
         'django_celery_beat.PeriodicTask',
@@ -109,21 +121,18 @@ class ScheduleMixin(models.Model):
             return ''
         if self.schedule_type == self.ScheduleType.INTERVAL:
             return f'Every {self.interval_value} {self.interval_unit.lower()}'
-        elif self.schedule_type == self.ScheduleType.WEEKLY:
+        if self.schedule_type == self.ScheduleType.WEEKLY:
             day_names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
             days = ', '.join(day_names[d] for d in sorted(self.days_of_week))
             return f'Weekly on {days} at {self.first_run_time}'
-        elif self.schedule_type == self.ScheduleType.MONTHLY:
-            day = self.first_run_date.day if self.first_run_date else '?'
+        day = self.first_run_date.day if self.first_run_date else '?'
+        if self.schedule_type == self.ScheduleType.MONTHLY:
             return f'Monthly on day {day} at {self.first_run_time}'
-        elif self.schedule_type == self.ScheduleType.QUARTERLY:
-            day = self.first_run_date.day if self.first_run_date else '?'
+        if self.schedule_type == self.ScheduleType.QUARTERLY:
             return f'Quarterly on day {day} at {self.first_run_time}'
-        elif self.schedule_type == self.ScheduleType.SEMI_ANNUALLY:
-            day = self.first_run_date.day if self.first_run_date else '?'
+        if self.schedule_type == self.ScheduleType.SEMI_ANNUALLY:
             return f'Semi-annually on day {day} at {self.first_run_time}'
-        elif self.schedule_type == self.ScheduleType.ANNUALLY:
-            day = self.first_run_date.day if self.first_run_date else '?'
+        if self.schedule_type == self.ScheduleType.ANNUALLY:
             return f'Annually on day {day} at {self.first_run_time}'
         return f'Schedule ({self.schedule_type})'
 
@@ -221,47 +230,32 @@ class ScheduleMixin(models.Model):
                 month_of_year='*',
                 timezone=self.timezone,
             )
-        elif self.schedule_type == self.ScheduleType.MONTHLY:
-            schedule, created = CrontabSchedule.objects.get_or_create(
-                minute=str(minute),
-                hour=str(hour),
-                day_of_month=str(day),
-                day_of_week='*',
-                month_of_year='*',
-                timezone=self.timezone,
-            )
+            return schedule
+
+        # MONTHLY, QUARTERLY, SEMI_ANNUALLY, ANNUALLY all share the same
+        # crontab shape — they differ only in which months to run.
+        if self.schedule_type == self.ScheduleType.MONTHLY:
+            month_of_year = '*'
         elif self.schedule_type == self.ScheduleType.QUARTERLY:
+            # Every 3 months starting from `month`, wrapping around December.
             months = [str((month - 1 + i * 3) % 12 + 1) for i in range(4)]
-            schedule, created = CrontabSchedule.objects.get_or_create(
-                minute=str(minute),
-                hour=str(hour),
-                day_of_month=str(day),
-                day_of_week='*',
-                month_of_year=','.join(sorted(months, key=int)),
-                timezone=self.timezone,
-            )
+            month_of_year = ','.join(sorted(months, key=int))
         elif self.schedule_type == self.ScheduleType.SEMI_ANNUALLY:
             months = [str(month), str((month - 1 + 6) % 12 + 1)]
-            schedule, created = CrontabSchedule.objects.get_or_create(
-                minute=str(minute),
-                hour=str(hour),
-                day_of_month=str(day),
-                day_of_week='*',
-                month_of_year=','.join(sorted(months, key=int)),
-                timezone=self.timezone,
-            )
+            month_of_year = ','.join(sorted(months, key=int))
         elif self.schedule_type == self.ScheduleType.ANNUALLY:
-            schedule, created = CrontabSchedule.objects.get_or_create(
-                minute=str(minute),
-                hour=str(hour),
-                day_of_month=str(day),
-                day_of_week='*',
-                month_of_year=str(month),
-                timezone=self.timezone,
-            )
+            month_of_year = str(month)
         else:
             raise ValueError(
                 f'Unsupported schedule_type: {self.schedule_type}'
             )
 
+        schedule, created = CrontabSchedule.objects.get_or_create(
+            minute=str(minute),
+            hour=str(hour),
+            day_of_month=str(day),
+            day_of_week='*',
+            month_of_year=month_of_year,
+            timezone=self.timezone,
+        )
         return schedule

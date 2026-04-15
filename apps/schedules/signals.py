@@ -37,6 +37,13 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
             logger.info(f'Deleted periodic task for {instance} (schedule removed)')
         return
 
+    for attr in ('CELERY_TASK', 'PERIODIC_TASK_PREFIX'):
+        if not isinstance(getattr(instance, attr, None), str):
+            raise TypeError(
+                f'{type(instance).__name__} must define {attr} as a string '
+                'class attribute'
+            )
+
     task_name = f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
     task_kwargs = {
         'task': instance.CELERY_TASK,
