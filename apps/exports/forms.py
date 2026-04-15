@@ -6,8 +6,9 @@ from apps.commcare.models import (
     CommCareServer,
 )
 from apps.db.models import Database
-from .models import ExportConfig, MultiProjectExportConfig
+
 from .api_client import download_config_file
+from .models import ExportConfig, MultiProjectExportConfig
 
 
 class ConfigFileFetchMixin:
@@ -47,7 +48,7 @@ class ConfigFileFetchMixin:
             config_file = download_config_file(
                 url=det_config_url,
                 username=account.username,
-                api_key=account.api_key
+                api_key=account.api_key,
             )
             instance.config_file = config_file
 
@@ -57,11 +58,17 @@ class ConfigFileFetchMixin:
 
 
 class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
-    project = forms.ModelChoiceField(CommCareProject.objects.order_by('domain'))
-    account = forms.ModelChoiceField(CommCareAccount.objects.order_by('username'))
+    project = forms.ModelChoiceField(
+        CommCareProject.objects.order_by('domain')
+    )
+    account = forms.ModelChoiceField(
+        CommCareAccount.objects.order_by('username')
+    )
     database = forms.ModelChoiceField(Database.objects.order_by('name'))
     extra_args = forms.CharField(widget=forms.TextInput, required=False)
-    det_config_url = forms.CharField(widget=forms.HiddenInput(), required=False)
+    det_config_url = forms.CharField(
+        widget=forms.HiddenInput(), required=False
+    )
 
     class Meta:
         model = ExportConfig
@@ -79,10 +86,12 @@ class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
 
 class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
     projects = forms.ModelMultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple(attrs={"class": "checkbox"}),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox'}),
         queryset=CommCareProject.objects.order_by('domain'),
     )
-    det_config_url = forms.CharField(widget=forms.HiddenInput(), required=False)
+    det_config_url = forms.CharField(
+        widget=forms.HiddenInput(), required=False
+    )
 
     class Meta:
         model = MultiProjectExportConfig
@@ -96,5 +105,3 @@ class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
             'batch_size',
             'extra_args',
         )
-
-

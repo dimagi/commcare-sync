@@ -11,6 +11,7 @@ objects. They are registered per-model in each app's signals.py via::
     post_save.connect(create_or_update_periodic_task, sender=MyConfig)
     pre_delete.connect(delete_periodic_task, sender=MyConfig)
 """
+
 import json
 import logging
 
@@ -34,7 +35,9 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
             # Use QuerySet.update() rather than instance.save() to avoid
             # triggering this post_save signal recursively.
             sender.objects.filter(pk=instance.pk).update(periodic_task=None)
-            logger.info(f'Deleted periodic task for {instance} (schedule removed)')
+            logger.info(
+                f'Deleted periodic task for {instance} (schedule removed)'
+            )
         return
 
     for attr in ('CELERY_TASK', 'PERIODIC_TASK_PREFIX'):
@@ -44,7 +47,9 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
                 'class attribute'
             )
 
-    task_name = f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
+    task_name = (
+        f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
+    )
     task_kwargs = {
         'task': instance.CELERY_TASK,
         'name': task_name,
