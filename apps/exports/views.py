@@ -108,7 +108,7 @@ def edit_multi_export_config(request, export_id):
         form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
             export = form.save()
-            messages.success(request, f'Export {export.name} was successfully created.')
+            messages.success(request, f'Export {export.name} was successfully saved.')
             return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
     else:
         form = MultiProjectExportConfigForm(instance=export)
@@ -346,12 +346,11 @@ def fetch_config_files(request):
                     'det_config_url': config.get('det_config_url'),
                 })
         except Exception as err:
-            error_msg = (
-                "Error fetching configs for "
-                f"{project.domain}: {type(err).__name__}: {err}"
+            logger.error(
+                'Error fetching configs for %s: %s: %s',
+                project.domain, type(err).__name__, err,
             )
-            logger.error(error_msg)
-            errors.append(error_msg)
+            errors.append(f'Could not fetch configs for {project.domain}.')
 
     is_multi_project = len(projects) > 1
 
