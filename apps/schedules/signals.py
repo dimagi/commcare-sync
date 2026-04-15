@@ -31,6 +31,8 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
     if not instance.has_schedule:
         if instance.periodic_task:
             instance.periodic_task.delete()
+            # Use QuerySet.update() rather than instance.save() to avoid
+            # triggering this post_save signal recursively.
             sender.objects.filter(pk=instance.pk).update(periodic_task=None)
             logger.info(f'Deleted periodic task for {instance} (schedule removed)')
         return
@@ -39,7 +41,6 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
     task_kwargs = {
         'task': instance.CELERY_TASK,
         'name': task_name,
-        'enabled': True,
         'args': json.dumps([instance.id]),
         'crontab': None,
         'interval': None,
@@ -58,7 +59,13 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
         periodic_task.save()
         logger.info(f'Updated periodic task for {instance}')
     else:
+        # If `instance` already has a PeriodicTask, preserve its value
+        # of `enabled` so that a manually-paused task is not silently
+        # re-enabled. Default to `True`
+        task_kwargs['enabled'] = True
         periodic_task = PeriodicTask.objects.create(**task_kwargs)
+        # Use QuerySet.update() rather than instance.save() to avoid
+        # triggering this post_save signal recursively.
         sender.objects.filter(pk=instance.pk).update(
             periodic_task=periodic_task
         )
