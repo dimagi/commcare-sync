@@ -1,6 +1,10 @@
 from django import forms
 
-from apps.commcare.models import CommCareProject, CommCareAccount
+from apps.commcare.models import (
+    CommCareAccount,
+    CommCareProject,
+    CommCareServer,
+)
 from apps.db.models import Database
 from .models import ExportConfig, MultiProjectExportConfig
 from .api_client import download_config_file
@@ -18,6 +22,19 @@ class ConfigFileFetchMixin:
         # Require config selection for new exports, optional for edits
         if not self.instance.pk and not det_config_url:
             raise forms.ValidationError('Please select a config file.')
+
+        if det_config_url:
+            # Guard against SSRF: only allow URLs from registered CommCare servers.
+            valid_prefixes = list(
+                CommCareServer.objects.values_list('url', flat=True)
+            )
+            if not any(
+                det_config_url.startswith(server_url.rstrip('/'))
+                for server_url in valid_prefixes
+            ):
+                raise forms.ValidationError(
+                    'Config file URL must be from a registered CommCare server.'
+                )
 
         return cleaned_data
 
