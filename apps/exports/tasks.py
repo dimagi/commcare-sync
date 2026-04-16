@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 from django.utils import timezone
 
@@ -11,11 +13,21 @@ from .models import (
 )
 from .runner import run_export, run_multi_project_export
 
+logger = logging.getLogger(__name__)
+
 
 @shared_task
 def run_scheduled_export_task(export_config_id):
     """Celery-beat entry point for a single ExportConfig."""
-    export = ExportConfig.objects.get(id=export_config_id)
+    try:
+        export = ExportConfig.objects.get(id=export_config_id)
+    except ExportConfig.DoesNotExist:
+        logger.warning(
+            'run_scheduled_export_task: ExportConfig %s no longer exists, '
+            'skipping.',
+            export_config_id,
+        )
+        return
     if export.has_queued_runs():
         return
     export_record = ExportRun.objects.create(
@@ -29,7 +41,15 @@ def run_scheduled_export_task(export_config_id):
 @shared_task
 def run_scheduled_multi_export_task(export_config_id):
     """Celery-beat entry point for a single MultiProjectExportConfig."""
-    export = MultiProjectExportConfig.objects.get(id=export_config_id)
+    try:
+        export = MultiProjectExportConfig.objects.get(id=export_config_id)
+    except MultiProjectExportConfig.DoesNotExist:
+        logger.warning(
+            'run_scheduled_multi_export_task: MultiProjectExportConfig %s no '
+            'longer exists, skipping.',
+            export_config_id,
+        )
+        return
     if export.has_queued_runs():
         return
     export_record = MultiProjectExportRun.objects.create(
