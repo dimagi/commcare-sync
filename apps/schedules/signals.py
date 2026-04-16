@@ -11,6 +11,7 @@ objects. They are registered per-model in each app's signals.py via::
     post_save.connect(create_or_update_periodic_task, sender=MyConfig)
     pre_delete.connect(delete_periodic_task, sender=MyConfig)
 """
+
 import json
 import logging
 
@@ -31,15 +32,27 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
     if not instance.has_schedule:
         if instance.periodic_task:
             instance.periodic_task.delete()
+            # Use QuerySet.update() rather than instance.save() to avoid
+            # triggering this post_save signal recursively.
             sender.objects.filter(pk=instance.pk).update(periodic_task=None)
-            logger.info(f'Deleted periodic task for {instance} (schedule removed)')
+            logger.info(
+                f'Deleted periodic task for {instance} (schedule removed)'
+            )
         return
 
-    task_name = f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
+    for attr in ('CELERY_TASK', 'PERIODIC_TASK_PREFIX'):
+        if not isinstance(getattr(instance, attr, None), str):
+            raise TypeError(
+                f'{type(instance).__name__} must define {attr} as a string '
+                'class attribute'
+            )
+
+    task_name = (
+        f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
+    )
     task_kwargs = {
         'task': instance.CELERY_TASK,
         'name': task_name,
-        'enabled': True,
         'args': json.dumps([instance.id]),
         'crontab': None,
         'interval': None,
@@ -58,7 +71,13 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
         periodic_task.save()
         logger.info(f'Updated periodic task for {instance}')
     else:
+        # If `instance` already has a PeriodicTask, preserve its value
+        # of `enabled` so that a manually-paused task is not silently
+        # re-enabled. Default to `True`
+        task_kwargs['enabled'] = True
         periodic_task = PeriodicTask.objects.create(**task_kwargs)
+        # Use QuerySet.update() rather than instance.save() to avoid
+        # triggering this post_save signal recursively.
         sender.objects.filter(pk=instance.pk).update(
             periodic_task=periodic_task
         )

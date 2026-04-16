@@ -37,13 +37,19 @@ logger = logging.getLogger(__name__)
 @login_required
 def home(request):
     exports = ExportConfig.objects.order_by('-updated_at')
-    multi_project_exports = MultiProjectExportConfig.objects.order_by('-updated_at')
+    multi_project_exports = MultiProjectExportConfig.objects.order_by(
+        '-updated_at'
+    )
 
-    return render(request, 'exports/exports_home.html', {
-        'active_tab': 'exports',
-        'exports': exports,
-        'multi_project_exports': multi_project_exports,
-    })
+    return render(
+        request,
+        'exports/exports_home.html',
+        {
+            'active_tab': 'exports',
+            'exports': exports,
+            'multi_project_exports': multi_project_exports,
+        },
+    )
 
 
 @login_required
@@ -53,15 +59,23 @@ def create_export_config(request):
         form = ExportConfigForm(request.POST, request.FILES)
         if form.is_valid():
             export = form.save()
-            messages.success(request, f'Export "{export.name}" was successfully created.')
-            return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
+            messages.success(
+                request, f'Export "{export.name}" was successfully created.'
+            )
+            return HttpResponseRedirect(
+                reverse('exports:export_details', args=[export.id])
+            )
     else:
         form = ExportConfigForm()
 
-    return render(request, 'exports/create_export.html', {
-        'active_tab': 'create_export',
-        'form': form,
-    })
+    return render(
+        request,
+        'exports/create_export.html',
+        {
+            'active_tab': 'create_export',
+            'form': form,
+        },
+    )
 
 
 @login_required
@@ -71,15 +85,23 @@ def create_multi_export_config(request):
         if form.is_valid():
             export = form.save()
             form.save_m2m()
-            messages.success(request, f'Export {export.name} was successfully created.')
-            return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
+            messages.success(
+                request, f'Export {export.name} was successfully created.'
+            )
+            return HttpResponseRedirect(
+                reverse('exports:multi_export_details', args=[export.id])
+            )
     else:
         form = MultiProjectExportConfigForm()
 
-    return render(request, 'exports/create_multi_project_export.html', {
-        'active_tab': 'create_multi_export',
-        'form': form,
-    })
+    return render(
+        request,
+        'exports/create_multi_project_export.html',
+        {
+            'active_tab': 'create_multi_export',
+            'form': form,
+        },
+    )
 
 
 @login_required
@@ -89,34 +111,52 @@ def edit_export_config(request, export_id):
         form = ExportConfigForm(request.POST, request.FILES, instance=export)
         if form.is_valid():
             export = form.save()
-            messages.success(request, f'Export {export.name} was successfully saved.')
-            return HttpResponseRedirect(reverse('exports:export_details', args=[export.id]))
+            messages.success(
+                request, f'Export {export.name} was successfully saved.'
+            )
+            return HttpResponseRedirect(
+                reverse('exports:export_details', args=[export.id])
+            )
     else:
         form = ExportConfigForm(instance=export)
 
-    return render(request, 'exports/edit_export.html', {
-        'active_tab': 'exports',
-        'form': form,
-        'export': export,
-    })
+    return render(
+        request,
+        'exports/edit_export.html',
+        {
+            'active_tab': 'exports',
+            'form': form,
+            'export': export,
+        },
+    )
 
 
 @login_required
 def edit_multi_export_config(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     if request.method == 'POST':
-        form = MultiProjectExportConfigForm(request.POST, request.FILES, instance=export)
+        form = MultiProjectExportConfigForm(
+            request.POST, request.FILES, instance=export
+        )
         if form.is_valid():
             export = form.save()
-            messages.success(request, f'Export {export.name} was successfully created.')
-            return HttpResponseRedirect(reverse('exports:multi_export_details', args=[export.id]))
+            messages.success(
+                request, f'Export {export.name} was successfully saved.'
+            )
+            return HttpResponseRedirect(
+                reverse('exports:multi_export_details', args=[export.id])
+            )
     else:
         form = MultiProjectExportConfigForm(instance=export)
 
-    return render(request, 'exports/edit_multi_project_export.html', {
-        'active_tab': 'create_multi_export',
-        'form': form,
-    })
+    return render(
+        request,
+        'exports/edit_multi_project_export.html',
+        {
+            'active_tab': 'create_multi_export',
+            'form': form,
+        },
+    )
 
 
 @login_required
@@ -124,12 +164,18 @@ def delete_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(request, f'Export file "{export.name}" was successfully deleted.')
+        messages.success(
+            request, f'Export file "{export.name}" was successfully deleted.'
+        )
         return HttpResponseRedirect(reverse('exports:home'))
-    return render(request, 'exports/delete_export.html', {
-        'active_tab': 'exports',
-        'export': export,
-    })
+    return render(
+        request,
+        'exports/delete_export.html',
+        {
+            'active_tab': 'exports',
+            'export': export,
+        },
+    )
 
 
 @login_required
@@ -137,12 +183,18 @@ def delete_multi_export_config(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(request, f'Export file "{export.name}" was successfully deleted.')
+        messages.success(
+            request, f'Export file "{export.name}" was successfully deleted.'
+        )
         return HttpResponseRedirect(reverse('exports:home'))
-    return render(request, 'exports/delete_export.html', {
-        'active_tab': 'exports',
-        'export': export,
-    })
+    return render(
+        request,
+        'exports/delete_export.html',
+        {
+            'active_tab': 'exports',
+            'export': export,
+        },
+    )
 
 
 @login_required
@@ -151,15 +203,23 @@ def export_details(request, export_id):
     runs = export.runs
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
+        runs = runs.exclude(
+            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
+        )
 
-    return render(request, 'exports/export_details.html', {
-        'active_tab': 'exports',
-        'export': export,
-        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
-        'hide_skipped': hide_skipped,
-        'run_history_url': reverse('exports:run_history_table', args=[export.id]),
-    })
+    return render(
+        request,
+        'exports/export_details.html',
+        {
+            'active_tab': 'exports',
+            'export': export,
+            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'hide_skipped': hide_skipped,
+            'run_history_url': reverse(
+                'exports:run_history_table', args=[export.id]
+            ),
+        },
+    )
 
 
 @login_required
@@ -170,16 +230,22 @@ def run_history_table(request, export_id):
     hide_skipped = get_hide_skipped_from_request(request)
     is_multi_project = request.GET.get('is_multi_project') == 'true'
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
+        runs = runs.exclude(
+            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
+        )
     run_history_url = reverse('exports:run_history_table', args=[export.id])
     if is_multi_project:
         run_history_url += '?is_multi_project=true'
-    return render(request, 'exports/partials/run_history_table.html', {
-        'export': export,
-        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
-        'is_multi_project': is_multi_project,
-        'run_history_url': run_history_url,
-    })
+    return render(
+        request,
+        'exports/partials/run_history_table.html',
+        {
+            'export': export,
+            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'is_multi_project': is_multi_project,
+            'run_history_url': run_history_url,
+        },
+    )
 
 
 @login_required
@@ -201,8 +267,12 @@ def download_export_file_version(request, version_id):
 
 
 def _download_config_file(export_file_field):
-    response = HttpResponse(export_file_field.read(), content_type='application/force-download')
-    response['Content-Disposition'] = f'attachment; filename={os.path.basename(export_file_field.name)}'
+    response = HttpResponse(
+        export_file_field.read(), content_type='application/force-download'
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename={os.path.basename(export_file_field.name)}'
+    )
     return response
 
 
@@ -212,31 +282,45 @@ def multi_export_details(request, export_id):
     runs = export.runs
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
-        runs = runs.exclude(status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED])
+        runs = runs.exclude(
+            status__in=[ExportRun.Status.SKIPPED, ExportRun.Status.QUEUED]
+        )
     run_history_url = (
         reverse('exports:run_history_table', args=[export.id])
         + '?is_multi_project=true'
     )
-    return render(request, 'exports/multi_project_export_details.html', {
-        'active_tab': 'exports',
-        'export': export,
-        'runs': runs.order_by('-created_at')[:get_ui_page_size(request)],
-        'hide_skipped': hide_skipped,
-        'run_history_url': run_history_url,
-    })
+    return render(
+        request,
+        'exports/multi_project_export_details.html',
+        {
+            'active_tab': 'exports',
+            'export': export,
+            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'hide_skipped': hide_skipped,
+            'run_history_url': run_history_url,
+        },
+    )
 
 
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
     if export_run.base_export_config.id != export_id:
-        raise Http404(f'Export id {export_id} did not match run value of {export_run.base_export_config.id }!')
-    return render(request, 'exports/multi_project_export_run_details.html', {
-        'active_tab': 'exports',
-        'export_run': export_run,
-        'export': export_run.base_export_config,
-        'runs': export_run.partial_runs.order_by('-created_at')[:get_ui_page_size(request)],
-    })
+        raise Http404(
+            f'Export id {export_id} did not match run value of {export_run.base_export_config.id}!'
+        )
+    return render(
+        request,
+        'exports/multi_project_export_run_details.html',
+        {
+            'active_tab': 'exports',
+            'export_run': export_run,
+            'export': export_run.base_export_config,
+            'runs': export_run.partial_runs.order_by('-created_at')[
+                : get_ui_page_size(request)
+            ],
+        },
+    )
 
 
 @login_required
@@ -253,7 +337,11 @@ def run_export(request, export_id):
         triggered_by=request.user,
     )
 
-    result = run_export_task.delay(export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True)
+    result = run_export_task.delay(
+        export_record.id,
+        force_sync_all_data=force_sync,
+        ignore_schedule_checks=True,
+    )
     return HttpResponse(result.task_id)
 
 
@@ -268,11 +356,13 @@ def run_multi_export(request, export_id):
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
-        triggered_by=request.user
+        triggered_by=request.user,
     )
 
     result = run_multi_project_export_task.delay(
-        export_record.id, force_sync_all_data=force_sync, ignore_schedule_checks=True,
+        export_record.id,
+        force_sync_all_data=force_sync,
+        ignore_schedule_checks=True,
     )
     return HttpResponse(result.task_id)
 
@@ -301,33 +391,41 @@ def fetch_config_files(request):
 
     if not account_id or not project_ids:
         logger.error(
-            "Missing required params for fetch_config_files: "
-            "account_id=%s project_ids=%s",
+            'Missing required params for fetch_config_files: '
+            'account_id=%s project_ids=%s',
             account_id,
             project_ids,
         )
-        return render(request, 'exports/partials/config_options.html', {
-            'configs': [],
-            'errors': ['Missing account_id or project_ids'],
-            'is_multi_project': False,
-            'current_value': current_value,
-        })
+        return render(
+            request,
+            'exports/partials/config_options.html',
+            {
+                'configs': [],
+                'errors': ['Missing account_id or project_ids'],
+                'is_multi_project': False,
+                'current_value': current_value,
+            },
+        )
 
     account = get_object_or_404(CommCareAccount, id=account_id)
     projects = CommCareProject.objects.filter(id__in=project_ids)
     if not projects.exists():
         logger.error(
-            "No valid projects found for fetch_config_files: "
-            "account_id=%s project_ids=%s",
+            'No valid projects found for fetch_config_files: '
+            'account_id=%s project_ids=%s',
             account_id,
             project_ids,
         )
-        return render(request, 'exports/partials/config_options.html', {
-            'configs': [],
-            'errors': ['No valid projects found'],
-            'is_multi_project': False,
-            'current_value': current_value,
-        })
+        return render(
+            request,
+            'exports/partials/config_options.html',
+            {
+                'configs': [],
+                'errors': ['No valid projects found'],
+                'is_multi_project': False,
+                'current_value': current_value,
+            },
+        )
 
     all_configs = []
     errors = []
@@ -337,30 +435,37 @@ def fetch_config_files(request):
                 server_url=project.server.url,
                 domain=project.domain,
                 username=account.username,
-                api_key=account.api_key
+                api_key=account.api_key,
             )
             for config in configs:
-                all_configs.append({
-                    'domain': project.domain,
-                    'name': config.get('name', 'Unnamed'),
-                    'det_config_url': config.get('det_config_url'),
-                })
+                all_configs.append(
+                    {
+                        'domain': project.domain,
+                        'name': config.get('name', 'Unnamed'),
+                        'det_config_url': config.get('det_config_url'),
+                    }
+                )
         except Exception as err:
-            error_msg = (
-                "Error fetching configs for "
-                f"{project.domain}: {type(err).__name__}: {err}"
+            logger.error(
+                'Error fetching configs for %s: %s: %s',
+                project.domain,
+                type(err).__name__,
+                err,
             )
-            logger.error(error_msg)
-            errors.append(error_msg)
+            errors.append(f'Could not fetch configs for {project.domain}.')
 
     is_multi_project = len(projects) > 1
 
-    return render(request, 'exports/partials/config_options.html', {
-        'configs': all_configs,
-        'errors': errors,
-        'is_multi_project': is_multi_project,
-        'current_value': current_value,
-    })
+    return render(
+        request,
+        'exports/partials/config_options.html',
+        {
+            'configs': all_configs,
+            'errors': errors,
+            'is_multi_project': is_multi_project,
+            'current_value': current_value,
+        },
+    )
 
 
 @login_required
@@ -375,5 +480,7 @@ def download_commcare_export_log(request):
 
     with open(log_file_path, 'rb') as f:
         response = HttpResponse(f.read(), content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename=commcare_export.log'
+        response['Content-Disposition'] = (
+            'attachment; filename=commcare_export.log'
+        )
         return response
