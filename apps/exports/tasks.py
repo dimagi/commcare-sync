@@ -12,8 +12,8 @@ from .models import (
 from .runner import run_export, run_multi_project_export
 
 
-@shared_task(bind=True)
-def run_scheduled_export_task(self, export_config_id):
+@shared_task
+def run_scheduled_export_task(export_config_id):
     """Celery-beat entry point for a single ExportConfig."""
     export = ExportConfig.objects.get(id=export_config_id)
     if export.has_queued_runs():
@@ -26,8 +26,8 @@ def run_scheduled_export_task(self, export_config_id):
     run_export_task.delay(export_record.id, force_sync_all_data=False)
 
 
-@shared_task(bind=True)
-def run_scheduled_multi_export_task(self, export_config_id):
+@shared_task
+def run_scheduled_multi_export_task(export_config_id):
     """Celery-beat entry point for a single MultiProjectExportConfig."""
     export = MultiProjectExportConfig.objects.get(id=export_config_id)
     if export.has_queued_runs():
