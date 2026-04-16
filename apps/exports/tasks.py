@@ -28,14 +28,7 @@ def run_scheduled_export_task(export_config_id):
             export_config_id,
         )
         return
-    if export.has_queued_runs():
-        return
-    export_record = ExportRun.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
-        triggered_from_ui=False,
-    )
-    run_export_task.delay(export_record.id, force_sync_all_data=False)
+    _enqueue_scheduled_export(export, ExportRun, run_export_task)
 
 
 @shared_task
@@ -50,17 +43,26 @@ def run_scheduled_multi_export_task(export_config_id):
             export_config_id,
         )
         return
-    if export.has_queued_runs():
+    _enqueue_scheduled_export(
+        export, MultiProjectExportRun, run_multi_project_export_task
+    )
+
+
+def _enqueue_scheduled_export(export_config, run_model, next_task):
+    """
+    Common entry-point logic for celery-beat scheduled export tasks.
+
+    Skips enqueueing if a run is already queued, then creates a new run
+    record and dispatches the worker task.
+    """
+    if export_config.has_queued_runs():
         return
-    export_record = MultiProjectExportRun.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
+    export_record = run_model.objects.create(
+        base_export_config=export_config,
+        export_config_version=export_config.latest_version,
         triggered_from_ui=False,
     )
-    run_multi_project_export_task.delay(
-        export_record.id,
-        force_sync_all_data=False,
-    )
+    next_task.delay(export_record.id, force_sync_all_data=False)
 
 
 @shared_task(bind=True)
