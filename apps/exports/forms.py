@@ -77,8 +77,6 @@ class ExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
             'project',
             'account',
             'database',
-            'is_paused',
-            'time_between_runs',
             'batch_size',
             'extra_args',
         )
@@ -100,8 +98,6 @@ class MultiProjectExportConfigForm(ConfigFileFetchMixin, forms.ModelForm):
             'projects',
             'account',
             'database',
-            'is_paused',
-            'time_between_runs',
             'batch_size',
             'extra_args',
         )
