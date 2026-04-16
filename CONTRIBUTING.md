@@ -67,7 +67,8 @@ def test_doctests():
 
 ## Commits
 
-Commits should group changes logically and also make changes easier to
-review. Whenever code is moved and changed, or a file is renamed and
-changed, do the move or the rename in one commit and make the changes in
-another commit, so that the changes are clear.
+Each commit should do exactly one thing so that its diff is easy to
+review. If a task involves multiple changes, split them into separate
+commits. For example, whenever code is moved and changed, or a file is
+renamed and changed, do the move or the rename in one commit and make
+the changes in another.
