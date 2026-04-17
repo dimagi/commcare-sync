@@ -7,7 +7,12 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.exports.models import ExportConfig, MultiProjectExportConfig, ExportRun, MultiProjectExportRun
+from apps.exports.models import (
+    ExportConfig,
+    MultiProjectExportConfig,
+    ExportRun,
+    MultiProjectExportRun,
+)
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.refreshes.models import RefreshConfig, RefreshRun
 
@@ -54,15 +59,19 @@ def _get_export_statistics(since_datetime):
 
     total_runs = recent_export_runs.count() + recent_multi_runs.count()
     successful_runs = (
-        recent_export_runs.filter(status=ExportRun.COMPLETED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.COMPLETED).count()
+        recent_export_runs.filter(status=ExportRun.COMPLETED).count()
+        + recent_multi_runs.filter(
+            status=MultiProjectExportRun.COMPLETED
+        ).count()
     )
     failed_runs = (
-        recent_export_runs.filter(status=ExportRun.FAILED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.FAILED).count()
+        recent_export_runs.filter(status=ExportRun.FAILED).count()
+        + recent_multi_runs.filter(status=MultiProjectExportRun.FAILED).count()
     )
 
-    success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    success_rate = (
+        (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    )
 
     recent_runs = list(  # Combines both exports and multi-project exports
         ExportRun.objects.select_related(
@@ -107,7 +116,9 @@ def _get_refresh_statistics(since_datetime):
     ).count()
     failed_runs = recent_runs.filter(status=RefreshRun.Status.FAILED).count()
 
-    success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    success_rate = (
+        (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    )
 
     recent_run_list = list(
         RefreshRun.objects.select_related(
@@ -150,9 +161,13 @@ def _get_forwarding_statistics(since_datetime):
     successful_runs = recent_runs.filter(
         status=ForwardingRun.Status.COMPLETED
     ).count()
-    failed_runs = recent_runs.filter(status=ForwardingRun.Status.FAILED).count()
+    failed_runs = recent_runs.filter(
+        status=ForwardingRun.Status.FAILED
+    ).count()
 
-    success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    success_rate = (
+        (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    )
 
     recent_run_list = list(
         ForwardingRun.objects.select_related(
@@ -186,6 +201,12 @@ def _get_forwarding_statistics(since_datetime):
 @login_required
 def admin_required(request):
     if request.user.is_superuser:
-        return HttpResponseRedirect(request.GET.get('next', reverse('web:home')))
+        return HttpResponseRedirect(
+            request.GET.get('next', reverse('web:home'))
+        )
     else:
-        return render(request, 'web/admin_required.html', {'dev_mode': settings.DEBUG})
+        return render(
+            request,
+            'web/admin_required.html',
+            {'dev_mode': settings.DEBUG},
+        )
