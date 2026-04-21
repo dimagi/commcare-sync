@@ -1,5 +1,4 @@
 import reversion
-from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -7,10 +6,10 @@ from django.utils.translation import gettext_lazy as _
 from reversion.models import Version
 
 from apps.commcare.models import BaseModel, RunBaseModel
-from apps.exports.scheduling import export_is_scheduled_to_run
+from apps.schedules.mixin import ScheduleMixin
 
 
-class ExportConfigBase(BaseModel):
+class ExportConfigBase(ScheduleMixin, BaseModel):
     name = models.CharField(max_length=100)
     account = models.ForeignKey(
         'commcare.CommCareAccount',
@@ -25,17 +24,6 @@ class ExportConfigBase(BaseModel):
             'this number if your export gets stuck.'
         ),
     )
-    time_between_runs = models.PositiveIntegerField(
-        default=int(settings.COMMCARE_SYNC_EXPORT_PERIODICITY / 60),
-        help_text=_('How regularly to sync this export, in minutes.'),
-    )
-    is_paused = models.BooleanField(
-        default=False,
-        help_text=_(
-            'Pausing an export will disable automatic syncing. You can still '
-            'manually run it.'
-        ),
-    )
     extra_args = models.TextField(blank=True)
 
     class Meta:
@@ -44,27 +32,10 @@ class ExportConfigBase(BaseModel):
     @property
     def last_run(self):
         return (
-            self.runs
-            .exclude(status=ExportRun.Status.QUEUED)
+            self.runs.exclude(status=ExportRun.Status.QUEUED)
             .order_by('-created_at')
             .first()
         )
-
-    def is_scheduled_to_run(self):
-        return export_is_scheduled_to_run(self, self.last_run)
-
-    def has_queued_runs(self):
-        # Each run will ingest all new data when it is available, so we
-        # only need one run at a time. We can therefore ignore all but
-        # the latest queued run.
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == ExportRun.Status.QUEUED
-        return False
-
-    def should_create_export_run(self):
-        """If a new export_run should be created and celery task spawned"""
-        return self.is_scheduled_to_run() and not self.has_queued_runs()
 
     @property
     def latest_version(self):
@@ -72,12 +43,7 @@ class ExportConfigBase(BaseModel):
 
     @property
     def details_url(self):
-        if isinstance(self, ExportConfig):
-            return reverse('exports:export_details', args=[self.id])
-        elif isinstance(self, MultiProjectExportConfig):
-            return reverse('exports:multi_export_details', args=[self.id])
-        else:
-            raise ValueError(f"Can't find details URL for {self}")
+        raise NotImplementedError
 
     def save(self, **kwargs):
         with reversion.create_revision():
@@ -86,10 +52,17 @@ class ExportConfigBase(BaseModel):
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):
+    CELERY_TASK = 'apps.exports.tasks.run_scheduled_export_task'
+    PERIODIC_TASK_PREFIX = 'Run export'
+
     project = models.ForeignKey(
         'commcare.CommCareProject',
         on_delete=models.PROTECT,
     )
+
+    @property
+    def details_url(self):
+        return reverse('exports:export_details', args=[self.id])
 
     def __str__(self):
         return f'{self.name} - {self.project}'
@@ -97,7 +70,14 @@ class ExportConfig(ExportConfigBase):
 
 @reversion.register()
 class MultiProjectExportConfig(ExportConfigBase):
+    CELERY_TASK = 'apps.exports.tasks.run_scheduled_multi_export_task'
+    PERIODIC_TASK_PREFIX = 'Run multi-project export'
+
     projects = models.ManyToManyField('commcare.CommCareProject')
+
+    @property
+    def details_url(self):
+        return reverse('exports:multi_export_details', args=[self.id])
 
     def __str__(self):
         return f'{self.name} - {self.projects.count()} projects'
