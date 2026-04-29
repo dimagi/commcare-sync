@@ -46,20 +46,20 @@ def _get_export_statistics(since_datetime):
 
     recent_export_runs = ExportRun.objects.filter(
         created_at__gte=since_datetime
-    ).exclude(status=ExportRun.QUEUED)
+    ).exclude(status=ExportRun.Status.QUEUED)
 
     recent_multi_runs = MultiProjectExportRun.objects.filter(
         created_at__gte=since_datetime
-    ).exclude(status=MultiProjectExportRun.QUEUED)
+    ).exclude(status=MultiProjectExportRun.Status.QUEUED)
 
     total_runs = recent_export_runs.count() + recent_multi_runs.count()
     successful_runs = (
-        recent_export_runs.filter(status=ExportRun.COMPLETED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.COMPLETED).count()
+        recent_export_runs.filter(status=ExportRun.Status.COMPLETED).count() +
+        recent_multi_runs.filter(status=MultiProjectExportRun.Status.COMPLETED).count()
     )
     failed_runs = (
-        recent_export_runs.filter(status=ExportRun.FAILED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.FAILED).count()
+        recent_export_runs.filter(status=ExportRun.Status.FAILED).count() +
+        recent_multi_runs.filter(status=MultiProjectExportRun.Status.FAILED).count()
     )
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
@@ -69,7 +69,7 @@ def _get_export_statistics(since_datetime):
             'base_export_config',
             'base_export_config__project',
         )
-        .exclude(status=ExportRun.QUEUED)
+        .exclude(status=ExportRun.Status.QUEUED)
         .order_by('-created_at')[:10]
     )
 

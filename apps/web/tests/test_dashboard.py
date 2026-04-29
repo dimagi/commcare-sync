@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -11,9 +12,9 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
+from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
-    ExportDatabase,
     ExportRun,
 )
 from apps.forwarding.models import (
@@ -94,22 +95,28 @@ class TestExportStatistics:
             server=self.server,
         )
 
-        self.database = ExportDatabase.objects.create(
+        self.database = Database.objects.create(
             name='Test DB',
-            owner=self.user,
         )
         self.database.connection_string = (
             'postgresql://user:pass@localhost:5432/db'
         )
         self.database.save()
 
+        config_file = TemporaryUploadedFile(
+            name='config_file',
+            content_type='application/xml',
+            size=100,
+            charset='utf-8',
+        )
         self.export_config = ExportConfig.objects.create(
             name='Test Export',
             account=self.account,
             project=self.project,
             database=self.database,
-            created_by=self.user,
+            config_file=config_file,
         )
+        config_file.close()
 
     def test_export_statistics_with_no_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
@@ -126,7 +133,7 @@ class TestExportStatistics:
         for i in range(5):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.COMPLETED,
+                status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
 
@@ -144,12 +151,12 @@ class TestExportStatistics:
 
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.COMPLETED,
+            status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.FAILED,
+            status=ExportRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -166,12 +173,12 @@ class TestExportStatistics:
 
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.QUEUED,
+            status=ExportRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
             base_export_config=self.export_config,
-            status=ExportRun.COMPLETED,
+            status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -198,13 +205,13 @@ class TestExportStatistics:
         for i in range(successful):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.COMPLETED,
+                status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             ExportRun.objects.create(
                 base_export_config=self.export_config,
-                status=ExportRun.FAILED,
+                status=ExportRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
 
@@ -222,9 +229,7 @@ class TestRefreshStatistics:
             password='testpass123',
         )
 
-        self.database = ExportDatabase.objects.create(
-            name='Test DB', owner=self.user
-        )
+        self.database = Database.objects.create(name='Test DB')
         self.database.connection_string = (
             'postgresql://user:pass@localhost:5432/db'
         )
@@ -234,7 +239,6 @@ class TestRefreshStatistics:
             name='Test Refresh',
             database=self.database,
             materialized_views=['public.test_view'],
-            created_by=self.user,
         )
 
     def test_refresh_statistics_with_no_runs(self):
@@ -348,9 +352,7 @@ class TestForwardingStatistics:
             password='testpass123',
         )
 
-        self.database = ExportDatabase.objects.create(
-            name='Test DB', owner=self.user
-        )
+        self.database = Database.objects.create(name='Test DB')
         self.database.connection_string = (
             'postgresql://user:pass@localhost:5432/db'
         )
@@ -359,7 +361,6 @@ class TestForwardingStatistics:
         self.destination = ForwardingDestination.objects.create(
             name='Test Destination',
             api_url='https://example.com/api',
-            owner=self.user,
         )
 
         self.forwarding_config = ForwardingConfig.objects.create(
@@ -367,7 +368,6 @@ class TestForwardingStatistics:
             database=self.database,
             destination=self.destination,
             query='SELECT * FROM table',
-            created_by=self.user,
         )
 
     def test_forwarding_statistics_with_no_runs(self):
