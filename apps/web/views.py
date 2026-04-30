@@ -73,14 +73,9 @@ def _get_export_statistics(since_datetime, previous_start=None):
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
-    recent_runs = list(  # Combines both exports and multi-project exports
-        ExportRun.objects.select_related(
-            'base_export_config',
-            'base_export_config__project',
-        )
-        .filter(created_at__gte=since_datetime)
-        .exclude(status=ExportRun.Status.QUEUED)
-        .order_by('-created_at')[:10]
+    configs = list(
+        ExportConfig.objects.select_related('project', 'created_by')
+        .order_by('-updated_at')[:10]
     )
 
     if total_runs == 0:
@@ -110,7 +105,7 @@ def _get_export_statistics(since_datetime, previous_start=None):
 
     return {
         'total_configs': total_configs,
-        'recent_runs': recent_runs,
+        'configs': configs,
         'last_24h_runs': total_runs,
         'success_rate': round(success_rate, 1),
         'success_trend': _get_success_trend(success_rate, prev_success_rate),
@@ -136,14 +131,9 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
-    recent_run_list = list(
-        RefreshRun.objects.select_related(
-            'refresh_config',
-            'refresh_config__database',
-        )
-        .filter(created_at__gte=since_datetime)
-        .exclude(status=RefreshRun.Status.QUEUED)
-        .order_by('-created_at')[:10]
+    configs = list(
+        RefreshConfig.objects.select_related('database', 'created_by')
+        .order_by('-updated_at')[:10]
     )
 
     if total_runs == 0:
@@ -169,7 +159,7 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
 
     return {
         'total_configs': total_configs,
-        'recent_runs': recent_run_list,
+        'configs': configs,
         'last_24h_runs': total_runs,
         'success_rate': round(success_rate, 1),
         'success_trend': _get_success_trend(success_rate, prev_success_rate),
@@ -195,14 +185,9 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
-    recent_run_list = list(
-        ForwardingRun.objects.select_related(
-            'forwarding_config',
-            'forwarding_config__destination',
-        )
-        .filter(created_at__gte=since_datetime)
-        .exclude(status=ForwardingRun.Status.QUEUED)
-        .order_by('-created_at')[:10]
+    configs = list(
+        ForwardingConfig.objects.select_related('destination', 'created_by')
+        .order_by('-updated_at')[:10]
     )
 
     if total_runs == 0:
@@ -228,7 +213,7 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
 
     return {
         'total_configs': total_configs,
-        'recent_runs': recent_run_list,
+        'configs': configs,
         'last_24h_runs': total_runs,
         'success_rate': round(success_rate, 1),
         'success_trend': _get_success_trend(success_rate, prev_success_rate),
