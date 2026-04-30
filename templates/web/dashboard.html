@@ -12,210 +12,233 @@
     </div>
   </div>
 
-  <!-- Pipeline Flow Visualization -->
-  <div class="pipeline-flow">
+  <div x-data="{ activeTab: 'exports' }">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'exports' }"
+          @click="activeTab = 'exports'"
+        >
+          <i class="fa fa-download me-1"></i> {% trans "Exports" %}
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'refreshes' }"
+          @click="activeTab = 'refreshes'"
+        >
+          <i class="fa fa-refresh me-1"></i>
+          {% trans "Aggregation/Transformation" %}
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'forwarders' }"
+          @click="activeTab = 'forwarders'"
+        >
+          <i class="fa fa-paper-plane me-1"></i> {% trans "Forwarders" %}
+        </button>
+      </li>
+    </ul>
 
-    <!-- Stage 1: Exports -->
-    <div class="pipeline-stage">
-      <div class="card pipeline-card h-100">
-        <div class="card-header d-flex justify-content-between align-items-center {% if export_stats.status == 'healthy' %}bg-success-subtle{% elif export_stats.status == 'error' %}bg-danger-subtle{% elif export_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
-          <h5 class="card-title mb-0">
-            <i class="fa fa-download me-2"></i>
-            <span>{% trans "Exports" %}</span>
-          </h5>
-          <div>
-            {% if export_stats.status == 'healthy' %}
-              <span class="badge bg-success">{% trans "Healthy" %}</span>
-            {% elif export_stats.status == 'warning' %}
-              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-            {% elif export_stats.status == 'error' %}
-              <span class="badge bg-danger">{% trans "Issues" %}</span>
-            {% else %}
-              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-around text-center mb-3">
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Configs" %}</p>
-              <p class="h5 mb-0">{{ export_stats.total_configs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Last 24h" %}</p>
-              <p class="h5 mb-0">{{ export_stats.last_24h_runs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Success" %}</p>
-              <p class="h5 mb-0 {% if export_stats.status == 'healthy' %}text-success{% elif export_stats.status == 'error' %}text-danger{% elif export_stats.status == 'warning' %}text-warning{% endif %}">
-                {{ export_stats.success_rate }}%
-              </p>
-            </div>
-          </div>
-
-          {% if export_stats.recent_runs %}
-          <div class="recent-runs">
-            <p class="text-uppercase fw-bold small text-muted mb-2">{% trans "Recent Exports" %}</p>
-            <table class="table table-sm w-100 small mb-0">
-              <tbody>
-                {% for run in export_stats.recent_runs|slice:":5" %}
-                <tr>
-                  <td>
-                    <a href="{% url 'exports:export_details' run.base_export_config.id %}">
-                      {{ run.base_export_config.name|truncatechars:30 }}
-                    </a>
-                  </td>
-                  <td>{{ run.status|to_status_icon }}</td>
-                  <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+    <!-- Exports Tab -->
+    <div x-show="activeTab === 'exports'" x-cloak>
+      <!-- Snapshot Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="mb-0">Export {% trans "Snapshot" %}</h4>
+          {% if export_stats.status == 'healthy' %}
+            <span class="badge bg-success">{% trans "Healthy" %}</span>
+          {% elif export_stats.status == 'warning' %}
+            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+          {% elif export_stats.status == 'error' %}
+            <span class="badge bg-danger">{% trans "Issue" %}</span>
+          {% else %}
+            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
           {% endif %}
         </div>
-        <div class="card-footer">
-          <a href="{% url 'exports:home' %}" class="text-decoration-none d-block text-center">
-            {% trans "Manage Exports" %}
-          </a>
+        <a href="{% url 'exports:home' %}" class="btn btn-outline-primary btn-sm">
+          <i class="fa fa-plus me-1"></i> Manage Exports
+        </a>
+      </div>
+
+      <!-- Stats Boxes -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Configs" %}</span>
+            <p class="h3 mb-0 mt-1">{{ export_stats.total_configs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Last 24 H" %}</span>
+            <p class="h3 mb-0 mt-1">{{ export_stats.last_24h_runs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Success %" %}</span>
+            <p class="h3 mb-0 mt-1 {% if export_stats.status == 'healthy' %}text-success{% elif export_stats.status == 'error' %}text-danger{% elif export_stats.status == 'warning' %}text-warning{% endif %}">
+              {{ export_stats.success_rate }}%
+            </p>
+          </div>
         </div>
       </div>
+
+      <!-- Recent Runs -->
+      {% if export_stats.recent_runs %}
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for run in export_stats.recent_runs|slice:":5" %}
+          <tr>
+            <td>
+              <a href="{% url 'exports:export_details' run.base_export_config.id %}">
+                {{ run.base_export_config.name|truncatechars:30 }}
+              </a>
+            </td>
+            <td>{{ run.status|to_status_icon }}</td>
+            <td class="text-muted">{{ run.created_at|naturaltime }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
     </div>
 
-    <!-- Stage 2: Aggregation & Transformation -->
-    <div class="pipeline-stage">
-      <div class="card pipeline-card h-100">
-        <div class="card-header d-flex justify-content-between align-items-center {% if refresh_stats.status == 'healthy' %}bg-success-subtle{% elif refresh_stats.status == 'error' %}bg-danger-subtle{% elif refresh_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
-          <h5 class="card-title mb-0">
-            <i class="fa fa-refresh me-2"></i>
-            <span>{% trans "Aggregation & Transformation" %}</span>
-          </h5>
-          <div>
-            {% if refresh_stats.status == 'healthy' %}
-              <span class="badge bg-success">{% trans "Healthy" %}</span>
-            {% elif refresh_stats.status == 'warning' %}
-              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-            {% elif refresh_stats.status == 'error' %}
-              <span class="badge bg-danger">{% trans "Issues" %}</span>
-            {% else %}
-              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-around text-center mb-3">
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Configs" %}</p>
-              <p class="h5 mb-0">{{ refresh_stats.total_configs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Last 24h" %}</p>
-              <p class="h5 mb-0">{{ refresh_stats.last_24h_runs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Success" %}</p>
-              <p class="h5 mb-0 {% if refresh_stats.status == 'healthy' %}text-success{% elif refresh_stats.status == 'error' %}text-danger{% elif refresh_stats.status == 'warning' %}text-warning{% endif %}">
-                {{ refresh_stats.success_rate }}%
-              </p>
-            </div>
-          </div>
-
-          {% if refresh_stats.recent_runs %}
-          <div class="recent-runs">
-            <p class="text-uppercase fw-bold small text-muted mb-2">{% trans "Recent Refreshes" %}</p>
-            <table class="table table-sm w-100 small mb-0">
-              <tbody>
-                {% for run in refresh_stats.recent_runs|slice:":5" %}
-                <tr>
-                  <td>
-                    <a href="{% url 'refreshes:refresh_details' run.refresh_config.id %}">
-                      {{ run.refresh_config.name|truncatechars:30 }}
-                    </a>
-                  </td>
-                  <td>{{ run.status|to_status_icon }}</td>
-                  <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+    <!-- Refreshes Tab -->
+    <div x-show="activeTab === 'refreshes'" x-cloak>
+      <!-- Snapshot Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="mb-0">Refresh {% trans "Snapshot" %}</h4>
+          {% if refresh_stats.status == 'healthy' %}
+            <span class="badge bg-success">{% trans "Healthy" %}</span>
+          {% elif refresh_stats.status == 'warning' %}
+            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+          {% elif refresh_stats.status == 'error' %}
+            <span class="badge bg-danger">{% trans "Issue" %}</span>
+          {% else %}
+            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
           {% endif %}
         </div>
-        <div class="card-footer">
-          <a href="{% url 'refreshes:refresh_configs' %}" class="text-decoration-none d-block text-center">
-            {% trans "Manage Refreshes" %}
-          </a>
+        <a href="{% url 'refreshes:refresh_configs' %}" class="btn btn-outline-primary btn-sm">
+          <i class="fa fa-plus me-1"></i> Manage Refreshes
+        </a>
+      </div>
+
+      <!-- Stats Boxes -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Configs" %}</span>
+            <p class="h3 mb-0 mt-1">{{ refresh_stats.total_configs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Last 24 H" %}</span>
+            <p class="h3 mb-0 mt-1">{{ refresh_stats.last_24h_runs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Success %" %}</span>
+            <p class="h3 mb-0 mt-1 {% if refresh_stats.status == 'healthy' %}text-success{% elif refresh_stats.status == 'error' %}text-danger{% elif refresh_stats.status == 'warning' %}text-warning{% endif %}">
+              {{ refresh_stats.success_rate }}%
+            </p>
+          </div>
         </div>
       </div>
+
+      <!-- Recent Runs -->
+      {% if refresh_stats.recent_runs %}
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for run in refresh_stats.recent_runs|slice:":5" %}
+          <tr>
+            <td>
+              <a href="{% url 'refreshes:refresh_details' run.refresh_config.id %}">
+                {{ run.refresh_config.name|truncatechars:30 }}
+              </a>
+            </td>
+            <td>{{ run.status|to_status_icon }}</td>
+            <td class="text-muted">{{ run.created_at|naturaltime }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
     </div>
 
-    <!-- Stage 4: Forwarders -->
-    <div class="pipeline-stage">
-      <div class="card pipeline-card h-100">
-        <div class="card-header d-flex justify-content-between align-items-center {% if forwarding_stats.status == 'healthy' %}bg-success-subtle{% elif forwarding_stats.status == 'error' %}bg-danger-subtle{% elif forwarding_stats.status == 'warning' %}bg-warning-subtle{% endif %}">
-          <h5 class="card-title mb-0">
-            <i class="fa fa-paper-plane me-2"></i>
-            <span>{% trans "Forwarders" %}</span>
-          </h5>
-          <div>
-            {% if forwarding_stats.status == 'healthy' %}
-              <span class="badge bg-success">{% trans "Healthy" %}</span>
-            {% elif forwarding_stats.status == 'warning' %}
-              <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-            {% elif forwarding_stats.status == 'error' %}
-              <span class="badge bg-danger">{% trans "Issues" %}</span>
-            {% else %}
-              <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-around text-center mb-3">
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Configs" %}</p>
-              <p class="h5 mb-0">{{ forwarding_stats.total_configs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Last 24h" %}</p>
-              <p class="h5 mb-0">{{ forwarding_stats.last_24h_runs }}</p>
-            </div>
-            <div>
-              <p class="text-uppercase fw-bold small text-muted mb-1">{% trans "Success" %}</p>
-              <p class="h5 mb-0 {% if forwarding_stats.status == 'healthy' %}text-success{% elif forwarding_stats.status == 'error' %}text-danger{% elif forwarding_stats.status == 'warning' %}text-warning{% endif %}">
-                {{ forwarding_stats.success_rate }}%
-              </p>
-            </div>
-          </div>
-
-          {% if forwarding_stats.recent_runs %}
-          <div class="recent-runs">
-            <p class="text-uppercase fw-bold small text-muted mb-2">{% trans "Recent Forwards" %}</p>
-            <table class="table table-sm w-100 small mb-0">
-              <tbody>
-                {% for run in forwarding_stats.recent_runs|slice:":5" %}
-                <tr>
-                  <td>
-                    <a href="{% url 'forwarding:forwarder_details' run.forwarding_config.id %}">
-                      {{ run.forwarding_config.name|truncatechars:30 }}
-                    </a>
-                  </td>
-                  <td>{{ run.status|to_status_icon }}</td>
-                  <td class="text-muted small">{{ run.created_at|naturaltime }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+    <!-- Forwarders Tab -->
+    <div x-show="activeTab === 'forwarders'" x-cloak>
+      <!-- Snapshot Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="mb-0">Forwarder {% trans "Snapshot" %}</h4>
+          {% if forwarding_stats.status == 'healthy' %}
+            <span class="badge bg-success">{% trans "Healthy" %}</span>
+          {% elif forwarding_stats.status == 'warning' %}
+            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+          {% elif forwarding_stats.status == 'error' %}
+            <span class="badge bg-danger">{% trans "Issue" %}</span>
+          {% else %}
+            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
           {% endif %}
         </div>
-        <div class="card-footer">
-          <a href="{% url 'forwarding:forwarders' %}" class="text-decoration-none d-block text-center">
-            {% trans "Manage Forwarding" %}
-          </a>
+        <a href="{% url 'forwarding:forwarders' %}" class="btn btn-outline-primary btn-sm">
+          <i class="fa fa-plus me-1"></i> Manage Forwarding
+        </a>
+      </div>
+
+      <!-- Stats Boxes -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Configs" %}</span>
+            <p class="h3 mb-0 mt-1">{{ forwarding_stats.total_configs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Last 24 H" %}</span>
+            <p class="h3 mb-0 mt-1">{{ forwarding_stats.last_24h_runs }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded p-3 text-center">
+            <span class="text-uppercase fw-bold small text-muted">{% trans "Success %" %}</span>
+            <p class="h3 mb-0 mt-1 {% if forwarding_stats.status == 'healthy' %}text-success{% elif forwarding_stats.status == 'error' %}text-danger{% elif forwarding_stats.status == 'warning' %}text-warning{% endif %}">
+              {{ forwarding_stats.success_rate }}%
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
+      <!-- Recent Runs -->
+      {% if forwarding_stats.recent_runs %}
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for run in forwarding_stats.recent_runs|slice:":5" %}
+          <tr>
+            <td>
+              <a href="{% url 'forwarding:forwarder_details' run.forwarding_config.id %}">
+                {{ run.forwarding_config.name|truncatechars:30 }}
+              </a>
+            </td>
+            <td>{{ run.status|to_status_icon }}</td>
+            <td class="text-muted">{{ run.created_at|naturaltime }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
   </div>
 
   <!-- Empty State (when no data) -->
