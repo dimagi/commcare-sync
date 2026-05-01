@@ -1,17 +1,20 @@
 from unittest.mock import patch
 
 import psycopg
-import pytest
+from unmagic import fixture, use
 
 from ..models import RefreshRun
 from ..runner import run_refresh
 
+_refresh_run = fixture('refresh_run')
 
-@pytest.mark.django_db
+
+@use('db')
 class TestRunRefresh:
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_successful_refresh(self, mock_refresh_view, refresh_run):
-        result = run_refresh(refresh_run)
+    def test_successful_refresh(self, mock_refresh_view):
+        result = run_refresh(_refresh_run())
 
         assert result.status == RefreshRun.Status.COMPLETED
         assert result.started_at is not None
@@ -22,14 +25,15 @@ class TestRunRefresh:
         assert result.view_results['public.view1']['status'] == 'success'
         assert result.view_results['public.view2']['status'] == 'success'
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_partial_failure(self, mock_refresh_view, refresh_run):
+    def test_partial_failure(self, mock_refresh_view):
         mock_refresh_view.side_effect = [
             None,
             psycopg.Error('View does not exist'),
         ]
 
-        result = run_refresh(refresh_run)
+        result = run_refresh(_refresh_run())
 
         assert result.status == RefreshRun.Status.FAILED
         assert len(result.view_results) == 2
@@ -41,11 +45,12 @@ class TestRunRefresh:
         )
         assert 'Failed views: public.view2' in result.log
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_all_views_fail(self, mock_refresh_view, refresh_run):
+    def test_all_views_fail(self, mock_refresh_view):
         mock_refresh_view.side_effect = psycopg.Error('Database error')
 
-        result = run_refresh(refresh_run)
+        result = run_refresh(_refresh_run())
 
         assert result.status == RefreshRun.Status.FAILED
         assert len(result.view_results) == 2
@@ -53,58 +58,59 @@ class TestRunRefresh:
             r['status'] == 'failed' for r in result.view_results.values()
         )
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_view_results_include_duration(
-        self, mock_refresh_view, refresh_run
-    ):
-        result = run_refresh(refresh_run)
+    def test_view_results_include_duration(self, mock_refresh_view):
+        result = run_refresh(_refresh_run())
 
         for view_result in result.view_results.values():
             assert 'duration' in view_result
             assert isinstance(view_result['duration'], float)
             assert view_result['duration'] >= 0
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_view_without_schema_uses_public(
-        self, mock_refresh_view, refresh_run
-    ):
-        refresh_run.refresh_config.materialized_views = ['view_no_schema']
-        refresh_run.refresh_config.save()
+    def test_view_without_schema_uses_public(self, mock_refresh_view):
+        run = _refresh_run()
+        run.refresh_config.materialized_views = ['view_no_schema']
+        run.refresh_config.save()
 
-        run_refresh(refresh_run)
+        run_refresh(run)
 
         mock_refresh_view.assert_called_once()
         args = mock_refresh_view.call_args[0]
         assert args[1] == 'public'
         assert args[2] == 'view_no_schema'
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_status_transitions(self, mock_refresh_view, refresh_run):
-        assert refresh_run.status == RefreshRun.Status.QUEUED
+    def test_status_transitions(self, mock_refresh_view):
+        run = _refresh_run()
+        assert run.status == RefreshRun.Status.QUEUED
 
-        run_refresh(refresh_run)
+        run_refresh(run)
 
-        refresh_run.refresh_from_db()
-        assert refresh_run.status == RefreshRun.Status.COMPLETED
+        run.refresh_from_db()
+        assert run.status == RefreshRun.Status.COMPLETED
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_log_contains_timestamps(self, mock_refresh_view, refresh_run):
-        result = run_refresh(refresh_run)
+    def test_log_contains_timestamps(self, mock_refresh_view):
+        result = run_refresh(_refresh_run())
 
         assert 'Starting refresh' in result.log
         assert 'public.view1' in result.log
         assert 'public.view2' in result.log
 
+    @use(_refresh_run)
     @patch('apps.refreshes.runner.refresh_materialized_view')
-    def test_continues_on_view_failure(
-        self, mock_refresh_view, refresh_run
-    ):
+    def test_continues_on_view_failure(self, mock_refresh_view):
         mock_refresh_view.side_effect = [
             psycopg.Error('First view failed'),
             None,
         ]
 
-        result = run_refresh(refresh_run)
+        result = run_refresh(_refresh_run())
 
         assert mock_refresh_view.call_count == 2
         assert result.view_results['public.view1']['status'] == 'failed'
