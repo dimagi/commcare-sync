@@ -32,6 +32,13 @@ def regular_user(db):
 
 
 @pytest.fixture
+def other_user(db):
+    return User.objects.create_user(
+        username='otheruser', email='other@example.com', password='pass'
+    )
+
+
+@pytest.fixture
 def regular_client(client, regular_user):
     client.force_login(regular_user)
     return client
@@ -55,6 +62,19 @@ class TestProjectsView:
 
     def test_logged_in_user_gets_200(self, regular_client):
         url = reverse('commcare:projects')
+        response = regular_client.get(url)
+        assert response.status_code == 200
+
+
+class TestAccountsView:
+    def test_anonymous_redirects_to_login(self, client):
+        url = reverse('commcare:accounts')
+        response = client.get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url
+
+    def test_logged_in_user_gets_200(self, regular_client):
+        url = reverse('commcare:accounts')
         response = regular_client.get(url)
         assert response.status_code == 200
 
@@ -122,6 +142,33 @@ class TestDeleteProjectView:
         response = regular_client.post(url)
         assert response.status_code == 302
         assert CommCareProject.objects.filter(id=project.id).exists()
+
+
+class TestDeleteAccountView:
+    def test_anonymous_redirects_to_login(self, client, account):
+        url = reverse('commcare:delete_account', args=[account.id])
+        response = client.get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url
+
+    def test_owner_get_shows_confirmation(self, regular_client, account):
+        url = reverse('commcare:delete_account', args=[account.id])
+        response = regular_client.get(url)
+        assert response.status_code == 200
+
+    def test_non_owner_get_returns_403(self, client, other_user, account):
+        client.force_login(other_user)
+        url = reverse('commcare:delete_account', args=[account.id])
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_owner_post_deletes_and_redirects(self, regular_client, account):
+        account_id = account.id
+        url = reverse('commcare:delete_account', args=[account_id])
+        response = regular_client.post(url)
+        assert response.status_code == 302
+        assert reverse('commcare:accounts') in response.url
+        assert not CommCareAccount.objects.filter(id=account_id).exists()
 
 
 class TestCreateProjectRedirect:
