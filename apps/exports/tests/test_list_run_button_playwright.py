@@ -3,11 +3,14 @@ Playwright tests for Run button on the Exports list page.
 """
 import pytest
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
 
 from apps.exports.models import ExportConfig, ExportRun
 from .fixtures import test_data
 from .helpers import login
+
+_page = fixture('page')
+_live_server = fixture('live_server')
 
 
 def navigate_to_exports_list(page, live_server):
@@ -18,9 +21,10 @@ def navigate_to_exports_list(page, live_server):
 @pytest.mark.django_db(transaction=True)
 class TestListPageRunButton:
 
+    @use(_page, _live_server)
     def test_run_button_appears_in_actions_column(self):
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         ExportConfig.objects.create(
             name='Test Export',
@@ -35,10 +39,11 @@ class TestListPageRunButton:
         expect(run_button).to_be_visible()
         expect(run_button).to_contain_text('Run')
 
+    @use(_page, _live_server)
     def test_clicking_run_shows_spinner_in_status_cell(self):
         """Clicking Run immediately sets running=true via Alpine.js."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         ExportConfig.objects.create(
             name='Test Export',
@@ -61,10 +66,11 @@ class TestListPageRunButton:
         spinner = page.locator('.spinner-border').first
         expect(spinner).to_be_visible(timeout=1000)
 
+    @use(_page, _live_server)
     def test_clicking_run_disables_run_and_log_buttons(self):
         """After click, Run button is disabled; Edit link is not."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         ExportConfig.objects.create(
             name='Test Export',
@@ -89,10 +95,11 @@ class TestListPageRunButton:
         edit_link = page.locator('a.btn-outline-secondary:has-text("Edit")').first
         expect(edit_link).not_to_have_attribute('disabled', '')
 
+    @use(_page, _live_server)
     def test_htmx_poll_resets_running_state(self):
         """Triggering the HTMX poll (outerHTML swap) resets Alpine running state."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         ExportConfig.objects.create(
             name='Test Export',
