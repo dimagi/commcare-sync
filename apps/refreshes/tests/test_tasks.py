@@ -4,7 +4,7 @@ from unmagic import use
 
 from ..models import RefreshRun
 from ..tasks import run_refresh_task, run_scheduled_refresh_task
-from .conftest import refresh_config as _refresh_config
+from .fixtures import refresh_config as _refresh_config
 
 
 @use(_refresh_config)

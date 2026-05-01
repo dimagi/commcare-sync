@@ -5,7 +5,7 @@ from unmagic import use
 
 from ..models import RefreshRun
 from ..runner import run_refresh
-from .conftest import refresh_run as _refresh_run
+from .fixtures import refresh_run as _refresh_run
 
 
 @use('db')

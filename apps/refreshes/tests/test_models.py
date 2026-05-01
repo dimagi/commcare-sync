@@ -10,7 +10,7 @@ from apps.db.models import Database
 from tests.fixtures import database
 
 from ..models import RefreshConfig, RefreshRun
-from .conftest import refresh_config as _refresh_config
+from .fixtures import refresh_config as _refresh_config
 
 
 @use('db')
