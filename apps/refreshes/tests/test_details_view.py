@@ -1,20 +1,9 @@
-from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
 
-from apps.db.models import Database
 from apps.refreshes.models import RefreshConfig, RefreshRun
-
-User = get_user_model()
-
-
-@fixture
-@use('db')
-def user():
-    yield User.objects.create_user(
-        username='detailsuser_ref', email='dref@example.com', password='pass'
-    )
+from tests.fixtures import database, user
 
 
 @fixture
@@ -22,15 +11,6 @@ def authed_client():
     client = Client()
     client.force_login(user())
     yield client
-
-
-@fixture
-@use('db')
-def database():
-    yield Database.objects.create(
-        name='TestDB',
-        connection_string='postgresql://localhost/test',
-    )
 
 
 @fixture
