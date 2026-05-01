@@ -7,20 +7,24 @@ without requiring full integration testing or API mocking.
 import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
 
 from .fixtures import test_data
 from .helpers import login, navigate_to_create_export
+
+_page = fixture('page')
+_live_server = fixture('live_server')
 
 
 @pytest.mark.django_db(transaction=True)
 class TestExportFormStructure:
     """Test form structure and attributes."""
 
+    @use(_page, _live_server)
     def test_export_form_has_required_fields(self):
         """Test that export form contains all required fields."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
@@ -33,10 +37,11 @@ class TestExportFormStructure:
         expect(page.locator('#id_database')).to_be_visible()
         expect(page.locator('#id_config_file_select')).to_be_visible()
 
+    @use(_page, _live_server)
     def test_alpine_attributes_present(self):
         """Test that Alpine.js attributes are configured."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
@@ -47,10 +52,11 @@ class TestExportFormStructure:
         expect(config_select).to_have_attribute('x-model', 'selectedConfig')
         expect(config_select).to_have_attribute(':disabled', 'loading')
 
+    @use(_page, _live_server)
     def test_htmx_attributes_present(self):
         """Test that HTMX attributes are configured."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
