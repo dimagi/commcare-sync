@@ -38,11 +38,11 @@ class TestHomeView:
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
 
     def test_home_redirects_to_exports_when_authenticated(self):
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass')
         response = self.client.get(reverse('web:home'))
         assert response.status_code == 302
         assert response.url == reverse('exports:home')
@@ -58,7 +58,7 @@ class TestExportStatistics:
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
 
         self.server = CommCareServer.objects.create(
@@ -204,7 +204,7 @@ class TestRefreshStatistics:
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
 
         self.database = Database.objects.create(
@@ -326,7 +326,7 @@ class TestForwardingStatistics:
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
 
         self.database = Database.objects.create(

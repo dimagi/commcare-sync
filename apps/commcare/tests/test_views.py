@@ -27,14 +27,14 @@ def project(server):
 @pytest.fixture
 def regular_user(db):
     return User.objects.create_user(
-        username='testuser', email='test@example.com', password='pass'
+        username='testuser', email='test@example.com', password='testpass'
     )
 
 
 @pytest.fixture
 def other_user(db):
     return User.objects.create_user(
-        username='otheruser', email='other@example.com', password='pass'
+        username='otheruser', email='other@example.com', password='testpass'
     )
 
 

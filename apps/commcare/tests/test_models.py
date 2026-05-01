@@ -21,7 +21,7 @@ class TestCommCareAccountAPIKey:
         user = User(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
         server = CommCareServer(
             name='Test Server',
@@ -100,7 +100,7 @@ def project(server):
 @pytest.fixture
 def owner(db):
     return User.objects.create_user(
-        username='owner', email='owner@example.com', password='pass'
+        username='owner', email='owner@example.com', password='testpass'
     )
 
 

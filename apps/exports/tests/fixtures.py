@@ -19,7 +19,7 @@ def test_data():
     user = User.objects.create_user(
         username='testuser',
         email='test@example.com',
-        password='testpass123'
+        password='testpass'
     )
 
     server = CommCareServer.objects.create(
@@ -111,7 +111,7 @@ def user_fixture():
     yield User.objects.create(
         username='test_user',
         email='test@example.com',
-        password='P@ssWord',
+        password='testpass',
     )
 
 

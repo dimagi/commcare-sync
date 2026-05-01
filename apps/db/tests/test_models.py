@@ -105,7 +105,7 @@ class TestDatabaseIsInUse:
         owner = User.objects.create_user(
             username='db_is_in_use_owner',
             email='dbisinuse@example.com',
-            password='pass',
+            password='testpass',
         )
         account = CommCareAccount(
             server=server, username='test@example.com', owner=owner

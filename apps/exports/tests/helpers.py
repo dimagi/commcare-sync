@@ -8,7 +8,7 @@ def login(page, live_server, user):
     """Helper to log in a user."""
     page.goto(f'{live_server.url}/accounts/login/')
     page.fill('input[name="login"]', user.email)
-    page.fill('input[name="password"]', 'testpass123')
+    page.fill('input[name="password"]', 'testpass')
     page.click('input[type="submit"]')
     page.wait_for_url(lambda url: '/accounts/login/' not in url)
 
