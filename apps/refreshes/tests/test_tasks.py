@@ -1,11 +1,10 @@
 from unittest.mock import patch
 
-from unmagic import fixture, use
+from unmagic import use
 
 from ..models import RefreshRun
 from ..tasks import run_refresh_task, run_scheduled_refresh_task
-
-_refresh_config = fixture('refresh_config')
+from .conftest import refresh_config as _refresh_config
 
 
 @use(_refresh_config)

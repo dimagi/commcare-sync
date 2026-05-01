@@ -9,13 +9,12 @@ from apps.db.models import Database
 from tests.fixtures import database, user
 
 from ..models import RefreshConfig, RefreshRun
+from .conftest import refresh_config as _refresh_config
 
 SCHEDULE_DEFAULTS = {
     'first_run_time': '00:00',
     'timezone': 'UTC',
 }
-
-_refresh_config = fixture('refresh_config')
 
 
 @fixture

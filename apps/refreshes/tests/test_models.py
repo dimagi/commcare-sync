@@ -4,14 +4,13 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from reversion.models import Version
-from unmagic import fixture, use
+from unmagic import use
 
 from apps.db.models import Database
 from tests.fixtures import database
 
 from ..models import RefreshConfig, RefreshRun
-
-_refresh_config = fixture('refresh_config')
+from .conftest import refresh_config as _refresh_config
 
 
 @use('db')

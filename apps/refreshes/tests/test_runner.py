@@ -1,12 +1,11 @@
 from unittest.mock import patch
 
 import psycopg
-from unmagic import fixture, use
+from unmagic import use
 
 from ..models import RefreshRun
 from ..runner import run_refresh
-
-_refresh_run = fixture('refresh_run')
+from .conftest import refresh_run as _refresh_run
 
 
 @use('db')
