@@ -9,7 +9,7 @@ from apps.forwarding.models import ForwardingConfig
 from apps.schedules.mixin import ScheduleMixin
 from tests.fixtures import database
 
-from .conftest import destination
+from .fixtures import destination
 
 
 @use('db', database, destination)
