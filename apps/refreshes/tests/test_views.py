@@ -1,10 +1,12 @@
 import json
+import re
 from unittest.mock import MagicMock, patch
 
-import pytest
 from django.urls import reverse
+from unmagic import fixture, use
 
 from apps.db.models import Database
+from tests.fixtures import database, user
 
 from ..models import RefreshConfig, RefreshRun
 
@@ -13,56 +15,69 @@ SCHEDULE_DEFAULTS = {
     'timezone': 'UTC',
 }
 
-
-@pytest.fixture
-def client(client, user):
-    client.force_login(user)
-    return client
+_refresh_config = fixture('refresh_config')
 
 
-@pytest.fixture
-def non_pg_database(db):
-    return Database.objects.create(
+@fixture
+def django_test_client():
+    from django.test import Client
+    client = Client()
+    client.force_login(user())
+    yield client
+
+
+@fixture
+@use('db')
+def non_pg_database():
+    yield Database.objects.create(
         name='MySQL DB',
         connection_string='mysql://localhost/test',
     )
 
 
 class TestRefreshConfigsListView:
-    def test_requires_login(self, client, user):
+    @use(django_test_client)
+    def test_requires_login(self):
+        client = django_test_client()
         client.logout()
         url = reverse('refreshes:refresh_configs')
         response = client.get(url)
         assert response.status_code == 302
         assert '/accounts/login/' in response.url
 
-    def test_stats_in_context(self, client, db):
+    @use(django_test_client, 'db')
+    def test_stats_in_context(self):
         url = reverse('refreshes:refresh_configs')
-        response = client.get(url)
+        response = django_test_client().get(url)
         assert 'export_stats' in response.context
         assert 'refresh_stats' in response.context
         assert 'forwarding_stats' in response.context
 
-    def test_list_configs(self, client, refresh_config):
+    @use(django_test_client, _refresh_config)
+    def test_list_configs(self):
+        config = _refresh_config()
         url = reverse('refreshes:refresh_configs')
-        response = client.get(url)
+        response = django_test_client().get(url)
         assert response.status_code == 200
-        assert refresh_config.name in response.content.decode()
+        assert config.name in response.content.decode()
 
 
 class TestCreateRefreshConfigView:
-    def test_get_form(self, client):
+    @use(django_test_client)
+    def test_get_form(self):
         url = reverse('refreshes:create_refresh_config')
-        response = client.get(url)
+        response = django_test_client().get(url)
         assert response.status_code == 200
 
-    def test_create_valid(self, client, database):
+    @use(django_test_client, database)
+    def test_create_valid(self):
+        db_obj = database()
         url = reverse('refreshes:create_refresh_config')
-        response = client.post(
+        response = django_test_client().post(
             url,
             {
                 'name': 'New Config',
-                'database': database.id,
+                'database': db_obj.id,
                 'materialized_views': json.dumps(['public.my_view']),
                 'concurrently': '',
                 **SCHEDULE_DEFAULTS,
@@ -76,13 +91,15 @@ class TestCreateRefreshConfigView:
             'refreshes:refresh_details', args=[config.id]
         )
 
-    def test_create_missing_views(self, client, database):
+    @use(django_test_client, database)
+    def test_create_missing_views(self):
+        db_obj = database()
         url = reverse('refreshes:create_refresh_config')
-        response = client.post(
+        response = django_test_client().post(
             url,
             {
                 'name': 'Bad Config',
-                'database': database.id,
+                'database': db_obj.id,
                 'materialized_views': '',
                 **SCHEDULE_DEFAULTS,
             },
@@ -92,129 +109,149 @@ class TestCreateRefreshConfigView:
 
 
 class TestEditRefreshConfigView:
-    def test_get_form(self, client, refresh_config):
-        url = reverse(
-            'refreshes:edit_refresh_config', args=[refresh_config.id]
-        )
-        response = client.get(url)
+    @use(django_test_client, _refresh_config)
+    def test_get_form(self):
+        config = _refresh_config()
+        url = reverse('refreshes:edit_refresh_config', args=[config.id])
+        response = django_test_client().get(url)
         assert response.status_code == 200
 
-    def test_edit_valid(self, client, refresh_config):
-        url = reverse(
-            'refreshes:edit_refresh_config', args=[refresh_config.id]
-        )
-        response = client.post(
+    @use(django_test_client, _refresh_config)
+    def test_edit_valid(self):
+        config = _refresh_config()
+        url = reverse('refreshes:edit_refresh_config', args=[config.id])
+        response = django_test_client().post(
             url,
             {
                 'name': 'Updated Name',
-                'database': refresh_config.database.id,
+                'database': config.database.id,
                 'materialized_views': json.dumps(['public.view1']),
                 'concurrently': 'on',
                 **SCHEDULE_DEFAULTS,
             },
         )
         assert response.status_code == 302
-        refresh_config.refresh_from_db()
-        assert refresh_config.name == 'Updated Name'
-        assert refresh_config.materialized_views == ['public.view1']
-        assert refresh_config.concurrently is True
+        config.refresh_from_db()
+        assert config.name == 'Updated Name'
+        assert config.materialized_views == ['public.view1']
+        assert config.concurrently is True
 
-    def test_edit_nonexistent_returns_404(self, client):
+    @use(django_test_client)
+    def test_edit_nonexistent_returns_404(self):
         url = reverse('refreshes:edit_refresh_config', args=[9999])
-        response = client.get(url)
+        response = django_test_client().get(url)
         assert response.status_code == 404
 
 
 class TestDeleteRefreshConfigView:
-    def test_get_confirmation(self, client, refresh_config):
-        url = reverse(
-            'refreshes:delete_refresh_config', args=[refresh_config.id]
-        )
-        response = client.get(url)
+    @use(django_test_client, _refresh_config)
+    def test_get_confirmation(self):
+        config = _refresh_config()
+        url = reverse('refreshes:delete_refresh_config', args=[config.id])
+        response = django_test_client().get(url)
         assert response.status_code == 200
 
-    def test_post_deletes(self, client, refresh_config):
-        config_id = refresh_config.id
+    @use(django_test_client, _refresh_config)
+    def test_post_deletes(self):
+        config_id = _refresh_config().id
         url = reverse('refreshes:delete_refresh_config', args=[config_id])
-        response = client.post(url)
+        response = django_test_client().post(url)
         assert response.status_code == 302
         assert not RefreshConfig.objects.filter(id=config_id).exists()
 
 
 class TestRefreshDetailsView:
-    def test_details_page(self, client, refresh_config):
-        url = reverse('refreshes:refresh_details', args=[refresh_config.id])
-        response = client.get(url)
+    @use(django_test_client, _refresh_config)
+    def test_details_page(self):
+        config = _refresh_config()
+        url = reverse('refreshes:refresh_details', args=[config.id])
+        response = django_test_client().get(url)
         assert response.status_code == 200
-        assert refresh_config.name in response.content.decode()
+        assert config.name in response.content.decode()
 
-    def test_hide_skipped(self, client, refresh_config):
+    @use(django_test_client, _refresh_config)
+    def test_hide_skipped(self):
+        config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=refresh_config,
+            refresh_config=config,
             status=RefreshRun.Status.SKIPPED,
         )
-        url = reverse('refreshes:refresh_details', args=[refresh_config.id])
-        response = client.get(url, {'hide_skipped': 'y'})
+        url = reverse('refreshes:refresh_details', args=[config.id])
+        response = django_test_client().get(url, {'hide_skipped': 'y'})
         assert response.status_code == 200
 
 
 class TestRunHistoryTableView:
-    def test_returns_partial(self, client, refresh_config):
-        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
-        response = client.get(url)
+    @use(django_test_client, _refresh_config)
+    def test_returns_partial(self):
+        config = _refresh_config()
+        url = reverse('refreshes:run_history_table', args=[config.id])
+        response = django_test_client().get(url)
         assert response.status_code == 200
 
-    def test_post_not_allowed(self, client, refresh_config):
-        url = reverse('refreshes:run_history_table', args=[refresh_config.id])
-        response = client.post(url)
+    @use(django_test_client, _refresh_config)
+    def test_post_not_allowed(self):
+        config = _refresh_config()
+        url = reverse('refreshes:run_history_table', args=[config.id])
+        response = django_test_client().post(url)
         assert response.status_code == 405
 
 
 class TestRunRefreshView:
+    @use(django_test_client, _refresh_config)
     @patch('apps.refreshes.views.run_refresh_task')
-    def test_triggers_task(self, mock_task, client, refresh_config):
+    def test_triggers_task(self, mock_task):
+        config = _refresh_config()
         mock_result = MagicMock()
         mock_result.task_id = 'test-task-id'
         mock_task.delay.return_value = mock_result
 
-        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
-        response = client.post(url)
+        url = reverse('refreshes:run_refresh', args=[config.id])
+        response = django_test_client().post(url)
 
         assert response.status_code == 200
         assert response.content.decode() == 'test-task-id'
         mock_task.delay.assert_called_once()
         assert RefreshRun.objects.filter(
-            refresh_config=refresh_config,
+            refresh_config=config,
             triggered_from_ui=True,
         ).exists()
 
-    def test_get_not_allowed(self, client, refresh_config):
-        url = reverse('refreshes:run_refresh', args=[refresh_config.id])
-        response = client.get(url)
+    @use(django_test_client, _refresh_config)
+    def test_get_not_allowed(self):
+        config = _refresh_config()
+        url = reverse('refreshes:run_refresh', args=[config.id])
+        response = django_test_client().get(url)
         assert response.status_code == 405
 
 
 class TestFetchMaterializedViewsView:
-    def test_missing_database_id(self, client):
+    @use(django_test_client)
+    def test_missing_database_id(self):
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.get(url)
+        response = django_test_client().get(url)
         assert response.status_code == 400
 
-    def test_nonexistent_database(self, client):
+    @use(django_test_client)
+    def test_nonexistent_database(self):
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.get(url, {'database_id': 9999})
+        response = django_test_client().get(url, {'database_id': 9999})
         assert response.status_code == 404
 
-    def test_non_postgresql_database(self, client, non_pg_database):
+    @use(django_test_client, non_pg_database)
+    def test_non_postgresql_database(self):
+        db_obj = non_pg_database()
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.get(url, {'database_id': non_pg_database.id})
+        response = django_test_client().get(url, {'database_id': db_obj.id})
         assert response.status_code == 400
         data = response.json()
         assert 'PostgreSQL' in data['error']
 
+    @use(django_test_client, database)
     @patch('apps.refreshes.views.check_connection')
     @patch('apps.refreshes.views.get_materialized_views')
-    def test_success(self, mock_get_views, mock_check_conn, client, database):
+    def test_success(self, mock_get_views, mock_check_conn):
+        db_obj = database()
         mock_check_conn.return_value = (True, 'OK')
         mock_get_views.return_value = [
             {
@@ -226,75 +263,68 @@ class TestFetchMaterializedViewsView:
         ]
 
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.get(url, {'database_id': database.id})
+        response = django_test_client().get(url, {'database_id': db_obj.id})
 
         assert response.status_code == 200
         data = response.json()
         assert len(data['views']) == 1
         assert data['views'][0]['full_name'] == 'public.view1'
 
+    @use(django_test_client, database)
     @patch('apps.refreshes.views.check_connection')
-    def test_connection_failure(self, mock_check_conn, client, database):
+    def test_connection_failure(self, mock_check_conn):
+        db_obj = database()
         mock_check_conn.return_value = (False, 'Connection refused')
 
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.get(url, {'database_id': database.id})
+        response = django_test_client().get(url, {'database_id': db_obj.id})
 
         assert response.status_code == 500
         assert 'error' in response.json()
 
-    def test_post_not_allowed(self, client):
+    @use(django_test_client)
+    def test_post_not_allowed(self):
         url = reverse('refreshes:fetch_materialized_views')
-        response = client.post(url)
+        response = django_test_client().post(url)
         assert response.status_code == 405
 
 
-import re
-
-from unmagic import fixture, use
-
-_client = fixture('client')
-_refresh_config = fixture('refresh_config')
-_database = fixture('database')
-
-
 class TestRefreshConfigTableView:
-    @use(_client)
+    @use(django_test_client)
     def test_requires_login(self):
-        client = _client()
+        client = django_test_client()
         client.logout()
         response = client.get(reverse('refreshes:config_table'))
         assert response.status_code == 302
 
-    @use(_client, 'db')
+    @use(django_test_client, 'db')
     def test_returns_200(self):
-        response = _client().get(reverse('refreshes:config_table'))
+        response = django_test_client().get(reverse('refreshes:config_table'))
         assert response.status_code == 200
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_config_appears(self):
         config = _refresh_config()
-        response = _client().get(reverse('refreshes:config_table'))
+        response = django_test_client().get(reverse('refreshes:config_table'))
         assert config.name in response.content.decode()
 
-    @use(_client, _database)
+    @use(django_test_client, database)
     def test_pagination_default_10(self):
-        from ..models import RefreshConfig
-        database = _database()
+        db_obj = database()
         for i in range(15):
             RefreshConfig.objects.create(
                 name=f'Refresh {i}',
-                database=database,
+                database=db_obj,
                 materialized_views=['public.view1'],
             )
-        response = _client().get(reverse('refreshes:config_table'))
+        response = django_test_client().get(reverse('refreshes:config_table'))
         shown = response.content.decode().count('Refresh ')
         assert shown == 10
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_etag_match_returns_no_swap(self):
         _refresh_config()
-        client = _client()
+        client = django_test_client()
         response = client.get(reverse('refreshes:config_table'))
         match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
         assert match
@@ -302,10 +332,10 @@ class TestRefreshConfigTableView:
         response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})
         assert response2.get('HX-Reswap') == 'none'
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_etag_mismatch_returns_content(self):
         config = _refresh_config()
-        response = _client().get(
+        response = django_test_client().get(
             reverse('refreshes:config_table'), {'etag': 'stale'}
         )
         assert response.get('HX-Reswap') is None
@@ -313,57 +343,56 @@ class TestRefreshConfigTableView:
 
 
 class TestRefreshRunLogView:
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_requires_login(self):
         run = RefreshRun.objects.create(
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='hello log',
         )
-        client = _client()
+        client = django_test_client()
         client.logout()
         response = client.get(reverse('refreshes:run_log', args=[run.id]))
         assert response.status_code == 302
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_returns_log(self):
         run = RefreshRun.objects.create(
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='refresh log content',
         )
-        response = _client().get(reverse('refreshes:run_log', args=[run.id]))
+        response = django_test_client().get(reverse('refreshes:run_log', args=[run.id]))
         assert response.status_code == 200
         assert 'refresh log content' in response.content.decode()
 
-    @use(_client)
+    @use(django_test_client)
     def test_404_for_missing(self):
-        response = _client().get(reverse('refreshes:run_log', args=[9999]))
+        response = django_test_client().get(reverse('refreshes:run_log', args=[9999]))
         assert response.status_code == 404
 
 
 class TestRunRefreshHtmxBranch:
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_htmx_request_returns_204(self):
-        # client fixture in conftest.py is already logged in
         url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
-        response = _client().post(url, HTTP_HX_REQUEST='true')
+        response = django_test_client().post(url, HTTP_HX_REQUEST='true')
         assert response.status_code == 204
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_htmx_request_creates_refresh_run(self):
         config = _refresh_config()
         url = reverse('refreshes:run_refresh', args=[config.id])
-        _client().post(url, HTTP_HX_REQUEST='true')
+        django_test_client().post(url, HTTP_HX_REQUEST='true')
         assert RefreshRun.objects.filter(
             refresh_config=config,
             triggered_from_ui=True,
         ).exists()
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_non_htmx_request_returns_200(self):
         url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
-        response = _client().post(url)
+        response = django_test_client().post(url)
         assert response.status_code == 200
         assert len(response.content) > 0
 
@@ -371,68 +400,68 @@ class TestRunRefreshHtmxBranch:
 class TestRefreshesListPageSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 
-    @use(_client, 'db')
+    @use(django_test_client, 'db')
     def test_renders_200(self):
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
 
-    @use(_client, 'db')
+    @use(django_test_client, 'db')
     def test_includes_config_table_div(self):
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert 'id="refreshes-config-table"' in response.content.decode()
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_renders_with_no_runs(self):
         config = _refresh_config()
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert config.name in response.content.decode()
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_renders_with_completed_run(self):
         RefreshRun.objects.create(
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='Refreshed 2 views.',
         )
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'completed' in response.content.decode()
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_renders_with_failed_run(self):
         RefreshRun.objects.create(
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.FAILED,
             log='Error refreshing.',
         )
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'failed' in response.content.decode()
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_renders_with_started_run(self):
         RefreshRun.objects.create(
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.STARTED,
         )
-        response = _client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'started' in response.content.decode()
 
 
 class TestRefreshesRunButtonRendering:
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_run_button_present_when_no_active_run(self):
         config = _refresh_config()
         url = reverse('refreshes:config_table')
-        response = _client().get(url)
+        response = django_test_client().get(url)
         assert response.status_code == 200
         content = response.content.decode()
         run_url = reverse('refreshes:run_refresh', args=[config.id])
         assert f'hx-post="{run_url}"' in content
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_run_button_disabled_when_active_run(self):
         config = _refresh_config()
         RefreshRun.objects.create(
@@ -440,17 +469,17 @@ class TestRefreshesRunButtonRendering:
             status=RefreshRun.Status.QUEUED,
         )
         url = reverse('refreshes:config_table')
-        response = _client().get(url)
+        response = django_test_client().get(url)
         content = response.content.decode()
         assert 'btn-outline-success' in content
         run_url = reverse('refreshes:run_refresh', args=[config.id])
         assert f'hx-post="{run_url}"' not in content
 
-    @use(_client, _refresh_config)
+    @use(django_test_client, _refresh_config)
     def test_edit_button_never_disabled(self):
         config = _refresh_config()
         url = reverse('refreshes:config_table')
-        response = _client().get(url)
+        response = django_test_client().get(url)
         content = response.content.decode()
         edit_url = reverse('refreshes:edit_refresh_config', args=[config.id])
         assert edit_url in content
