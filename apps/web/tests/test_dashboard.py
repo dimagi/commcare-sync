@@ -1,18 +1,12 @@
 from datetime import timedelta
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from unmagic import fixture, use
 
-from apps.commcare.models import (
-    CommCareAccount,
-    CommCareProject,
-    CommCareServer,
-)
-from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
     ExportRun,
@@ -27,75 +21,80 @@ from apps.refreshes.models import (
     RefreshRun,
 )
 from apps.web.stats import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
+from tests.fixtures import commcare_account, commcare_project, database, user
 
-User = get_user_model()
+
+@fixture
+@use('db')
+def client():
+    c = Client()
+    c.force_login(user())
+    yield c
 
 
-@pytest.mark.django_db
+@fixture
+def export_config():
+    config_file = TemporaryUploadedFile(
+        name='config_file',
+        content_type='application/xml',
+        size=100,
+        charset='utf-8',
+    )
+    cfg = ExportConfig.objects.create(
+        name='Test Export',
+        account=commcare_account(),
+        project=commcare_project(),
+        database=database(),
+        config_file=config_file,
+    )
+    config_file.close()
+    yield cfg
+
+
+@fixture
+def refresh_config():
+    yield RefreshConfig.objects.create(
+        name='Test Refresh',
+        database=database(),
+        materialized_views=['public.test_view'],
+    )
+
+
+@fixture
+@use('db')
+def destination():
+    yield ForwardingDestination.objects.create(
+        name='Test Destination',
+        api_url='https://example.com/api',
+    )
+
+
+@fixture
+def forwarding_config():
+    yield ForwardingConfig.objects.create(
+        name='Test Forwarding',
+        database=database(),
+        destination=destination(),
+        query='SELECT * FROM table',
+    )
+
+
+@use('db')
 class TestHomeView:
-    def setup_method(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass',
-        )
-
+    @use(user, client)
     def test_home_redirects_to_exports_when_authenticated(self):
-        self.client.login(username='testuser', password='testpass')
-        response = self.client.get(reverse('web:home'))
+        response = client().get(reverse('web:home'))
         assert response.status_code == 302
         assert response.url == reverse('exports:home')
 
     def test_home_shows_landing_page_when_unauthenticated(self):
-        response = self.client.get(reverse('web:home'))
+        response = Client().get(reverse('web:home'))
         assert response.status_code == 200
 
 
-@pytest.mark.django_db
+@use('db')
 class TestExportStatistics:
-    def setup_method(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass',
-        )
-
-        self.server = CommCareServer.objects.create(
-            url='https://commcarehq.org',
-            name='CommCare HQ',
-        )
-        self.account = CommCareAccount.objects.create(
-            server=self.server,
-            username='test@account.com',
-            api_key_encrypted='encrypted_key',
-            owner=self.user,
-        )
-        self.project = CommCareProject.objects.create(
-            domain='test-domain',
-            server=self.server,
-        )
-
-        self.database = Database.objects.create(
-            name='Test DB',
-            connection_string='postgresql://user:pass@localhost:5432/db',
-        )
-
-        config_file = TemporaryUploadedFile(
-            name='config_file',
-            content_type='application/xml',
-            size=100,
-            charset='utf-8',
-        )
-        self.export_config = ExportConfig.objects.create(
-            name='Test Export',
-            account=self.account,
-            project=self.project,
-            database=self.database,
-            config_file=config_file,
-        )
-        config_file.close()
-
+    @use(export_config)
     def test_export_statistics_with_no_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
         stats = _get_export_statistics(last_24h)
@@ -105,12 +104,13 @@ class TestExportStatistics:
         assert stats['success_rate'] == 0
         assert stats['status'] == 'neutral'
 
+    @use(export_config)
     def test_export_statistics_with_completed_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         for i in range(5):
             ExportRun.objects.create(
-                base_export_config=self.export_config,
+                base_export_config=export_config(),
                 status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -124,16 +124,17 @@ class TestExportStatistics:
         assert stats['failed_count'] == 0
         assert stats['status'] == 'healthy'
 
+    @use(export_config)
     def test_export_statistics_with_failed_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         ExportRun.objects.create(
-            base_export_config=self.export_config,
+            base_export_config=export_config(),
             status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
-            base_export_config=self.export_config,
+            base_export_config=export_config(),
             status=ExportRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -146,16 +147,17 @@ class TestExportStatistics:
         assert stats['failed_count'] == 1
         assert stats['status'] == 'error'
 
+    @use(export_config)
     def test_export_statistics_excludes_queued_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         ExportRun.objects.create(
-            base_export_config=self.export_config,
+            base_export_config=export_config(),
             status=ExportRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
-            base_export_config=self.export_config,
+            base_export_config=export_config(),
             status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -175,6 +177,7 @@ class TestExportStatistics:
             (20, 0, 100.0, 'healthy'),
         ],
     )
+    @use(export_config)
     def test_export_statistics_status_thresholds(
         self, successful, failed, expected_rate, expected_status
     ):
@@ -182,13 +185,13 @@ class TestExportStatistics:
 
         for i in range(successful):
             ExportRun.objects.create(
-                base_export_config=self.export_config,
+                base_export_config=export_config(),
                 status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             ExportRun.objects.create(
-                base_export_config=self.export_config,
+                base_export_config=export_config(),
                 status=ExportRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
@@ -198,26 +201,9 @@ class TestExportStatistics:
         assert stats['status'] == expected_status
 
 
-@pytest.mark.django_db
+@use('db')
 class TestRefreshStatistics:
-    def setup_method(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass',
-        )
-
-        self.database = Database.objects.create(
-            name='Test DB',
-            connection_string='postgresql://user:pass@localhost:5432/db',
-        )
-
-        self.refresh_config = RefreshConfig.objects.create(
-            name='Test Refresh',
-            database=self.database,
-            materialized_views=['public.test_view'],
-        )
-
+    @use(refresh_config)
     def test_refresh_statistics_with_no_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
         stats = _get_refresh_statistics(last_24h)
@@ -227,12 +213,13 @@ class TestRefreshStatistics:
         assert stats['success_rate'] == 0
         assert stats['status'] == 'neutral'
 
+    @use(refresh_config)
     def test_refresh_statistics_with_completed_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         for i in range(4):
             RefreshRun.objects.create(
-                refresh_config=self.refresh_config,
+                refresh_config=refresh_config(),
                 status=RefreshRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -246,16 +233,17 @@ class TestRefreshStatistics:
         assert stats['failed_count'] == 0
         assert stats['status'] == 'healthy'
 
+    @use(refresh_config)
     def test_refresh_statistics_with_failed_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         RefreshRun.objects.create(
-            refresh_config=self.refresh_config,
+            refresh_config=refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         RefreshRun.objects.create(
-            refresh_config=self.refresh_config,
+            refresh_config=refresh_config(),
             status=RefreshRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -268,16 +256,17 @@ class TestRefreshStatistics:
         assert stats['failed_count'] == 1
         assert stats['status'] == 'error'
 
+    @use(refresh_config)
     def test_refresh_statistics_excludes_queued_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         RefreshRun.objects.create(
-            refresh_config=self.refresh_config,
+            refresh_config=refresh_config(),
             status=RefreshRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         RefreshRun.objects.create(
-            refresh_config=self.refresh_config,
+            refresh_config=refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -297,6 +286,7 @@ class TestRefreshStatistics:
             (20, 0, 100.0, 'healthy'),
         ],
     )
+    @use(refresh_config)
     def test_refresh_statistics_status_thresholds(
         self, successful, failed, expected_rate, expected_status
     ):
@@ -304,13 +294,13 @@ class TestRefreshStatistics:
 
         for i in range(successful):
             RefreshRun.objects.create(
-                refresh_config=self.refresh_config,
+                refresh_config=refresh_config(),
                 status=RefreshRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             RefreshRun.objects.create(
-                refresh_config=self.refresh_config,
+                refresh_config=refresh_config(),
                 status=RefreshRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
@@ -320,32 +310,9 @@ class TestRefreshStatistics:
         assert stats['status'] == expected_status
 
 
-@pytest.mark.django_db
+@use('db')
 class TestForwardingStatistics:
-    def setup_method(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass',
-        )
-
-        self.database = Database.objects.create(
-            name='Test DB',
-            connection_string='postgresql://user:pass@localhost:5432/db',
-        )
-
-        self.destination = ForwardingDestination.objects.create(
-            name='Test Destination',
-            api_url='https://example.com/api',
-        )
-
-        self.forwarding_config = ForwardingConfig.objects.create(
-            name='Test Forwarding',
-            database=self.database,
-            destination=self.destination,
-            query='SELECT * FROM table',
-        )
-
+    @use(forwarding_config)
     def test_forwarding_statistics_with_no_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
         stats = _get_forwarding_statistics(last_24h)
@@ -355,12 +322,13 @@ class TestForwardingStatistics:
         assert stats['success_rate'] == 0
         assert stats['status'] == 'neutral'
 
+    @use(forwarding_config)
     def test_forwarding_statistics_with_completed_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         for i in range(3):
             ForwardingRun.objects.create(
-                forwarding_config=self.forwarding_config,
+                forwarding_config=forwarding_config(),
                 status=ForwardingRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -374,16 +342,17 @@ class TestForwardingStatistics:
         assert stats['failed_count'] == 0
         assert stats['status'] == 'healthy'
 
+    @use(forwarding_config)
     def test_forwarding_statistics_excludes_queued_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
         ForwardingRun.objects.create(
-            forwarding_config=self.forwarding_config,
+            forwarding_config=forwarding_config(),
             status=ForwardingRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ForwardingRun.objects.create(
-            forwarding_config=self.forwarding_config,
+            forwarding_config=forwarding_config(),
             status=ForwardingRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
