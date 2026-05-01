@@ -10,11 +10,14 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
 
 from apps.exports.models import ExportConfig
 from .fixtures import test_data
 from .helpers import login, navigate_to_export_details
+
+_page = fixture('page')
+_live_server = fixture('live_server')
 
 
 def create_export_config(data):
@@ -32,10 +35,11 @@ def create_export_config(data):
 class TestRunButtonStructure:
     """Test Run button HTML structure and Alpine.js attributes."""
 
+    @use(_page, _live_server)
     def test_run_button_has_alpine_attributes(self):
         """Test that Run button has required Alpine.js attributes."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -48,10 +52,11 @@ class TestRunButtonStructure:
         expect(run_button).to_have_attribute('@click', 'running = true')
         expect(run_button).to_have_attribute(':disabled', 'running')
 
+    @use(_page, _live_server)
     def test_section_has_alpine_data(self):
         """Test that run history section has x-data with state."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -66,10 +71,11 @@ class TestRunButtonStructure:
             "{ running: false, forceSync: false }"
         )
 
+    @use(_page, _live_server)
     def test_progress_section_has_x_show(self):
         """Test that progress section has x-show binding."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -80,10 +86,11 @@ class TestRunButtonStructure:
         progress_section = page.locator('#run-status-progress')
         expect(progress_section).to_have_attribute('x-show', 'running')
 
+    @use(_page, _live_server)
     def test_force_sync_checkbox_has_alpine_model(self):
         """Test that force sync checkbox has x-model binding."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -128,10 +135,11 @@ class TestRunHistoryTableEndpoint:
 class TestRunButtonWithMocks:
     """Test Run button functionality with mocked API responses."""
 
+    @use(_page, _live_server)
     def test_run_button_javascript_handler_attached(self):
         """Test that Run button has JavaScript click handler attached."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -158,10 +166,11 @@ class TestRunButtonWithMocks:
         }''')
         assert has_click_handler, "Run button should have click handler"
 
+    @use(_page, _live_server)
     def test_force_sync_checkbox_alpine_binding(self):
         """Test that force sync checkbox is bound to Alpine.js state."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -196,10 +205,11 @@ class TestRunButtonWithMocks:
             f'got: {alpine_state}'
         )
 
+    @use(_page, _live_server)
     def test_alpine_running_state_changes_on_click(self):
         """Test that Alpine running state changes when Run button is clicked."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -232,10 +242,11 @@ class TestRunButtonWithMocks:
             'Alpine running state should be true after clicking Run button'
         )
 
+    @use(_page, _live_server)
     def test_progress_elements_exist_on_page(self):
         """Test that progress bar elements are present on the page."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
@@ -247,10 +258,11 @@ class TestRunButtonWithMocks:
         expect(page.locator('#progress-bar')).to_be_attached()
         expect(page.locator('#progress-bar-message')).to_be_attached()
 
+    @use(_page, _live_server)
     def test_run_button_disabled_state(self):
         """Test that Run button is disabled when clicked via Alpine state."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
 
