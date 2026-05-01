@@ -5,10 +5,13 @@ Tests Alpine.js and HTMX functionality with mocked API responses.
 """
 import pytest
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
 
 from .fixtures import test_data
 from .helpers import login, navigate_to_create_export
+
+_page = fixture('page')
+_live_server = fixture('live_server')
 
 
 def mock_config_files_response(route):
@@ -48,10 +51,11 @@ def mock_config_files_error(route):
 class TestExportFormWithMockedAPI:
     """Test export form with mocked HTMX responses."""
 
+    @use(_page, _live_server)
     def test_full_form_flow_with_config_selection(self):
         """Test complete form flow from load to config selection."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         # Setup: Mock the HTMX endpoint
@@ -89,10 +93,11 @@ class TestExportFormWithMockedAPI:
             'https://test.commcarehq.org/a/test-domain/export/config/123/'
         )
 
+    @use(_page, _live_server)
     def test_loading_spinner_during_fetch(self):
         """Test that Alpine loading state mechanism is properly configured."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         page.route(
@@ -125,10 +130,11 @@ class TestExportFormWithMockedAPI:
         )
         expect(loading_text).to_have_attribute('x-show', 'loading')
 
+    @use(_page, _live_server)
     def test_error_handling_when_fetch_fails(self):
         """Test that errors from config fetch are handled gracefully."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         # Mock error response
