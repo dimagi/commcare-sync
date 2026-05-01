@@ -2,23 +2,23 @@
 
 from datetime import date, time
 
-from unmagic import fixture, use
+from unmagic import use
 
 from apps.forwarding.forms import ForwardingConfigForm
 from apps.forwarding.models import ForwardingConfig
 from apps.schedules.mixin import ScheduleMixin
 from tests.fixtures import database
 
-_destination = fixture('destination')
+from .conftest import destination
 
 
-@use('db', database, _destination)
+@use('db', database, destination)
 class TestScheduleFormMixinEdit:
     def test_edit_weekly_schedule_populates_days_of_week(self):
         config = ForwardingConfig.objects.create(
             name='Weekly Config',
             database=database(),
-            destination=_destination(),
+            destination=destination(),
             query='SELECT 1',
             schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
             first_run_date=date(2025, 1, 1),
@@ -35,7 +35,7 @@ class TestScheduleFormMixinEdit:
         config = ForwardingConfig.objects.create(
             name='Interval Config',
             database=database(),
-            destination=_destination(),
+            destination=destination(),
             query='SELECT 1',
             schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
             interval_value=30,
@@ -49,11 +49,10 @@ class TestScheduleFormMixinEdit:
 
     def test_submit_edited_weekly_schedule_with_changed_days(self):
         db_obj = database()
-        destination = _destination()
         config = ForwardingConfig.objects.create(
             name='Weekly Config',
             database=db_obj,
-            destination=destination,
+            destination=destination(),
             query='SELECT 1',
             schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
             first_run_date=date(2025, 1, 1),
@@ -67,7 +66,7 @@ class TestScheduleFormMixinEdit:
         form_data = {
             'name': 'Weekly Config',
             'database': db_obj.id,
-            'destination': destination.id,
+            'destination': destination().id,
             'query': 'SELECT 1',
             'schedule_type': ScheduleMixin.ScheduleType.WEEKLY,
             'first_run_date': '2025-01-01',
@@ -87,7 +86,7 @@ class TestScheduleFormMixinEdit:
         config = ForwardingConfig.objects.create(
             name='All Days Config',
             database=database(),
-            destination=_destination(),
+            destination=destination(),
             query='SELECT 1',
             schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
             first_run_date=date(2025, 1, 1),
