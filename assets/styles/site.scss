@@ -3,10 +3,6 @@
 // Custom variables should be defined before importing Bootstrap
 // See https://getbootstrap.com/docs/5.3/customize/sass/ for more information
 
-// CommCare color palette
-$COMMCARE_BLUE: #004EBC;
-$COMMCARE_GREY: #685C53;
-
 // Bootstrap theme colors
 $primary: #5C6AC5;
 $info: #00BDC5;
@@ -14,15 +10,15 @@ $warning: #EEC200;
 $success: #4ABA32;
 $danger: #E73C27;
 
-// Custom colors
+// CommCare HQ color palette and font overrides
+$COMMCARE_BLUE: #004EBC;
+$COMMCARE_GREY: #685C53;
 $bg-grey: #F2F2F1;
 $default-shadow: 0 2px 4px rgba(55, 63, 67, 0.3);
-
-// Bootstrap variable overrides
 $font-family-sans-serif: "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 $body-bg: $bg-grey;
-$card-bg: #fff;
-$input-bg: #fff;
+$card-bg: #FFF;  // Override $body-bg above
+$input-bg: #FFF;
 $link-color: $COMMCARE_BLUE;
 
 // Navbar customization
