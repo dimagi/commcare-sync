@@ -94,98 +94,98 @@
   }"
 >
   <div x-show="databaseSelected">
-  <label class="form-label">{% trans "Materialized Views" %}</label>
-  <p class="form-text">
-    {% blocktrans %}
-      Select the materialized views to refresh. They will be refreshed in the
-      order shown below.
-    {% endblocktrans %}
-  </p>
+    <label class="form-label">{% trans "Materialized Views" %}</label>
+    <p class="form-text">
+      {% blocktrans %}
+        Select the materialized views to refresh. They will be refreshed in the
+        order shown below.
+      {% endblocktrans %}
+    </p>
 
-  <div x-show="loading" class="alert alert-info">
-    <i class="fa fa-spinner fa-spin"></i> {% trans "Loading views..." %}
-  </div>
-
-  <div x-show="error" class="alert alert-danger" x-text="error"></div>
-
-  <div
-    x-show="!loading && availableViews.length === 0 && !error"
-    class="alert alert-warning"
-  >
-    {% blocktrans %}
-      No materialized views found in the selected database. Please select a
-      PostgreSQL database.
-    {% endblocktrans %}
-  </div>
-
-  <div class="row" x-show="availableViews.length > 0">
-    <div class="col-md-6">
-      <h6 class="text-muted small">{% trans "Available Views" %}</h6>
-      <div class="list-group overflow-y-auto" style="max-height: 300px;">
-        <template x-for="view in availableViews" :key="view.full_name">
-          <button
-            type="button"
-            class="list-group-item list-group-item-action"
-            @click="addView(view.full_name)"
-            :disabled="selectedViews.includes(view.full_name)"
-          >
-            <code x-text="view.full_name"></code>
-          </button>
-        </template>
-      </div>
+    <div x-show="loading" class="alert alert-info">
+      <i class="fa fa-spinner fa-spin"></i> {% trans "Loading views..." %}
     </div>
 
-    <div class="col-md-6">
-      <h6 class="text-muted small">
-        {% trans "Selected Views (in refresh order)" %}
-      </h6>
-      <div x-show="selectedViews.length === 0" class="alert alert-info">
-        {% trans "Click on views from the left to add them." %}
+    <div x-show="error" class="alert alert-danger" x-text="error"></div>
+
+    <div
+      x-show="!loading && availableViews.length === 0 && !error"
+      class="alert alert-warning"
+    >
+      {% blocktrans %}
+        No materialized views found in the selected database. Please select a
+        PostgreSQL database.
+      {% endblocktrans %}
+    </div>
+
+    <div class="row" x-show="availableViews.length > 0">
+      <div class="col-md-6">
+        <h6 class="text-muted small">{% trans "Available Views" %}</h6>
+        <div class="list-group overflow-y-auto" style="max-height: 300px;">
+          <template x-for="view in availableViews" :key="view.full_name">
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              @click="addView(view.full_name)"
+              :disabled="selectedViews.includes(view.full_name)"
+            >
+              <code x-text="view.full_name"></code>
+            </button>
+          </template>
+        </div>
       </div>
-      <div class="list-group" x-show="selectedViews.length > 0">
-        <template x-for="(view, index) in selectedViews" :key="index">
-          <div
-            class="list-group-item d-flex justify-content-between align-items-center"
-          >
-            <code x-text="view"></code>
-            <div class="btn-group btn-group-sm">
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                @click="moveUp(index)"
-                :disabled="index === 0"
-                title="{% trans 'Move up' %}"
-              >
-                <i class="fa fa-arrow-up"></i>
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                @click="moveDown(index)"
-                :disabled="index === selectedViews.length - 1"
-                title="{% trans 'Move down' %}"
-              >
-                <i class="fa fa-arrow-down"></i>
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-danger"
-                @click="removeView(index)"
-                title="{% trans 'Remove' %}"
-              >
-                <i class="fa fa-times"></i>
-              </button>
+
+      <div class="col-md-6">
+        <h6 class="text-muted small">
+          {% trans "Selected Views (in refresh order)" %}
+        </h6>
+        <div x-show="selectedViews.length === 0" class="alert alert-info">
+          {% trans "Click on views from the left to add them." %}
+        </div>
+        <div class="list-group" x-show="selectedViews.length > 0">
+          <template x-for="(view, index) in selectedViews" :key="index">
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <code x-text="view"></code>
+              <div class="btn-group btn-group-sm">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  @click="moveUp(index)"
+                  :disabled="index === 0"
+                  title="{% trans 'Move up' %}"
+                >
+                  <i class="fa fa-arrow-up"></i>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  @click="moveDown(index)"
+                  :disabled="index === selectedViews.length - 1"
+                  title="{% trans 'Move down' %}"
+                >
+                  <i class="fa fa-arrow-down"></i>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  @click="removeView(index)"
+                  title="{% trans 'Remove' %}"
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div x-show="selectedViews.length === 0" class="text-danger mt-2">
-    {% trans "You must select at least one materialized view." %}
+    <div x-show="selectedViews.length === 0" class="text-danger mt-2">
+      {% trans "You must select at least one materialized view." %}
+    </div>
   </div>
-  </div>{# /x-show="databaseSelected" #}
 
   <div
     class="form-check mt-3"
