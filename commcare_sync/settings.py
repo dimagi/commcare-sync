@@ -52,9 +52,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'allauth',  # allauth account/registration management
-    'allauth.account',
-
     'celery_progress',
     'django_celery_beat',
     'reversion',
@@ -81,7 +78,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'commcare_sync.urls'
@@ -127,7 +123,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Django recommends overriding the user model even if you don't think
 # you need to because it makes future changes much easier.
 AUTH_USER_MODEL = 'users.CustomUser'
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -146,30 +144,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Allauth setup
-
-# swap these two lines to enable public sign ups
-# ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
-ACCOUNT_ADAPTER = 'apps.users.account_adapter.NoNewUsersAccountAdapter'
-
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_SESSION_REMEMBER = True
-ACCOUNT_LOGOUT_ON_GET = True
-
-# User signup configuration:
-# * "mandatory": require users to confirm email before signing in
-# * "optional": send confirmation emails but not require them
-# * "none"
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-
-
 AUTHENTICATION_BACKENDS = (
-    # Needed to login by username in Django admin, regardless of `allauth`
-    "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by e-mail
-    "allauth.account.auth_backends.AuthenticationBackend",
+    'django.contrib.auth.backends.ModelBackend',
 )
 
 
