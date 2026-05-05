@@ -77,10 +77,11 @@ commands.
 
 ### Agent documentation
 
-| Path                                   | Purpose              |
-|----------------------------------------|----------------------|
-| `claude/specs/YYYY-MM-DD_spec-name.md` | Design specs         |
-| `claude/plans/YYYY-MM-DD_plan-name.md` | Implementation plans |
+| Path                                     | Purpose              |
+|------------------------------------------|----------------------|
+| `claude/specs/YYYY-MM-DD_spec-name.md`   | Design specs         |
+| `claude/plans/YYYY-MM-DD_plan-name.md`   | Implementation plans |
+| `claude/reviews/YYYY-MM-DD_plan-name.md` | Code reviews         |
 
 ### Key Patterns
 
