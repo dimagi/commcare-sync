@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [
     "Django~=5.2",
-    "django-allauth",
     "psycopg[binary]",  # psycopg 3: https://www.psycopg.org/psycopg3/docs/basic/from_pg2.html
     "django-anymail[mailgun]",  # email services
     "celery-progress",
