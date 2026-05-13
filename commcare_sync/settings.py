@@ -3,6 +3,7 @@ Django settings for CommCare Data Pipeline
 """
 import json
 import os
+from datetime import timedelta
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -239,6 +240,10 @@ ADMINS = [('Dimagi', 'devops+commcare-sync@dimagi.com')]
 
 # Replace with your Google Analytics ID to connect to Google Analytics
 GOOGLE_ANALYTICS_ID = ''
+
+
+# Dashboard statistics period
+DASHBOARD_STATS_PERIOD = timedelta(hours=24)
 
 
 try:
