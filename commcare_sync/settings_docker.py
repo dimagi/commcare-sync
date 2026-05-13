@@ -14,6 +14,3 @@ DATABASES = {
         'PORT': '5432',  # internal Docker network port
     }
 }
-
-# enable public sign-ups
-ACCOUNT_ADAPTER = 'apps.users.account_adapter.EmailAsUsernameAdapter'
