@@ -23,9 +23,8 @@ from apps.web.stats import (
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.views import (
     get_config_page_size,
-    get_hide_skipped_from_request,
     get_page_from_request,
-    get_ui_page_size,
+    get_run_statuses_from_request,
 )
 
 from .db_utils import check_connection, get_materialized_views
@@ -212,21 +211,23 @@ def delete_refresh_config(request, config_id):
 def refresh_details(request, config_id):
     """Display details for a refresh configuration."""
     config = get_object_or_404(RefreshConfig, id=config_id)
-    runs = config.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[RefreshRun.Status.SKIPPED, RefreshRun.Status.QUEUED]
-        )
-
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(config.runs.order_by('-created_at'), page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     return render(
         request,
         'refreshes/refresh_details.html',
         {
             'active_tab': 'refreshes',
             'config': config,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
-            'hide_skipped': hide_skipped,
+            'runs': page_obj,
+            'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 
@@ -236,19 +237,26 @@ def refresh_details(request, config_id):
 def run_history_table(request, config_id):
     """HTMX endpoint to refresh the run history table."""
     config = get_object_or_404(RefreshConfig, id=config_id)
-    runs = config.runs
-    hide_skipped = get_hide_skipped_from_request(request)
-    if hide_skipped:
-        runs = runs.exclude(
-            status__in=[RefreshRun.Status.SKIPPED, RefreshRun.Status.QUEUED]
-        )
-
+    runs_qs = config.runs.order_by('-created_at')
+    statuses = get_run_statuses_from_request(request)
+    if statuses is not None:
+        runs_qs = runs_qs.filter(status__in=statuses)
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    paginator = Paginator(runs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     return render(
         request,
         'refreshes/partials/run_history_table.html',
         {
             'config': config,
-            'runs': runs.order_by('-created_at')[: get_ui_page_size(request)],
+            'runs': page_obj,
+            'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
         },
     )
 
