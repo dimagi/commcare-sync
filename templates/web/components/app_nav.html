@@ -121,39 +121,4 @@
       </a>
     </li>
   </ul>
-  <hr />
-  <h6 class="text-muted text-uppercase small fw-bold mt-3 d-md-none d-lg-block">
-    {% trans "My Account" %}
-  </h6>
-  <ul class="nav flex-column">
-    <li class="nav-item">
-      <a
-        class="nav-link icon-link {% if active_tab == 'profile' %}active{% endif %}"
-        href="{% url 'users:user_profile' %}"
-      >
-        <i class="fa-solid fa-user"></i
-        ><span class="d-md-none d-lg-inline">{% trans "Profile" %}</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a
-        class="nav-link icon-link {% if 'accounts/password/change' in request.path %}active{% endif %}"
-        href="{% url 'account_change_password' %}"
-      >
-        <i class="fa-solid fa-unlock-keyhole"></i
-        ><span class="d-md-none d-lg-inline"
-          >{% trans "Change Password" %}</span
-        >
-      </a>
-    </li>
-    <li class="nav-item">
-      <a
-        class="nav-link icon-link {% if 'accounts/logout' in request.path %}active{% endif %}"
-        href="{% url 'account_logout' %}"
-      >
-        <i class="fa-solid fa-right-from-bracket"></i
-        ><span class="d-md-none d-lg-inline">{% trans "Sign out" %}</span>
-      </a>
-    </li>
-  </ul>
 </aside>
