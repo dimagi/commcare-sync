@@ -17,7 +17,7 @@ User = get_user_model()
 @use('db')
 def user():
     yield User.objects.create_user(
-        username='detailsuser_fwd', email='dfwd@example.com', password='testpass'
+        email='dfwd@example.com', password='testpass'
     )
 
 
