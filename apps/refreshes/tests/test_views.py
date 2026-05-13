@@ -1,4 +1,5 @@
 import json
+import re
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
@@ -342,6 +343,35 @@ class TestRefreshConfigTableView:
         assert config.name in response.content.decode()
 
 
+class TestRefreshRunLogView:
+    @use(django_test_client, _refresh_config)
+    def test_requires_login(self):
+        run = RefreshRun.objects.create(
+            refresh_config=_refresh_config(),
+            status=RefreshRun.Status.COMPLETED,
+            log='hello log',
+        )
+        client = django_test_client()
+        client.logout()
+        response = client.get(reverse('refreshes:run_log', args=[run.id]))
+        assert response.status_code == 302
+
+    @use(django_test_client, _refresh_config)
+    def test_returns_log(self):
+        run = RefreshRun.objects.create(
+            refresh_config=_refresh_config(),
+            status=RefreshRun.Status.COMPLETED,
+            log='refresh log content',
+        )
+        response = django_test_client().get(reverse('refreshes:run_log', args=[run.id]))
+        assert response.status_code == 200
+        assert 'refresh log content' in response.content.decode()
+
+    @use(django_test_client)
+    def test_404_for_missing(self):
+        response = django_test_client().get(reverse('refreshes:run_log', args=[9999]))
+        assert response.status_code == 404
+
 
 class TestRefreshesListPageSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
@@ -394,4 +424,3 @@ class TestRefreshesListPageSmoke:
         response = django_test_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'started' in response.content.decode()
-
