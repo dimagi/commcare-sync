@@ -16,15 +16,7 @@ from ..models import (
     ForwardingDestination,
     ForwardingRun,
 )
-
-
-@fixture
-@use('db')
-def destination():
-    yield ForwardingDestination.objects.create(
-        name='Test API',
-        api_url='https://example.com/api',
-    )
+from .fixtures import destination
 
 
 @fixture
