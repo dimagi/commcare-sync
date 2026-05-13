@@ -1,13 +1,20 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.web.decorators import admin_required
+from apps.web.stats import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
 
 from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
 
@@ -23,6 +30,11 @@ from .tasks import run_forwarding_task
 @login_required
 def forwarders(request):
     """List all forwarding configurations."""
+    now = timezone.now()
+    period = settings.DASHBOARD_STATS_PERIOD
+    current_start = now - period
+    previous_start = current_start - period
+
     fwd_configs = ForwardingConfig.objects.order_by('-updated_at')
     return render(
         request,
@@ -30,6 +42,9 @@ def forwarders(request):
         {
             'active_tab': 'forwarders',
             'forwarders': fwd_configs,
+            'export_stats': _get_export_statistics(current_start, previous_start),
+            'refresh_stats': _get_refresh_statistics(current_start, previous_start),
+            'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
         },
     )
 
