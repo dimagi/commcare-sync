@@ -74,10 +74,10 @@ def forwarding_config():
 @use('db')
 class TestHomeView:
     @use(authed_client)
-    def test_home_redirects_to_dashboard_when_authenticated(self):
+    def test_home_redirects_to_exports_when_authenticated(self):
         response = authed_client().get(reverse('web:home'))
         assert response.status_code == 302
-        assert response.url == reverse('web:dashboard')
+        assert response.url == reverse('exports:home')
 
     def test_home_shows_landing_page_when_unauthenticated(self):
         response = Client().get(reverse('web:home'))
