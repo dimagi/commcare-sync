@@ -17,6 +17,7 @@ from apps.web.stats import (
     _get_forwarding_statistics,
     _get_refresh_statistics,
 )
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.views import (
     get_hide_skipped_from_request,
     get_ui_page_size,
@@ -45,6 +46,7 @@ def refresh_configs(request):
         {
             'active_tab': 'refreshes',
             'refresh_configs': configs,
+            'stats_period': readable_timedelta(period, short=True),
             'export_stats': _get_export_statistics(current_start, previous_start),
             'refresh_stats': _get_refresh_statistics(current_start, previous_start),
             'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),

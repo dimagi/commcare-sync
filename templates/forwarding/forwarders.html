@@ -20,12 +20,12 @@
   {% elif forwarding_stats.status == 'warning' %}
   <div class="alert alert-warning d-flex align-items-center mt-3 mb-3">
     <i class="fa-solid fa-triangle-exclamation me-2 flex-shrink-0"></i>
-    <span>{% blocktrans with n=forwarding_stats.failed_count %}{{ n }} forwarder(s) failed in the last 24 hours{% endblocktrans %}</span>
+    <span>{% blocktrans with n=forwarding_stats.failed_count period=stats_period %}{{ n }} run(s) failed in the last {{ period }}{% endblocktrans %}</span>
   </div>
   {% elif forwarding_stats.status == 'error' %}
   <div class="alert alert-danger d-flex align-items-center mt-3 mb-3">
     <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
-    <span>{% blocktrans with n=forwarding_stats.failed_count %}{{ n }} forwarder(s) failed in the last 24 hours{% endblocktrans %}</span>
+    <span>{% blocktrans with n=forwarding_stats.failed_count period=stats_period %}{{ n }} run(s) failed in the last {{ period }}{% endblocktrans %}</span>
   </div>
   {% endif %}
 
