@@ -109,24 +109,12 @@ def home(request):
     page_obj = _merged_export_configs(page_size, page_num)
     etag = _compute_exports_etag(page_obj.object_list)
 
-    exports = (
-        ExportConfig.objects
-        .select_related('project')
-        .annotate(last_run_at=Max('runs__created_at'))
-        .order_by('-last_run_at', '-updated_at')
-    )
-    multi_project_exports = MultiProjectExportConfig.objects.order_by(
-        '-updated_at'
-    )
-
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
         'configs': page_obj,
         'page_size': page_size,
         'page_sizes': [10, 20, 50],
         'etag': etag,
-        'exports': exports,
-        'multi_project_exports': multi_project_exports,
         'stats_period': readable_timedelta(period, short=True),
         'export_stats': _get_export_statistics(current_start, previous_start),
         'refresh_stats': _get_refresh_statistics(current_start, previous_start),
