@@ -384,4 +384,6 @@ def run_forwarding(request, forwarder_id):
     )
 
     result = run_forwarding_task.delay(forwarding_run.id)
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204)
     return HttpResponse(result.task_id)

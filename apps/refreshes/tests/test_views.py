@@ -373,6 +373,31 @@ class TestRefreshRunLogView:
         assert response.status_code == 404
 
 
+class TestRunRefreshHtmxBranch:
+    @use(django_test_client, _refresh_config)
+    def test_htmx_request_returns_204(self):
+        url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
+        response = django_test_client().post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    @use(django_test_client, _refresh_config)
+    def test_htmx_request_creates_refresh_run(self):
+        config = _refresh_config()
+        url = reverse('refreshes:run_refresh', args=[config.id])
+        django_test_client().post(url, HTTP_HX_REQUEST='true')
+        assert RefreshRun.objects.filter(
+            refresh_config=config,
+            triggered_from_ui=True,
+        ).exists()
+
+    @use(django_test_client, _refresh_config)
+    def test_non_htmx_request_returns_200(self):
+        url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
+        response = django_test_client().post(url)
+        assert response.status_code == 200
+        assert len(response.content) > 0
+
+
 class TestRefreshesListPageSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 
