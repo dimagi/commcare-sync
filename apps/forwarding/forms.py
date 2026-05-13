@@ -9,20 +9,33 @@ from .models import ForwardingConfig, ForwardingDestination
 class CreateForwardingDestinationForm(forms.ModelForm):
     """Form for creating ForwardingDestination objects."""
 
-    class Meta:
-        model = ForwardingDestination
-        fields = ('name', 'api_url', 'api_username', 'api_password')
-        widgets = {
-            'api_password': forms.PasswordInput(),
-        }
-
-
-class EditForwardingDestinationForm(forms.ModelForm):
-    """Form for editing ForwardingDestination objects."""
+    api_password = forms.CharField(
+        widget=forms.PasswordInput(),
+        required=False,
+        help_text=ForwardingDestination.api_password_encrypted.field.help_text,
+    )
 
     class Meta:
         model = ForwardingDestination
         fields = ('name', 'api_url', 'api_username')
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.cleaned_data['api_password']:
+            instance.api_password = self.cleaned_data['api_password']
+        if commit:
+            instance.save()
+        return instance
+
+
+class EditForwardingDestinationForm(CreateForwardingDestinationForm):
+    """Form for editing ForwardingDestination objects."""
+
+    api_password = forms.CharField(
+        widget=forms.PasswordInput(),
+        required=False,
+        help_text='Leave blank to keep the existing password.',
+    )
 
 
 class ForwardingConfigForm(ScheduleFormMixin, forms.ModelForm):
