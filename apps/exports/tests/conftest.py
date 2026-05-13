@@ -17,13 +17,6 @@ def pytest_configure(config):
     # This is needed for pytest-django's live_server fixture which uses dynamic ports
     settings.ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', '.localhost']
 
-    # Disable allauth rate limiting for tests
-    settings.ACCOUNT_RATE_LIMITS = {
-        'login_failed': None,
-        'login': None,
-        'signup': None,
-    }
-
 
 @pytest.fixture(scope='session')
 def browser_context_args(browser_context_args):
