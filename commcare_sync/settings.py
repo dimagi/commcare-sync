@@ -123,7 +123,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Django recommends overriding the user model even if you don't think
 # you need to because it makes future changes much easier.
 AUTH_USER_MODEL = 'users.CustomUser'
-LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
