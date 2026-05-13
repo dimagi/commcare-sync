@@ -1,15 +1,22 @@
 import logging
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.db.models import Database
+from apps.web.stats import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
 from commcare_sync.views import (
     get_hide_skipped_from_request,
     get_ui_page_size,
@@ -26,6 +33,11 @@ logger = logging.getLogger(__name__)
 @login_required
 def refresh_configs(request):
     """List all refresh configurations."""
+    now = timezone.now()
+    period = settings.DASHBOARD_STATS_PERIOD
+    current_start = now - period
+    previous_start = current_start - period
+
     configs = RefreshConfig.objects.order_by('-updated_at')
     return render(
         request,
@@ -33,6 +45,9 @@ def refresh_configs(request):
         {
             'active_tab': 'refreshes',
             'refresh_configs': configs,
+            'export_stats': _get_export_statistics(current_start, previous_start),
+            'refresh_stats': _get_refresh_statistics(current_start, previous_start),
+            'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
         },
     )
 
