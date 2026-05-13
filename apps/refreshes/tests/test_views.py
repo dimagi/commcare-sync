@@ -440,3 +440,38 @@ class TestRefreshesListPageSmoke:
         response = authed_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
         assert 'started' in response.content.decode()
+
+
+class TestRefreshesRunButtonRendering:
+    @use(authed_client, _refresh_config)
+    def test_run_button_present_when_no_active_run(self):
+        config = _refresh_config()
+        url = reverse('refreshes:config_table')
+        response = authed_client().get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        run_url = reverse('refreshes:run_refresh', args=[config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    @use(authed_client, _refresh_config)
+    def test_run_button_disabled_when_active_run(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.QUEUED,
+        )
+        url = reverse('refreshes:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        assert 'btn-outline-success' in content
+        run_url = reverse('refreshes:run_refresh', args=[config.id])
+        assert f'hx-post="{run_url}"' not in content
+
+    @use(authed_client, _refresh_config)
+    def test_edit_button_never_disabled(self):
+        config = _refresh_config()
+        url = reverse('refreshes:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        edit_url = reverse('refreshes:edit_refresh_config', args=[config.id])
+        assert edit_url in content
