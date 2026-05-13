@@ -23,7 +23,7 @@
         </tr>
       </thead>
       {% for config in configs.object_list %}
-        <tbody x-data="{logOpen: false}">
+        <tbody x-data="{logOpen: false, running: false}">
           <tr>
             <td>
               <a href="{% url 'forwarding:forwarder_details' config.id %}"
@@ -53,23 +53,56 @@
               {% endif %}
             </td>
             <td>
-              {% if config.last_run %}
-                <div>
-                  {{ config.last_run.status|to_status_icon }}
-                  {{ config.last_run.status }}
-                </div>
-                <div class="text-muted small">
-                  {{ config.last_run.duration|readable_timedelta_short }}
-                </div>
-              {% else %}
-                <span class="text-muted">—</span>
-              {% endif %}
+              <template x-if="!running">
+                {% if config.last_run %}
+                  <div>
+                    {{ config.last_run.status|to_status_icon }}
+                    {{ config.last_run.status }}
+                  </div>
+                  <div class="text-muted small">
+                    {{ config.last_run.duration|readable_timedelta_short }}
+                  </div>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </template>
+              <template x-if="running">
+                <span
+                  class="d-inline-flex align-items-center gap-1 text-primary small"
+                >
+                  <span
+                    class="spinner-border spinner-border-sm"
+                    style="width:0.8em;height:0.8em"
+                    role="status"
+                  ></span>
+                  {% trans "Running…" %}
+                </span>
+              </template>
             </td>
             <td class="text-nowrap">
+              {% if config.has_active_run %}
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  disabled
+                  title="{% trans 'Already running' %}"
+                >
+                  ▶ {% trans "Run" %}
+                </button>
+              {% else %}
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  :disabled="running"
+                  @click="running = true"
+                  hx-post="{% url 'forwarding:run_forwarding' config.id %}"
+                  hx-swap="none"
+                >
+                  ▶ {% trans "Run" %}
+                </button>
+              {% endif %}
               {% if config.last_run and config.last_run.status == 'completed' or config.last_run and config.last_run.status == 'failed' %}
                 <button
                   class="btn btn-outline-secondary btn-sm"
-                  :class="{'active': logOpen}"
+                  :class="{'active': logOpen, 'disabled': running}"
                   hx-get="{% url 'forwarding:run_log' config.last_run.id %}"
                   hx-target="#flog-{{ config.id }}"
                   hx-trigger="click once"
@@ -78,7 +111,11 @@
                   <i class="fa-solid fa-list"></i> {% trans "Log" %}
                 </button>
               {% else %}
-                <button class="btn btn-outline-secondary btn-sm" disabled>
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  :class="{'disabled': running}"
+                  disabled
+                >
                   <i class="fa-solid fa-list"></i> {% trans "Log" %}
                 </button>
               {% endif %}
@@ -167,7 +204,7 @@
       {% trans "No forwarding configurations found!" %}
     </div>
     <a
-      class="icon-link btn btn-primary btn-sm rounded-pill"
+      class="icon-link btn btn-primary btn-sm"
       href="{% url 'forwarding:create_forwarding_config' %}"
     >
       <i class="fa-solid fa-plus"></i> {% trans "Add Your First Forwarder" %}
