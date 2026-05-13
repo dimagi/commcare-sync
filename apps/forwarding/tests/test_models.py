@@ -213,7 +213,7 @@ class TestForwardingRun:
 
             duration_display = run.get_duration_display()
 
-            assert duration_display == ' 2 hours 15 minutes'
+            assert duration_display == '2 hours 15 minutes'
 
     @use(config)
     def test_mark_skipped_success(self):
