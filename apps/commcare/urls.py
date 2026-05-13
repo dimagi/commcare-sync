@@ -4,7 +4,6 @@ from . import views
 
 app_name = 'commcare'
 urlpatterns = [
-    path(r'', views.home, name='home'),
     path(r'projects/', views.projects, name='projects'),
     path(r'projects/create/', views.create_project, name='create_project'),
     path(r'projects/<int:project_id>/delete/', views.delete_project, name='delete_project'),

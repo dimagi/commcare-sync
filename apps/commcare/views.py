@@ -15,17 +15,6 @@ from .models import CommCareAccount, CommCareProject
 
 
 @login_required
-def home(request):
-    projects = CommCareProject.objects.order_by('domain')
-    accounts = CommCareAccount.objects.order_by('username')
-    return render(request, 'commcare/commcare_home.html', {
-        'active_tab': 'commcare',
-        'projects': projects,
-        'accounts': accounts,
-    })
-
-
-@login_required
 def projects(request):
     projects = CommCareProject.objects.order_by('domain')
     return render(request, 'commcare/projects.html', {
