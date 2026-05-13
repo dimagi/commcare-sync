@@ -20,29 +20,20 @@
   <ul class="nav flex-column">
     <li class="nav-item">
       <a
-        class="nav-link icon-link {% if active_tab == 'commcare' %}active{% endif %}"
-        href="{% url 'commcare:home' %}"
+        class="nav-link icon-link {% if active_tab == 'projects' %}active{% endif %}"
+        href="{% url 'commcare:projects' %}"
       >
         <i class="fcc fcc-flower"></i
-        ><span class="d-md-none d-lg-inline">{% trans "CommCare Setup" %}</span>
+        ><span class="d-md-none d-lg-inline">{% trans "Projects" %}</span>
       </a>
     </li>
     <li class="nav-item">
       <a
-        class="nav-link icon-link {% if active_tab == 'create_project' %}active{% endif %}"
-        href="{% url 'commcare:create_project' %}"
+        class="nav-link icon-link {% if active_tab == 'accounts' %}active{% endif %}"
+        href="{% url 'commcare:accounts' %}"
       >
-        <i class="fa-solid fa-plus"></i
-        ><span class="d-md-none d-lg-inline">{% trans "Add Project" %}</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a
-        class="nav-link icon-link {% if active_tab == 'create_account' %}active{% endif %}"
-        href="{% url 'commcare:create_account' %}"
-      >
-        <i class="fa-solid fa-user-plus"></i
-        ><span class="d-md-none d-lg-inline">{% trans "Add Account" %}</span>
+        <i class="fa-solid fa-user"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Accounts" %}</span>
       </a>
     </li>
   </ul>
