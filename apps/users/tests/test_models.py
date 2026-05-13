@@ -40,6 +40,45 @@ def test_authenticate_is_case_insensitive():
 
 
 @use('db')
+def test_manager_create_user_normalizes_email():
+    user = User.objects.create_user(email='Erin@Example.COM', password='hunter2')
+    user.refresh_from_db()
+    assert user.email == 'erin@example.com'
+    assert user.check_password('hunter2')
+    assert not user.is_staff
+    assert not user.is_superuser
+
+
+@use('db')
+def test_manager_create_user_requires_email():
+    with pytest.raises(ValueError):
+        User.objects.create_user(email='', password='hunter2')
+
+
+@use('db')
+def test_manager_create_superuser_sets_flags():
+    user = User.objects.create_superuser(email='admin@example.com', password='hunter2')
+    assert user.is_staff
+    assert user.is_superuser
+
+
+@use('db')
+def test_manager_create_superuser_rejects_non_staff():
+    with pytest.raises(ValueError):
+        User.objects.create_superuser(
+            email='admin@example.com', password='hunter2', is_staff=False,
+        )
+
+
+@use('db')
+def test_manager_create_superuser_rejects_non_superuser():
+    with pytest.raises(ValueError):
+        User.objects.create_superuser(
+            email='admin@example.com', password='hunter2', is_superuser=False,
+        )
+
+
+@use('db')
 def test_email_must_be_unique():
     User.objects.create_user(
         username='alice', email='dup@example.com', password='hunter2',
