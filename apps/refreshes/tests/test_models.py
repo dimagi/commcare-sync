@@ -162,3 +162,62 @@ class TestRefreshRun:
         )
         with pytest.raises(ValueError):
             run.mark_skipped()
+
+
+@use('db')
+class TestRefreshConfigHasActiveRun:
+    @use(_refresh_config)
+    def test_false_with_no_runs(self):
+        assert _refresh_config().has_active_run is False
+
+    @use(_refresh_config)
+    def test_false_when_run_is_completed(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.COMPLETED,
+        )
+        assert config.has_active_run is False
+
+    @use(_refresh_config)
+    def test_false_when_run_is_failed(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.FAILED,
+        )
+        assert config.has_active_run is False
+
+    @use(_refresh_config)
+    def test_true_when_run_is_queued(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.QUEUED,
+        )
+        assert config.has_active_run is True
+
+    @use(_refresh_config)
+    def test_true_when_run_is_started(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.STARTED,
+        )
+        assert config.has_active_run is True
+
+    @use(_refresh_config)
+    def test_uses_prefetched_runs_without_db_query(self):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        config = _refresh_config()
+        run = RefreshRun.objects.create(
+            refresh_config=config,
+            status=RefreshRun.Status.QUEUED,
+        )
+        config._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = config.has_active_run
+        assert len(ctx) == 0
+        assert result is True
