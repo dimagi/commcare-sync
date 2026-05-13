@@ -53,7 +53,7 @@
             {{ run.status|to_status_icon }} {{ run.status }}
             {% if run.duration %}
               <span class="text-muted small ms-1"
-                >({{ run.duration|readable_timedelta }})</span
+                >{{ run.duration|readable_timedelta_short }}</span
               >
             {% endif %}
           </td>
