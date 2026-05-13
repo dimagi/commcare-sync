@@ -54,3 +54,11 @@ class Database(BaseModel):
         """
         scheme = urlsplit(self.connection_string).scheme
         return scheme.split('+')[0] if '+' in scheme else scheme
+
+    def is_in_use(self):
+        return (
+            self.exportconfig_set.exists()
+            or self.multiprojectexportconfig_set.exists()
+            or self.forwardingconfig_set.exists()
+            or self.refreshconfig_set.exists()
+        )

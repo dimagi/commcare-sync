@@ -30,6 +30,9 @@ class ForwardingDestination(BaseModel):
     def __str__(self):
         return self.name
 
+    def is_in_use(self):
+        return self.forwardingconfig_set.exists()
+
 
 @reversion.register()
 class ForwardingConfig(ScheduleMixin, BaseModel):
