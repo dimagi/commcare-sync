@@ -302,6 +302,64 @@ class TestExportsHomeViewUpdated:
         assert config.name in response.content.decode()
 
 
+class TestExportConfigHasActiveRun:
+    @use(export_config)
+    def test_false_with_no_runs(self):
+        assert export_config().has_active_run is False
+
+    @use(export_config)
+    def test_false_when_run_is_completed(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.COMPLETED,
+        )
+        assert config.has_active_run is False
+
+    @use(export_config)
+    def test_false_when_run_is_failed(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.FAILED,
+        )
+        assert config.has_active_run is False
+
+    @use(export_config)
+    def test_true_when_run_is_queued(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.QUEUED,
+        )
+        assert config.has_active_run is True
+
+    @use(export_config)
+    def test_true_when_run_is_started(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.STARTED,
+        )
+        assert config.has_active_run is True
+
+    @use(export_config)
+    def test_uses_prefetched_runs_without_db_query(self):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        config = export_config()
+        run = ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.QUEUED,
+        )
+        config._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = config.has_active_run
+        assert len(ctx) == 0
+        assert result is True
+
+
 class TestIsMultiProject:
     @use(export_config)
     def test_export_config_is_not_multi_project(self):
