@@ -15,9 +15,8 @@ User = get_user_model()
 @use('db')
 def admin_user():
     yield User.objects.create_user(
-        username='fwdadminuser',
         email='fwdadmin@example.com',
-        password='pass',
+        password='testpass',
         is_active=True,
         is_superuser=True,
         is_staff=True,
@@ -28,9 +27,8 @@ def admin_user():
 @use('db')
 def regular_user():
     yield User.objects.create_user(
-        username='fwdregularuser',
         email='fwdregular@example.com',
-        password='pass',
+        password='testpass',
     )
 
 

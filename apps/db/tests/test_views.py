@@ -21,7 +21,7 @@ User = get_user_model()
 @use('db')
 def regular_user():
     yield User.objects.create_user(
-        username='dbviewuser', email='dbview@example.com', password='pass'
+        email='dbview@example.com', password='testpass'
     )
 
 
@@ -29,9 +29,8 @@ def regular_user():
 @use('db')
 def admin_user():
     yield User.objects.create_user(
-        username='dbadminuser',
         email='dbadmin@example.com',
-        password='pass',
+        password='testpass',
         is_active=True,
         is_superuser=True,
         is_staff=True,

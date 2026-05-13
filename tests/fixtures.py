@@ -20,7 +20,6 @@ from apps.db.models import Database
 def user():
     User = get_user_model()
     yield User.objects.create_user(
-        username='testuser',
         email='test@example.com',
         password='testpass',
     )

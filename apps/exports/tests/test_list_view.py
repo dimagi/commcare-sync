@@ -1,6 +1,5 @@
 import re
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
@@ -10,23 +9,13 @@ from apps.commcare.models import (
     CommCareProject,
     CommCareServer,
 )
-from apps.db.models import Database
 from apps.exports.models import (
     ExportConfig,
     ExportRun,
     MultiProjectExportConfig,
     MultiProjectExportRun,
 )
-
-User = get_user_model()
-
-
-@fixture
-@use('db')
-def user():
-    yield User.objects.create_user(
-        username='listviewuser', email='lv@example.com', password='pass'
-    )
+from tests.fixtures import database, user
 
 
 @fixture
@@ -57,15 +46,6 @@ def project():
 def account():
     yield CommCareAccount.objects.create(
         server=server(), username='u@example.com', api_key='key', owner=user()
-    )
-
-
-@fixture
-@use('db')
-def database():
-    yield Database.objects.create(
-        name='TestDB',
-        connection_string='postgresql://localhost/test',
     )
 
 

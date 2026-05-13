@@ -110,7 +110,6 @@ class TestDatabaseIsInUse:
             server=server, domain='test-domain'
         )
         owner = User.objects.create_user(
-            username='db_is_in_use_owner',
             email='dbisinuse@example.com',
             password='testpass',
         )

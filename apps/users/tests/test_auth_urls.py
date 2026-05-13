@@ -27,7 +27,7 @@ def test_signup_url_returns_404():
 def test_login_with_email():
     User = get_user_model()
     User.objects.create_user(
-        username='bob', email='bob@example.com', password='hunter2',
+        email='bob@example.com', password='hunter2',
     )
     response = _client().post(
         reverse('login'),

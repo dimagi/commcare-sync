@@ -36,20 +36,18 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **extra_fields)
 
+
 class CustomUser(AbstractUser):
-    """
-    Add additional fields to the user model here.
-    """
-    """
-    Abstract base class for users, with a small amount of added functionality
-    """
+    username = None  # type: ignore[assignment]
     email = models.EmailField(unique=True)
-    avatar = models.FileField(upload_to='profile-pictures/', null=True, blank=True)
+    avatar = models.FileField(
+        upload_to='profile-pictures/', null=True, blank=True
+    )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()
+    objects = CustomUserManager()  # type: ignore[assignment, misc]
 
     def save(self, *args, **kwargs):
         if self.email:
@@ -74,9 +72,15 @@ class CustomUser(AbstractUser):
         if self.avatar:
             return reverse('users:avatar', args=[self.id])
         else:
-            return 'https://www.gravatar.com/avatar/{}?s=128&d=identicon'.format(self.gravatar_id)
+            return (
+                'https://www.gravatar.com/avatar/{}?s=128&d=identicon'.format(
+                    self.gravatar_id
+                )
+            )
 
     @property
     def gravatar_id(self):
         # https://en.gravatar.com/site/implement/hash/
-        return hashlib.md5(self.email.lower().strip().encode('utf-8')).hexdigest()
+        return hashlib.md5(
+            self.email.lower().strip().encode('utf-8')
+        ).hexdigest()
