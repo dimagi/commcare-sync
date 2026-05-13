@@ -55,6 +55,7 @@
       </div>
     </div>
   </section>
+  <form class="d-none">{% csrf_token %}</form>
   {% include 'refreshes/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
