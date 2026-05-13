@@ -1,0 +1,152 @@
+from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
+from django.test import Client
+from django.urls import reverse
+from unmagic import fixture, use
+
+from apps.db.models import Database
+
+from ..models import ForwardingConfig, ForwardingDestination
+
+User = get_user_model()
+
+
+@fixture
+@use('db')
+def admin_user():
+    yield User.objects.create_user(
+        username='fwdadminuser',
+        email='fwdadmin@example.com',
+        password='pass',
+        is_active=True,
+        is_superuser=True,
+        is_staff=True,
+    )
+
+
+@fixture
+@use('db')
+def regular_user():
+    yield User.objects.create_user(
+        username='fwdregularuser',
+        email='fwdregular@example.com',
+        password='pass',
+    )
+
+
+@fixture
+@use('db')
+def admin_client():
+    client = Client()
+    client.force_login(admin_user())
+    yield client
+
+
+@fixture
+@use('db')
+def regular_client():
+    client = Client()
+    client.force_login(regular_user())
+    yield client
+
+
+@fixture
+@use('db')
+def destination():
+    yield ForwardingDestination.objects.create(
+        name='Test Dest',
+        api_url='https://example.com/api/',
+    )
+
+
+@fixture
+@use('db')
+def database():
+    db_obj = Database(name='Test DB')
+    db_obj.connection_string = 'postgresql://localhost/testdb'
+    db_obj.save()
+    yield db_obj
+
+
+@fixture
+@use('db')
+def destination_in_use():
+    dest = destination()
+    ForwardingConfig.objects.create(
+        name='Test Forwarder',
+        database=database(),
+        destination=dest,
+        query='SELECT 1',
+    )
+    yield dest
+
+
+class TestDestinationsView:
+    @use(admin_client)
+    def test_admin_get_returns_200(self):
+        url = reverse('forwarding:destinations')
+        response = admin_client().get(url)
+        assert response.status_code == 200
+
+    def test_anonymous_redirects(self):
+        url = reverse('forwarding:destinations')
+        response = Client().get(url)
+        assert response.status_code == 302
+
+
+class TestDeleteDestinationView:
+    @use(admin_client, destination)
+    def test_get_with_deletable_destination_returns_200(self):
+        url = reverse('forwarding:delete_destination', args=[destination().id])
+        response = admin_client().get(url)
+        assert response.status_code == 200
+
+    @use(admin_client, destination)
+    def test_post_with_deletable_destination_deletes_and_redirects(self):
+        destination_id = destination().id
+        url = reverse('forwarding:delete_destination', args=[destination_id])
+        response = admin_client().post(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
+        assert not ForwardingDestination.objects.filter(id=destination_id).exists()
+
+    @use(admin_client, destination_in_use)
+    def test_get_with_in_use_destination_redirects_with_error(self):
+        url = reverse(
+            'forwarding:delete_destination', args=[destination_in_use().id]
+        )
+        response = admin_client().get(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
+
+    @use(admin_client, destination_in_use)
+    def test_post_with_in_use_destination_redirects_and_does_not_delete(self):
+        destination_id = destination_in_use().id
+        url = reverse('forwarding:delete_destination', args=[destination_id])
+        response = admin_client().post(url)
+        assert response.status_code == 302
+        assert reverse('forwarding:destinations') in response.url
+        assert ForwardingDestination.objects.filter(id=destination_id).exists()
+        messages_list = list(get_messages(response.wsgi_request))
+        assert any('Cannot delete' in str(m) for m in messages_list)
+
+    @use(regular_client, destination)
+    def test_non_admin_get_redirects(self):
+        url = reverse('forwarding:delete_destination', args=[destination().id])
+        response = regular_client().get(url)
+        assert response.status_code == 403
+
+    @use(regular_client, destination)
+    def test_non_admin_post_is_rejected(self):
+        dest = destination()
+        url = reverse('forwarding:delete_destination', args=[dest.pk])
+        response = regular_client().post(url)
+        assert response.status_code == 403
+        assert ForwardingDestination.objects.filter(pk=dest.pk).exists()
+
+    @use(destination)
+    def test_anonymous_get_redirects(self):
+        url = reverse('forwarding:delete_destination', args=[destination().id])
+        response = Client().get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url
