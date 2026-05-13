@@ -3,39 +3,61 @@
 {% block app %}
   {% load humanize %}
   <section class="py-4 app-card">
-    <h1 class="h2">{% trans "Database Connections" %}</h1>
-    <h2 class="lead">
-      {% trans "Manage the databases that you export data to here" %}
-    </h2>
-    {% if databases.exists %}
-      <div class="alert alert-info">
-        {% trans "Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases." %}
-      </div>
+    {# Action bar #}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h2 mb-0">{% trans "Database Connections" %}</h1>
       {% if user.is_admin %}
-        <a
-          class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
-          href="{% url 'db:create_database' %}"
-        >
+        <a class="btn btn-primary btn-sm" href="{% url 'db:create_database' %}">
           <i class="fa-solid fa-plus"></i>
           {% trans "New Database Connection" %}
         </a>
       {% endif %}
-      <table class="table table-striped">
+    </div>
+
+    {% if databases.exists %}
+      <div class="alert alert-info">
+        {% trans "Note: this app will not create new databases for you. Any connections you add must point to valid, existing databases." %}
+      </div>
+      <table class="table table-sm">
         <thead>
           <tr>
             <th>{% trans "Database" %}</th>
+            <th>{% trans "Actions" %}</th>
           </tr>
         </thead>
         <tbody>
           {% for database in databases %}
             <tr>
-              <td>
+              <td>{{ database.name }}</td>
+              <td class="text-nowrap">
                 {% if user.is_admin %}
-                  <a href="{% url 'db:edit_database' database.id %}">
-                    {{ database.name }}
+                  <a
+                    href="{% url 'db:edit_database' database.id %}"
+                    class="btn btn-outline-secondary btn-sm"
+                  >
+                    <i class="fa-solid fa-pencil"></i> {% trans "Edit" %}
                   </a>
-                {% else %}
-                  {{ database.name }}
+                  {% if database.is_in_use %}
+                    <span
+                      data-bs-toggle="tooltip"
+                      title="{% trans 'Cannot delete: This database is in use by one or more configurations' %}"
+                    >
+                      <a
+                        class="btn btn-outline-danger btn-sm disabled"
+                        disabled
+                        aria-disabled="true"
+                      >
+                        <i class="fa-solid fa-trash"></i> {% trans "Delete" %}
+                      </a>
+                    </span>
+                  {% else %}
+                    <a
+                      href="{% url 'db:delete_database' database.id %}"
+                      class="btn btn-outline-danger btn-sm"
+                    >
+                      <i class="fa-solid fa-trash"></i> {% trans "Delete" %}
+                    </a>
+                  {% endif %}
                 {% endif %}
               </td>
             </tr>
@@ -46,13 +68,12 @@
       <div class="alert alert-warning">
         {% trans "No database connections found!" %}
       </div>
-      <a
-        class="icon-link btn btn-primary btn-sm rounded-pill"
-        href="{% url 'db:create_database' %}"
-      >
-        <i class="fa-solid fa-plus"></i>
-        {% trans "Add Your First Database Connection" %}
-      </a>
+      {% if user.is_admin %}
+        <a class="btn btn-primary btn-sm" href="{% url 'db:create_database' %}">
+          <i class="fa-solid fa-plus"></i>
+          {% trans "Add Your First Database Connection" %}
+        </a>
+      {% endif %}
     {% endif %}
   </section>
 {% endblock app %}
