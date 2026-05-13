@@ -502,3 +502,29 @@ class TestForwardingScheduling:
 
         assert cfg.is_paused is True
 
+
+@use('db')
+class TestForwardingDestinationIsInUse:
+    def test_not_in_use_when_no_configs(self):
+        dest = ForwardingDestination.objects.create(
+            name='IsInUse Destination',
+            api_url='https://example.com/api/',
+        )
+        assert dest.is_in_use() is False
+
+    def test_is_in_use_when_forwarding_config_exists(self):
+        dest = ForwardingDestination.objects.create(
+            name='IsInUse Destination',
+            api_url='https://example.com/api/',
+        )
+        db = Database.objects.create(
+            name='IsInUse DB',
+            connection_string='postgresql://localhost/testdb',
+        )
+        ForwardingConfig.objects.create(
+            name='IsInUse Config',
+            database=db,
+            destination=dest,
+            query='SELECT 1',
+        )
+        assert dest.is_in_use() is True
