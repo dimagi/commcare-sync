@@ -1,132 +1,210 @@
 {% load i18n %}
 {% load dateformat_tags %}
 {% load exports_tags %}
-<table
+
+<div
   id="run-table"
-  class="table my-2"
-  hx-get="{% url 'refreshes:run_history_table' config.id %}"
+  hx-get="{{ run_history_url }}"
   hx-trigger="refresh from:body"
   hx-swap="outerHTML"
+  hx-include="#status-filter-form"
 >
-  <thead>
-    <tr>
-      <th>{% trans "Queued" %}</th>
-      <th>{% trans "Started" %}</th>
-      <th>{% trans "Duration" %}</th>
-      <th>{% trans "Status" %}</th>
-      <th>{% trans "Log" %}</th>
-    </tr>
-  </thead>
-  <tbody x-data="{ expandedLogs: {}, expandedViews: {} }">
-    {% for refresh_run in runs %}
+  <table class="table w-100 my-2">
+    <thead>
       <tr>
-        <td>
-          <span class="icon">
-            {% if refresh_run.triggered_from_ui %}
-              <i
-                class="fa-solid fa-user"
-                title="{% blocktrans with user=refresh_run.triggered_by|default:'unknown' %}
-                  Triggered from UI by {{ user }}
-                {% endblocktrans %}"
-              ></i>
-            {% elif refresh_run.triggered_from_ui == False %}
-              <i
-                class="fa-regular fa-clock text-muted"
-                title="{% trans 'Scheduled Run' %}"
-              ></i>
-            {% else %}
-              <i
-                class="fa-solid fa-question text-muted"
-                title="{% trans 'Unknown' %}"
-              ></i>
+        <th>{% trans "Created At" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th>{% trans "Actions" %}</th>
+      </tr>
+    </thead>
+    <tbody x-data="{ logOpen: {}, viewOpen: {} }">
+      {% for run in runs %}
+        <tr>
+          <td>
+            <span class="icon">
+              {% if run.triggered_from_ui %}
+                <i
+                  class="fa-solid fa-user"
+                  title="{% blocktrans with user=run.triggering_user|default:'unknown' %}Triggered
+                  from UI by {{ user }}{% endblocktrans %}"
+                ></i>
+              {% elif run.triggered_from_ui == False %}
+                <i
+                  class="fa-regular fa-clock text-muted"
+                  title="{% trans 'Scheduled Run' %}"
+                ></i>
+              {% else %}
+                <i
+                  class="fa-solid fa-question text-muted"
+                  title="{% trans 'Unknown' %}"
+                ></i>
+              {% endif %}
+            </span>
+            {{ run.created_at }}
+          </td>
+          <td>
+            {{ run.status|to_status_icon }} {{ run.status }}
+            {% if run.duration %}
+              <span class="text-muted small ms-1"
+                >({{ run.duration|readable_timedelta }})</span
+              >
             {% endif %}
-          </span>
-          {{ refresh_run.created_at }}
-        </td>
-        <td>{{ refresh_run.started_at|default:'-' }}</td>
-        <td>{{ refresh_run.duration|readable_timedelta }}</td>
-        <td>
-          {{ refresh_run.status|to_status_icon }} {{ refresh_run.status }}
-        </td>
-        <td>
-          <a
-            class="icon-link"
-            @click="expandedLogs[{{ refresh_run.id }}] = !expandedLogs[{{ refresh_run.id }}]"
-            role="button"
-            ><span class="icon"
-              ><i
-                class="fa-solid"
-                :class="expandedLogs[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
-              ></i
-            ></span>
-            {% trans "View log" %}
-          </a>
-          {% if refresh_run.view_results %}
-            <a
-              class="icon-link ms-2"
-              @click="expandedViews[{{ refresh_run.id }}] = !expandedViews[{{ refresh_run.id }}]"
-              role="button"
-              ><span class="icon"
-                ><i
-                  class="fa-solid"
-                  :class="expandedViews[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
-                ></i
-              ></span>
-              {% trans "View details" %}
-            </a>
-          {% endif %}
-        </td>
-      </tr>
-      <tr
-        class="refresh-log my-1"
-        x-show="expandedLogs[{{ refresh_run.id }}]"
-        x-transition
-      >
-        <td colspan="5">
-          <pre class="wrapped">
-{% if refresh_run.log %}{{ refresh_run.log }}{% else %}{% trans "No logs yet…" %}{% endif %}</pre
-          >
-        </td>
-      </tr>
-      {% if refresh_run.view_results %}
-        <tr
-          class="view-results my-1"
-          x-show="expandedViews[{{ refresh_run.id }}]"
-          x-transition
-        >
-          <td colspan="5">
-            <h6 class="text-muted small">{% trans "Per-View Results" %}</h6>
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>{% trans "View" %}</th>
-                  <th>{% trans "Status" %}</th>
-                  <th>{% trans "Duration" %}</th>
-                  <th>{% trans "Message" %}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for view_name, result in refresh_run.view_results.items %}
-                  <tr>
-                    <td><code>{{ view_name }}</code></td>
-                    <td>
-                      {% if result.status == 'success' %}
-                        <i class="fa-solid fa-circle-check text-success"></i>
-                        {% trans "Success" %}
-                      {% else %}
-                        <i class="fa-solid fa-circle-xmark text-danger"></i>
-                        {% trans "Failed" %}
-                      {% endif %}
-                    </td>
-                    <td>{{ result.duration|floatformat:2 }}s</td>
-                    <td>{{ result.message|default:'-' }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              {% if run.status == 'completed' or run.status == 'failed' %}
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  :class="{ active: logOpen[{{ run.id }}] }"
+                  hx-get="{% url 'refreshes:run_log' run.id %}"
+                  hx-target="#log-{{ run.id }}"
+                  hx-trigger="click once"
+                  @click="logOpen[{{ run.id }}] = !logOpen[{{ run.id }}]"
+                >
+                  <i class="fa-solid fa-list"></i>
+                  {% trans "Log" %}
+                </button>
+              {% else %}
+                <button class="btn btn-outline-secondary btn-sm" disabled>
+                  <i class="fa-solid fa-list"></i>
+                  {% trans "Log" %}
+                </button>
+              {% endif %}
+              {% if run.view_results %}
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  :class="{ active: viewOpen[{{ run.id }}] }"
+                  @click="viewOpen[{{ run.id }}] = !viewOpen[{{ run.id }}]"
+                >
+                  <i class="fa-solid fa-table-list"></i>
+                  {% trans "Details" %}
+                </button>
+              {% endif %}
+            </div>
           </td>
         </tr>
-      {% endif %}
-    {% endfor %}
-  </tbody>
-</table>
+        <tr x-show="logOpen[{{ run.id }}]" x-transition x-cloak>
+          <td colspan="3" class="p-0 border-top-0">
+            <div
+              id="log-{{ run.id }}"
+              class="overflow-auto font-monospace small p-2 bg-light border-bottom"
+              style="max-height: 15lh;"
+            ></div>
+          </td>
+        </tr>
+        {% if run.view_results %}
+          <tr x-show="viewOpen[{{ run.id }}]" x-transition x-cloak>
+            <td colspan="3">
+              <h6 class="text-muted small">{% trans "Per-View Results" %}</h6>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>{% trans "View" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Duration" %}</th>
+                    <th>{% trans "Message" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for view_name, result in run.view_results.items %}
+                    <tr>
+                      <td><code>{{ view_name }}</code></td>
+                      <td>
+                        {% if result.status == 'success' %}
+                          <i class="fa-solid fa-circle-check text-success"></i>
+                          {% trans "Success" %}
+                        {% else %}
+                          <i class="fa-solid fa-circle-xmark text-danger"></i>
+                          {% trans "Failed" %}
+                        {% endif %}
+                      </td>
+                      <td>{{ result.duration|floatformat:2 }}s</td>
+                      <td>{{ result.message|default:'-' }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {# Pagination footer #}
+  <div
+    class="d-flex justify-content-between align-items-center mt-2 px-1 small"
+  >
+    <div class="d-flex align-items-center gap-1">
+      <span class="text-muted me-1">{% trans "Per page:" %}</span>
+      {% for size in page_sizes %}
+        <button
+          class="btn btn-sm {% if page_size == size %}btn-secondary{% else %}btn-outline-secondary{% endif %} py-0"
+          hx-get="{{ run_history_url }}"
+          hx-target="#run-table"
+          hx-swap="outerHTML"
+          hx-include="#status-filter-form"
+          hx-vals='{"page": "1", "page_size": "{{ size }}"}'
+        >
+          {{ size }}
+        </button>
+      {% endfor %}
+    </div>
+    {% if runs.paginator.num_pages > 1 %}
+      <nav aria-label="{% trans 'Pagination' %}">
+        <ul class="pagination pagination-sm mb-0">
+          {% if runs.has_previous %}
+            <li class="page-item">
+              <button
+                class="page-link"
+                hx-get="{{ run_history_url }}"
+                hx-target="#run-table"
+                hx-swap="outerHTML"
+                hx-include="#status-filter-form"
+                hx-vals='{"page": "{{ runs.previous_page_number }}", "page_size": "{{ page_size }}"}'
+              >
+                &laquo;
+              </button>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">&laquo;</span>
+            </li>
+          {% endif %}
+          {% for num in runs.paginator.page_range %}
+            <li class="page-item {% if num == runs.number %}active{% endif %}">
+              <button
+                class="page-link"
+                hx-get="{{ run_history_url }}"
+                hx-target="#run-table"
+                hx-swap="outerHTML"
+                hx-include="#status-filter-form"
+                hx-vals='{"page": "{{ num }}", "page_size": "{{ page_size }}"}'
+              >
+                {{ num }}
+              </button>
+            </li>
+          {% endfor %}
+          {% if runs.has_next %}
+            <li class="page-item">
+              <button
+                class="page-link"
+                hx-get="{{ run_history_url }}"
+                hx-target="#run-table"
+                hx-swap="outerHTML"
+                hx-include="#status-filter-form"
+                hx-vals='{"page": "{{ runs.next_page_number }}", "page_size": "{{ page_size }}"}'
+              >
+                &raquo;
+              </button>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">&raquo;</span>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
