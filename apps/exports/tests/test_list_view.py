@@ -302,6 +302,16 @@ class TestExportsHomeViewUpdated:
         assert config.name in response.content.decode()
 
 
+class TestIsMultiProject:
+    @use(export_config)
+    def test_export_config_is_not_multi_project(self):
+        assert export_config().is_multi_project is False
+
+    @use(multi_export_config)
+    def test_multi_export_config_is_multi_project(self):
+        assert multi_export_config().is_multi_project is True
+
+
 class TestExportsHomeSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 
