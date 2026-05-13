@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -181,11 +180,3 @@ def _get_forwarding_statistics(since_datetime):
         'failed_count': failed_runs,
         'status': status,
     }
-
-
-@login_required
-def admin_access_denied(request):
-    if request.user.is_superuser:
-        return HttpResponseRedirect(request.GET.get('next', reverse('web:home')))
-    else:
-        return render(request, 'web/admin_required.html', {'dev_mode': settings.DEBUG})
