@@ -108,6 +108,12 @@ class CommCareProject(BaseModel):
     def url(self):
         return f'{self.server.get_url_base()}/a/{self.domain}/'
 
+    def is_in_use(self):
+        return (
+            self.exportconfig_set.exists()
+            or self.multiprojectexportconfig_set.exists()
+        )
+
 
 class CommCareAccount(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
@@ -152,3 +158,9 @@ class CommCareAccount(BaseModel):
         fernet = Fernet(key.encode() if isinstance(key, str) else key)
         encrypted = fernet.encrypt(value.encode())
         self.api_key_encrypted = encrypted.decode()
+
+    def is_in_use(self):
+        return (
+            self.exportconfig_set.exists()
+            or self.multiprojectexportconfig_set.exists()
+        )
