@@ -277,3 +277,58 @@ class TestFetchMaterializedViewsView:
         url = reverse('refreshes:fetch_materialized_views')
         response = authed_client().post(url)
         assert response.status_code == 405
+
+
+
+class TestRefreshConfigTableView:
+    @use(authed_client)
+    def test_requires_login(self):
+        client = authed_client()
+        client.logout()
+        response = client.get(reverse('refreshes:config_table'))
+        assert response.status_code == 302
+
+    @use(authed_client, 'db')
+    def test_returns_200(self):
+        response = authed_client().get(reverse('refreshes:config_table'))
+        assert response.status_code == 200
+
+    @use(authed_client, _refresh_config)
+    def test_config_appears(self):
+        config = _refresh_config()
+        response = authed_client().get(reverse('refreshes:config_table'))
+        assert config.name in response.content.decode()
+
+    @use(authed_client, database)
+    def test_pagination_default_10(self):
+        db_obj = database()
+        for i in range(15):
+            RefreshConfig.objects.create(
+                name=f'Refresh {i}',
+                database=db_obj,
+                materialized_views=['public.view1'],
+            )
+        response = authed_client().get(reverse('refreshes:config_table'))
+        shown = response.content.decode().count('Refresh ')
+        assert shown == 10
+
+    @use(authed_client, _refresh_config)
+    def test_etag_match_returns_no_swap(self):
+        _refresh_config()
+        client = authed_client()
+        response = client.get(reverse('refreshes:config_table'))
+        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
+        assert match
+        etag = match.group(1)
+        response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})
+        assert response2.get('HX-Reswap') == 'none'
+
+    @use(authed_client, _refresh_config)
+    def test_etag_mismatch_returns_content(self):
+        config = _refresh_config()
+        response = authed_client().get(
+            reverse('refreshes:config_table'), {'etag': 'stale'}
+        )
+        assert response.get('HX-Reswap') is None
+        assert config.name in response.content.decode()
+

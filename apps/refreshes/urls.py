@@ -45,4 +45,6 @@ urlpatterns = [
         views.fetch_materialized_views,
         name='fetch_materialized_views',
     ),
+    path(r'config-table/', views.config_table, name='config_table'),
+    path(r'runs/<int:run_id>/log/', views.run_log, name='run_log'),
 ]
