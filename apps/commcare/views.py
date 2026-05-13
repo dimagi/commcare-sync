@@ -25,18 +25,46 @@ def home(request):
 
 
 @login_required
+def projects(request):
+    projects = CommCareProject.objects.order_by('domain')
+    return render(request, 'commcare/projects.html', {
+        'active_tab': 'projects',
+        'projects': projects,
+    })
+
+
+@login_required
+def delete_project(request, project_id):
+    project = get_object_or_404(CommCareProject, id=project_id)
+    if project.is_in_use():
+        messages.error(
+            request,
+            f'Cannot delete "{project.domain}": It is used by one or more export configurations.',
+        )
+        return HttpResponseRedirect(reverse('commcare:projects'))
+    if request.method == 'POST':
+        project.delete()
+        messages.success(request, f'Project "{project.domain}" was successfully deleted.')
+        return HttpResponseRedirect(reverse('commcare:projects'))
+    return render(request, 'commcare/delete_project.html', {
+        'active_tab': 'projects',
+        'project': project,
+    })
+
+
+@login_required
 def create_project(request):
     if request.method == 'POST':
         form = CommCareProjectForm(request.POST, request.FILES)
         if form.is_valid():
             project = form.save()
             messages.success(request, f'Project {project.domain} was successfully added.')
-            return HttpResponseRedirect(reverse('commcare:home'))
+            return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm()
 
     return render(request, 'commcare/create_project.html', {
-        'active_tab': 'create_project',
+        'active_tab': 'projects',
         'form': form,
     })
 
@@ -49,12 +77,12 @@ def edit_project(request, project_id):
         if form.is_valid():
             project = form.save()
             messages.success(request, f'Project {project} was successfully saved.')
-            return HttpResponseRedirect(reverse('commcare:home'))
+            return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm(instance=project)
 
     return render(request, 'commcare/edit_project.html', {
-        'active_tab': 'commcare',
+        'active_tab': 'projects',
         'form': form,
         'project': project,
     })
