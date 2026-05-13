@@ -20,7 +20,7 @@ from apps.refreshes.models import (
     RefreshConfig,
     RefreshRun,
 )
-from apps.web.views import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
+from apps.web.stats import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
 from tests.fixtures import commcare_account, commcare_project, database, user
 
 
@@ -82,10 +82,10 @@ def forwarding_config():
 @use('db')
 class TestHomeView:
     @use(user, client)
-    def test_home_redirects_to_dashboard_when_authenticated(self):
+    def test_home_redirects_to_exports_when_authenticated(self):
         response = client().get(reverse('web:home'))
         assert response.status_code == 302
-        assert response.url == reverse('web:dashboard')
+        assert response.url == reverse('exports:home')
 
     def test_home_shows_landing_page_when_unauthenticated(self):
         response = Client().get(reverse('web:home'))
