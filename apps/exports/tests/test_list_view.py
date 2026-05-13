@@ -3,7 +3,11 @@ import re
 from django.urls import reverse
 from unmagic import use
 
-from apps.exports.models import ExportConfig
+from apps.exports.models import (
+    ExportConfig,
+    ExportRun,
+    MultiProjectExportRun,
+)
 from apps.exports.tests.fixtures import (
     export_config,
     export_run,
@@ -208,3 +212,68 @@ class TestExportsHomeViewUpdated:
         config = multi_export_config()
         response = authed_client().get(reverse('exports:home'))
         assert config.name in response.content.decode()
+
+
+class TestExportsHomeSmoke:
+    """Smoke tests: full-page renders with configs in various run states."""
+
+    @use(authed_client, export_config)
+    def test_renders_with_no_runs(self):
+        config = export_config()
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert config.name in response.content.decode()
+
+    @use(authed_client, export_config)
+    def test_renders_with_completed_run(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.COMPLETED,
+            log='Exported 100 rows.',
+        )
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert config.name in content
+        assert 'completed' in content
+
+    @use(authed_client, export_config)
+    def test_renders_with_failed_run(self):
+        ExportRun.objects.create(
+            base_export_config=export_config(),
+            status=ExportRun.Status.FAILED,
+            log='Error: connection refused.',
+        )
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert 'failed' in response.content.decode()
+
+    @use(authed_client, export_config)
+    def test_renders_with_started_run(self):
+        ExportRun.objects.create(
+            base_export_config=export_config(),
+            status=ExportRun.Status.STARTED,
+        )
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert 'started' in response.content.decode()
+
+    @use(authed_client, multi_export_config)
+    def test_renders_multi_config_with_completed_run(self):
+        config = multi_export_config()
+        MultiProjectExportRun.objects.create(
+            base_export_config=config,
+            status=MultiProjectExportRun.Status.COMPLETED,
+        )
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        assert config.name in response.content.decode()
+
+    @use(authed_client)
+    def test_new_export_split_dropdown_present(self):
+        response = authed_client().get(reverse('exports:home'))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert 'dropdown-toggle-split' in content
+        assert 'Multi-Project Export' in content
