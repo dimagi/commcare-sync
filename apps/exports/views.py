@@ -461,8 +461,12 @@ def multi_export_run_details(request, export_id, run_id):
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
 
-    options = json.loads(request.body)
-    force_sync = options.get('forceSync', False)
+    if request.headers.get('HX-Request'):
+        force_sync = False
+    else:
+        options = json.loads(request.body)
+        force_sync = options.get('forceSync', False)
+
     export_record = ExportRun.objects.create(
         base_export_config=export,
         export_config_version=export.latest_version,
@@ -474,6 +478,8 @@ def run_export(request, export_id):
         export_record.id,
         force_sync_all_data=force_sync,
     )
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204)
     return HttpResponse(result.task_id)
 
 
@@ -482,8 +488,12 @@ def run_export(request, export_id):
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
 
-    options = json.loads(request.body)
-    force_sync = options.get('forceSync', False)
+    if request.headers.get('HX-Request'):
+        force_sync = False
+    else:
+        options = json.loads(request.body)
+        force_sync = options.get('forceSync', False)
+
     export_record = MultiProjectExportRun.objects.create(
         base_export_config=export,
         export_config_version=export.latest_version,
@@ -495,6 +505,8 @@ def run_multi_export(request, export_id):
         export_record.id,
         force_sync_all_data=force_sync,
     )
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204)
     return HttpResponse(result.task_id)
 
 
