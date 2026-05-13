@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, Paginator
-from django.db.models import Max
+from django.db.models import Max, Prefetch
 from django.http import (
     Http404,
     HttpResponse,
@@ -54,13 +54,18 @@ logger = logging.getLogger(__name__)
 def _merged_export_configs(page_size, page_num):
     """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
     single = list(
-        ExportConfig.objects.select_related('project', 'created_by').annotate(
-            last_run_at=Max('runs__created_at')
+        ExportConfig.objects
+        .select_related('project')
+        .annotate(last_run_at=Max('runs__created_at'))
+        .prefetch_related(
+            Prefetch('runs', queryset=ExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
         )
     )
     multi = list(
-        MultiProjectExportConfig.objects.select_related('created_by').annotate(
-            last_run_at=Max('runs__created_at')
+        MultiProjectExportConfig.objects
+        .annotate(last_run_at=Max('runs__created_at'))
+        .prefetch_related(
+            Prefetch('runs', queryset=MultiProjectExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
         )
     )
     all_configs = sorted(
@@ -79,7 +84,8 @@ def _compute_exports_etag(configs_list):
     """MD5 fingerprint of (run.id, created_at, status) for each config's latest run."""
     parts = []
     for config in configs_list:
-        run = config.runs.order_by('-created_at').first()
+        all_runs = getattr(config, '_all_runs', None)
+        run = all_runs[0] if all_runs else None
         if run:
             parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
         else:
