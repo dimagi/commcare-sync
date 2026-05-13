@@ -520,3 +520,59 @@ class TestForwardingDestinationIsInUse:
             query='SELECT 1',
         )
         assert dest.is_in_use() is True
+
+
+@use('db')
+class TestForwardingConfigHasActiveRun:
+
+    @use(has_active_run_config)
+    def test_false_with_no_runs(self):
+        assert has_active_run_config().has_active_run is False
+
+    @use(has_active_run_config)
+    def test_false_when_run_is_completed(self):
+        ForwardingRun.objects.create(
+            forwarding_config=has_active_run_config(),
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        assert has_active_run_config().has_active_run is False
+
+    @use(has_active_run_config)
+    def test_false_when_run_is_failed(self):
+        ForwardingRun.objects.create(
+            forwarding_config=has_active_run_config(),
+            status=ForwardingRun.Status.FAILED,
+        )
+        assert has_active_run_config().has_active_run is False
+
+    @use(has_active_run_config)
+    def test_true_when_run_is_queued(self):
+        ForwardingRun.objects.create(
+            forwarding_config=has_active_run_config(),
+            status=ForwardingRun.Status.QUEUED,
+        )
+        assert has_active_run_config().has_active_run is True
+
+    @use(has_active_run_config)
+    def test_true_when_run_is_started(self):
+        ForwardingRun.objects.create(
+            forwarding_config=has_active_run_config(),
+            status=ForwardingRun.Status.STARTED,
+        )
+        assert has_active_run_config().has_active_run is True
+
+    @use(has_active_run_config)
+    def test_uses_prefetched_runs_without_db_query(self):
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        cfg = has_active_run_config()
+        run = ForwardingRun.objects.create(
+            forwarding_config=cfg,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        cfg._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = cfg.has_active_run
+        assert len(ctx) == 0
+        assert result is True
