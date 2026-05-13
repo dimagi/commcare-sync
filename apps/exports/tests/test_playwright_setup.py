@@ -1,13 +1,15 @@
 """
 Simple smoke test to verify Playwright setup is working.
 """
-import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
+
+_page = fixture('page')
+_live_server = fixture('live_server')
 
 
-@pytest.mark.django_db(transaction=True)
+@use('transactional_db', _page, _live_server)
 def test_playwright_can_load_page():
     """
     Smoke test: Verify Playwright can load a page.
@@ -20,8 +22,8 @@ def test_playwright_can_load_page():
 
     Note: Uses transaction=True for live_server compatibility.
     """
-    live_server = get_request().getfixturevalue('live_server')
-    page = get_request().getfixturevalue('page')
+    page = _page()
+    live_server = _live_server()
 
     # Navigate to exports home
     page.goto(f'{live_server.url}{reverse("exports:home")}')
@@ -30,15 +32,15 @@ def test_playwright_can_load_page():
     expect(page.locator('body')).to_be_visible()
 
 
-@pytest.mark.django_db(transaction=True)
+@use('transactional_db', _page, _live_server)
 def test_page_console_logging_works():
     """
     Verify that console logging works (useful for debugging).
 
     Tests that the conftest.py console handler captures browser logs.
     """
-    live_server = get_request().getfixturevalue('live_server')
-    page = get_request().getfixturevalue('page')
+    page = _page()
+    live_server = _live_server()
 
     # Our conftest.py should log console messages
     page.goto(f'{live_server.url}{reverse("exports:home")}')
