@@ -2,12 +2,12 @@ import doctest
 
 from cryptography.fernet import Fernet
 from django.test import override_settings
+from unmagic import fixture, use
 
 from apps.db.models import Database
 
 
 class TestDatabaseConnectionString:
-
     def setup_method(self):
         self.db = Database(
             name='Test Database',
@@ -38,10 +38,12 @@ class TestDatabaseConnectionString:
             self.db.connection_string = test_connection_string
 
         current_key = Fernet.generate_key()
-        with override_settings(FERNET_KEYS=[
-            current_key,
-            old_key,
-        ]):
+        with override_settings(
+            FERNET_KEYS=[
+                current_key,
+                old_key,
+            ]
+        ):
             assert self.db.connection_string == test_connection_string
 
     def test_encryption_uses_current_key(self):
@@ -49,10 +51,12 @@ class TestDatabaseConnectionString:
 
         current_key = Fernet.generate_key()
         old_key = Fernet.generate_key()
-        with override_settings(FERNET_KEYS=[
-            current_key,
-            old_key,
-        ]):
+        with override_settings(
+            FERNET_KEYS=[
+                current_key,
+                old_key,
+            ]
+        ):
             self.db.connection_string = test_connection_string
 
         encrypted_bytes = self.db.connection_string_encrypted.encode()
@@ -66,3 +70,13 @@ def test_doctests():
 
     results = doctest.testmod(module)
     assert results.failed == 0
+
+
+@fixture
+@use('db')
+def database_for_is_in_use():
+    """A persisted Database for is_in_use tests (avoids hitting FERNET_KEYS)."""
+    db_obj = Database(name='Test DB IsInUse')
+    db_obj.connection_string = 'postgresql://localhost/testdb'
+    db_obj.save()
+    yield db_obj

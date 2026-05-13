@@ -1,18 +1,19 @@
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
 from django.test import override_settings
+from unmagic import fixture
 
 from apps.commcare.models import CommCareAccount, CommCareServer
+from tests.fixtures import commcare_server, user
 
 
 class TestCommCareAccountAPIKey:
-
     def setup_method(self):
         User = get_user_model()
         user = User(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
         server = CommCareServer(
             name='Test Server',
@@ -49,10 +50,12 @@ class TestCommCareAccountAPIKey:
             self.account.api_key = test_api_key
 
         current_key = Fernet.generate_key()
-        with override_settings(FERNET_KEYS=[
-            current_key,
-            old_key,
-        ]):
+        with override_settings(
+            FERNET_KEYS=[
+                current_key,
+                old_key,
+            ]
+        ):
             assert self.account.api_key == test_api_key
 
     def test_encryption_uses_current_key(self):
@@ -60,13 +63,29 @@ class TestCommCareAccountAPIKey:
 
         current_key = Fernet.generate_key()
         old_key = Fernet.generate_key()
-        with override_settings(FERNET_KEYS=[
-            current_key,
-            old_key,
-        ]):
+        with override_settings(
+            FERNET_KEYS=[
+                current_key,
+                old_key,
+            ]
+        ):
             self.account.api_key = test_api_key
 
         encrypted_bytes = self.account.api_key_encrypted.encode()
         fernet = Fernet(current_key)
         decrypted_bytes = fernet.decrypt(encrypted_bytes)
         assert decrypted_bytes.decode() == test_api_key
+
+
+@fixture
+def account():
+    """CommCareAccount with FERNET_KEYS set for api_key encryption."""
+    with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+        a = CommCareAccount(
+            server=commcare_server(),
+            username='test@example.com',
+            owner=user(),
+        )
+        a.api_key = 'dummy-key'
+        a.save()
+    yield a
