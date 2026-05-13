@@ -17,7 +17,7 @@ def profile(request):
             form.save()
     else:
         form = CustomUserChangeForm(instance=request.user)
-    return render(request, 'account/profile.html', {
+    return render(request, 'users/profile.html', {
         'form': form,
         'active_tab': 'profile'
     })
