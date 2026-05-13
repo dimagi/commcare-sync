@@ -75,6 +75,9 @@ def edit_database(request, database_id):
 @admin_required
 def delete_database(request, database_id):
     db = get_object_or_404(Database, id=database_id)
+    if db.is_in_use():
+        messages.error(request, f'Cannot delete "{db.name}": It is currently in use.')
+        return HttpResponseRedirect(reverse('db:databases'))
     if request.method == 'POST':
         db.delete()
         messages.success(

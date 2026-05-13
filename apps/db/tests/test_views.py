@@ -1,9 +1,18 @@
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
 
+from apps.commcare.models import (
+    CommCareAccount,
+    CommCareProject,
+    CommCareServer,
+)
+from apps.exports.models import ExportConfig
 from tests.fixtures import database
+
+from ..models import Database
 
 User = get_user_model()
 
@@ -134,3 +143,53 @@ class TestDeleteDatabaseView:
         response = admin_client().post(url)
         assert response.status_code == 302
         assert reverse('db:databases') in response.url
+
+
+@fixture
+@use('db')
+def database_in_use():
+    server = CommCareServer.objects.create(
+        name='Test', url='https://test.commcarehq.org'
+    )
+    project = CommCareProject.objects.create(server=server, domain='test')
+    account = CommCareAccount(
+        server=server, username='test@example.com', owner=admin_user()
+    )
+    account.api_key = 'dummy'
+    account.save()
+
+    db_obj = Database(name='In Use DB')
+    db_obj.connection_string = 'postgresql://localhost/testdb'
+    db_obj.save()
+
+    config = ExportConfig(
+        name='Test Export',
+        account=account,
+        database=db_obj,
+        project=project,
+    )
+    config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+    config.save()
+
+    yield db_obj
+
+
+class TestDeleteDatabaseViewInUseGuard:
+    @use(admin_client, database_in_use)
+    def test_post_on_in_use_database_redirects_with_error(self):
+        db_obj = database_in_use()
+        url = reverse('db:delete_database', args=[db_obj.id])
+        response = admin_client().post(url)
+        assert response.status_code == 302
+        assert reverse('db:databases') in response.url
+        # Database must still exist
+        assert Database.objects.filter(id=db_obj.id).exists()
+
+    @use(admin_client, database_in_use)
+    def test_get_on_in_use_database_redirects_with_error(self):
+        db_obj = database_in_use()
+        url = reverse('db:delete_database', args=[db_obj.id])
+        response = admin_client().get(url)
+        assert response.status_code == 302
+        assert reverse('db:databases') in response.url
+        assert Database.objects.filter(id=db_obj.id).exists()
