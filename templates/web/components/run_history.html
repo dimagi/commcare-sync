@@ -1,63 +1,148 @@
 {% load i18n %}
 <section class="py-4 app-card" x-data="{ running: false, forceSync: false }">
-  <h1 class="h2">{% trans "Run History" %}</h1>
-  <div class="d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-2">
+  <div
+    class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2"
+  >
+    <h2 class="h2 mb-0">{% trans "Run History" %}</h2>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
       <button
-        class="btn btn-primary btn-sm rounded-pill"
+        class="btn btn-primary btn-sm"
         id="run-now-button"
         @click="running = true"
         :disabled="running"
       >
-        <span class="me-2">
-          <i class="fa-solid fa-play"></i>
-        </span>
+        <i class="fa-solid fa-play me-1"></i>
         <span>{% trans "Run Now" %}</span>
       </button>
       {% if show_force_sync %}
-        <label for="force-sync-checkbox" class="form-check-label mx-2">
+        <div class="form-check mb-0">
           <input
             type="checkbox"
             class="form-check-input"
             id="force-sync-checkbox"
             x-model="forceSync"
           />
-          {% trans "Force sync of all data" %}
-        </label>
+          <label class="form-check-label" for="force-sync-checkbox">
+            {% trans "Force sync" %}
+          </label>
+        </div>
       {% endif %}
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <label>{% trans "Filter" %}</label>
-      {% if hide_skipped %}
-        <a
-          class="btn btn-outline-primary btn-sm rounded-pill mx-2"
-          href="?hide_skipped=n"
+      <div class="dropdown">
+        <button
+          class="btn btn-outline-secondary btn-sm dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false"
         >
-          <span>{% trans "Show Queued and Skipped Items" %}</span>
-        </a>
-      {% else %}
-        <a
-          class="btn btn-outline-primary btn-sm rounded-pill mx-2"
-          href="?hide_skipped=y"
+          {% trans "Status" %}
+        </button>
+        <div
+          class="dropdown-menu p-2"
+          id="status-filter-form"
+          style="min-width: 160px;"
         >
-          <span>{% trans "Hide Queued and Skipped Items" %}</span>
-        </a>
-      {% endif %}
+          <input type="hidden" name="has_status_filter" value="1" />
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="queued"
+              id="filter-queued"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-queued"
+              >{% trans "Queued" %}</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="started"
+              id="filter-started"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-started"
+              >{% trans "Started" %}</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="completed"
+              id="filter-completed"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-completed"
+              >{% trans "Completed" %}</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="failed"
+              id="filter-failed"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-failed"
+              >{% trans "Failed" %}</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="skipped"
+              id="filter-skipped"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-skipped"
+              >{% trans "Skipped" %}</label
+            >
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="run-status-progress" class="my-2" x-show="running" x-cloak>
-    <div class="progress-wrapper">
-      <div class="progress" style="height: 20px;">
-        <div
-          id="progress-bar"
-          class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-          role="progressbar"
-          style="width: 0%"
-          aria-valuenow="0"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        ></div>
-      </div>
+    <div class="progress" style="height: 20px;">
+      <div
+        id="progress-bar"
+        class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+        role="progressbar"
+        style="width: 0%"
+        aria-valuenow="0"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      ></div>
     </div>
     <div id="progress-bar-message" class="text-muted">
       {% trans "Waiting for task to start..." %}
