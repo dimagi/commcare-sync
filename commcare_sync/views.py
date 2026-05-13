@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from apps.commcare.models import RunBaseModel
+
 _VALID_CONFIG_PAGE_SIZES = (10, 20, 50)
 
 
@@ -35,3 +37,25 @@ def get_page_from_request(request):
         return max(int(request.GET.get('page', 1)), 1)
     except ValueError:
         return 1
+
+
+# Per-run statuses available for filtering. RunBaseModel.Status is the shared base
+# enum (queued/started/completed/failed/skipped); ExportRunBase additionally
+# defines MULTIPLE — an aggregate for multi-project parent runs — which is
+# deliberately not a per-run filter state, so deriving from the base excludes it.
+_VALID_RUN_STATUSES = set(RunBaseModel.Status.values)
+
+
+def get_run_statuses_from_request(request):
+    """Return list of statuses to filter runs by, or None if no filter active.
+
+    Returns None  → filter not submitted; show all runs (initial page load).
+    Returns list  → filter active; show only runs whose status is in the list
+                    (list may be empty, which means show nothing).
+    """
+    if 'has_status_filter' not in request.GET:
+        return None
+    return [
+        s for s in request.GET.getlist('status_filter')
+        if s in _VALID_RUN_STATUSES
+    ]
