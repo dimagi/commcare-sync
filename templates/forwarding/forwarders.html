@@ -38,50 +38,7 @@
     </a>
   </div>
 
-  {% if forwarders.exists %}
-  <table class="table table-striped w-100">
-    <thead>
-      <tr>
-        <th>{% trans "Forwarder" %}</th>
-        <th>{% trans "Database" %}</th>
-        <th>{% trans "Destination" %}</th>
-        <th>{% trans "Last Run" %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for forwarder in forwarders %}
-        <tr>
-          <td>
-            <a href="{% url 'forwarding:forwarder_details' forwarder.id %}">{{ forwarder.name }}</a>
-            {% if forwarder.is_paused %}
-              <i title="{% trans 'This forwarder is paused.' %}"
-                 class="fa-solid fa-circle-pause text-muted"></i>
-            {% endif %}
-          </td>
-          <td>{{ forwarder.database.name }}</td>
-          <td>{{ forwarder.destination.name }}</td>
-          <td>
-            {% if forwarder.last_run %}
-              {{ forwarder.last_run.status|to_status_icon }}
-              {{ forwarder.last_run.created_at|naturaltime }}
-            {% else %}
-              <span class="text-muted">{% trans "Never" %}</span>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <div class="alert alert-warning">
-    {% trans "No forwarding configurations found!" %}
-  </div>
-  <a class="icon-link btn btn-primary btn-sm rounded-pill"
-     href="{% url 'forwarding:create_forwarding_config' %}">
-    <i class="fa-solid fa-plus"></i>
-    {% trans "Add Your First Forwarder" %}
-  </a>
-  {% endif %}
+  {% include "forwarding/partials/config_table.html" %}
 
 </section>
 {% endblock app %}
