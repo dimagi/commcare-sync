@@ -1,9 +1,14 @@
 import pytest
 from django.test import RequestFactory
 
-from commcare_sync.views import get_config_page_size, get_page_from_request
+from commcare_sync.views import (
+    _VALID_CONFIG_PAGE_SIZES,
+    get_config_page_size,
+    get_page_from_request,
+    get_run_statuses_from_request,
+)
 
-VALID_PAGE_SIZES = [10, 20, 50]
+VALID_PAGE_SIZES = list(_VALID_CONFIG_PAGE_SIZES)
 
 
 class TestGetConfigPageSize:
@@ -44,3 +49,31 @@ class TestGetPageFromRequest:
 
     def test_non_integer_returns_1(self):
         assert get_page_from_request(self._req('page=abc')) == 1
+
+
+class TestGetRunStatusesFromRequest:
+    def _req(self, params=''):
+        rf = RequestFactory()
+        return rf.get(f'/?{params}')
+
+    def test_returns_none_when_no_param(self):
+        assert get_run_statuses_from_request(self._req()) is None
+
+    def test_returns_empty_list_when_sentinel_but_no_statuses(self):
+        assert get_run_statuses_from_request(
+            self._req('has_status_filter=1')
+        ) == []
+
+    def test_returns_checked_statuses(self):
+        request = self._req(
+            'has_status_filter=1&status_filter=queued&status_filter=completed'
+        )
+        assert set(get_run_statuses_from_request(request)) == {
+            'queued', 'completed'
+        }
+
+    def test_ignores_invalid_status_values(self):
+        request = self._req(
+            'has_status_filter=1&status_filter=bogus&status_filter=completed'
+        )
+        assert set(get_run_statuses_from_request(request)) == {'completed'}
