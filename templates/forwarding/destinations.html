@@ -2,45 +2,64 @@
 {% load i18n %}
 {% block app %}
   <section class="py-4 app-card">
-    <h1 class="h2">{% trans "Forwarding Destinations" %}</h1>
-    <h2 class="lead">
-      {% trans "Manage the API endpoints where data will be forwarded" %}
-    </h2>
-    {% if destinations.exists %}
-      <div class="alert alert-info">
-        {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
-      </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h2 mb-0">{% trans "Forwarding Destinations" %}</h1>
       {% if user.is_admin %}
         <a
-          class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
+          class="btn btn-primary btn-sm"
           href="{% url 'forwarding:create_destination' %}"
         >
           <i class="fa-solid fa-plus"></i>
           {% trans "New Destination" %}
         </a>
       {% endif %}
-      <table class="table table-striped">
+    </div>
+    {% if destinations.exists %}
+      <div class="alert alert-info">
+        {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
+      </div>
+      <table class="table table-sm">
         <thead>
           <tr>
             <th>{% trans "Name" %}</th>
             <th>{% trans "API URL" %}</th>
+            {% if user.is_admin %}
+              <th>{% trans "Actions" %}</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
           {% for destination in destinations %}
             <tr>
-              <td>
-                {% if user.is_admin %}
+              <td>{{ destination.name }}</td>
+              <td>{{ destination.api_url }}</td>
+              {% if user.is_admin %}
+                <td>
                   <a
+                    class="btn btn-outline-secondary btn-sm"
                     href="{% url 'forwarding:edit_destination' destination.id %}"
                   >
-                    {{ destination.name }}
+                    <i class="fa-solid fa-pencil"></i> {% trans "Edit" %}
                   </a>
-                {% else %}
-                  {{ destination.name }}
-                {% endif %}
-              </td>
-              <td>{{ destination.api_url }}</td>
+                  {% if destination.is_in_use %}
+                    <span
+                      data-bs-toggle="tooltip"
+                      title="{% trans 'Cannot delete: This destination is in use by one or more configurations' %}"
+                    >
+                      <a class="btn btn-outline-danger btn-sm disabled" disabled
+                        >{% trans "Delete" %}</a
+                      >
+                    </span>
+                  {% else %}
+                    <a
+                      class="btn btn-outline-danger btn-sm"
+                      href="{% url 'forwarding:delete_destination' destination.id %}"
+                    >
+                      {% trans "Delete" %}
+                    </a>
+                  {% endif %}
+                </td>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>
@@ -49,13 +68,15 @@
       <div class="alert alert-warning">
         {% trans "No forwarding destinations found!" %}
       </div>
-      <a
-        class="icon-link btn btn-primary btn-sm rounded-pill"
-        href="{% url 'forwarding:create_destination' %}"
-      >
-        <i class="fa-solid fa-plus"></i>
-        {% trans "Add Your First Destination" %}
-      </a>
+      {% if user.is_admin %}
+        <a
+          class="btn btn-primary btn-sm"
+          href="{% url 'forwarding:create_destination' %}"
+        >
+          <i class="fa-solid fa-plus"></i>
+          {% trans "Add Your First Destination" %}
+        </a>
+      {% endif %}
     {% endif %}
   </section>
 {% endblock app %}
