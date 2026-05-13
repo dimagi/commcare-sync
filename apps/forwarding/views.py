@@ -1,13 +1,17 @@
+import hashlib
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, Paginator
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.web.decorators import admin_required
 from apps.web.stats import (
@@ -17,7 +21,12 @@ from apps.web.stats import (
 )
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
-from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
+from commcare_sync.views import (
+    get_config_page_size,
+    get_hide_skipped_from_request,
+    get_page_from_request,
+    get_ui_page_size,
+)
 
 from .forms import (
     ForwardingConfigForm,
@@ -28,6 +37,18 @@ from .models import ForwardingConfig, ForwardingDestination, ForwardingRun
 from .tasks import run_forwarding_task
 
 
+def _compute_forwarding_etag(configs_list):
+    parts = []
+    for config in configs_list:
+        all_runs = getattr(config, '_all_runs', None)
+        run = all_runs[0] if all_runs else config.runs.order_by('-created_at').first()
+        if run:
+            parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
+        else:
+            parts.append(f"config:{config.id}:no-runs")
+    return hashlib.md5('|'.join(parts).encode()).hexdigest()
+
+
 @login_required
 def forwarders(request):
     """List all forwarding configurations."""
@@ -36,19 +57,71 @@ def forwarders(request):
     current_start = now - period
     previous_start = current_start - period
 
-    fwd_configs = ForwardingConfig.objects.order_by('-updated_at')
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
+        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    )
+    paginator = Paginator(configs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    etag = _compute_forwarding_etag(page_obj.object_list)
+
     return render(
         request,
         'forwarding/forwarders.html',
         {
             'active_tab': 'forwarders',
-            'forwarders': fwd_configs,
+            'configs': page_obj,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
+            'etag': etag,
             'stats_period': readable_timedelta(period, short=True),
             'export_stats': _get_export_statistics(current_start, previous_start),
             'refresh_stats': _get_refresh_statistics(current_start, previous_start),
             'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
         },
     )
+
+
+@login_required
+@require_GET
+def config_table(request):
+    """HTMX endpoint: paginated + ETag-guarded forwarding config table partial."""
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
+        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    )
+    paginator = Paginator(configs_qs, page_size)
+    try:
+        page_obj = paginator.page(page_num)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    etag = _compute_forwarding_etag(page_obj.object_list)
+    if request.GET.get('etag') == etag:
+        response = HttpResponse()
+        response['HX-Reswap'] = 'none'
+        return response
+
+    return render(request, 'forwarding/partials/config_table.html', {
+        'configs': page_obj,
+        'page_size': page_size,
+        'page_sizes': [10, 20, 50],
+        'etag': etag,
+    })
+
+
+@login_required
+@require_GET
+def run_log(request, run_id):
+    """HTMX endpoint: log fragment for a ForwardingRun."""
+    run = get_object_or_404(ForwardingRun, id=run_id)
+    return render(request, 'forwarding/partials/run_log.html', {'run': run})
 
 
 @login_required
