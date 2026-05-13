@@ -500,3 +500,52 @@ class TestExportsHomeSmoke:
         content = response.content.decode()
         assert 'dropdown-toggle-split' in content
         assert 'Multi-Project Export' in content
+
+
+class TestExportsRunButtonRendering:
+    @use(authed_client, export_config)
+    def test_run_button_present_when_no_active_run(self):
+        config = export_config()
+        url = reverse('exports:config_table')
+        response = authed_client().get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        run_url = reverse('exports:run_export', args=[config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    @use(authed_client, export_config)
+    def test_run_button_disabled_when_active_run(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.QUEUED,
+        )
+        url = reverse('exports:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        # Run button present but disabled
+        assert 'btn-outline-success' in content
+        run_url = reverse('exports:run_export', args=[config.id])
+        assert f'hx-post="{run_url}"' not in content  # disabled, no hx-post
+
+    @use(authed_client, multi_export_config)
+    def test_multi_export_run_button_uses_multi_url(self):
+        config = multi_export_config()
+        url = reverse('exports:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        run_url = reverse('exports:run_multi_export', args=[config.id])
+        assert f'hx-post="{run_url}"' in content
+
+    @use(authed_client, export_config)
+    def test_edit_button_never_disabled(self):
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.QUEUED,
+        )
+        url = reverse('exports:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        edit_url = config.edit_url
+        assert edit_url in content
