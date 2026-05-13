@@ -43,141 +43,36 @@
           <i class="fa-solid fa-play"></i>
           {% trans "Run All" %}
         </button>
-        <a
-          class="icon-link btn btn-primary btn-sm"
-          href="{% url 'exports:create_export_config' %}"
-        >
-          <i class="fa-solid fa-plus"></i>
-          {% trans "New Export" %}
-        </a>
+        {# Split dropdown for New Export / New Multi-Project Export #}
+        <div class="btn-group">
+          <a
+            href="{% url 'exports:create_export_config' %}"
+            class="icon-link btn btn-primary btn-sm ps-3"
+          >
+            <i class="fa-solid fa-plus"></i> {% trans "New Export" %}
+          </a>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split pe-3"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <span class="visually-hidden">{% trans "Toggle Dropdown" %}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a
+                class="dropdown-item"
+                href="{% url 'exports:create_multi_export_config' %}"
+              >
+                {% trans "Multi-Project Export" %}
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    {% if exports.exists %}
-      <table class="table table-sm small mb-0">
-        <thead>
-          <tr>
-            <th>{% trans "Name" %}</th>
-            <th>{% trans "Schedule" %}</th>
-            <th>{% trans "Last Started" %}</th>
-            <th>{% trans "Status" %}</th>
-            <th>{% trans "Actions" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for export in exports %}
-            <tr>
-              <td>
-                <a href="{% url 'exports:export_details' export.id %}"
-                  >{{ export.name }}</a
-                >
-                {% if export.is_paused %}
-                  <i
-                    class="fa-solid fa-circle-pause text-muted ms-1"
-                    title="{% trans 'Paused' %}"
-                  ></i>
-                {% endif %}
-              </td>
-              <td>
-                {% if export.is_paused %}
-                  <span class="text-muted">{% trans "Paused" %}</span>
-                {% elif export.schedule_display %}
-                  {{ export.schedule_display }}
-                {% else %}
-                  <span class="text-muted">-</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if export.last_run %}
-                  {{ export.last_run.created_at|naturaltime }}
-                {% else %}
-                  <span class="text-muted">{% trans "Never" %}</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if export.last_run %}
-                  <div>
-                    {{ export.last_run.status|to_status_icon }}
-                    {{ export.last_run.status }}
-                  </div>
-                  <div class="text-muted small">
-                    {{ export.last_run.duration|readable_timedelta_short }}
-                  </div>
-                {% else %}
-                  <span class="text-muted">-</span>
-                {% endif %}
-              </td>
-              <td class="text-nowrap">
-                <a
-                  href="{% url 'exports:edit_export_config' export.id %}"
-                  class="btn btn-outline-secondary btn-sm"
-                  title="{% trans 'Edit' %}"
-                >
-                  <i class="fa-solid fa-pencil"></i> {% trans "Edit" %}
-                </a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <div class="alert alert-warning">
-        {% trans "No export configurations found!" %}
-      </div>
-      <a
-        class="icon-link btn btn-primary btn-sm rounded-pill"
-        href="{% url 'exports:create_export_config' %}"
-      >
-        <i class="fa-solid fa-plus"></i> {% trans "Add Your First Export" %}
-      </a>
-    {% endif %}
+    {% include "exports/partials/config_table.html" %}
   </section>
-
-  {% if multi_project_exports.exists %}
-    <section class="py-4 app-card">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h2 mb-0">
-          {% trans "Multi-Project Export Configurations" %}
-        </h1>
-        <a
-          class="icon-link btn btn-outline-primary btn-sm rounded-pill"
-          href="{% url 'exports:create_multi_export_config' %}"
-        >
-          <i class="fa-solid fa-plus"></i>
-          {% trans "New Multi-Project Export" %}
-        </a>
-      </div>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>{% trans "Export" %}</th>
-            <th>{% trans "Projects" %}</th>
-            <th>{% trans "Last Run" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for export in multi_project_exports %}
-            <tr>
-              <td>
-                <a href="{% url 'exports:multi_export_details' export.id %}"
-                  >{{ export.name }}</a
-                >
-                {% if export.is_paused %}
-                  <i
-                    title="{% trans 'paused' %}"
-                    class="fa-solid fa-circle-pause"
-                  ></i>
-                {% endif %}
-              </td>
-              <td>{{ export.get_projects_display_short }}</td>
-              <td>
-                {{ export.last_run.status|to_status_icon }}
-                {{ export.last_run.created_at|naturaltime }}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-  {% endif %}
 {% endblock app %}
