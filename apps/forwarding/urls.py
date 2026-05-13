@@ -60,4 +60,14 @@ urlpatterns = [
         views.run_forwarding,
         name='run_forwarding',
     ),
+    path(
+        'config-table/',
+        views.config_table,
+        name='config_table',
+    ),
+    path(
+        'runs/<int:run_id>/log/',
+        views.run_log,
+        name='run_log',
+    ),
 ]
