@@ -15,9 +15,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect_to_login(request.get_full_path())
-        if not (request.user.is_active
-                and request.user.is_superuser
-                and request.user.is_staff):
+        if not request.user.is_admin:
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
 

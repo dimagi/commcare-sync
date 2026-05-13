@@ -23,6 +23,11 @@ class CustomUser(AbstractUser):
         return self.email
 
     @property
+    def is_admin(self):
+        """An admin user is_active, is_superuser, and is_staff."""
+        return self.is_active and self.is_superuser and self.is_staff
+
+    @property
     def avatar_url(self):
         if self.avatar:
             return reverse('users:avatar', args=[self.id])
