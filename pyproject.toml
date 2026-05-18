@@ -52,6 +52,7 @@ test = [
     "pytest-django",
     "pytest-playwright",
     "pytest-unmagic",
+    "pytest-unmagic-django",
     "ruff",
     "time-machine",
     "types-requests",
@@ -60,6 +61,7 @@ test = [
 [tool.uv.sources]
 db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git" }
 commcare-export = { git = "https://github.com/dimagi/commcare-export.git", branch = "master" }
+pytest-unmagic-django = { git = "https://github.com/dimagi/pytest-unmagic-django/" }
 
 [tool.mypy]
 disallow_incomplete_defs = true

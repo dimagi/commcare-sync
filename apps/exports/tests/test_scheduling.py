@@ -1,7 +1,7 @@
 from django_celery_beat.models import PeriodicTask
 
 from apps.exports.models import ExportRun
-from apps.exports.tests.conftest import export_config_db_fixture
+from apps.exports.tests.fixtures import export_config_db_fixture
 from apps.schedules.mixin import ScheduleMixin
 
 

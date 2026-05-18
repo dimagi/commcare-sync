@@ -4,23 +4,25 @@ Playwright structural tests for Export form.
 Tests that verify HTML structure, Alpine.js attributes, and HTMX configuration
 without requiring full integration testing or API mocking.
 """
-import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
-from unmagic import get_request
+from unmagic import fixture, use
 
 from .fixtures import test_data
 from .helpers import login, navigate_to_create_export
 
+_page = fixture('page')
+_live_server = fixture('live_server')
 
-@pytest.mark.django_db(transaction=True)
+
+@use('db', 'transactional_db', _live_server, _page)
 class TestExportFormStructure:
     """Test form structure and attributes."""
 
     def test_export_form_has_required_fields(self):
         """Test that export form contains all required fields."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
@@ -35,8 +37,8 @@ class TestExportFormStructure:
 
     def test_alpine_attributes_present(self):
         """Test that Alpine.js attributes are configured."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
@@ -49,8 +51,8 @@ class TestExportFormStructure:
 
     def test_htmx_attributes_present(self):
         """Test that HTMX attributes are configured."""
-        page = get_request().getfixturevalue('page')
-        live_server = get_request().getfixturevalue('live_server')
+        page = _page()
+        live_server = _live_server()
         data = test_data()
 
         login(page, live_server, data['user'])
@@ -76,7 +78,7 @@ class TestExportFormStructure:
         )
 
 
-@pytest.mark.django_db
+@use('db')
 class TestHTMXEndpoints:
     """Test HTMX endpoint configuration (no browser needed)."""
 

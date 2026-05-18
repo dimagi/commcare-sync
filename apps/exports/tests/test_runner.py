@@ -1,5 +1,5 @@
 from apps.exports.runner import _compile_export_command
-from apps.exports.tests.conftest import (
+from apps.exports.tests.fixtures import (
     export_config_fixture,
     export_config_db_fixture,
     project_fixture,
