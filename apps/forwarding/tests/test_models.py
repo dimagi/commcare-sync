@@ -9,7 +9,7 @@ from unmagic import fixture, use
 
 from apps.db.models import Database
 from apps.schedules.mixin import ScheduleMixin
-from tests.fixtures import database, user
+from tests.fixtures import database
 
 from ..models import (
     ForwardingConfig,
@@ -50,15 +50,15 @@ def has_active_run_config():
 @use('db')
 class TestForwardingConfig:
 
-    @use(user, config)
+    @use(config)
     def test_str_method(self):
         assert str(config()) == 'Test Config'
 
-    @use(user, config)
+    @use(config)
     def test_last_run_with_no_runs(self):
         assert config().last_run is None
 
-    @use(user, config)
+    @use(config)
     def test_last_run_excludes_queued_runs(self):
         queued_run = ForwardingRun.objects.create(  # noqa: F841
             forwarding_config=config(),
@@ -67,7 +67,7 @@ class TestForwardingConfig:
 
         assert config().last_run is None
 
-    @use(user, config)
+    @use(config)
     def test_last_run_returns_most_recent_non_queued(self):
         with time_machine.travel('2025-01-01 10:00:00', tick=False):
             run1 = ForwardingRun.objects.create(  # noqa: F841
@@ -89,11 +89,11 @@ class TestForwardingConfig:
 
         assert config().last_run.id == run2.id
 
-    @use(user, config)
+    @use(config)
     def test_has_queued_runs_with_no_runs(self):
         assert not config().has_queued_runs()
 
-    @use(user, config)
+    @use(config)
     def test_has_queued_runs_returns_true_when_most_recent_is_queued(self):
         with time_machine.travel('2025-01-01 10:00:00', tick=False):
             completed_run = ForwardingRun.objects.create(  # noqa: F841
@@ -109,7 +109,7 @@ class TestForwardingConfig:
 
         assert config().has_queued_runs()
 
-    @use(user, config)
+    @use(config)
     def test_has_queued_runs_returns_false_when_most_recent_is_not_queued(
         self,
     ):
@@ -127,19 +127,19 @@ class TestForwardingConfig:
 
         assert not config().has_queued_runs()
 
-    @use(user, config)
+    @use(config)
     def test_latest_version_returns_version(self):
         version = config().latest_version
 
         assert version is not None
         assert isinstance(version, Version)
 
-    @use(user, config)
+    @use(config)
     def test_details_url(self):
         expected_url = f'/forwarding/{config().id}/'
         assert config().details_url == expected_url
 
-    @use(user, config)
+    @use(config)
     def test_save_creates_revision(self):
         initial_version_count = Version.objects.get_for_object(
             config()
@@ -155,7 +155,7 @@ class TestForwardingConfig:
 @use('db')
 class TestForwardingRun:
 
-    @use(user, config)
+    @use(config)
     def test_str_method(self):
         with time_machine.travel('2025-01-15 14:30:00', tick=False):
             run = ForwardingRun.objects.create(
@@ -165,7 +165,7 @@ class TestForwardingRun:
 
         assert str(run) == 'Test Config (2025-01-15 14:30:00+00:00)'
 
-    @use(user, config)
+    @use(config)
     def test_duration_with_both_timestamps(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -178,7 +178,7 @@ class TestForwardingRun:
 
         assert run.duration == timedelta(minutes=5, seconds=30)
 
-    @use(user, config)
+    @use(config)
     def test_duration_with_missing_started_at(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -188,7 +188,7 @@ class TestForwardingRun:
 
         assert run.duration is None
 
-    @use(user, config)
+    @use(config)
     def test_duration_with_missing_completed_at(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -198,7 +198,7 @@ class TestForwardingRun:
 
         assert run.duration is None
 
-    @use(user, config)
+    @use(config)
     def test_get_duration_display(self):
         with time_machine.travel('2025-01-15 10:00:00', tick=False):
             run = ForwardingRun.objects.create(
@@ -215,7 +215,7 @@ class TestForwardingRun:
 
             assert duration_display == ' 2 hours 15 minutes'
 
-    @use(user, config)
+    @use(config)
     def test_mark_skipped_success(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -228,7 +228,7 @@ class TestForwardingRun:
         assert run.status == ForwardingRun.Status.SKIPPED
         assert run.completed_at is not None
 
-    @use(user, config)
+    @use(config)
     def test_mark_skipped_raises_exception_when_already_started(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -240,7 +240,7 @@ class TestForwardingRun:
 
         assert 'skipped' in str(exc_info.value)
 
-    @use(user, config)
+    @use(config)
     def test_mark_skipped_raises_exception_when_already_completed(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -252,7 +252,7 @@ class TestForwardingRun:
 
         assert 'skipped' in str(exc_info.value)
 
-    @use(user, config)
+    @use(config)
     def test_mark_skipped_raises_exception_when_already_failed(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -264,7 +264,7 @@ class TestForwardingRun:
 
         assert 'skipped' in str(exc_info.value)
 
-    @use(user, config)
+    @use(config)
     def test_default_status_is_queued(self):
         run = ForwardingRun.objects.create(
             forwarding_config=config(),
@@ -276,7 +276,6 @@ class TestForwardingRun:
 @use('db')
 class TestDatabase:
 
-    @use(user)
     def test_str_method(self):
         db = Database.objects.create(
             name='Production DB',
@@ -289,7 +288,6 @@ class TestDatabase:
 @use('db')
 class TestForwardingDestination:
 
-    @use(user)
     def test_str_method(self):
         dest = ForwardingDestination.objects.create(
             name='Example API',
@@ -298,7 +296,6 @@ class TestForwardingDestination:
 
         assert str(dest) == 'Example API'
 
-    @use(user)
     def test_api_credentials_optional(self):
         dest = ForwardingDestination.objects.create(
             name='Public API',
@@ -308,7 +305,6 @@ class TestForwardingDestination:
         assert dest.api_username == ''
         assert dest.api_password == ''
 
-    @use(user)
     def test_api_credentials_can_be_set(self):
         dest = ForwardingDestination.objects.create(
             name='Secured API',
@@ -324,7 +320,7 @@ class TestForwardingDestination:
 @use('db')
 class TestForwardingScheduling:
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_creating_config_with_interval_schedule_creates_periodic_task(
         self,
     ):
@@ -348,7 +344,7 @@ class TestForwardingScheduling:
         )
         assert f'{cfg.id}' in cfg.periodic_task.args
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_creating_config_with_weekly_schedule_creates_periodic_task(self):
         cfg = ForwardingConfig.objects.create(
             name='Weekly Config',
@@ -368,7 +364,7 @@ class TestForwardingScheduling:
         assert cfg.periodic_task.interval is None
         assert cfg.periodic_task.crontab.day_of_week == '1,3,5'
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_creating_config_without_schedule_does_not_create_periodic_task(
         self,
     ):
@@ -382,7 +378,7 @@ class TestForwardingScheduling:
         cfg.refresh_from_db()
         assert cfg.periodic_task is None
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_updating_config_schedule_updates_periodic_task(self):
         cfg = ForwardingConfig.objects.create(
             name='Config to Update',
@@ -404,7 +400,7 @@ class TestForwardingScheduling:
         # The task should be updated (same ID)
         assert cfg.periodic_task.id == initial_task_id
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_deleting_config_deletes_periodic_task(self):
         cfg = ForwardingConfig.objects.create(
             name='Config to Delete',
@@ -422,7 +418,7 @@ class TestForwardingScheduling:
 
         assert not PeriodicTask.objects.filter(id=task_id).exists()
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_removing_schedule_deletes_periodic_task(self):
         cfg = ForwardingConfig.objects.create(
             name='Config to Unschedule',
@@ -444,7 +440,7 @@ class TestForwardingScheduling:
         assert cfg.periodic_task is None
         assert not PeriodicTask.objects.filter(id=task_id).exists()
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_is_paused_returns_true_when_no_schedule(self):
         cfg = ForwardingConfig.objects.create(
             name='Unscheduled Config',
@@ -455,7 +451,7 @@ class TestForwardingScheduling:
 
         assert cfg.is_paused is True
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_is_paused_returns_true_when_no_periodic_task(self):
         cfg = ForwardingConfig.objects.create(
             name='No Task Config',
@@ -473,7 +469,7 @@ class TestForwardingScheduling:
 
         assert cfg.is_paused is True
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_is_paused_returns_false_when_periodic_task_enabled(self):
         cfg = ForwardingConfig.objects.create(
             name='Enabled Config',
@@ -488,7 +484,7 @@ class TestForwardingScheduling:
         cfg.refresh_from_db()
         assert cfg.is_paused is False
 
-    @use(user, database, destination)
+    @use(database, destination)
     def test_is_paused_returns_true_when_periodic_task_disabled(self):
         cfg = ForwardingConfig.objects.create(
             name='Disabled Config',
