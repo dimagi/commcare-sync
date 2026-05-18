@@ -30,11 +30,10 @@ def create_export_config(data):
     return export
 
 
-@use('db', 'transactional_db')
+@use('db', 'transactional_db', _live_server, _page)
 class TestRunButtonStructure:
     """Test Run button HTML structure and Alpine.js attributes."""
 
-    @use(_page, _live_server)
     def test_run_button_has_alpine_attributes(self):
         """Test that Run button has required Alpine.js attributes."""
         page = _page()
@@ -51,7 +50,6 @@ class TestRunButtonStructure:
         expect(run_button).to_have_attribute('@click', 'running = true')
         expect(run_button).to_have_attribute(':disabled', 'running')
 
-    @use(_page, _live_server)
     def test_section_has_alpine_data(self):
         """Test that run history section has x-data with state."""
         page = _page()
@@ -70,7 +68,6 @@ class TestRunButtonStructure:
             "{ running: false, forceSync: false }"
         )
 
-    @use(_page, _live_server)
     def test_progress_section_has_x_show(self):
         """Test that progress section has x-show binding."""
         page = _page()
@@ -85,7 +82,6 @@ class TestRunButtonStructure:
         progress_section = page.locator('#run-status-progress')
         expect(progress_section).to_have_attribute('x-show', 'running')
 
-    @use(_page, _live_server)
     def test_force_sync_checkbox_has_alpine_model(self):
         """Test that force sync checkbox has x-model binding."""
         page = _page()
@@ -130,11 +126,10 @@ class TestRunHistoryTableEndpoint:
         assert 'hx-swap="outerHTML"' in content
 
 
-@use('db', 'transactional_db')
+@use('db', 'transactional_db', _live_server, _page)
 class TestRunButtonWithMocks:
     """Test Run button functionality with mocked API responses."""
 
-    @use(_page, _live_server)
     def test_run_button_javascript_handler_attached(self):
         """Test that Run button has JavaScript click handler attached."""
         page = _page()
@@ -165,7 +160,6 @@ class TestRunButtonWithMocks:
         }''')
         assert has_click_handler, "Run button should have click handler"
 
-    @use(_page, _live_server)
     def test_force_sync_checkbox_alpine_binding(self):
         """Test that force sync checkbox is bound to Alpine.js state."""
         page = _page()
@@ -204,7 +198,6 @@ class TestRunButtonWithMocks:
             f'got: {alpine_state}'
         )
 
-    @use(_page, _live_server)
     def test_alpine_running_state_changes_on_click(self):
         """Test that Alpine running state changes when Run button is clicked."""
         page = _page()
@@ -241,7 +234,6 @@ class TestRunButtonWithMocks:
             'Alpine running state should be true after clicking Run button'
         )
 
-    @use(_page, _live_server)
     def test_progress_elements_exist_on_page(self):
         """Test that progress bar elements are present on the page."""
         page = _page()
@@ -257,7 +249,6 @@ class TestRunButtonWithMocks:
         expect(page.locator('#progress-bar')).to_be_attached()
         expect(page.locator('#progress-bar-message')).to_be_attached()
 
-    @use(_page, _live_server)
     def test_run_button_disabled_state(self):
         """Test that Run button is disabled when clicked via Alpine state."""
         page = _page()

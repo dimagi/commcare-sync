@@ -15,11 +15,10 @@ _page = fixture('page')
 _live_server = fixture('live_server')
 
 
-@use('db', 'transactional_db')
+@use('db', 'transactional_db', _live_server, _page)
 class TestExportFormStructure:
     """Test form structure and attributes."""
 
-    @use(_page, _live_server)
     def test_export_form_has_required_fields(self):
         """Test that export form contains all required fields."""
         page = _page()
@@ -36,7 +35,6 @@ class TestExportFormStructure:
         expect(page.locator('#id_database')).to_be_visible()
         expect(page.locator('#id_config_file_select')).to_be_visible()
 
-    @use(_page, _live_server)
     def test_alpine_attributes_present(self):
         """Test that Alpine.js attributes are configured."""
         page = _page()
@@ -51,7 +49,6 @@ class TestExportFormStructure:
         expect(config_select).to_have_attribute('x-model', 'selectedConfig')
         expect(config_select).to_have_attribute(':disabled', 'loading')
 
-    @use(_page, _live_server)
     def test_htmx_attributes_present(self):
         """Test that HTMX attributes are configured."""
         page = _page()
