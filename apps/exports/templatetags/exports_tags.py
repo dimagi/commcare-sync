@@ -12,7 +12,7 @@ def to_status_icon(export_status):
     """
     Convert export status to an HTML icon with appropriate styling.
 
-    >>> 'fa-check-circle' in to_status_icon('completed')
+    >>> 'fa-circle-check' in to_status_icon('completed')
     True
     >>> 'text-success' in to_status_icon('completed')
     True
@@ -26,7 +26,7 @@ def to_status_icon(export_status):
         ExportRunBase.Status.SKIPPED: 'text-muted',
     }
     icons = {
-        ExportRunBase.Status.COMPLETED: 'fa-check-circle',
+        ExportRunBase.Status.COMPLETED: 'fa-circle-check',
         ExportRunBase.Status.FAILED: 'fa-exclamation-circle',
         ExportRunBase.Status.STARTED: 'fa-play-circle',
         ExportRunBase.Status.MULTIPLE: 'fa-exclamation-triangle',
