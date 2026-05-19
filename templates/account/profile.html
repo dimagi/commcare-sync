@@ -91,7 +91,7 @@
         // update UI
         let uploadlabel = document.getElementById("profile-upload-label");
         uploadlabel.innerHTML =
-          '<span class="icon"><i class="fa fa-refresh"></i></span><span>' +
+          '<span class="icon"><i class="fa-solid fa-refresh"></i></span><span>' +
           uploadingText +
           "</span>";
         uploadlabel.classList.add("active");
@@ -111,7 +111,7 @@
               // update UI
               console.log(text);
               uploadlabel.innerHTML =
-                '<span class="icon"><i class="fa fa-check"></i></span><span>' +
+                '<span class="icon"><i class="fa-solid fa-check"></i></span><span>' +
                 text +
                 "</span>";
               uploadlabel.classList.remove("active");
@@ -121,7 +121,7 @@
             response.text().then(function (errorText) {
               console.error(errorText);
               uploadlabel.innerHTML =
-                '<span class="icon"><i class="fa fa-times"></i></span><span>' +
+                '<span class="icon"><i class="fa-solid fa-times"></i></span><span>' +
                 uploadFailedText +
                 "</span>";
               uploadlabel.classList.add("text-danger");

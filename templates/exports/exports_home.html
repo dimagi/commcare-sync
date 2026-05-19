@@ -11,7 +11,7 @@
           class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
           href="{% url 'exports:create_export_config' %}"
         >
-          <i class="fa fa-plus"></i>
+          <i class="fa-solid fa-plus"></i>
           {% trans "New Export" %}
         </a>
       {% endif %}
@@ -19,7 +19,7 @@
         class="icon-link btn btn-info btn-sm rounded-pill mb-3"
         href="{% url 'exports:download_commcare_export_log' %}"
       >
-        <i class="fa fa-download"></i>
+        <i class="fa-solid fa-download"></i>
         {% trans "Download Export Log" %}
       </a>
     </nav>
@@ -42,7 +42,7 @@
                 {% if export.is_paused %}
                   <i
                     title="{% trans 'This export is paused.' %}"
-                    class="fa fa-pause-circle text-muted"
+                    class="fa-solid fa-pause-circle text-muted"
                   ></i>
                 {% endif %}
               </td>
@@ -63,7 +63,7 @@
         class="icon-link btn btn-primary btn-sm rounded-pill"
         href="{% url 'exports:create_export_config' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Your First Export" %}
       </a>
     {% endif %}
@@ -79,7 +79,7 @@
             class="icon-link btn btn-outline-primary btn-sm rounded-pill"
             href="{% url 'exports:create_multi_export_config' %}"
           >
-            <i class="fa fa-plus"></i>
+            <i class="fa-solid fa-plus"></i>
             {% trans "New Multi-Project Export" %}
           </a>
         </div>
@@ -102,7 +102,7 @@
                 {% if export.is_paused %}
                   <i
                     title="{% trans 'paused' %}"
-                    class="fa fa-pause-circle"
+                    class="fa-solid fa-pause-circle"
                   ></i>
                 {% endif %}
               </td>

@@ -34,7 +34,7 @@
           <span class="icon">
             {% if export_run.triggered_from_ui %}
               <i
-                class="fa fa-user"
+                class="fa-solid fa-user"
                 title="{% blocktrans with user=export_run.triggered_by|default:'unknown' %}Triggered
                 from UI by {{ user }}{% endblocktrans %}"
               ></i>
@@ -45,7 +45,7 @@
               ></i>
             {% else %}
               <i
-                class="fa fa-question text-muted"
+                class="fa-solid fa-question text-muted"
                 title="{% trans 'Unknown' %}"
               ></i>
             {% endif %}
@@ -71,7 +71,7 @@
             >
               <span class="icon">
                 <i
-                  class="fa"
+                  class="fa-solid"
                   :class="isExpanded({{ export_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
                 ></i>
               </span>
@@ -87,7 +87,7 @@
                 class="icon-link btn btn-outline-primary btn-sm rounded-pill"
                 href="{% url 'exports:download_export_file_version' export_run.export_config_version.id %}"
               >
-                <i class="fa fa-download"></i>
+                <i class="fa-solid fa-download"></i>
               </a>
             {% else %}
               <span class="text-muted">{% trans "Not available" %}</span>
