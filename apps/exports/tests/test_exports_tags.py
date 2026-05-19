@@ -15,7 +15,7 @@ def test_doctests():
     ('status', 'expected_icon', 'expected_class'),
     [
         (ExportRunBase.Status.COMPLETED, 'fa-circle-check', 'text-success'),
-        (ExportRunBase.Status.FAILED, 'fa-exclamation-circle', 'text-danger'),
+        (ExportRunBase.Status.FAILED, 'fa-circle-exclamation', 'text-danger'),
         (ExportRunBase.Status.STARTED, 'fa-play-circle', 'text-primary'),
         (ExportRunBase.Status.MULTIPLE, 'fa-exclamation-triangle', 'text-warning'),
         (ExportRunBase.Status.QUEUED, 'fa-ellipsis-h', 'text-muted'),
