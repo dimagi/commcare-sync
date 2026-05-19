@@ -36,6 +36,6 @@ def to_status_icon(export_status):
     return mark_safe(
         '<i'
         f'  title="{export_status}"'
-        f'  class="fa {icons.get(export_status)} {text_modifiers.get(export_status)}"'
+        f'  class="fa-solid {icons.get(export_status)} {text_modifiers.get(export_status)}"'
         '></i>'
     )

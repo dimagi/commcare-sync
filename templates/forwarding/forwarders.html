@@ -10,7 +10,7 @@
         class="icon-link btn btn-outline-primary btn-sm rounded-pill mb-3"
         href="{% url 'forwarding:create_forwarding_config' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "New Forwarder" %}
       </a>
       <table class="table table-striped">
@@ -32,7 +32,7 @@
                 {% if forwarder.is_paused %}
                   <i
                     title="{% trans 'This forwarder is paused.' %}"
-                    class="fa fa-pause-circle text-muted"
+                    class="fa-solid fa-pause-circle text-muted"
                   ></i>
                 {% endif %}
               </td>
@@ -58,7 +58,7 @@
         class="icon-link btn btn-primary btn-sm rounded-pill"
         href="{% url 'forwarding:create_forwarding_config' %}"
       >
-        <i class="fa fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
         {% trans "Add Your First Forwarder" %}
       </a>
     {% endif %}

@@ -24,7 +24,7 @@
           <span class="icon">
             {% if refresh_run.triggered_from_ui %}
               <i
-                class="fa fa-user"
+                class="fa-solid fa-user"
                 title="{% blocktrans with user=refresh_run.triggered_by|default:'unknown' %}
                   Triggered from UI by {{ user }}
                 {% endblocktrans %}"
@@ -36,7 +36,7 @@
               ></i>
             {% else %}
               <i
-                class="fa fa-question text-muted"
+                class="fa-solid fa-question text-muted"
                 title="{% trans 'Unknown' %}"
               ></i>
             {% endif %}
@@ -55,7 +55,7 @@
             role="button"
             ><span class="icon"
               ><i
-                class="fa"
+                class="fa-solid"
                 :class="expandedLogs[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
               ></i
             ></span>
@@ -68,7 +68,7 @@
               role="button"
               ><span class="icon"
                 ><i
-                  class="fa"
+                  class="fa-solid"
                   :class="expandedViews[{{ refresh_run.id }}] ? 'fa-chevron-up' : 'fa-chevron-down'"
                 ></i
               ></span>
@@ -111,10 +111,10 @@
                     <td><code>{{ view_name }}</code></td>
                     <td>
                       {% if result.status == 'success' %}
-                        <i class="fa fa-check-circle text-success"></i>
+                        <i class="fa-solid fa-check-circle text-success"></i>
                         {% trans "Success" %}
                       {% else %}
-                        <i class="fa fa-times-circle text-danger"></i>
+                        <i class="fa-solid fa-times-circle text-danger"></i>
                         {% trans "Failed" %}
                       {% endif %}
                     </td>

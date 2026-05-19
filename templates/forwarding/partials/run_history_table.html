@@ -24,7 +24,7 @@
           <span class="icon">
             {% if forwarding_run.triggered_from_ui %}
               <i
-                class="fa fa-user"
+                class="fa-solid fa-user"
                 title="{% blocktrans with user=forwarding_run.triggered_by|default:'unknown' %}Triggered
                 from UI by {{ user }}{% endblocktrans %}"
               ></i>
@@ -35,7 +35,7 @@
               ></i>
             {% else %}
               <i
-                class="fa fa-question text-muted"
+                class="fa-solid fa-question text-muted"
                 title="{% trans 'Unknown' %}"
               ></i>
             {% endif %}
@@ -55,7 +55,7 @@
           >
             <span class="icon">
               <i
-                class="fa"
+                class="fa-solid"
                 :class="isExpanded({{ forwarding_run.id }}) ? 'fa-chevron-up' : 'fa-chevron-down'"
               ></i>
             </span>
