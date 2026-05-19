@@ -21,6 +21,7 @@ SCHEDULE_DEFAULTS = {
 @use('db')
 def django_test_client():
     from django.test import Client
+
     client = Client()
     client.force_login(user())
     yield client
@@ -289,7 +290,6 @@ class TestFetchMaterializedViewsView:
         assert response.status_code == 405
 
 
-
 class TestRefreshConfigTableView:
     @use(django_test_client)
     def test_requires_login(self):
@@ -327,10 +327,14 @@ class TestRefreshConfigTableView:
         _refresh_config()
         client = django_test_client()
         response = client.get(reverse('refreshes:config_table'))
-        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
+        match = re.search(
+            r'data-etag="([a-f0-9]+)"', response.content.decode()
+        )
         assert match
         etag = match.group(1)
-        response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})
+        response2 = client.get(
+            reverse('refreshes:config_table'), {'etag': etag}
+        )
         assert response2.get('HX-Reswap') == 'none'
 
     @use(django_test_client, _refresh_config)
@@ -363,13 +367,17 @@ class TestRefreshRunLogView:
             status=RefreshRun.Status.COMPLETED,
             log='refresh log content',
         )
-        response = django_test_client().get(reverse('refreshes:run_log', args=[run.id]))
+        response = django_test_client().get(
+            reverse('refreshes:run_log', args=[run.id])
+        )
         assert response.status_code == 200
         assert 'refresh log content' in response.content.decode()
 
     @use(django_test_client)
     def test_404_for_missing(self):
-        response = django_test_client().get(reverse('refreshes:run_log', args=[9999]))
+        response = django_test_client().get(
+            reverse('refreshes:run_log', args=[9999])
+        )
         assert response.status_code == 404
 
 
@@ -403,18 +411,24 @@ class TestRefreshesListPageSmoke:
 
     @use(django_test_client, 'db')
     def test_renders_200(self):
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert response.status_code == 200
 
     @use(django_test_client, 'db')
     def test_includes_config_table_div(self):
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert 'id="refreshes-config-table"' in response.content.decode()
 
     @use(django_test_client, _refresh_config)
     def test_renders_with_no_runs(self):
         config = _refresh_config()
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert response.status_code == 200
         assert config.name in response.content.decode()
 
@@ -425,7 +439,9 @@ class TestRefreshesListPageSmoke:
             status=RefreshRun.Status.COMPLETED,
             log='Refreshed 2 views.',
         )
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert response.status_code == 200
         assert 'completed' in response.content.decode()
 
@@ -436,7 +452,9 @@ class TestRefreshesListPageSmoke:
             status=RefreshRun.Status.FAILED,
             log='Error refreshing.',
         )
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert response.status_code == 200
         assert 'failed' in response.content.decode()
 
@@ -446,7 +464,9 @@ class TestRefreshesListPageSmoke:
             refresh_config=_refresh_config(),
             status=RefreshRun.Status.STARTED,
         )
-        response = django_test_client().get(reverse('refreshes:refresh_configs'))
+        response = django_test_client().get(
+            reverse('refreshes:refresh_configs')
+        )
         assert response.status_code == 200
         assert 'started' in response.content.decode()
 

@@ -53,18 +53,25 @@ logger = logging.getLogger(__name__)
 def _merged_export_configs(page_size, page_num):
     """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
     single = list(
-        ExportConfig.objects
-        .select_related('project')
+        ExportConfig.objects.select_related('project')
         .annotate(last_run_at=Max('runs__created_at'))
         .prefetch_related(
-            Prefetch('runs', queryset=ExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
+            Prefetch(
+                'runs',
+                queryset=ExportRun.objects.order_by('-created_at'),
+                to_attr='_all_runs',
+            )
         )
     )
     multi = list(
-        MultiProjectExportConfig.objects
-        .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(
-            Prefetch('runs', queryset=MultiProjectExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
+        MultiProjectExportConfig.objects.annotate(
+            last_run_at=Max('runs__created_at')
+        ).prefetch_related(
+            Prefetch(
+                'runs',
+                queryset=MultiProjectExportRun.objects.order_by('-created_at'),
+                to_attr='_all_runs',
+            )
         )
     )
     all_configs = sorted(
@@ -340,7 +347,9 @@ def export_details(request, export_id):
             'active_tab': 'exports',
             'export': export,
             'runs': page_obj,
-            'run_history_url': reverse('exports:run_history_table', args=[export.id]),
+            'run_history_url': reverse(
+                'exports:run_history_table', args=[export.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
