@@ -27,7 +27,7 @@ def to_status_icon(export_status):
     }
     icons = {
         ExportRunBase.Status.COMPLETED: 'fa-circle-check',
-        ExportRunBase.Status.FAILED: 'fa-exclamation-circle',
+        ExportRunBase.Status.FAILED: 'fa-circle-exclamation',
         ExportRunBase.Status.STARTED: 'fa-play-circle',
         ExportRunBase.Status.MULTIPLE: 'fa-exclamation-triangle',
         ExportRunBase.Status.QUEUED: 'fa-ellipsis-h',
