@@ -29,7 +29,7 @@ def to_status_icon(export_status):
         ExportRunBase.Status.COMPLETED: 'fa-circle-check',
         ExportRunBase.Status.FAILED: 'fa-circle-exclamation',
         ExportRunBase.Status.STARTED: 'fa-circle-play',
-        ExportRunBase.Status.MULTIPLE: 'fa-exclamation-triangle',
+        ExportRunBase.Status.MULTIPLE: 'fa-triangle-exclamation',
         ExportRunBase.Status.QUEUED: 'fa-ellipsis-h',
         ExportRunBase.Status.SKIPPED: 'fa-ban',
     }
