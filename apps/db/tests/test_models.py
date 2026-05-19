@@ -1,9 +1,13 @@
 import doctest
 
 from cryptography.fernet import Fernet
+from django.contrib.auth import get_user_model
 from django.test import override_settings
+from unmagic import fixture, use
 
 from apps.db.models import Database
+
+User = get_user_model()
 
 
 class TestDatabaseConnectionString:
@@ -66,3 +70,59 @@ def test_doctests():
 
     results = doctest.testmod(module)
     assert results.failed == 0
+
+
+@fixture
+@use('db')
+def database_for_is_in_use():
+    """A persisted Database for is_in_use tests (avoids hitting FERNET_KEYS)."""
+    db_obj = Database(name='Test DB IsInUse')
+    db_obj.connection_string = 'postgresql://localhost/testdb'
+    db_obj.save()
+    yield db_obj
+
+
+@use('db')
+class TestDatabaseIsInUse:
+    @use(database_for_is_in_use)
+    def test_not_in_use_when_no_configs(self):
+        assert database_for_is_in_use().is_in_use() is False
+
+    @use(database_for_is_in_use)
+    def test_is_in_use_when_export_config_exists(self):
+        from django.core.files.base import ContentFile
+
+        from apps.commcare.models import (
+            CommCareAccount,
+            CommCareProject,
+            CommCareServer,
+        )
+        from apps.exports.models import ExportConfig
+
+        db_obj = database_for_is_in_use()
+        server = CommCareServer.objects.create(
+            name='Test Server', url='https://test.commcarehq.org'
+        )
+        project = CommCareProject.objects.create(
+            server=server, domain='test-domain'
+        )
+        owner = User.objects.create_user(
+            username='db_is_in_use_owner',
+            email='dbisinuse@example.com',
+            password='testpass',
+        )
+        account = CommCareAccount(
+            server=server, username='test@example.com', owner=owner
+        )
+        account.api_key = 'dummy-key'
+        account.save()
+
+        config = ExportConfig(
+            name='Test Export',
+            account=account,
+            database=db_obj,
+            project=project,
+        )
+        config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+        config.save()
+        assert db_obj.is_in_use() is True
