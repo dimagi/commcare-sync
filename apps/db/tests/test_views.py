@@ -3,7 +3,7 @@ from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
 
-from ..models import Database
+from tests.fixtures import database
 
 User = get_user_model()
 
@@ -43,15 +43,6 @@ def admin_client():
     client = Client()
     client.force_login(admin_user())
     yield client
-
-
-@fixture
-@use('db')
-def database():
-    db_obj = Database(name='Test DB')
-    db_obj.connection_string = 'postgresql://localhost/testdb'
-    db_obj.save()
-    yield db_obj
 
 
 class TestCreateDatabaseView:
