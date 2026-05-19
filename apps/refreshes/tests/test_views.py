@@ -280,7 +280,6 @@ class TestFetchMaterializedViewsView:
         assert response.status_code == 405
 
 
-
 class TestRefreshConfigTableView:
     @use(authed_client)
     def test_requires_login(self):
@@ -318,10 +317,14 @@ class TestRefreshConfigTableView:
         _refresh_config()
         client = authed_client()
         response = client.get(reverse('refreshes:config_table'))
-        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
+        match = re.search(
+            r'data-etag="([a-f0-9]+)"', response.content.decode()
+        )
         assert match
         etag = match.group(1)
-        response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})
+        response2 = client.get(
+            reverse('refreshes:config_table'), {'etag': etag}
+        )
         assert response2.get('HX-Reswap') == 'none'
 
     @use(authed_client, _refresh_config)
@@ -354,13 +357,17 @@ class TestRefreshRunLogView:
             status=RefreshRun.Status.COMPLETED,
             log='refresh log content',
         )
-        response = authed_client().get(reverse('refreshes:run_log', args=[run.id]))
+        response = authed_client().get(
+            reverse('refreshes:run_log', args=[run.id])
+        )
         assert response.status_code == 200
         assert 'refresh log content' in response.content.decode()
 
     @use(authed_client)
     def test_404_for_missing(self):
-        response = authed_client().get(reverse('refreshes:run_log', args=[9999]))
+        response = authed_client().get(
+            reverse('refreshes:run_log', args=[9999])
+        )
         assert response.status_code == 404
 
 

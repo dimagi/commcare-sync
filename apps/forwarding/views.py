@@ -40,11 +40,15 @@ def _compute_forwarding_etag(configs_list):
     parts = []
     for config in configs_list:
         all_runs = getattr(config, '_all_runs', None)
-        run = all_runs[0] if all_runs else config.runs.order_by('-created_at').first()
+        run = (
+            all_runs[0]
+            if all_runs
+            else config.runs.order_by('-created_at').first()
+        )
         if run:
-            parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
+            parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
         else:
-            parts.append(f"config:{config.id}:no-runs")
+            parts.append(f'config:{config.id}:no-runs')
     return hashlib.md5('|'.join(parts).encode()).hexdigest()
 
 
@@ -58,8 +62,14 @@ def forwarders(request):
 
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = ForwardingConfig.objects.order_by(
+        '-updated_at'
+    ).prefetch_related(
+        Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        )
     )
     paginator = Paginator(configs_qs, page_size)
     try:
@@ -79,9 +89,15 @@ def forwarders(request):
             'page_sizes': [10, 20, 50],
             'etag': etag,
             'stats_period': readable_timedelta(period, short=True),
-            'export_stats': _get_export_statistics(current_start, previous_start),
-            'refresh_stats': _get_refresh_statistics(current_start, previous_start),
-            'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+            'export_stats': _get_export_statistics(
+                current_start, previous_start
+            ),
+            'refresh_stats': _get_refresh_statistics(
+                current_start, previous_start
+            ),
+            'forwarding_stats': _get_forwarding_statistics(
+                current_start, previous_start
+            ),
         },
     )
 
@@ -92,8 +108,14 @@ def config_table(request):
     """HTMX endpoint: paginated + ETag-guarded forwarding config table partial."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = ForwardingConfig.objects.order_by(
+        '-updated_at'
+    ).prefetch_related(
+        Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        )
     )
     paginator = Paginator(configs_qs, page_size)
     try:
@@ -107,12 +129,16 @@ def config_table(request):
         response['HX-Reswap'] = 'none'
         return response
 
-    return render(request, 'forwarding/partials/config_table.html', {
-        'configs': page_obj,
-        'page_size': page_size,
-        'page_sizes': [10, 20, 50],
-        'etag': etag,
-    })
+    return render(
+        request,
+        'forwarding/partials/config_table.html',
+        {
+            'configs': page_obj,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
+            'etag': etag,
+        },
+    )
 
 
 @login_required
@@ -134,9 +160,12 @@ def create_forwarding_config(request):
             with transaction.atomic():
                 config = config_form.save()
 
-            messages.success(request, _(
-                "Forwarding configuration '{}' was successfully created."
-            ).format(config.name))
+            messages.success(
+                request,
+                _(
+                    "Forwarding configuration '{}' was successfully created."
+                ).format(config.name),
+            )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[config.id])
             )
@@ -165,9 +194,12 @@ def edit_forwarding_config(request, forwarder_id):
             with transaction.atomic():
                 config_form.save()
 
-            messages.success(request, _(
-                "Forwarding configuration '{}' was successfully updated."
-            ).format(forwarder.name))
+            messages.success(
+                request,
+                _(
+                    "Forwarding configuration '{}' was successfully updated."
+                ).format(forwarder.name),
+            )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[forwarder.id])
             )
@@ -193,9 +225,12 @@ def delete_forwarding_config(request, forwarder_id):
     if request.method == 'POST':
         forwarder_name = forwarder.name
         forwarder.delete()
-        messages.success(request, _(
-            "Forwarding configuration '{}' was successfully deleted."
-        ).format(forwarder_name))
+        messages.success(
+            request,
+            _(
+                "Forwarding configuration '{}' was successfully deleted."
+            ).format(forwarder_name),
+        )
         return HttpResponseRedirect(reverse('forwarding:forwarders'))
 
     return render(
@@ -229,9 +264,12 @@ def create_destination(request):
         form = CreateForwardingDestinationForm(request.POST)
         if form.is_valid():
             destination = form.save()
-            messages.success(request, _(
-                "Destination '{}' was successfully created."
-            ).format(destination.name))
+            messages.success(
+                request,
+                _("Destination '{}' was successfully created.").format(
+                    destination.name
+                ),
+            )
             return HttpResponseRedirect(reverse('forwarding:destinations'))
     else:
         form = CreateForwardingDestinationForm()
@@ -251,12 +289,17 @@ def edit_destination(request, destination_id):
     """Edit an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
     if request.method == 'POST':
-        form = EditForwardingDestinationForm(request.POST, instance=destination)
+        form = EditForwardingDestinationForm(
+            request.POST, instance=destination
+        )
         if form.is_valid():
             destination = form.save()
-            messages.success(request, _(
-                "Destination '{}' was successfully updated."
-            ).format(destination.name))
+            messages.success(
+                request,
+                _("Destination '{}' was successfully updated.").format(
+                    destination.name
+                ),
+            )
             return HttpResponseRedirect(reverse('forwarding:destinations'))
     else:
         form = EditForwardingDestinationForm(instance=destination)
@@ -277,21 +320,31 @@ def delete_destination(request, destination_id):
     """Delete an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
     if destination.is_in_use():
-        messages.error(request, _(
-            "Cannot delete '{}': It is used by one or more forwarder "
-            'configurations.'
-        ).format(destination.name))
+        messages.error(
+            request,
+            _(
+                "Cannot delete '{}': It is used by one or more forwarder "
+                'configurations.'
+            ).format(destination.name),
+        )
         return HttpResponseRedirect(reverse('forwarding:destinations'))
     if request.method == 'POST':
         destination.delete()
-        messages.success(request, _(
-            "Destination '{}' was successfully deleted."
-        ).format(destination.name))
+        messages.success(
+            request,
+            _("Destination '{}' was successfully deleted.").format(
+                destination.name
+            ),
+        )
         return HttpResponseRedirect(reverse('forwarding:destinations'))
-    return render(request, 'forwarding/delete_destination.html', {
-        'active_tab': 'destinations',
-        'destination': destination,
-    })
+    return render(
+        request,
+        'forwarding/delete_destination.html',
+        {
+            'active_tab': 'destinations',
+            'destination': destination,
+        },
+    )
 
 
 @login_required
@@ -312,7 +365,9 @@ def forwarder_details(request, forwarder_id):
             'active_tab': 'forwarders',
             'forwarder': forwarder,
             'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'run_history_url': reverse(
+                'forwarding:run_history_table', args=[forwarder.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
@@ -341,7 +396,9 @@ def run_history_table(request, forwarder_id):
         {
             'forwarder': forwarder,
             'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
+            'run_history_url': reverse(
+                'forwarding:run_history_table', args=[forwarder.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
