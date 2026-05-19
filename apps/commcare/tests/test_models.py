@@ -1,18 +1,25 @@
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.test import override_settings
+from unmagic import fixture, use
 
-from apps.commcare.models import CommCareAccount, CommCareServer
+from apps.commcare.models import (
+    CommCareAccount,
+    CommCareServer,
+)
+from apps.db.models import Database
+from apps.exports.models import ExportConfig
+from tests.fixtures import commcare_project, commcare_server, user
 
 
 class TestCommCareAccountAPIKey:
-
     def setup_method(self):
         User = get_user_model()
         user = User(
             username='testuser',
             email='test@example.com',
-            password='testpass123',
+            password='testpass',
         )
         server = CommCareServer(
             name='Test Server',
@@ -70,3 +77,87 @@ class TestCommCareAccountAPIKey:
         fernet = Fernet(current_key)
         decrypted_bytes = fernet.decrypt(encrypted_bytes)
         assert decrypted_bytes.decode() == test_api_key
+
+
+@fixture
+def account():
+    """CommCareAccount with FERNET_KEYS set for api_key encryption."""
+    with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+        a = CommCareAccount(
+            server=commcare_server(),
+            username='test@example.com',
+            owner=user(),
+        )
+        a.api_key = 'dummy-key'
+        a.save()
+    yield a
+
+
+@use('db')
+class TestCommCareProjectIsInUse:
+    @use(commcare_project)
+    def test_not_in_use_when_no_configs(self):
+        assert commcare_project().is_in_use() is False
+
+    @use(commcare_project, account)
+    def test_in_use_when_exportconfig_exists(self):
+        project = commcare_project()
+        with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+            db_obj = Database(name='Test DB')
+            db_obj.connection_string = 'postgresql://localhost/testdb'
+            db_obj.save()
+
+        config = ExportConfig(
+            name='Test Export',
+            account=account(),
+            database=db_obj,
+            project=project,
+        )
+        config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+        config.save()
+        assert project.is_in_use() is True
+
+    @use(commcare_project, account)
+    def test_not_in_use_after_config_deleted(self):
+        project = commcare_project()
+        with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+            db_obj = Database(name='Test DB 2')
+            db_obj.connection_string = 'postgresql://localhost/testdb2'
+            db_obj.save()
+
+        config = ExportConfig(
+            name='Test Export 2',
+            account=account(),
+            database=db_obj,
+            project=project,
+        )
+        config.config_file.save('test2.xlsx', ContentFile(b''), save=False)
+        config.save()
+        config.delete()
+        assert project.is_in_use() is False
+
+
+@use('db')
+class TestCommCareAccountIsInUse:
+    @use(account)
+    def test_not_in_use_when_no_configs(self):
+        assert account().is_in_use() is False
+
+    @use(commcare_project, account)
+    def test_in_use_when_exportconfig_exists(self):
+        project = commcare_project()
+        acct = account()
+        with override_settings(FERNET_KEYS=[Fernet.generate_key()]):
+            db_obj = Database(name='Test DB')
+            db_obj.connection_string = 'postgresql://localhost/testdb'
+            db_obj.save()
+
+        config = ExportConfig(
+            name='Test Export',
+            account=acct,
+            database=db_obj,
+            project=project,
+        )
+        config.config_file.save('test.xlsx', ContentFile(b''), save=False)
+        config.save()
+        assert acct.is_in_use() is True
