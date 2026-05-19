@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.web.decorators import admin_required
 from commcare_sync.views import get_hide_skipped_from_request, get_ui_page_size
 
 from .api_client import fetch_available_configs
@@ -477,7 +478,7 @@ def fetch_config_files(request):
     )
 
 
-@login_required
+@admin_required
 def download_commcare_export_log(request):
     """
     Download the commcare_export.log file from the configured log directory.

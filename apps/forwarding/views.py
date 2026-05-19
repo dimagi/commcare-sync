@@ -1,11 +1,13 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
+
+from apps.web.decorators import admin_required
 
 from commcare_sync.views import get_ui_page_size, get_hide_skipped_from_request
 
@@ -45,9 +47,9 @@ def create_forwarding_config(request):
 
             messages.success(
                 request,
-                _(
-                    'Forwarding configuration "{}" was successfully created.'
-                ).format(config.name),
+                _('Forwarding configuration "{}" was successfully created.').format(
+                    config.name
+                ),
             )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[config.id])
@@ -79,9 +81,9 @@ def edit_forwarding_config(request, forwarder_id):
 
             messages.success(
                 request,
-                _(
-                    'Forwarding configuration "{}" was successfully updated.'
-                ).format(forwarder.name),
+                _('Forwarding configuration "{}" was successfully updated.').format(
+                    forwarder.name
+                ),
             )
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[forwarder.id])
@@ -110,9 +112,9 @@ def delete_forwarding_config(request, forwarder_id):
         forwarder.delete()
         messages.success(
             request,
-            _(
-                'Forwarding configuration "{}" was successfully deleted.'
-            ).format(forwarder_name),
+            _('Forwarding configuration "{}" was successfully deleted.').format(
+                forwarder_name
+            ),
         )
         return HttpResponseRedirect(reverse('forwarding:forwarders'))
 
@@ -140,7 +142,7 @@ def destinations(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
+@admin_required
 def create_destination(request):
     """Create a new forwarding destination."""
     if request.method == 'POST':
@@ -167,14 +169,12 @@ def create_destination(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
+@admin_required
 def edit_destination(request, destination_id):
     """Edit an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
     if request.method == 'POST':
-        form = EditForwardingDestinationForm(
-            request.POST, instance=destination
-        )
+        form = EditForwardingDestinationForm(request.POST, instance=destination)
         if form.is_valid():
             destination = form.save()
             messages.success(
@@ -206,10 +206,7 @@ def forwarder_details(request, forwarder_id):
     hide_skipped = get_hide_skipped_from_request(request)
     if hide_skipped:
         runs = runs.exclude(
-            status__in=[
-                ForwardingRun.Status.SKIPPED,
-                ForwardingRun.Status.QUEUED,
-            ]
+            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
         )
 
     return render(
@@ -233,10 +230,7 @@ def run_history_table(request, forwarder_id):
 
     if hide_skipped:
         runs = runs.exclude(
-            status__in=[
-                ForwardingRun.Status.SKIPPED,
-                ForwardingRun.Status.QUEUED,
-            ]
+            status__in=[ForwardingRun.Status.SKIPPED, ForwardingRun.Status.QUEUED]
         )
 
     return render(

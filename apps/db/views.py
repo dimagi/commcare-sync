@@ -1,8 +1,10 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+
+from apps.web.decorators import admin_required
 
 from .forms import CreateDatabaseForm, EditDatabaseForm
 from .models import Database
@@ -21,7 +23,7 @@ def databases(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/admin-required')  # type: ignore[union-attr]
+@admin_required
 def create_database(request):
     if request.method == 'POST':
         form = CreateDatabaseForm(request.POST, request.FILES)
@@ -45,7 +47,7 @@ def create_database(request):
     )
 
 
-@user_passes_test(lambda u: u.is_superuser)  # type: ignore[union-attr]
+@admin_required
 def edit_database(request, database_id):
     db = get_object_or_404(Database, id=database_id)
     if request.method == 'POST':
@@ -70,7 +72,7 @@ def edit_database(request, database_id):
     )
 
 
-@login_required
+@admin_required
 def delete_database(request, database_id):
     db = get_object_or_404(Database, id=database_id)
     if request.method == 'POST':
