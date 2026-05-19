@@ -18,7 +18,7 @@ def test_doctests():
         (ExportRunBase.Status.FAILED, 'fa-circle-exclamation', 'text-danger'),
         (ExportRunBase.Status.STARTED, 'fa-circle-play', 'text-primary'),
         (ExportRunBase.Status.MULTIPLE, 'fa-triangle-exclamation', 'text-warning'),
-        (ExportRunBase.Status.QUEUED, 'fa-ellipsis-h', 'text-muted'),
+        (ExportRunBase.Status.QUEUED, 'fa-ellipsis', 'text-muted'),
         (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-muted'),
     ],
 )
