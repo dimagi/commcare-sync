@@ -34,6 +34,25 @@ def projects(request):
 
 
 @login_required
+def delete_project(request, project_id):
+    project = get_object_or_404(CommCareProject, id=project_id)
+    if project.is_in_use():
+        messages.error(
+            request,
+            f'Cannot delete "{project.domain}": It is used by one or more export configurations.',
+        )
+        return HttpResponseRedirect(reverse('commcare:projects'))
+    if request.method == 'POST':
+        project.delete()
+        messages.success(request, f'Project "{project.domain}" was successfully deleted.')
+        return HttpResponseRedirect(reverse('commcare:projects'))
+    return render(request, 'commcare/delete_project.html', {
+        'active_tab': 'projects',
+        'project': project,
+    })
+
+
+@login_required
 def create_project(request):
     if request.method == 'POST':
         form = CommCareProjectForm(request.POST, request.FILES)
