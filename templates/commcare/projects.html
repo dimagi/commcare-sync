@@ -1,0 +1,72 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% block app %}
+  <section class="py-4 app-card">
+    {% if projects %}
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h2 mb-0">{% trans "CommCare Projects" %}</h1>
+        <a
+          class="btn btn-primary btn-sm"
+          href="{% url 'commcare:create_project' %}"
+        >
+          <i class="fa-solid fa-plus"></i> {% trans "New Project" %}
+        </a>
+      </div>
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>{% trans "Domain" %}</th>
+            <th>{% trans "Server" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+            <tr>
+              <td>
+                <a href="{{ project.url }}">{{ project.domain }}</a>
+              </td>
+              <td>{{ project.server }}</td>
+              <td class="text-nowrap">
+                <a
+                  class="btn btn-outline-secondary btn-sm"
+                  href="{% url 'commcare:edit_project' project.id %}"
+                >
+                  <i class="fa-solid fa-pencil"></i> {% trans "Edit" %}
+                </a>
+                {% if project.is_in_use %}
+                  <span
+                    data-bs-toggle="tooltip"
+                    title="{% trans 'Cannot delete: Used by one or more export configurations' %}"
+                  >
+                    <a class="btn btn-outline-danger btn-sm disabled" disabled>
+                      <i class="fa-solid fa-trash"></i> {% trans "Delete" %}
+                    </a>
+                  </span>
+                {% else %}
+                  <a
+                    class="btn btn-outline-danger btn-sm"
+                    href="{% url 'commcare:delete_project' project.id %}"
+                  >
+                    <i class="fa-solid fa-trash"></i> {% trans "Delete" %}
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <h1 class="h2">{% trans "CommCare Projects" %}</h1>
+      <div class="alert alert-warning">
+        {% trans "No CommCare projects yet." %}
+      </div>
+      <a
+        class="btn btn-primary btn-sm"
+        href="{% url 'commcare:create_project' %}"
+      >
+        <i class="fa-solid fa-plus"></i> {% trans "Add Your First Project" %}
+      </a>
+    {% endif %}
+  </section>
+{% endblock app %}
