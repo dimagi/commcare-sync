@@ -25,6 +25,15 @@ def home(request):
 
 
 @login_required
+def projects(request):
+    projects = CommCareProject.objects.order_by('domain')
+    return render(request, 'commcare/projects.html', {
+        'active_tab': 'projects',
+        'projects': projects,
+    })
+
+
+@login_required
 def create_project(request):
     if request.method == 'POST':
         form = CommCareProjectForm(request.POST, request.FILES)
