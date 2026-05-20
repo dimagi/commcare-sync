@@ -45,7 +45,7 @@ def create_project(request):
         form = CommCareProjectForm()
 
     return render(request, 'commcare/create_project.html', {
-        'active_tab': 'create_project',
+        'active_tab': 'projects',
         'form': form,
     })
 
@@ -63,7 +63,7 @@ def edit_project(request, project_id):
         form = CommCareProjectForm(instance=project)
 
     return render(request, 'commcare/edit_project.html', {
-        'active_tab': 'commcare',
+        'active_tab': 'projects',
         'form': form,
         'project': project,
     })
