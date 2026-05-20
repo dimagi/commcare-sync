@@ -75,6 +75,32 @@ def test_edit_project_redirect():
     assert reverse('commcare:projects') in response.url
 
 
+@use(regular_client, commcare_server)
+def test_create_account_redirect():
+    url = reverse('commcare:create_account')
+    with override_settings(FERNET_KEYS=[FERNET_KEY]):
+        response = regular_client().post(url, {
+            'server': commcare_server().id,
+            'username': 'newaccount@example.com',
+            'api_key': 'some-api-key',
+        })
+    assert response.status_code == 302
+    assert reverse('commcare:accounts') in response.url
+
+
+@use(regular_client, commcare_account, commcare_server)
+def test_edit_account_redirect():
+    url = reverse('commcare:edit_account', args=[commcare_account().id])
+    with override_settings(FERNET_KEYS=[FERNET_KEY]):
+        response = regular_client().post(url, {
+            'server': commcare_server().id,
+            'username': 'updated@example.com',
+            'api_key': 'updated-api-key',
+        })
+    assert response.status_code == 302
+    assert reverse('commcare:accounts') in response.url
+
+
 @use(regular_client, commcare_project, commcare_account)
 class TestDeleteProjectView:
     def test_anonymous_redirects_to_login(self):
