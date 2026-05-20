@@ -89,6 +89,15 @@ def edit_project(request, project_id):
 
 
 @login_required
+def accounts(request):
+    accounts = CommCareAccount.objects.order_by('username')
+    return render(request, 'commcare/accounts.html', {
+        'active_tab': 'accounts',
+        'accounts': accounts,
+    })
+
+
+@login_required
 def create_account(request):
     if request.method == 'POST':
         form = CreateCommCareAccountForm(request.POST, request.FILES)
