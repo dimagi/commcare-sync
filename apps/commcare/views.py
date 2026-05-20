@@ -111,7 +111,7 @@ def create_account(request):
         form = CreateCommCareAccountForm()
 
     return render(request, 'commcare/create_account.html', {
-        'active_tab': 'create_account',
+        'active_tab': 'accounts',
         'form': form,
     })
 
@@ -132,7 +132,7 @@ def edit_account(request, account_id):
         form = EditCommCareAccountForm(instance=account)
 
     return render(request, 'commcare/edit_account.html', {
-        'active_tab': 'commcare',
+        'active_tab': 'accounts',
         'form': form,
         'account': account,
     })
