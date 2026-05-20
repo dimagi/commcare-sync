@@ -40,7 +40,7 @@ def create_project(request):
         if form.is_valid():
             project = form.save()
             messages.success(request, f'Project {project.domain} was successfully added.')
-            return HttpResponseRedirect(reverse('commcare:home'))
+            return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm()
 
@@ -58,7 +58,7 @@ def edit_project(request, project_id):
         if form.is_valid():
             project = form.save()
             messages.success(request, f'Project {project} was successfully saved.')
-            return HttpResponseRedirect(reverse('commcare:home'))
+            return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm(instance=project)
 
