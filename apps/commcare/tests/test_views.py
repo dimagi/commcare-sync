@@ -39,6 +39,20 @@ class TestProjectsView:
         assert response.status_code == 200
 
 
+class TestAccountsView:
+    def test_anonymous_redirects_to_login(self):
+        url = reverse('commcare:accounts')
+        response = Client().get(url)
+        assert response.status_code == 302
+        assert '/accounts/login/' in response.url
+
+    @use(regular_client)
+    def test_logged_in_user_gets_200(self):
+        url = reverse('commcare:accounts')
+        response = regular_client().get(url)
+        assert response.status_code == 200
+
+
 @use(regular_client, commcare_server)
 def test_create_project_redirect():
     url = reverse('commcare:create_project')
