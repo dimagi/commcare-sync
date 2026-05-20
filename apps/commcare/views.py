@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -94,6 +95,27 @@ def accounts(request):
     return render(request, 'commcare/accounts.html', {
         'active_tab': 'accounts',
         'accounts': accounts,
+    })
+
+
+@login_required
+def delete_account(request, account_id):
+    account = get_object_or_404(CommCareAccount, id=account_id)
+    if account.owner != request.user:
+        raise PermissionDenied
+    if account.is_in_use():
+        messages.error(
+            request,
+            f'Cannot delete "{account.username}": It is used by one or more export configurations.',
+        )
+        return HttpResponseRedirect(reverse('commcare:accounts'))
+    if request.method == 'POST':
+        account.delete()
+        messages.success(request, f'Account "{account.username}" was successfully deleted.')
+        return HttpResponseRedirect(reverse('commcare:accounts'))
+    return render(request, 'commcare/delete_account.html', {
+        'active_tab': 'accounts',
+        'account': account,
     })
 
 
