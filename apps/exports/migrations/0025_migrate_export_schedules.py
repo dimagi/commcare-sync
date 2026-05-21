@@ -8,7 +8,17 @@ def migrate_export_schedules(apps, schema_editor):
     IntervalSchedule = apps.get_model('django_celery_beat', 'IntervalSchedule')
     PeriodicTask = apps.get_model('django_celery_beat', 'PeriodicTask')
 
-    for model_name in ('ExportConfig', 'MultiProjectExportConfig'):
+    model_config = {
+        'ExportConfig': {
+            'periodic_task_prefix': 'Run export',
+            'celery_task': 'apps.exports.tasks.run_scheduled_export_task',
+        },
+        'MultiProjectExportConfig': {
+            'periodic_task_prefix': 'Run multi-project export',
+            'celery_task': 'apps.exports.tasks.run_scheduled_multi_export_task',
+        },
+    }
+    for model_name, config in model_config.items():
         Model = apps.get_model('exports', model_name)
         for export in Model.objects.all():
             export.schedule_type = 'interval'
@@ -23,10 +33,10 @@ def migrate_export_schedules(apps, schema_editor):
 
             # Create PeriodicTask (disabled if export was paused)
             task_name = (
-                f'{Model.PERIODIC_TASK_PREFIX}: {export} (ID: {export.id})'
+                f"{config['periodic_task_prefix']}: {export} (ID: {export.id})"
             )
             periodic_task = PeriodicTask.objects.create(
-                task=Model.CELERY_TASK,
+                task=config['celery_task'],
                 name=task_name,
                 enabled=not export.is_paused,
                 args=json.dumps([export.id]),
