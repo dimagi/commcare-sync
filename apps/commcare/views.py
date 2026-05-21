@@ -27,14 +27,16 @@ def projects(request):
 def delete_project(request, project_id):
     project = get_object_or_404(CommCareProject, id=project_id)
     if project.is_in_use():
-        messages.error(
-            request,
-            f'Cannot delete "{project.domain}": It is used by one or more export configurations.',
-        )
+        messages.error(request, _(
+            'Cannot delete "{}": It is used by one or more export '
+            'configurations.'
+        ).format(project.domain),)
         return HttpResponseRedirect(reverse('commcare:projects'))
     if request.method == 'POST':
         project.delete()
-        messages.success(request, f'Project "{project.domain}" was successfully deleted.')
+        messages.success(request, _(
+            'Project "{}" was successfully deleted.'
+        ).format(project.domain))
         return HttpResponseRedirect(reverse('commcare:projects'))
     return render(request, 'commcare/delete_project.html', {
         'active_tab': 'projects',
@@ -48,7 +50,9 @@ def create_project(request):
         form = CommCareProjectForm(request.POST, request.FILES)
         if form.is_valid():
             project = form.save()
-            messages.success(request, f'Project {project.domain} was successfully added.')
+            messages.success(request, _(
+                'Project {} was successfully added.'
+            ).format(project.domain))
             return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm()
@@ -66,7 +70,9 @@ def edit_project(request, project_id):
         form = CommCareProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             project = form.save()
-            messages.success(request, f'Project {project} was successfully saved.')
+            messages.success(request, _(
+                'Project {} was successfully saved.'
+            ).format(project))
             return HttpResponseRedirect(reverse('commcare:projects'))
     else:
         form = CommCareProjectForm(instance=project)
@@ -93,14 +99,16 @@ def delete_account(request, account_id):
     if account.owner != request.user:
         raise PermissionDenied
     if account.is_in_use():
-        messages.error(
-            request,
-            f'Cannot delete "{account.username}": It is used by one or more export configurations.',
-        )
+        messages.error(request, _(
+            'Cannot delete "{}": It is used by one or more export '
+            'configurations.'
+        ).format(account.username))
         return HttpResponseRedirect(reverse('commcare:accounts'))
     if request.method == 'POST':
         account.delete()
-        messages.success(request, f'Account "{account.username}" was successfully deleted.')
+        messages.success(request, _(
+            'Account "{}" was successfully deleted.'
+        ).format(account.username))
         return HttpResponseRedirect(reverse('commcare:accounts'))
     return render(request, 'commcare/delete_account.html', {
         'active_tab': 'accounts',
@@ -116,7 +124,9 @@ def create_account(request):
             account = form.save(commit=False)
             account.owner = request.user
             account.save()
-            messages.success(request, f'Account {account.username} was successfully added.')
+            messages.success(request, _(
+                'Account {} was successfully added.'
+            ).format(account.username))
             return HttpResponseRedirect(reverse('commcare:accounts'))
     else:
         form = CreateCommCareAccountForm()
