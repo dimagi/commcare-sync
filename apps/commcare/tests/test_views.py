@@ -1,6 +1,5 @@
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from django.test import Client, override_settings
 from django.urls import reverse
 from unmagic import fixture, use
@@ -139,14 +138,12 @@ class TestDeleteProjectView:
             db_obj = Database(name='Test DB')
             db_obj.connection_string = 'postgresql://localhost/testdb'
             db_obj.save()
-            config = ExportConfig(
-                name='Test Export',
-                account=commcare_account(),
-                database=db_obj,
-                project=commcare_project(),
-            )
-            config.config_file.save('test.xlsx', ContentFile(b''), save=False)
-            config.save()
+        ExportConfig.objects.create(
+            name='Test Export',
+            account=commcare_account(),
+            database=db_obj,
+            project=commcare_project(),
+        )
 
         url = reverse('commcare:delete_project', args=[commcare_project().id])
         response = regular_client().get(url)
@@ -158,14 +155,12 @@ class TestDeleteProjectView:
             db_obj = Database(name='Test DB 3')
             db_obj.connection_string = 'postgresql://localhost/testdb3'
             db_obj.save()
-            config = ExportConfig(
-                name='Test Export 3',
-                account=commcare_account(),
-                database=db_obj,
-                project=commcare_project(),
-            )
-            config.config_file.save('test3.xlsx', ContentFile(b''), save=False)
-            config.save()
+        ExportConfig.objects.create(
+            name='Test Export 3',
+            account=commcare_account(),
+            database=db_obj,
+            project=commcare_project(),
+        )
 
         url = reverse('commcare:delete_project', args=[commcare_project().id])
         response = regular_client().post(url)
@@ -210,17 +205,15 @@ class TestDeleteAccountView:
             db_obj = Database(name='Account In Use DB')
             db_obj.connection_string = 'postgresql://localhost/testdb'
             db_obj.save()
-            config = ExportConfig(
-                name='Account Test Export',
-                account=commcare_account(),
-                database=db_obj,
-                project=CommCareProject.objects.create(
-                    server=commcare_account().server,
-                    domain='guard-test-domain',
-                ),
-            )
-            config.config_file.save('test.xlsx', ContentFile(b''), save=False)
-            config.save()
+        ExportConfig.objects.create(
+            name='Account Test Export',
+            account=commcare_account(),
+            database=db_obj,
+            project=CommCareProject.objects.create(
+                server=commcare_account().server,
+                domain='guard-test-domain',
+            ),
+        )
 
         url = reverse('commcare:delete_account', args=[commcare_account().id])
         response = regular_client().get(url)
@@ -233,17 +226,15 @@ class TestDeleteAccountView:
             db_obj = Database(name='Account In Use DB 2')
             db_obj.connection_string = 'postgresql://localhost/testdb2'
             db_obj.save()
-            config = ExportConfig(
-                name='Account Test Export 2',
-                account=commcare_account(),
-                database=db_obj,
-                project=CommCareProject.objects.create(
-                    server=commcare_account().server,
-                    domain='guard-test-domain-2',
-                ),
-            )
-            config.config_file.save('test2.xlsx', ContentFile(b''), save=False)
-            config.save()
+        ExportConfig.objects.create(
+            name='Account Test Export 2',
+            account=commcare_account(),
+            database=db_obj,
+            project=CommCareProject.objects.create(
+                server=commcare_account().server,
+                domain='guard-test-domain-2',
+            ),
+        )
 
         url = reverse('commcare:delete_account', args=[commcare_account().id])
         response = regular_client().post(url)
