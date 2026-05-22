@@ -141,10 +141,16 @@ def create_account(request):
 def edit_account(request, account_id):
     account = get_object_or_404(CommCareAccount, id=account_id)
     if not request.user == account.owner:
-        messages.warning(request, _("Sorry, you don't have permission to edit that account"))
+        messages.warning(request, _(
+            "Sorry, you don't have permission to edit that account"
+        ))
         return HttpResponseRedirect(reverse('commcare:accounts'))
     if request.method == 'POST':
-        form = EditCommCareAccountForm(request.POST, request.FILES, instance=account)
+        form = EditCommCareAccountForm(
+            request.POST,
+            request.FILES,
+            instance=account,
+        )
         if form.is_valid():
             account = form.save()
             messages.success(request, _(
