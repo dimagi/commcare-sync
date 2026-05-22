@@ -14,29 +14,34 @@ CommCare to provide reporting data to users.
 
 ## Commands
 
-The project uses a virtualenv in `.venv/` managed with uv. Activate it
-with `source .venv/bin/activate`. Alternatively use `uv run ...` before
-commands.
+Run commands in the uv virtualenv using `uv run ...`.
 
 - Python: `uv run python3 ...`
 - Run tests: `uv run pytest [path/to/file.py::TestClass::test_method]`
 - Check typing: `uv run mypy apps/ commcare_sync/ *.py`
 - Check linting: `uv run ruff check`
 - Format Python: `uv run ruff format <path/to/file.py>`
-- Format HTML templates: `npx prettier --write <path/to/file.html>`
+- Format HTML and Markdown: `npx prettier --write <path/to/file.html>`
 - Sort imports `uv run ruff check --select I --fix <path/to/file.py>`
 
 ## Project Structure
 
+### Agent documentation
+
+| Path                                        | Purpose              |
+|---------------------------------------------|----------------------|
+| `claude/specs/YYYY-MM-DD_spec-name.md`      | Design specs         |
+| `.claude/plans/YYYY-MM-DD_plan-name.md`     | Implementation plans |
+| `.claude/reviews/YYYY-MM-DD_review-name.md` | Code reviews         |
+
 ### Configuration
 
-| File                        | Purpose                                 |
-|-----------------------------|-----------------------------------------|
-| `commcare_sync/settings.py` | Main Django settings                    |
-| `commcare_sync/urls.py`     | Root URL configuration                  |
-| `commcare_sync/celery.py`   | Celery task queue configuration         |
-| `pyproject.toml`            | Python dependencies, tool configuration |
-| `package.json`              | JavaScript dependencies, build scripts  |
+| File                              | Purpose                         |
+|-----------------------------------|---------------------------------|
+| `commcare_sync/settings.py`       | Main Django settings            |
+| `commcare_sync/settings_local.py` | Git-ignored local settings      |
+| `commcare_sync/urls.py`           | Root URL configuration          |
+| `commcare_sync/celery.py`         | Celery task queue configuration |
 
 ### Applications (`apps/`)
 
@@ -60,31 +65,24 @@ commands.
 
 ### Static Files (`static/`)
 
-| Path               | Purpose                                 |
-|--------------------|-----------------------------------------|
-| `js/alpine.min.js` | Alpine.js framework                     |
-| `js/htmx.min.js`   | HTMX library                            |
-| `css/site.css`     | Compiled from `assets/styles/site.scss` |
+| Path           | Purpose                                 |
+|----------------|-----------------------------------------|
+| `css/site.css` | Compiled from `assets/styles/site.scss` |
 
 ### Testing
 
-| Path                             | Purpose                                   |
-|----------------------------------|-------------------------------------------|
-| `apps/{app}/tests/`              | Tests per application                     |
-| `apps/exports/tests/conftest.py` | Pytest and Playwright configuration       |
-| `apps/exports/tests/fixtures.py` | Reusable test data fixtures               |
-| `apps/exports/tests/helpers.py`  | Test helper functions (login, navigation) |
-
-### Agent documentation
-
-| Path                                     | Purpose              |
-|------------------------------------------|----------------------|
-| `claude/specs/YYYY-MM-DD_spec-name.md`   | Design specs         |
-| `claude/plans/YYYY-MM-DD_plan-name.md`   | Implementation plans |
-| `claude/reviews/YYYY-MM-DD_plan-name.md` | Code reviews         |
+| Path                           | Purpose                                   |
+|--------------------------------|-------------------------------------------|
+| `apps/{app}/tests/`            | Tests per application                     |
+| `apps/{app}/tests/conftest.py` | Pytest and Playwright configuration       |
+| `apps/{app}/tests/fixtures.py` | Reusable test fixtures                    |
+| `apps/{app}/tests/helpers.py`  | Test helper functions (login, navigation) |
+| `tests/fixtures.py`            | Test fixtures reusable across apps        |
 
 ### Key Patterns
 
+- **Bootstrap**: Where Bootstrap can achieve the same functionality as
+  Alpine.js, use Bootstrap.
 - **HTMX partials**: Templates in `{app}/partials/` return HTML fragments
   for partial page updates
 - **Alpine.js**: Reactive state via `x-data`, `x-model`, `@change`
