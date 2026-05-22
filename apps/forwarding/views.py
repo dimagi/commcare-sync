@@ -45,12 +45,9 @@ def create_forwarding_config(request):
             with transaction.atomic():
                 config = config_form.save()
 
-            messages.success(
-                request,
-                _('Forwarding configuration "{}" was successfully created.').format(
-                    config.name
-                ),
-            )
+            messages.success(request, _(
+                "Forwarding configuration '{}' was successfully created."
+            ).format(config.name))
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[config.id])
             )
@@ -79,12 +76,9 @@ def edit_forwarding_config(request, forwarder_id):
             with transaction.atomic():
                 config_form.save()
 
-            messages.success(
-                request,
-                _('Forwarding configuration "{}" was successfully updated.').format(
-                    forwarder.name
-                ),
-            )
+            messages.success(request, _(
+                "Forwarding configuration '{}' was successfully updated."
+            ).format(forwarder.name))
             return HttpResponseRedirect(
                 reverse('forwarding:forwarder_details', args=[forwarder.id])
             )
@@ -110,12 +104,9 @@ def delete_forwarding_config(request, forwarder_id):
     if request.method == 'POST':
         forwarder_name = forwarder.name
         forwarder.delete()
-        messages.success(
-            request,
-            _('Forwarding configuration "{}" was successfully deleted.').format(
-                forwarder_name
-            ),
-        )
+        messages.success(request, _(
+            "Forwarding configuration '{}' was successfully deleted."
+        ).format(forwarder_name))
         return HttpResponseRedirect(reverse('forwarding:forwarders'))
 
     return render(
@@ -149,12 +140,9 @@ def create_destination(request):
         form = CreateForwardingDestinationForm(request.POST)
         if form.is_valid():
             destination = form.save()
-            messages.success(
-                request,
-                _('Destination "{}" was successfully created.').format(
-                    destination.name
-                ),
-            )
+            messages.success(request, _(
+                "Destination '{}' was successfully created."
+            ).format(destination.name))
             return HttpResponseRedirect(reverse('forwarding:destinations'))
     else:
         form = CreateForwardingDestinationForm()
@@ -177,12 +165,9 @@ def edit_destination(request, destination_id):
         form = EditForwardingDestinationForm(request.POST, instance=destination)
         if form.is_valid():
             destination = form.save()
-            messages.success(
-                request,
-                _('Destination "{}" was successfully updated.').format(
-                    destination.name
-                ),
-            )
+            messages.success(request, _(
+                "Destination '{}' was successfully updated."
+            ).format(destination.name))
             return HttpResponseRedirect(reverse('forwarding:destinations'))
     else:
         form = EditForwardingDestinationForm(instance=destination)

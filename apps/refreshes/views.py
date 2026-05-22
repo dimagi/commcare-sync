@@ -47,12 +47,9 @@ def create_refresh_config(request):
             with transaction.atomic():
                 config = config_form.save()
 
-            messages.success(
-                request,
-                _(
-                    'Refresh configuration "{}" was successfully created.'
-                ).format(config.name),
-            )
+            messages.success(request, _(
+                "Refresh configuration '{}' was successfully created."
+            ).format(config.name))
             return HttpResponseRedirect(
                 reverse('refreshes:refresh_details', args=[config.id])
             )
@@ -81,12 +78,9 @@ def edit_refresh_config(request, config_id):
             with transaction.atomic():
                 config_form.save()
 
-            messages.success(
-                request,
-                _(
-                    'Refresh configuration "{}" was successfully updated.'
-                ).format(config.name),
-            )
+            messages.success(request, _(
+                "Refresh configuration '{}' was successfully updated."
+            ).format(config.name))
             return HttpResponseRedirect(
                 reverse('refreshes:refresh_details', args=[config.id])
             )
@@ -112,12 +106,9 @@ def delete_refresh_config(request, config_id):
     if request.method == 'POST':
         config_name = config.name
         config.delete()
-        messages.success(
-            request,
-            _('Refresh configuration "{}" was successfully deleted.').format(
-                config_name
-            ),
-        )
+        messages.success(request, _(
+            "Refresh configuration '{}' was successfully deleted."
+        ).format(config_name))
         return HttpResponseRedirect(reverse('refreshes:refresh_configs'))
 
     return render(
