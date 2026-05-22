@@ -28,14 +28,14 @@ def delete_project(request, project_id):
     project = get_object_or_404(CommCareProject, id=project_id)
     if project.is_in_use():
         messages.error(request, _(
-            'Cannot delete "{}": It is used by one or more export '
+            "Cannot delete '{}': It is used by one or more export "
             'configurations.'
         ).format(project.domain),)
         return HttpResponseRedirect(reverse('commcare:projects'))
     if request.method == 'POST':
         project.delete()
         messages.success(request, _(
-            'Project "{}" was successfully deleted.'
+            "Project '{}' was successfully deleted."
         ).format(project.domain))
         return HttpResponseRedirect(reverse('commcare:projects'))
     return render(request, 'commcare/delete_project.html', {
@@ -51,7 +51,7 @@ def create_project(request):
         if form.is_valid():
             project = form.save()
             messages.success(request, _(
-                'Project {} was successfully added.'
+                "Project '{}' was successfully added."
             ).format(project.domain))
             return HttpResponseRedirect(reverse('commcare:projects'))
     else:
@@ -71,7 +71,7 @@ def edit_project(request, project_id):
         if form.is_valid():
             project = form.save()
             messages.success(request, _(
-                'Project {} was successfully saved.'
+                "Project '{}' was successfully saved."
             ).format(project))
             return HttpResponseRedirect(reverse('commcare:projects'))
     else:
@@ -100,14 +100,14 @@ def delete_account(request, account_id):
         raise PermissionDenied
     if account.is_in_use():
         messages.error(request, _(
-            'Cannot delete "{}": It is used by one or more export '
+            "Cannot delete '{}': It is used by one or more export "
             'configurations.'
         ).format(account.username))
         return HttpResponseRedirect(reverse('commcare:accounts'))
     if request.method == 'POST':
         account.delete()
         messages.success(request, _(
-            'Account "{}" was successfully deleted.'
+            "Account '{}' was successfully deleted."
         ).format(account.username))
         return HttpResponseRedirect(reverse('commcare:accounts'))
     return render(request, 'commcare/delete_account.html', {
@@ -125,7 +125,7 @@ def create_account(request):
             account.owner = request.user
             account.save()
             messages.success(request, _(
-                'Account {} was successfully added.'
+                "Account '{}' was successfully added."
             ).format(account.username))
             return HttpResponseRedirect(reverse('commcare:accounts'))
     else:
@@ -147,7 +147,9 @@ def edit_account(request, account_id):
         form = EditCommCareAccountForm(request.POST, request.FILES, instance=account)
         if form.is_valid():
             account = form.save()
-            messages.success(request, _('Account {account} was successfully saved.').format(account=account))
+            messages.success(request, _(
+                "Account '{}' was successfully saved."
+            ).format(account))
             return HttpResponseRedirect(reverse('commcare:accounts'))
     else:
         form = EditCommCareAccountForm(instance=account)
