@@ -12,6 +12,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from reversion.models import Version
 
@@ -60,9 +61,9 @@ def create_export_config(request):
         config_form = ExportConfigForm(request.POST, request.FILES)
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(
-                request, f'Export "{export.name}" was successfully created.'
-            )
+            messages.success(request, _(
+                "Export '{}' was successfully created."
+            ).format(export.name))
             return HttpResponseRedirect(
                 reverse('exports:export_details', args=[export.id])
             )
@@ -86,10 +87,9 @@ def create_multi_export_config(request):
         if config_form.is_valid():
             export = config_form.save()
             config_form.save_m2m()
-            messages.success(
-                request,
-                f'Export {export.name} was successfully created.',
-            )
+            messages.success(request, _(
+                "Export '{}' was successfully created."
+            ).format(export.name))
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
             )
@@ -117,10 +117,9 @@ def edit_export_config(request, export_id):
         )
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(
-                request,
-                f'Export {export.name} was successfully saved.',
-            )
+            messages.success(request, _(
+                "Export '{}' was successfully saved."
+            ).format(export.name))
             return HttpResponseRedirect(
                 reverse('exports:export_details', args=[export.id])
             )
@@ -147,10 +146,9 @@ def edit_multi_export_config(request, export_id):
         )
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(
-                request,
-                f'Export {export.name} was successfully saved.',
-            )
+            messages.success(request, _(
+                "Export '{}' was successfully saved."
+            ).format(export.name))
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
             )
@@ -172,10 +170,9 @@ def delete_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(
-            request,
-            f'Export file "{export.name}" was successfully deleted.',
-        )
+        messages.success(request, _(
+            "Export file '{}' was successfully deleted."
+        ).format(export.name))
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
         request,
@@ -192,10 +189,9 @@ def delete_multi_export_config(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(
-            request,
-            f'Export file "{export.name}" was successfully deleted.',
-        )
+        messages.success(request, _(
+            "Export file '{}' was successfully deleted."
+        ).format(export.name))
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
         request,

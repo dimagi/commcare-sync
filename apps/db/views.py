@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from apps.web.decorators import admin_required
 
@@ -29,10 +30,9 @@ def create_database(request):
         form = CreateDatabaseForm(request.POST, request.FILES)
         if form.is_valid():
             db = form.save()
-            messages.success(
-                request,
-                f'Database {db.name} was successfully created.',
-            )
+            messages.success(request, _(
+                "Database '{}' was successfully created."
+            ).format(db.name))
             return HttpResponseRedirect(reverse('db:databases'))
     else:
         form = CreateDatabaseForm()
@@ -54,10 +54,9 @@ def edit_database(request, database_id):
         form = EditDatabaseForm(request.POST, instance=db)
         if form.is_valid():
             db = form.save()
-            messages.success(
-                request,
-                f'Database "{db.name}" was successfully updated.',
-            )
+            messages.success(request, _(
+                "Database '{}' was successfully updated."
+            ).format(db.name))
             return HttpResponseRedirect(reverse('db:databases'))
     else:
         form = EditDatabaseForm(instance=db)
@@ -76,14 +75,15 @@ def edit_database(request, database_id):
 def delete_database(request, database_id):
     db = get_object_or_404(Database, id=database_id)
     if db.is_in_use():
-        messages.error(request, f'Cannot delete "{db.name}": It is currently in use.')
+        messages.error(request, _(
+            "Cannot delete '{}': It is currently in use."
+        ).format(db.name))
         return HttpResponseRedirect(reverse('db:databases'))
     if request.method == 'POST':
         db.delete()
-        messages.success(
-            request,
-            f'Database "{db.name}" was successfully deleted.',
-        )
+        messages.success(request, _(
+            "Database '{}' was successfully deleted."
+        ).format(db.name))
         return HttpResponseRedirect(reverse('db:databases'))
     return render(
         request,
