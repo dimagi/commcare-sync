@@ -19,7 +19,3 @@ logs/
 
 # Tools
 .playwright-mcp/
-
-# Claude
-claude/plans/
-claude/reviews/

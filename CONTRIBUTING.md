@@ -61,25 +61,8 @@ Use Pythonic assert statements.
 
 #### Doctests
 
-Doctests can augment but should not replace unit tests. Use docstrings
-with doctests for functions and methods where a doctest can demonstrate
-usage or behavior in a simple way. For example,
-
-```python
-# some/module.py
-
-def show_spaces(string):
-    """
-    Replaces spaces with a middle dot.
-
-    >>> show_spaces('hello world ')
-    'hello·world·'
-
-    """
-    return string.replace(' ', '\u00b7')
-```
-
-Run doctests from an appropriate test module. For example,
+Use doctests to demonstrate usage or behavior in a simple way. Run
+doctests from an appropriate test module. For example,
 
 ```python
 # some/tests/module.py
