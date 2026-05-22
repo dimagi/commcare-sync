@@ -191,7 +191,8 @@ def fetch_materialized_views(request):
 
     if not database_id:
         return JsonResponse(
-            {'error': 'database_id parameter required'}, status=400
+            {'error': 'database_id parameter required'},
+            status=400,
         )
 
     try:
@@ -202,7 +203,8 @@ def fetch_materialized_views(request):
     conn_str = database.connection_string
     if not conn_str.startswith('postgresql://'):
         return JsonResponse(
-            {'error': 'Only PostgreSQL databases are supported'}, status=400
+            {'error': 'Only PostgreSQL databases are supported'},
+            status=400,
         )
 
     try:
