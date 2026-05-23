@@ -58,7 +58,7 @@ test = [
 ]
 
 [tool.uv.sources]
-db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git" }
+db-query-fwd = { git = "https://github.com/dimagi/db-query-fwd.git", tag = "v0.1.1" }
 commcare-export = { git = "https://github.com/dimagi/commcare-export.git", branch = "master" }
 pytest-unmagic-django = { git = "https://github.com/dimagi/pytest-unmagic-django/" }
 
