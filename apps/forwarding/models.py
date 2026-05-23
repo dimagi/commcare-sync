@@ -14,9 +14,19 @@ from apps.schedules.mixin import ScheduleMixin
 class ForwardingDestination(BaseModel):
     """API endpoint where query results are forwarded (destination)."""
 
+    class HttpMethod(models.TextChoices):
+        POST = 'POST', 'POST'
+        PUT = 'PUT', 'PUT'
+
     name = models.CharField(max_length=100)
     api_url = models.URLField(
         max_length=500, help_text=_('API endpoint URL where data will be sent')
+    )
+    method = models.CharField(
+        max_length=4,
+        choices=HttpMethod.choices,
+        default=HttpMethod.POST,
+        help_text=_('HTTP method used to send data to the destination'),
     )
     api_username = models.CharField(
         max_length=100,
