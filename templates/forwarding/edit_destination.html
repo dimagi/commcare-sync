@@ -42,7 +42,9 @@
           >{% trans "API Password" %}</label
         >
         <div>{{ form.api_password }}</div>
-        {% if form.api_password.help_text %}<div class="form-text">{{ form.api_password.help_text }}</div>{% endif %}
+        {% if form.api_password.help_text %}
+          <div class="form-text">{{ form.api_password.help_text }}</div>
+        {% endif %}
         {{ form.api_password.errors }}
       </div>
       <div class="d-flex gap-2">
