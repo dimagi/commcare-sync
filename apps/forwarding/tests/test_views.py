@@ -140,6 +140,99 @@ class TestRunForwardingHtmxBranch:
         assert len(response.content) > 0
 
 
+@use('db')
+class TestDestinationMethodField:
+
+    @use(admin_user)
+    def test_create_destination_with_method_put(self):
+        client = Client()
+        client.login(email=admin_user().email, password='testpass')
+
+        response = client.post(
+            reverse('forwarding:create_destination'),
+            {
+                'name': 'PUT Destination',
+                'api_url': 'https://example.com/api/lookup_table/abc/',
+                'method': 'PUT',
+                'api_username': '',
+                'api_password': '',
+            },
+        )
+
+        assert response.status_code == 302
+        dest = ForwardingDestination.objects.get(name='PUT Destination')
+        assert dest.method == 'PUT'
+
+    @use(admin_user)
+    def test_edit_destination_changes_method(self):
+        dest = ForwardingDestination.objects.create(
+            name='Editable',
+            api_url='https://example.com/api',
+        )
+        assert dest.method == 'POST'
+
+        client = Client()
+        client.login(email=admin_user().email, password='testpass')
+
+        response = client.post(
+            reverse('forwarding:edit_destination', args=[dest.id]),
+            {
+                'name': dest.name,
+                'api_url': dest.api_url,
+                'method': 'PUT',
+                'api_username': '',
+                'api_password': '',
+            },
+        )
+
+        assert response.status_code == 302
+        dest.refresh_from_db()
+        assert dest.method == 'PUT'
+
+    @use(admin_user)
+    def test_create_destination_rejects_invalid_method(self):
+        client = Client()
+        client.login(email=admin_user().email, password='testpass')
+
+        response = client.post(
+            reverse('forwarding:create_destination'),
+            {
+                'name': 'Bad Method',
+                'api_url': 'https://example.com/api',
+                'method': 'PATCH',
+                'api_username': '',
+                'api_password': '',
+            },
+        )
+
+        # Form re-rendered with errors, not a redirect
+        assert response.status_code == 200
+        assert not ForwardingDestination.objects.filter(name='Bad Method').exists()
+
+    @use(admin_user)
+    def test_destinations_list_shows_method(self):
+        ForwardingDestination.objects.create(
+            name='POST One',
+            api_url='https://example.com/post',
+            method='POST',
+        )
+        ForwardingDestination.objects.create(
+            name='PUT One',
+            api_url='https://example.com/put',
+            method='PUT',
+        )
+
+        client = Client()
+        client.login(email=admin_user().email, password='testpass')
+        response = client.get(reverse('forwarding:destinations'))
+
+        assert response.status_code == 200
+        body = response.content.decode()
+        assert 'PUT' in body
+        # Both methods appear in their own table cells
+        assert body.count('<td>PUT</td>') == 1
+        assert body.count('<td>POST</td>') == 1
+
 class TestForwardingRunButtonRendering:
     @use(regular_client, forwarding_config)
     def test_run_button_present_when_no_active_run(self):
