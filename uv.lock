@@ -461,7 +461,7 @@ requires-dist = [
     { name = "commcare-export", extras = ["odbc"], marker = "extra == 'odbc'", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
     { name = "commcare-export", extras = ["postgres"], marker = "extra == 'postgres'", git = "https://github.com/dimagi/commcare-export.git?branch=master" },
     { name = "cryptography" },
-    { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git" },
+    { name = "db-query-fwd", git = "https://github.com/dimagi/db-query-fwd.git?tag=v0.1.1" },
     { name = "django", specifier = "~=5.2" },
     { name = "django-anymail", extras = ["mailgun"] },
     { name = "django-celery-beat" },
@@ -569,8 +569,8 @@ wheels = [
 
 [[package]]
 name = "db-query-fwd"
-version = "0.1.0"
-source = { git = "https://github.com/dimagi/db-query-fwd.git#54a416e1bc1b6cb745a9035db34e49fa00f89117" }
+version = "0.1.1"
+source = { git = "https://github.com/dimagi/db-query-fwd.git?tag=v0.1.1#f0a477be6d04bb2c3dddb5ab5669e8a8fb091d7f" }
 dependencies = [
     { name = "requests" },
     { name = "sqlalchemy" },
