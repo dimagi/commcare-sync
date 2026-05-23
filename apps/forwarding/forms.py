@@ -17,7 +17,7 @@ class CreateForwardingDestinationForm(forms.ModelForm):
 
     class Meta:
         model = ForwardingDestination
-        fields = ('name', 'api_url', 'api_username')
+        fields = ('name', 'api_url', 'method', 'api_username')
 
     def save(self, commit=True):
         instance = super().save(commit=False)

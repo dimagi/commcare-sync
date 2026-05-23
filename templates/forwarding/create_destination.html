@@ -21,6 +21,16 @@
         {{ form.api_url.errors }}
       </div>
       <div class="mb-3">
+        <label for="{{ form.method.id_for_label }}" class="form-label"
+          >{% trans "Method" %}</label
+        >
+        <div>{{ form.method }}</div>
+        {% if form.method.help_text %}
+          <div class="form-text">{{ form.method.help_text }}</div>
+        {% endif %}
+        {{ form.method.errors }}
+      </div>
+      <div class="mb-3">
         <label for="{{ form.api_username.id_for_label }}" class="form-label"
           >{% trans "API Username" %}</label
         >
