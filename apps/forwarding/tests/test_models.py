@@ -308,6 +308,24 @@ class TestForwardingDestination:
         assert dest.api_username == 'admin'
         assert dest.api_password == 'secret'
 
+    def test_method_defaults_to_post(self):
+        dest = ForwardingDestination.objects.create(
+            name='Defaults API',
+            api_url='https://example.com/api',
+        )
+
+        assert dest.method == ForwardingDestination.HttpMethod.POST
+        assert dest.method == 'POST'
+
+    def test_method_can_be_put(self):
+        dest = ForwardingDestination.objects.create(
+            name='PUT API',
+            api_url='https://example.com/api',
+            method=ForwardingDestination.HttpMethod.PUT,
+        )
+
+        assert dest.method == 'PUT'
+
 
 @use('db')
 class TestForwardingScheduling:
