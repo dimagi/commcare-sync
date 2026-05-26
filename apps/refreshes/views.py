@@ -191,19 +191,19 @@ def fetch_materialized_views(request):
 
     if not database_id:
         return JsonResponse(
-            {'error': 'database_id parameter required'},
+            {'error': _('database_id parameter required')},
             status=400,
         )
 
     try:
         database = Database.objects.get(id=database_id)
     except Database.DoesNotExist:
-        return JsonResponse({'error': 'Database not found'}, status=404)
+        return JsonResponse({'error': _('Database not found')}, status=404)
 
     conn_str = database.connection_string
     if not conn_str.startswith('postgresql://'):
         return JsonResponse(
-            {'error': 'Only PostgreSQL databases are supported'},
+            {'error': _('Only PostgreSQL databases are supported')},
             status=400,
         )
 
