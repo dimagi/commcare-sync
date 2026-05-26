@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.test import Client
 from django.urls import reverse
@@ -10,48 +9,14 @@ from apps.commcare.models import (
     CommCareServer,
 )
 from apps.exports.models import ExportConfig
-from tests.fixtures import database
+from tests.fixtures import (
+    admin_client,
+    admin_user,
+    database,
+    regular_client,
+)
 
 from ..models import Database
-
-User = get_user_model()
-
-
-@fixture
-@use('db')
-def regular_user():
-    yield User.objects.create_user(
-        username='dbviewuser', email='dbview@example.com', password='pass'
-    )
-
-
-@fixture
-@use('db')
-def admin_user():
-    yield User.objects.create_user(
-        username='dbadminuser',
-        email='dbadmin@example.com',
-        password='pass',
-        is_active=True,
-        is_superuser=True,
-        is_staff=True,
-    )
-
-
-@fixture
-@use('db')
-def regular_client():
-    client = Client()
-    client.force_login(regular_user())
-    yield client
-
-
-@fixture
-@use('db')
-def admin_client():
-    client = Client()
-    client.force_login(admin_user())
-    yield client
 
 
 class TestCreateDatabaseView:
