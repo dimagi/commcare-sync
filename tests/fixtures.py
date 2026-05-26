@@ -70,6 +70,14 @@ def admin_client():
 
 @fixture
 @use('db')
+def authed_client():
+    client = Client()
+    client.force_login(user())
+    yield client
+
+
+@fixture
+@use('db')
 def commcare_server():
     yield CommCareServer.objects.create(
         name='Test Server',
