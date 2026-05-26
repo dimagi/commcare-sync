@@ -9,6 +9,7 @@ Imported explicitly by tests, e.g.:
         ...
 """
 from django.contrib.auth import get_user_model
+from django.test import Client
 from unmagic import fixture, use
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
@@ -24,6 +25,47 @@ def user():
         email='test@example.com',
         password='testpass',
     )
+
+
+@fixture
+@use('db')
+def regular_user():
+    User = get_user_model()
+    yield User.objects.create_user(
+        username='regularuser',
+        email='regular@example.com',
+        password='pass',
+    )
+
+
+@fixture
+@use('db')
+def admin_user():
+    User = get_user_model()
+    yield User.objects.create_user(
+        username='adminuser',
+        email='admin@example.com',
+        password='pass',
+        is_active=True,
+        is_superuser=True,
+        is_staff=True,
+    )
+
+
+@fixture
+@use('db')
+def regular_client():
+    client = Client()
+    client.force_login(regular_user())
+    yield client
+
+
+@fixture
+@use('db')
+def admin_client():
+    client = Client()
+    client.force_login(admin_user())
+    yield client
 
 
 @fixture
