@@ -2,15 +2,15 @@
 
 ## Project Overview
 
-CommCare Data Pipeline is a web application that allows a single
-organization with multiple users to manage a data pipeline that exports
-data from [CommCare](https://github.com/dimagi/commcare-hq/) using the
-[CommCare Data Export Tool](https://github.com/dimagi/commcare-export/)
-into a database owned by the organization. There the data can be
-aggregated and transformed. From the database it can be used by BI tools
-like Power BI, Superset or Tableau. It can also be forwarded to APIs of
-third-party reporting platforms like DHIS2, or forwarded back to
-CommCare to provide reporting data to users.
+CommCare Data Pipeline is a web application that allows a single organization
+with multiple users to manage a data pipeline that exports data from
+[CommCare](https://github.com/dimagi/commcare-hq/) using the
+[CommCare Data Export Tool](https://github.com/dimagi/commcare-export/) into a
+database owned by the organization. There the data can be aggregated and
+transformed. From the database it can be used by BI tools like Power BI,
+Superset or Tableau. It can also be forwarded to APIs of third-party reporting
+platforms like DHIS2, or forwarded back to CommCare to provide reporting data to
+users.
 
 ## Commands
 
@@ -28,70 +28,73 @@ Run commands in the uv virtualenv using `uv run ...`.
 
 ### Agent documentation
 
-| Path                                        | Purpose              |
-|---------------------------------------------|----------------------|
-| `claude/specs/YYYY-MM-DD_spec-name.md`      | Design specs         |
-| `.claude/plans/YYYY-MM-DD_plan-name.md`     | Implementation plans |
-| `.claude/reviews/YYYY-MM-DD_review-name.md` | Code reviews         |
+| Description          | Path                                        |
+| -------------------- | ------------------------------------------- |
+| Design specs         | `claude/specs/YYYY-MM-DD_spec-name.md`      |
+| Implementation plans | `.claude/plans/YYYY-MM-DD_plan-name.md`     |
+| Code reviews         | `.claude/reviews/YYYY-MM-DD_review-name.md` |
+
+Specs are committed before implementation starts and removed after
+implementation is complete. Plans and reviews are artifacts specifically for
+Claude, and they are stored under `.claude/` because Git ignores the directory.
 
 ### Configuration
 
-| File                              | Purpose                         |
-|-----------------------------------|---------------------------------|
-| `commcare_sync/settings.py`       | Main Django settings            |
-| `commcare_sync/settings_local.py` | Git-ignored local settings      |
-| `commcare_sync/urls.py`           | Root URL configuration          |
-| `commcare_sync/celery.py`         | Celery task queue configuration |
+| Description                     | File                              |
+| ------------------------------- | --------------------------------- |
+| Main Django settings            | `commcare_sync/settings.py`       |
+| Git-ignored local settings      | `commcare_sync/settings_local.py` |
+| Root URL configuration          | `commcare_sync/urls.py`           |
+| Celery task queue configuration | `commcare_sync/celery.py`         |
 
 ### Applications (`apps/`)
 
-| App           | Purpose                                      |
-|---------------|----------------------------------------------|
-| `commcare/`   | CommCare server, account, and project models |
-| `exports/`    | Export configurations and execution          |
-| `forwarding/` | Data forwarding rules                        |
-| `schedules/`  | Scheduling and periodicity logic             |
-| `users/`      | Custom user model, authentication            |
-| `web/`        | Landing pages, context processors            |
+| Description                                  | App           |
+| -------------------------------------------- | ------------- |
+| CommCare server, account, and project models | `commcare/`   |
+| Export configurations and execution          | `exports/`    |
+| Data forwarding rules                        | `forwarding/` |
+| Scheduling and periodicity logic             | `schedules/`  |
+| Custom user model, authentication            | `users/`      |
+| Landing pages, context processors            | `web/`        |
 
 ### Templates (`templates/`)
 
-| Path                    | Purpose                                          |
-|-------------------------|--------------------------------------------------|
-| `web/base.html`         | Base template (loads Alpine.js, HTMX, Bootstrap) |
-| `web/app/app_base.html` | Base for authenticated app pages                 |
-| `web/components/`       | Reusable components (nav, messages, run buttons) |
-| `{app}/partials/`       | HTMX partial templates per app                   |
+| Description                                      | Path                    |
+| ------------------------------------------------ | ----------------------- |
+| Base template (loads Alpine.js, HTMX, Bootstrap) | `web/base.html`         |
+| Base for authenticated app pages                 | `web/app/app_base.html` |
+| Reusable components (nav, messages, run buttons) | `web/components/`       |
+| HTMX partial templates per app                   | `{app}/partials/`       |
 
 ### Static Files (`static/`)
 
-| Path           | Purpose                                 |
-|----------------|-----------------------------------------|
-| `css/site.css` | Compiled from `assets/styles/site.scss` |
+| Description                             | Path           |
+| --------------------------------------- | -------------- |
+| Compiled from `assets/styles/site.scss` | `css/site.css` |
 
 ### Testing
 
-| Path                           | Purpose                                   |
-|--------------------------------|-------------------------------------------|
-| `apps/{app}/tests/`            | Tests per application                     |
-| `apps/{app}/tests/conftest.py` | Pytest and Playwright configuration       |
-| `apps/{app}/tests/fixtures.py` | Reusable test fixtures                    |
-| `apps/{app}/tests/helpers.py`  | Test helper functions (login, navigation) |
-| `tests/fixtures.py`            | Test fixtures reusable across apps        |
+| Description                               | Path                           |
+| ----------------------------------------- | ------------------------------ |
+| Tests per application                     | `apps/{app}/tests/`            |
+| Pytest and Playwright configuration       | `apps/{app}/tests/conftest.py` |
+| Reusable test fixtures                    | `apps/{app}/tests/fixtures.py` |
+| Test helper functions (login, navigation) | `apps/{app}/tests/helpers.py`  |
+| Test fixtures reusable across apps        | `tests/fixtures.py`            |
 
 ### Key Patterns
 
 - **Bootstrap**: Where Bootstrap can achieve the same functionality as
   Alpine.js, use Bootstrap.
-- **HTMX partials**: Templates in `{app}/partials/` return HTML fragments
-  for partial page updates
-- **Alpine.js**: Reactive state via `x-data`, `x-model`, `@change`
-  attributes in templates
+- **HTMX partials**: Templates in `{app}/partials/` return HTML fragments for
+  partial page updates
+- **Alpine.js**: Reactive state via `x-data`, `x-model`, `@change` attributes in
+  templates
 - **Celery tasks**: Defined in `{app}/tasks.py`, configured in
   `commcare_sync/celery.py`
-- **Playwright tests**: Use `page.evaluate("htmx.trigger(...)")` to
-  trigger HTMX events, as `select_option()` doesn't fire Alpine
-  `@change` handlers
+- **Playwright tests**: Use `page.evaluate("htmx.trigger(...)")` to trigger HTMX
+  events, as `select_option()` doesn't fire Alpine `@change` handlers
 
 ## Coding Style
 
