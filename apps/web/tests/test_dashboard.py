@@ -21,15 +21,7 @@ from apps.refreshes.models import (
     RefreshRun,
 )
 from apps.web.views import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
-from tests.fixtures import commcare_account, commcare_project, database, user
-
-
-@fixture
-@use('db')
-def client():
-    c = Client()
-    c.force_login(user())
-    yield c
+from tests.fixtures import authed_client, commcare_account, commcare_project, database
 
 
 @fixture
@@ -81,9 +73,9 @@ def forwarding_config():
 
 @use('db')
 class TestHomeView:
-    @use(user, client)
+    @use(authed_client)
     def test_home_redirects_to_dashboard_when_authenticated(self):
-        response = client().get(reverse('web:home'))
+        response = authed_client().get(reverse('web:home'))
         assert response.status_code == 302
         assert response.url == reverse('web:dashboard')
 
