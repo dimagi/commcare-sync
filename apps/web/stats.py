@@ -1,11 +1,44 @@
+from datetime import timedelta
+
+from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F
+
 from apps.exports.models import (
     ExportConfig,
     ExportRun,
     MultiProjectExportConfig,
     MultiProjectExportRun,
 )
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.refreshes.models import RefreshConfig, RefreshRun
+
+
+def _avg_runtime_for_runs(*queryset_status_pairs):
+    """Compute weighted average runtime for completed runs across multiple querysets.
+
+    Each argument is a (queryset, completed_status_value) pair.
+    Returns the average as a timedelta, or None if there are no completed runs.
+    """
+    total_seconds = 0.0
+    total_count = 0
+    for qs, completed_status in queryset_status_pairs:
+        result = qs.filter(
+            status=completed_status,
+            started_at__isnull=False,
+            completed_at__isnull=False,
+        ).aggregate(
+            avg=Avg(ExpressionWrapper(
+                F('completed_at') - F('started_at'),
+                output_field=DurationField()
+            )),
+            count=Count('id'),
+        )
+        if result['avg'] and result['count']:
+            total_seconds += result['avg'].total_seconds() * result['count']
+            total_count += result['count']
+    if total_count > 0:
+        return timedelta(seconds=total_seconds / total_count)
+    return None
 
 
 def _get_export_statistics(since_datetime):
@@ -48,6 +81,10 @@ def _get_export_statistics(since_datetime):
     else:
         status = 'error'
 
+    avg_runtime = _avg_runtime_for_runs(
+        (recent_export_runs, ExportRun.Status.COMPLETED),
+        (recent_multi_runs, MultiProjectExportRun.Status.COMPLETED),
+    )
     return {
         'total_configs': total_configs,
         'configs': configs,
@@ -56,6 +93,7 @@ def _get_export_statistics(since_datetime):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
 
 
@@ -89,6 +127,9 @@ def _get_refresh_statistics(since_datetime):
     else:
         status = 'error'
 
+    avg_runtime = _avg_runtime_for_runs(
+        (recent_runs, RefreshRun.Status.COMPLETED),
+    )
     return {
         'total_configs': total_configs,
         'configs': configs,
@@ -97,6 +138,7 @@ def _get_refresh_statistics(since_datetime):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
 
 
@@ -130,6 +172,9 @@ def _get_forwarding_statistics(since_datetime):
     else:
         status = 'error'
 
+    avg_runtime = _avg_runtime_for_runs(
+        (recent_runs, ForwardingRun.Status.COMPLETED),
+    )
     return {
         'total_configs': total_configs,
         'configs': configs,
@@ -138,4 +183,5 @@ def _get_forwarding_statistics(since_datetime):
         'successful_count': successful_runs,
         'failed_count': failed_runs,
         'status': status,
+        'avg_runtime': readable_timedelta(avg_runtime, short=True),
     }
