@@ -1,5 +1,4 @@
-from datetime import timedelta
-
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -26,10 +25,12 @@ def dashboard(request):
     Main dashboard showing pipeline status overview.
     """
     now = timezone.now()
-    last_24h = now - timedelta(hours=24)
-    export_stats = _get_export_statistics(last_24h)
-    refresh_stats = _get_refresh_statistics(last_24h)
-    forwarding_stats = _get_forwarding_statistics(last_24h)
+    period = settings.DASHBOARD_STATS_PERIOD
+    current_start = now - period
+    previous_start = current_start - period
+    export_stats = _get_export_statistics(current_start, previous_start)
+    refresh_stats = _get_refresh_statistics(current_start, previous_start)
+    forwarding_stats = _get_forwarding_statistics(current_start, previous_start)
     context = {
         'active_tab': 'dashboard',
         'export_stats': export_stats,
