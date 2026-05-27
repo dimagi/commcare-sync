@@ -3,7 +3,7 @@
 {% load exports_tags %}
 <table
   id="run-table"
-  class="table w-100 my-2"
+  class="table my-2"
   hx-get="{% url 'refreshes:run_history_table' config.id %}"
   hx-trigger="refresh from:body"
   hx-swap="outerHTML"
