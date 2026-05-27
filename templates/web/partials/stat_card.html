@@ -1,0 +1,48 @@
+{% load i18n %}
+{% comment %}
+  One stat card linking to a list page. Included once per tab by
+  stat_cards.html. Required variables: tab_name — "exports" | "refreshes" |
+  "forwarders" url — link target for this card icon — Font Awesome class, e.g.
+  "fa-arrow-up-from-bracket" title — already-translated heading text stats —
+  dict from the matching _get_*_statistics() selected_tab — inherited from the
+  parent context (not passed explicitly)
+{% endcomment %}
+<div class="col-md-4">
+  <a
+    href="{{ url }}"
+    class="card dashboard-tab-card text-decoration-none {% if selected_tab == tab_name %}active{% endif %}"
+    role="tab"
+    aria-selected="{% if selected_tab == tab_name %}true{% else %}false{% endif %}"
+  >
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="card-title mb-0">
+          <i class="fa-solid {{ icon }} me-1"></i> {{ title }}
+        </h5>
+        {% if stats.status == 'healthy' %}
+          <span class="badge bg-success">{% trans "Healthy" %}</span>
+        {% elif stats.status == 'warning' %}
+          <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+        {% elif stats.status == 'error' %}
+          <span class="badge bg-danger">{% trans "Issue" %}</span>
+        {% else %}
+          <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
+        {% endif %}
+      </div>
+      <div class="dashboard-stat-row">
+        <span class="dashboard-stat-label"
+          >{% trans "Success Rate (24h)" %}</span
+        >
+        <span class="dashboard-stat-value">{{ stats.success_rate }}%</span>
+      </div>
+      <div class="dashboard-stat-row">
+        <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
+        <span class="dashboard-stat-value">{{ stats.last_24h_runs }}</span>
+      </div>
+      <div class="dashboard-stat-row">
+        <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
+        <span class="dashboard-stat-value">{{ stats.avg_runtime }}</span>
+      </div>
+    </div>
+  </a>
+</div>

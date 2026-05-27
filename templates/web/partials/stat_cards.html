@@ -1,126 +1,16 @@
 {% load i18n %}
 {% comment %}
-Shared stat cards shown at the top of the Exports, Refreshes, and Forwarders list pages.
-Each card is a plain <a> link that navigates to the corresponding list page.
-The current page's card gets the "active" CSS class (highlighted border/background).
-
-Required variables:
-  export_stats, refresh_stats, forwarding_stats  — dicts from _get_*_statistics()
-  selected_tab  — "exports" | "refreshes" | "forwarders"
-  exports_url, refreshes_url, forwarders_url  — URL strings for each card link
+  Shared stat cards shown at the top of the Exports, Refreshes, and Forwarders
+  list pages. See stat_card.html for the per-card markup. Required variables:
+  export_stats, refresh_stats, forwarding_stats — dicts from _get_*_statistics()
+  selected_tab — "exports" | "refreshes" | "forwarders" exports_url,
+  refreshes_url, forwarders_url — URL strings for each card link
 {% endcomment %}
-
+{% trans "Exports" as exports_title %}
+{% trans "Refreshes" as refreshes_title %}
+{% trans "Forwarders" as forwarders_title %}
 <div class="row g-3" role="tablist">
-
-  {# Exports card #}
-  <div class="col-md-4">
-    <a href="{{ exports_url }}"
-       class="card dashboard-tab-card text-decoration-none {% if selected_tab == 'exports' %}active{% endif %}"
-       role="tab"
-       aria-selected="{% if selected_tab == 'exports' %}true{% else %}false{% endif %}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0">
-            <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> {% trans "Exports" %}
-          </h5>
-          {% if export_stats.status == 'healthy' %}
-            <span class="badge bg-success">{% trans "Healthy" %}</span>
-          {% elif export_stats.status == 'warning' %}
-            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-          {% elif export_stats.status == 'error' %}
-            <span class="badge bg-danger">{% trans "Issue" %}</span>
-          {% else %}
-            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-          {% endif %}
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ export_stats.success_rate }}%</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ export_stats.last_24h_runs }}</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
-          <span class="dashboard-stat-value">{{ export_stats.avg_runtime }}</span>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  {# Refreshes card #}
-  <div class="col-md-4">
-    <a href="{{ refreshes_url }}"
-       class="card dashboard-tab-card text-decoration-none {% if selected_tab == 'refreshes' %}active{% endif %}"
-       role="tab"
-       aria-selected="{% if selected_tab == 'refreshes' %}true{% else %}false{% endif %}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0">
-            <i class="fa-solid fa-arrows-rotate me-1"></i> {% trans "Refreshes" %}
-          </h5>
-          {% if refresh_stats.status == 'healthy' %}
-            <span class="badge bg-success">{% trans "Healthy" %}</span>
-          {% elif refresh_stats.status == 'warning' %}
-            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-          {% elif refresh_stats.status == 'error' %}
-            <span class="badge bg-danger">{% trans "Issue" %}</span>
-          {% else %}
-            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-          {% endif %}
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ refresh_stats.success_rate }}%</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ refresh_stats.last_24h_runs }}</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
-          <span class="dashboard-stat-value">{{ refresh_stats.avg_runtime }}</span>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  {# Forwarders card #}
-  <div class="col-md-4">
-    <a href="{{ forwarders_url }}"
-       class="card dashboard-tab-card text-decoration-none {% if selected_tab == 'forwarders' %}active{% endif %}"
-       role="tab"
-       aria-selected="{% if selected_tab == 'forwarders' %}true{% else %}false{% endif %}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0">
-            <i class="fa-solid fa-share me-1"></i> {% trans "Forwarders" %}
-          </h5>
-          {% if forwarding_stats.status == 'healthy' %}
-            <span class="badge bg-success">{% trans "Healthy" %}</span>
-          {% elif forwarding_stats.status == 'warning' %}
-            <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
-          {% elif forwarding_stats.status == 'error' %}
-            <span class="badge bg-danger">{% trans "Issue" %}</span>
-          {% else %}
-            <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
-          {% endif %}
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Success Rate (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ forwarding_stats.success_rate }}%</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
-          <span class="dashboard-stat-value">{{ forwarding_stats.last_24h_runs }}</span>
-        </div>
-        <div class="dashboard-stat-row">
-          <span class="dashboard-stat-label">{% trans "Avg. Runtime" %}</span>
-          <span class="dashboard-stat-value">{{ forwarding_stats.avg_runtime }}</span>
-        </div>
-      </div>
-    </a>
-  </div>
-
+  {% include "web/partials/stat_card.html" with tab_name="exports" url=exports_url icon="fa-arrow-up-from-bracket" title=exports_title stats=export_stats %}
+  {% include "web/partials/stat_card.html" with tab_name="refreshes" url=refreshes_url icon="fa-arrows-rotate" title=refreshes_title stats=refresh_stats %}
+  {% include "web/partials/stat_card.html" with tab_name="forwarders" url=forwarders_url icon="fa-share" title=forwarders_title stats=forwarding_stats %}
 </div>
