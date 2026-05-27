@@ -1,4 +1,5 @@
 from django import template
+from django.utils.translation import ngettext
 
 register = template.Library()
 
@@ -12,9 +13,9 @@ def readable_timedelta(timedelta_obj, short=False):
 
     >>> from datetime import timedelta
     >>> readable_timedelta(timedelta(days=1, hours=2, minutes=3, seconds=4))
-    '1 days 2 hours 3 minutes 4 seconds'
+    '1 day 2 hours 3 minutes 4 seconds'
     >>> readable_timedelta(timedelta(seconds=90))
-    '1 minutes 30 seconds'
+    '1 minute 30 seconds'
     >>> readable_timedelta(
     ...    timedelta(days=1, hours=2, minutes=3, seconds=4),
     ...    short=True,
@@ -33,20 +34,36 @@ def readable_timedelta(timedelta_obj, short=False):
     if secs > 86400:  # 60sec * 60min * 24hrs
         days = secs // 86400
         if days:
-            strings.append(f'{days}d' if short else f'{days} days')
+            strings.append(
+                f'{days}d'
+                if short
+                else ngettext('{} day', '{} days', days).format(days)
+            )
         secs = secs - days * 86400
     if secs > 3600:
-        hrs = secs // 3600
-        if hrs:
-            strings.append(f'{hrs}h' if short else f'{hrs} hours')
-        secs = secs - hrs * 3600
+        hours = secs // 3600
+        if hours:
+            strings.append(
+                f'{hours}h'
+                if short
+                else ngettext('{} hour', '{} hours', hours).format(hours)
+            )
+        secs = secs - hours * 3600
     if secs > 60:
         mins = secs // 60
         if mins:
-            strings.append(f'{mins}m' if short else f'{mins} minutes')
+            strings.append(
+                f'{mins}m'
+                if short
+                else ngettext('{} minute', '{} minutes', mins).format(mins)
+            )
         secs = secs - mins * 60
     if secs:
-        strings.append(f'{secs}s' if short else f'{secs} seconds')
+        strings.append(
+            f'{secs}s'
+            if short
+            else ngettext('{} second', '{} seconds', secs).format(secs)
+        )
     return ' '.join(strings)
 
 

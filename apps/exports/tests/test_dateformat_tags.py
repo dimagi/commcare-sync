@@ -17,21 +17,22 @@ def test_doctests():
         (timedelta(days=7), '7 days'),
         (timedelta(seconds=45), '45 seconds'),
         (timedelta(minutes=3, seconds=4), '3 minutes 4 seconds'),
-        (timedelta(days=1, seconds=30), '1 days 30 seconds'),
-        (timedelta(hours=25, minutes=30), '1 days 1 hours 30 minutes'),
+        (timedelta(days=1, seconds=30), '1 day 30 seconds'),
+        (timedelta(hours=25, minutes=30), '1 day 1 hour 30 minutes'),
         (
             timedelta(hours=2, minutes=3, seconds=4),
             '2 hours 3 minutes 4 seconds',
         ),
         (
             timedelta(days=1, hours=2, minutes=3, seconds=4),
-            '1 days 2 hours 3 minutes 4 seconds',
+            '1 day 2 hours 3 minutes 4 seconds',
         ),
         (
             timedelta(days=365, hours=23, minutes=59, seconds=59),
             '365 days 23 hours 59 minutes 59 seconds',
         ),
         (None, '---'),
+        (timedelta(days=1, hours=0, minutes=-1), '23 hours 59 minutes'),
     ],
 )
 def test_readable_timedelta(delta, expected):
