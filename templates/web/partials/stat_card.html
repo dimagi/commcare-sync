@@ -4,8 +4,8 @@
   stat_cards.html. Required variables: tab_name — "exports" | "refreshes" |
   "forwarders" url — link target for this card icon — Font Awesome class, e.g.
   "fa-arrow-up-from-bracket" title — already-translated heading text stats —
-  dict from the matching _get_*_statistics() selected_tab — inherited from the
-  parent context (not passed explicitly)
+  dict from the matching _get_*_statistics() selected_tab, stats_period —
+  inherited from the parent context (not passed explicitly)
 {% endcomment %}
 <div class="col-md-4">
   <a
@@ -31,12 +31,14 @@
       </div>
       <div class="dashboard-stat-row">
         <span class="dashboard-stat-label"
-          >{% trans "Success Rate (24h)" %}</span
+          >{% trans "Success Rate" %} ({{ stats_period }})</span
         >
         <span class="dashboard-stat-value">{{ stats.success_rate }}%</span>
       </div>
       <div class="dashboard-stat-row">
-        <span class="dashboard-stat-label">{% trans "Total Runs (24h)" %}</span>
+        <span class="dashboard-stat-label"
+          >{% trans "Total Runs" %} ({{ stats_period }})</span
+        >
         <span class="dashboard-stat-value">{{ stats.last_24h_runs }}</span>
       </div>
       <div class="dashboard-stat-row">
