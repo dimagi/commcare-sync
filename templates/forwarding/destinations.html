@@ -16,7 +16,8 @@
     </div>
     {% if destinations.exists %}
       <div class="alert alert-info">
-        {% trans "Destinations are API endpoints that receive forwarded data from database queries." %}
+        {% blocktrans %}Destinations are API endpoints that receive forwarded
+        data from database queries.{% endblocktrans %}
       </div>
       <table class="table table-sm">
         <thead>
