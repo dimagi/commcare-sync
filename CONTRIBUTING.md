@@ -7,6 +7,16 @@
 >
 > -- Antoine de Saint-Exupéry
 
+### HTML, Bootstrap, Django templates
+
+| Instead of                      | Rather do                | Why?                                               |
+|---------------------------------|--------------------------|----------------------------------------------------|
+| `<input type="submit">`         | `<button type="submit">` | "button" is semantic; it indicates element purpose |
+| `<a class="disabled" disabled>` | `<a class="disabled">`   | "disabled" is a form element attribute             |
+| `class="mt-3 mb-3"`             | `class="my-3"`           | Use more succinct Bootstrap classes when available |
+| `class="table w-100"`           | `class="table"`          | The width of "table" is already 100%               |
+| `{% trans "a long string" %}`   | `{% blocktrans %}a very long string{% endblocktrans %}` | Use blocktrans for multi-line strings |
+
 ### Avoid using comments, docstrings, and type hints.
 
 In Python, comments, docstrings, and type hints, are all forms of
