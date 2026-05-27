@@ -10,7 +10,8 @@
     </h2>
     <div>
       <p>
-        {% trans "After deleting, the following items will be deleted and the export will stop syncing data." %}
+        {% blocktrans %}After deleting, the following items will be deleted and
+        the export will stop syncing data.{% endblocktrans %}
       </p>
       <ul>
         <li>{% trans "The Export and its configuration file." %}</li>
@@ -21,7 +22,8 @@
       </ul>
       <p>
         <strong
-          >{% trans "Note: the underlying data associated with the export must be deleted separately." %}</strong
+          >{% blocktrans %}Note: the underlying data associated with the export
+          must be deleted separately.{% endblocktrans %}</strong
         >
       </p>
     </div>

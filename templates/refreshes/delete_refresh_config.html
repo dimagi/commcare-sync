@@ -6,11 +6,13 @@
       {% blocktrans with name=config.name %}Delete {{ name }}?{% endblocktrans %}
     </h1>
     <h2 class="lead">
-      {% trans "Are you sure you want to delete this refresh configuration? This operation is not reversible." %}
+      {% blocktrans %}Are you sure you want to delete this refresh
+      configuration? This operation is not reversible.{% endblocktrans %}
     </h2>
     <div>
       <p>
-        {% trans "After deleting, the following items will be deleted and the refresh will stop running:" %}
+        {% blocktrans %}After deleting, the following items will be deleted and
+        the refresh will stop running:{% endblocktrans %}
       </p>
       <ul>
         <li>{% trans "The refresh configuration and its schedule." %}</li>
