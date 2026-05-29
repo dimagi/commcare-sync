@@ -46,7 +46,11 @@ from .models import (
     MultiProjectExportConfig,
     MultiProjectExportRun,
 )
-from .tasks import run_export_task, run_multi_project_export_task
+from .tasks import (
+    run_all_exports_task,
+    run_export_task,
+    run_multi_project_export_task,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -524,6 +528,16 @@ def run_multi_export(request, export_id):
         export_record.id,
         force_sync_all_data=force_sync,
     )
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204)
+    return HttpResponse(result.task_id)
+
+
+@login_required
+@require_POST
+def run_all_exports(request):
+    """Kick off the "Run All" Celery task for every non-paused export."""
+    result = run_all_exports_task.delay(user_id=request.user.id)
     if request.headers.get('HX-Request'):
         return HttpResponse(status=204)
     return HttpResponse(result.task_id)

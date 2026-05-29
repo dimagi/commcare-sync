@@ -17,6 +17,55 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
+def run_all_exports_task(user_id=None):
+    """Manual "Run All" trigger: enqueue a run for every non-paused export.
+
+    Skips configs that already have a queued run so a double-click doesn't
+    pile up duplicate runs. Records are marked as UI-triggered (and attributed
+    to ``user_id`` when supplied) so they're distinguishable from scheduled
+    runs.
+    """
+    from django.contrib.auth import get_user_model
+
+    user = None
+    if user_id is not None:
+        try:
+            user = get_user_model().objects.get(id=user_id)
+        except get_user_model().DoesNotExist:
+            logger.warning(
+                'run_all_exports_task: user %s no longer exists; '
+                'continuing with no attribution.',
+                user_id,
+            )
+
+    # ``is_paused`` is a derived property (depends on periodic_task state), not
+    # a DB column, so the filter has to happen in Python.
+    for export in ExportConfig.objects.all():
+        if export.is_paused or export.has_queued_runs():
+            continue
+        export_record = ExportRun.objects.create(
+            base_export_config=export,
+            export_config_version=export.latest_version,
+            triggered_from_ui=True,
+            triggered_by=user,
+        )
+        run_export_task.delay(export_record.id, force_sync_all_data=False)
+
+    for multi_export in MultiProjectExportConfig.objects.all():
+        if multi_export.is_paused or multi_export.has_queued_runs():
+            continue
+        multi_record = MultiProjectExportRun.objects.create(
+            base_export_config=multi_export,
+            export_config_version=multi_export.latest_version,
+            triggered_from_ui=True,
+            triggered_by=user,
+        )
+        run_multi_project_export_task.delay(
+            multi_record.id, force_sync_all_data=False
+        )
+
+
+@shared_task
 def run_scheduled_export_task(export_config_id):
     """Celery-beat entry point for a single ExportConfig."""
     try:

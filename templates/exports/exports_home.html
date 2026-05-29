@@ -41,7 +41,12 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1 class="h2 mb-0">{% trans "Export Configurations" %}</h1>
       <div class="d-flex gap-2">
-        <button class="icon-link btn btn-outline-secondary btn-sm" disabled>
+        <button
+          class="icon-link btn btn-outline-secondary btn-sm"
+          hx-post="{% url 'exports:run_all_exports' %}"
+          hx-swap="none"
+          hx-confirm="{% trans 'Run all non-paused exports now?' %}"
+        >
           <i class="fa-solid fa-play"></i>
           {% trans "Run All" %}
         </button>
