@@ -33,7 +33,22 @@
         <span class="dashboard-stat-label"
           >{% trans "Success Rate" %} ({{ stats_period }})</span
         >
-        <span class="dashboard-stat-value">{{ stats.success_rate }}%</span>
+        <span class="dashboard-stat-value">
+          {{ stats.success_rate }}%
+          {% if stats.success_trend == 'up' %}
+            <i class="fa-solid fa-arrow-trend-up text-success ms-1"
+               title="{% trans 'Trending up vs. previous period' %}"
+               aria-label="{% trans 'Trending up vs. previous period' %}"></i>
+          {% elif stats.success_trend == 'down' %}
+            <i class="fa-solid fa-arrow-trend-down text-danger ms-1"
+               title="{% trans 'Trending down vs. previous period' %}"
+               aria-label="{% trans 'Trending down vs. previous period' %}"></i>
+          {% elif stats.success_trend == 'flat' %}
+            <i class="fa-solid fa-minus text-muted ms-1"
+               title="{% trans 'No change vs. previous period' %}"
+               aria-label="{% trans 'No change vs. previous period' %}"></i>
+          {% endif %}
+        </span>
       </div>
       <div class="dashboard-stat-row">
         <span class="dashboard-stat-label"
