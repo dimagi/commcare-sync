@@ -17,13 +17,15 @@
       {% endif %}
       <div class="d-flex gap-2">
         <div>
-          <button class="btn btn-primary" type="submit">Sign Out</button>
+          <button class="btn btn-primary" type="submit">
+            {% trans 'Sign Out' %}
+          </button>
           <a
             class="icon-link btn btn-outline-primary btn-sm rounded-pill"
             href="{% url 'web:home' %}"
           >
             <i class="fa-solid fa-home"></i>
-            Home
+            {% trans 'Home' %}
           </a>
         </div>
       </div>
