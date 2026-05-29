@@ -54,18 +54,25 @@ logger = logging.getLogger(__name__)
 def _merged_export_configs(page_size, page_num):
     """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
     single = list(
-        ExportConfig.objects
-        .select_related('project')
+        ExportConfig.objects.select_related('project')
         .annotate(last_run_at=Max('runs__created_at'))
         .prefetch_related(
-            Prefetch('runs', queryset=ExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
+            Prefetch(
+                'runs',
+                queryset=ExportRun.objects.order_by('-created_at'),
+                to_attr='_all_runs',
+            )
         )
     )
     multi = list(
-        MultiProjectExportConfig.objects
-        .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(
-            Prefetch('runs', queryset=MultiProjectExportRun.objects.order_by('-created_at'), to_attr='_all_runs')
+        MultiProjectExportConfig.objects.annotate(
+            last_run_at=Max('runs__created_at')
+        ).prefetch_related(
+            Prefetch(
+                'runs',
+                queryset=MultiProjectExportRun.objects.order_by('-created_at'),
+                to_attr='_all_runs',
+            )
         )
     )
     all_configs = sorted(
@@ -177,9 +184,10 @@ def create_export_config(request):
         config_form = ExportConfigForm(request.POST, request.FILES)
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(request, _(
-                "Export '{}' was successfully created."
-            ).format(export.name))
+            messages.success(
+                request,
+                _("Export '{}' was successfully created.").format(export.name),
+            )
             return HttpResponseRedirect(
                 reverse('exports:export_details', args=[export.id])
             )
@@ -203,9 +211,10 @@ def create_multi_export_config(request):
         if config_form.is_valid():
             export = config_form.save()
             config_form.save_m2m()
-            messages.success(request, _(
-                "Export '{}' was successfully created."
-            ).format(export.name))
+            messages.success(
+                request,
+                _("Export '{}' was successfully created.").format(export.name),
+            )
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
             )
@@ -233,9 +242,10 @@ def edit_export_config(request, export_id):
         )
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(request, _(
-                "Export '{}' was successfully saved."
-            ).format(export.name))
+            messages.success(
+                request,
+                _("Export '{}' was successfully saved.").format(export.name),
+            )
             return HttpResponseRedirect(
                 reverse('exports:export_details', args=[export.id])
             )
@@ -262,9 +272,10 @@ def edit_multi_export_config(request, export_id):
         )
         if config_form.is_valid():
             export = config_form.save()
-            messages.success(request, _(
-                "Export '{}' was successfully saved."
-            ).format(export.name))
+            messages.success(
+                request,
+                _("Export '{}' was successfully saved.").format(export.name),
+            )
             return HttpResponseRedirect(
                 reverse('exports:multi_export_details', args=[export.id])
             )
@@ -286,9 +297,12 @@ def delete_export_config(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(request, _(
-            "Export file '{}' was successfully deleted."
-        ).format(export.name))
+        messages.success(
+            request,
+            _("Export file '{}' was successfully deleted.").format(
+                export.name
+            ),
+        )
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
         request,
@@ -305,9 +319,12 @@ def delete_multi_export_config(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     if request.method == 'POST':
         export.delete()
-        messages.success(request, _(
-            "Export file '{}' was successfully deleted."
-        ).format(export.name))
+        messages.success(
+            request,
+            _("Export file '{}' was successfully deleted.").format(
+                export.name
+            ),
+        )
         return HttpResponseRedirect(reverse('exports:home'))
     return render(
         request,
@@ -336,7 +353,9 @@ def export_details(request, export_id):
             'active_tab': 'exports',
             'export': export,
             'runs': page_obj,
-            'run_history_url': reverse('exports:run_history_table', args=[export.id]),
+            'run_history_url': reverse(
+                'exports:run_history_table', args=[export.id]
+            ),
             'page_size': page_size,
             'page_sizes': [10, 20, 50],
         },
