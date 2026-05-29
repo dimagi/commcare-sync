@@ -13,18 +13,18 @@
 
   {# Status banner #}
   {% if forwarding_stats.status == 'healthy' %}
-  <div class="alert alert-success d-flex align-items-center my-3">
-    <i class="fa-solid fa-circle-check me-2 flex-shrink-0"></i>
+  <div class="alert alert-success my-3">
+    <i class="fa-solid fa-circle-check me-2"></i>
     <span>{% trans "All forwarders running successfully" %}</span>
   </div>
   {% elif forwarding_stats.status == 'warning' %}
-  <div class="alert alert-warning d-flex align-items-center my-3">
-    <i class="fa-solid fa-triangle-exclamation me-2 flex-shrink-0"></i>
+  <div class="alert alert-warning my-3">
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>
     <span>{% blocktrans with n=forwarding_stats.failed_count period=stats_period %}{{ n }} run(s) failed in the last {{ period }}{% endblocktrans %}</span>
   </div>
   {% elif forwarding_stats.status == 'error' %}
-  <div class="alert alert-danger d-flex align-items-center my-3">
-    <i class="fa-solid fa-circle-exclamation me-2 flex-shrink-0"></i>
+  <div class="alert alert-danger my-3">
+    <i class="fa-solid fa-circle-exclamation me-2"></i>
     <span>{% blocktrans with n=forwarding_stats.failed_count period=stats_period %}{{ n }} run(s) failed in the last {{ period }}{% endblocktrans %}</span>
   </div>
   {% endif %}
