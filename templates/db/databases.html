@@ -23,15 +23,17 @@
         <thead>
           <tr>
             <th>{% trans "Database" %}</th>
-            <th>{% trans "Actions" %}</th>
+            {% if user.is_admin %}
+              <th>{% trans "Actions" %}</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
           {% for database in databases %}
             <tr>
               <td>{{ database.name }}</td>
-              <td class="text-nowrap">
-                {% if user.is_admin %}
+              {% if user.is_admin %}
+                <td class="text-nowrap">
                   <a
                     href="{% url 'db:edit_database' database.id %}"
                     class="btn btn-outline-secondary btn-sm"
@@ -58,8 +60,8 @@
                       <i class="fa-solid fa-trash"></i> {% trans "Delete" %}
                     </a>
                   {% endif %}
-                {% endif %}
-              </td>
+                </td>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>
