@@ -1,6 +1,7 @@
 import logging
 
 from celery import shared_task
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
@@ -14,6 +15,54 @@ from .models import (
 from .runner import run_export, run_multi_project_export
 
 logger = logging.getLogger(__name__)
+
+
+@shared_task
+def run_all_exports_task(user_id=None):
+    """Manual "Run All" trigger: enqueue a run for every non-paused export.
+
+    Skips configs that already have an active (queued or running) run so a
+    double-click — or clicking "Run All" while a per-config run is in flight —
+    doesn't pile up duplicate runs. This matches the per-row Run button, which
+    disables itself whenever ``has_active_run`` is true. Records are marked as
+    UI-triggered (and attributed to ``user_id`` when supplied) so they're
+    distinguishable from scheduled runs.
+    """
+    User = get_user_model()
+    user = None
+    if user_id is not None:
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.warning(
+                'run_all_exports_task: user %s no longer exists; '
+                'continuing with no attribution.',
+                user_id,
+            )
+
+    # ``is_paused`` is a derived property (depends on periodic_task state), not
+    # a DB column, so the filter has to happen in Python.
+    for export in ExportConfig.objects.select_related('periodic_task').all():
+        if export.is_paused or export.has_active_run:
+            continue
+        _create_and_dispatch_export_run(
+            export,
+            ExportRun,
+            run_export_task,
+            triggered_from_ui=True,
+            triggered_by=user,
+        )
+
+    for multi_export in MultiProjectExportConfig.objects.select_related('periodic_task').all():
+        if multi_export.is_paused or multi_export.has_active_run:
+            continue
+        _create_and_dispatch_export_run(
+            multi_export,
+            MultiProjectExportRun,
+            run_multi_project_export_task,
+            triggered_from_ui=True,
+            triggered_by=user,
+        )
 
 
 @shared_task
@@ -48,21 +97,28 @@ def run_scheduled_multi_export_task(export_config_id):
     )
 
 
-def _enqueue_scheduled_export(export_config, run_model, next_task):
-    """
-    Common entry-point logic for celery-beat scheduled export tasks.
-
-    Skips enqueueing if a run is already queued, then creates a new run
-    record and dispatches the worker task.
-    """
-    if export_config.has_queued_runs():
-        return
+def _create_and_dispatch_export_run(
+    export_config,
+        run_model,
+        next_task,
+        *,
+        triggered_from_ui=False,
+        triggered_by=None,
+):
     export_record = run_model.objects.create(
         base_export_config=export_config,
         export_config_version=export_config.latest_version,
-        triggered_from_ui=False,
+        triggered_from_ui=triggered_from_ui,
+        triggered_by=triggered_by,
     )
     next_task.delay(export_record.id, force_sync_all_data=False)
+
+
+def _enqueue_scheduled_export(export_config, run_model, next_task):
+    """Celery-beat entry point: skip if already queued, then create and dispatch."""
+    if export_config.has_queued_runs():
+        return
+    _create_and_dispatch_export_run(export_config, run_model, next_task)
 
 
 @shared_task(bind=True)
