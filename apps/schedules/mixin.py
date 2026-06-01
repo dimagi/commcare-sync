@@ -116,6 +116,14 @@ class ScheduleMixin(models.Model):
         return False
 
     @property
+    def last_run(self):
+        return (
+            self.runs.exclude(status=RunBaseModel.Status.QUEUED)
+            .order_by('-created_at')
+            .first()
+        )
+
+    @property
     def schedule_display(self):
         if not self.schedule_type:
             return ''
