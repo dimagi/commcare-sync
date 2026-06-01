@@ -44,14 +44,6 @@ class RefreshConfig(ScheduleMixin, BaseModel):
         return self.name
 
     @property
-    def last_run(self):
-        return (
-            self.runs.exclude(status=RefreshRun.Status.QUEUED)
-            .order_by('-created_at')
-            .first()
-        )
-
-    @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
 

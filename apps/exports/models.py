@@ -30,14 +30,6 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
         abstract = True
 
     @property
-    def last_run(self):
-        return (
-            self.runs.exclude(status=ExportRun.Status.QUEUED)
-            .order_by('-created_at')
-            .first()
-        )
-
-    @property
     def latest_version(self):
         return Version.objects.get_for_object(self).first()
 
