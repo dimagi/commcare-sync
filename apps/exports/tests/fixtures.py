@@ -6,7 +6,12 @@ from unmagic import fixture, use
 
 from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
 from apps.db.models import Database
-from apps.exports.models import ExportConfig
+from apps.exports.models import (
+    ExportConfig,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+)
 from tests.fixtures import (
     commcare_account,
     commcare_project,
@@ -141,4 +146,32 @@ def export_config():
         project=commcare_project(),
         account=commcare_account(),
         database=database(),
+    )
+
+
+@fixture
+@use('db')
+def multi_export_config():
+    yield MultiProjectExportConfig.objects.create(
+        name='Multi Export Config',
+        account=commcare_account(),
+        database=database(),
+    )
+
+
+@fixture
+@use('db')
+def export_run():
+    yield ExportRun.objects.create(
+        base_export_config=export_config(),
+        status=ExportRun.Status.COMPLETED,
+    )
+
+
+@fixture
+@use('db')
+def multi_export_run():
+    yield MultiProjectExportRun.objects.create(
+        base_export_config=multi_export_config(),
+        status=MultiProjectExportRun.Status.COMPLETED,
     )
