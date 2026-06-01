@@ -131,3 +131,14 @@ def export_config_db_fixture():
     )
     config_file.close()
     yield export_config
+
+
+@fixture
+@use('db')
+def export_config():
+    yield ExportConfig.objects.create(
+        name='Test Export Config',
+        project=commcare_project(),
+        account=commcare_account(),
+        database=database(),
+    )

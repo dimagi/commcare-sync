@@ -1,24 +1,8 @@
 from django.urls import reverse
-from unmagic import fixture, use
+from unmagic import use
 
-from apps.exports.models import ExportConfig
-from tests.fixtures import (
-    authed_client,
-    commcare_account,
-    commcare_project,
-    database,
-)
-
-
-@fixture
-@use('db')
-def export_config():
-    yield ExportConfig.objects.create(
-        name='Test Export Config',
-        project=commcare_project(),
-        account=commcare_account(),
-        database=database(),
-    )
+from apps.exports.tests.fixtures import export_config
+from tests.fixtures import authed_client
 
 
 class TestExportsHomeView:
