@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 
@@ -76,6 +77,13 @@ urlpatterns = [
         r'api/fetch-config-files/',
         views.fetch_config_files,
         name='fetch_config_files',
+    ),
+    path(r'config-table/', views.config_table, name='config_table'),
+    path(r'runs/<int:run_id>/log/', views.run_log, name='run_log'),
+    path(
+        r'runs/multi-project/<int:run_id>/log/',
+        views.multi_run_log,
+        name='multi_run_log',
     ),
     path(
         r'download/commcare-export-log/',

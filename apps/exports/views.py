@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -5,6 +6,7 @@ import os
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Max
 from django.http import (
     Http404,
@@ -15,7 +17,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
@@ -26,7 +28,12 @@ from apps.web.stats import (
     _get_refresh_statistics,
 )
 from apps.web.templatetags.dateformat_tags import readable_timedelta
-from commcare_sync.views import get_hide_skipped_from_request, get_ui_page_size
+from commcare_sync.views import (
+    get_config_page_size,
+    get_hide_skipped_from_request,
+    get_page_from_request,
+    get_ui_page_size,
+)
 
 from .api_client import fetch_available_configs
 from .forms import (
@@ -44,12 +51,53 @@ from .tasks import run_export_task, run_multi_project_export_task
 logger = logging.getLogger(__name__)
 
 
+def _merged_export_configs(page_size, page_num):
+    """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
+    single = list(
+        ExportConfig.objects.select_related('project', 'created_by').annotate(
+            last_run_at=Max('runs__created_at')
+        )
+    )
+    multi = list(
+        MultiProjectExportConfig.objects.select_related('created_by').annotate(
+            last_run_at=Max('runs__created_at')
+        )
+    )
+    all_configs = sorted(
+        single + multi,
+        key=lambda c: c.last_run_at or c.updated_at,
+        reverse=True,
+    )
+    paginator = Paginator(all_configs, page_size)
+    try:
+        return paginator.page(page_num)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
+
+
+def _compute_exports_etag(configs_list):
+    """MD5 fingerprint of (run.id, created_at, status) for each config's latest run."""
+    parts = []
+    for config in configs_list:
+        run = config.runs.order_by('-created_at').first()
+        if run:
+            parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
+        else:
+            parts.append(f'config:{config.id}:no-runs')
+    return hashlib.md5('|'.join(parts).encode()).hexdigest()
+
+
 @login_required
 def home(request):
     now = timezone.now()
     period = settings.DASHBOARD_STATS_PERIOD
     current_start = now - period
     previous_start = current_start - period
+
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    page_obj = _merged_export_configs(page_size, page_num)
+    etag = _compute_exports_etag(page_obj.object_list)
 
     exports = (
         ExportConfig.objects
@@ -63,6 +111,10 @@ def home(request):
 
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
+        'configs': page_obj,
+        'page_size': page_size,
+        'page_sizes': [10, 20, 50],
+        'etag': etag,
         'exports': exports,
         'multi_project_exports': multi_project_exports,
         'stats_period': readable_timedelta(period, short=True),
@@ -70,6 +122,48 @@ def home(request):
         'refresh_stats': _get_refresh_statistics(current_start, previous_start),
         'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
     })
+
+
+@login_required
+@require_GET
+def config_table(request):
+    """HTMX endpoint: paginated + ETag-guarded exports config table partial."""
+    page_size = get_config_page_size(request)
+    page_num = get_page_from_request(request)
+    page_obj = _merged_export_configs(page_size, page_num)
+
+    etag = _compute_exports_etag(page_obj.object_list)
+    if request.GET.get('etag') == etag:
+        response = HttpResponse()
+        response['HX-Reswap'] = 'none'
+        return response
+
+    return render(
+        request,
+        'exports/partials/config_table.html',
+        {
+            'configs': page_obj,
+            'page_size': page_size,
+            'page_sizes': [10, 20, 50],
+            'etag': etag,
+        },
+    )
+
+
+@login_required
+@require_GET
+def run_log(request, run_id):
+    """HTMX endpoint: log fragment for an ExportRun."""
+    run = get_object_or_404(ExportRun, id=run_id)
+    return render(request, 'exports/partials/run_log.html', {'run': run})
+
+
+@login_required
+@require_GET
+def multi_run_log(request, run_id):
+    """HTMX endpoint: log fragment for a MultiProjectExportRun."""
+    run = get_object_or_404(MultiProjectExportRun, id=run_id)
+    return render(request, 'exports/partials/run_log.html', {'run': run})
 
 
 @login_required
