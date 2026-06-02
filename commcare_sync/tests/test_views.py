@@ -1,4 +1,3 @@
-import pytest
 from django.test import RequestFactory
 
 from commcare_sync.views import (
