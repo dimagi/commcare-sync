@@ -74,7 +74,7 @@ def forwarders(request):
         'forwarding/forwarders.html',
         {
             'active_tab': 'forwarders',
-            'configs': page_obj,
+            'page_obj': page_obj,
             'page_size': page_size,
             'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
@@ -108,7 +108,7 @@ def config_table(request):
         return response
 
     return render(request, 'forwarding/partials/config_table.html', {
-        'configs': page_obj,
+        'page_obj': page_obj,
         'page_size': page_size,
         'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,

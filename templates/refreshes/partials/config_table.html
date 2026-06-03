@@ -9,9 +9,9 @@
   hx-get="{% url 'refreshes:config_table' %}"
   hx-trigger="every 60s"
   hx-swap="outerHTML"
-  hx-vals="js:{page: '{{ configs.number }}', page_size: '{{ page_size }}', etag: document.getElementById('refreshes-config-table').dataset.etag}"
+  hx-vals="js:{page: '{{ page_obj.number }}', page_size: '{{ page_size }}', etag: document.getElementById('refreshes-config-table').dataset.etag}"
 >
-  {% if configs.object_list %}
+  {% if page_obj.object_list %}
     <table class="table table-sm small mb-0">
       <thead>
         <tr>
@@ -22,7 +22,7 @@
           <th>{% trans "Actions" %}</th>
         </tr>
       </thead>
-      {% for config in configs.object_list %}
+      {% for config in page_obj.object_list %}
         <tbody x-data="{logOpen: false}">
           <tr>
             <td>
@@ -118,14 +118,14 @@
           </a>
         {% endfor %}
       </div>
-      {% if configs.paginator.num_pages > 1 %}
+      {% if page_obj.paginator.num_pages > 1 %}
         <nav aria-label="{% trans 'Pagination' %}">
           <ul class="pagination pagination-sm mb-0">
-            {% if configs.has_previous %}
+            {% if page_obj.has_previous %}
               <li class="page-item">
                 <a
                   class="page-link"
-                  href="?page={{ configs.previous_page_number }}&page_size={{ page_size }}"
+                  href="?page={{ page_obj.previous_page_number }}&page_size={{ page_size }}"
                   >&laquo;</a
                 >
               </li>
@@ -134,9 +134,9 @@
                 <span class="page-link">&laquo;</span>
               </li>
             {% endif %}
-            {% for num in configs.paginator.page_range %}
+            {% for num in page_obj.paginator.page_range %}
               <li
-                class="page-item {% if num == configs.number %}active{% endif %}"
+                class="page-item {% if num == page_obj.number %}active{% endif %}"
               >
                 <a
                   class="page-link"
@@ -145,11 +145,11 @@
                 >
               </li>
             {% endfor %}
-            {% if configs.has_next %}
+            {% if page_obj.has_next %}
               <li class="page-item">
                 <a
                   class="page-link"
-                  href="?page={{ configs.next_page_number }}&page_size={{ page_size }}"
+                  href="?page={{ page_obj.next_page_number }}&page_size={{ page_size }}"
                   >&raquo;</a
                 >
               </li>
