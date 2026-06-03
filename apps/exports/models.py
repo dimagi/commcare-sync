@@ -34,25 +34,6 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
         return Version.objects.get_for_object(self).first()
 
     @property
-    def edit_url(self):
-        if isinstance(self, ExportConfig):
-            return reverse('exports:edit_export_config', args=[self.id])
-        elif isinstance(self, MultiProjectExportConfig):
-            return reverse('exports:edit_multi_export_config', args=[self.id])
-        raise ValueError(f"Unknown config type: {type(self)}")
-
-    @property
-    def last_run_log_url(self):
-        run = self.last_run
-        if run is None:
-            return None
-        if isinstance(self, ExportConfig):
-            return reverse('exports:run_log', args=[run.id])
-        elif isinstance(self, MultiProjectExportConfig):
-            return reverse('exports:multi_run_log', args=[run.id])
-        raise ValueError(f"Unknown config type: {type(self)}")
-
-    @property
     def details_url(self):
         raise NotImplementedError
 
@@ -77,6 +58,18 @@ class ExportConfig(ExportConfigBase):
 
     def __str__(self):
         return f'{self.name} - {self.project}'
+
+    @property
+    def edit_url(self):
+        return reverse('exports:edit_export_config', args=[self.id])
+
+    @property
+    def last_run_log_url(self):
+        run = self.last_run
+        return None if run is None else reverse(
+            'exports:run_log',
+            args=[run.id],
+        )
 
 
 @reversion.register()
@@ -112,6 +105,18 @@ class MultiProjectExportConfig(ExportConfigBase):
             return mark_safe(
                 '<br>'.join(p.domain for p in self.projects.all())
             )
+
+    @property
+    def edit_url(self):
+        return reverse('exports:edit_multi_export_config', args=[self.id])
+
+    @property
+    def last_run_log_url(self):
+        run = self.last_run
+        return None if run is None else reverse(
+            'exports:multi_run_log',
+            args=[run.id],
+        )
 
 
 class ExportRunBase(RunBaseModel):
