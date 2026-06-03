@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+from itertools import chain
 
 from django.conf import settings
 from django.contrib import messages
@@ -54,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 def _merged_export_configs(page_size: int, page_num: int) -> Page:
     """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
-    single = list(
+    single = (
         ExportConfig.objects
         .select_related('project')
         .annotate(last_run_at=Max('runs__created_at'))
@@ -64,7 +65,7 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
             to_attr='_all_runs',
         ))
     )
-    multi = list(
+    multi = (
         MultiProjectExportConfig.objects
         .annotate(last_run_at=Max('runs__created_at'))
         .prefetch_related(Prefetch(
@@ -74,8 +75,8 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
         ))
     )
     all_configs = sorted(
-        single + multi,
-        key=lambda c: c.last_run_at or c.updated_at,
+        chain(single, multi),
+        key=lambda c: c.last_run_at or c.updated_at,  # type: ignore[attr-defined]
         reverse=True,
     )
     paginator = Paginator(all_configs, page_size)
