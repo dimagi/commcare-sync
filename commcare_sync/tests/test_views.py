@@ -1,13 +1,13 @@
 from django.test import RequestFactory
 
 from commcare_sync.views import (
-    _VALID_CONFIG_PAGE_SIZES,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
 )
+from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
-VALID_PAGE_SIZES = list(_VALID_CONFIG_PAGE_SIZES)
+VALID_PAGE_SIZES = list(VALID_CONFIG_PAGE_SIZES)
 
 
 class TestGetConfigPageSize:
