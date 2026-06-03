@@ -6,7 +6,7 @@ import os
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, Paginator
+from django.core.paginator import EmptyPage, Page, Paginator
 from django.db.models import Max, Prefetch
 from django.http import (
     Http404,
@@ -52,7 +52,7 @@ from .tasks import run_export_task, run_multi_project_export_task
 logger = logging.getLogger(__name__)
 
 
-def _merged_export_configs(page_size, page_num):
+def _merged_export_configs(page_size: int, page_num: int) -> Page:
     """Return a Page object combining ExportConfig and MultiProjectExportConfig."""
     single = list(
         ExportConfig.objects
@@ -112,7 +112,7 @@ def home(request):
 
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
-        'configs': page_obj,
+        'page_obj': page_obj,
         'page_size': page_size,
         'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,
@@ -141,7 +141,7 @@ def config_table(request):
         request,
         'exports/partials/config_table.html',
         {
-            'configs': page_obj,
+            'page_obj': page_obj,
             'page_size': page_size,
             'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
