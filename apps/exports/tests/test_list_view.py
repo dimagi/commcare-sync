@@ -22,26 +22,39 @@ from tests.fixtures import (
 )
 
 
-class TestExportConfigBaseProperties:
-    @use(export_config)
+@use(export_config)
+class TestExportConfigProperties:
     def test_export_config_edit_url(self):
         config = export_config()
         expected = reverse('exports:edit_export_config', args=[config.id])
         assert config.edit_url == expected
 
-    @use(multi_export_config)
+    def test_last_run_log_url_none_when_no_run(self):
+        assert export_config().last_run_log_url is None
+
+    @use(export_run)
+    def test_last_run_log_url_with_run(self):
+        run = export_run()
+        expected = reverse('exports:run_log', args=[run.id])
+        assert export_config().last_run_log_url == expected
+
+
+@use(multi_export_config)
+class TestMultiExportConfigProperties:
+
     def test_multi_export_config_edit_url(self):
         config = multi_export_config()
         expected = reverse('exports:edit_multi_export_config', args=[config.id])
         assert config.edit_url == expected
 
-    @use(export_config)
-    def test_last_run_log_url_none_when_no_run(self):
-        assert export_config().last_run_log_url is None
-
-    @use(multi_export_config)
     def test_last_run_log_url_none_when_no_run_multi(self):
         assert multi_export_config().last_run_log_url is None
+
+    @use(multi_export_run)
+    def test_last_run_log_url_with_run_multi(self):
+        run = multi_export_run()
+        expected = reverse('exports:multi_run_log', args=[run.id])
+        assert multi_export_config().last_run_log_url == expected
 
 
 class TestExportsHomeView:
