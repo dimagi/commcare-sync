@@ -21,6 +21,7 @@ from apps.web.stats import (
     _get_refresh_statistics,
 )
 from apps.web.templatetags.dateformat_tags import readable_timedelta
+from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     get_config_page_size,
     get_page_from_request,
@@ -76,7 +77,7 @@ def refresh_configs(request):
             'active_tab': 'refreshes',
             'configs': page_obj,
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
             'stats_period': readable_timedelta(period, short=True),
             'export_stats': _get_export_statistics(current_start, previous_start),
@@ -110,7 +111,7 @@ def config_table(request):
     return render(request, 'refreshes/partials/config_table.html', {
         'configs': page_obj,
         'page_size': page_size,
-        'page_sizes': [10, 20, 50],
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,
     })
 
@@ -227,7 +228,7 @@ def refresh_details(request, config_id):
             'runs': page_obj,
             'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
         },
     )
 
@@ -256,7 +257,7 @@ def run_history_table(request, config_id):
             'runs': page_obj,
             'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
         },
     )
 

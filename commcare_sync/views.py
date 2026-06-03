@@ -1,8 +1,7 @@
 from django.conf import settings
 
 from apps.commcare.models import RunBaseModel
-
-_VALID_CONFIG_PAGE_SIZES = (10, 20, 50)
+from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
 
 def get_ui_page_size(request):
@@ -25,11 +24,11 @@ def get_config_page_size(request):
     if 'page_size' in request.GET:
         try:
             size = int(request.GET['page_size'])
-            if size in _VALID_CONFIG_PAGE_SIZES:
+            if size in VALID_CONFIG_PAGE_SIZES:
                 return size
         except ValueError:
             pass
-    return _VALID_CONFIG_PAGE_SIZES[0]
+    return VALID_CONFIG_PAGE_SIZES[0]
 
 
 def get_page_from_request(request):

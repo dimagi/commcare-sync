@@ -28,6 +28,7 @@ from apps.web.stats import (
     _get_refresh_statistics,
 )
 from apps.web.templatetags.dateformat_tags import readable_timedelta
+from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     get_config_page_size,
     get_page_from_request,
@@ -113,7 +114,7 @@ def home(request):
         'active_tab': 'exports',
         'configs': page_obj,
         'page_size': page_size,
-        'page_sizes': [10, 20, 50],
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,
         'stats_period': readable_timedelta(period, short=True),
         'export_stats': _get_export_statistics(current_start, previous_start),
@@ -142,7 +143,7 @@ def config_table(request):
         {
             'configs': page_obj,
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
         },
     )
@@ -332,7 +333,7 @@ def export_details(request, export_id):
             'runs': page_obj,
             'run_history_url': reverse('exports:run_history_table', args=[export.id]),
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
         },
     )
 
@@ -366,7 +367,7 @@ def run_history_table(request, export_id):
             'is_multi_project': is_multi_project,
             'run_history_url': run_history_url,
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
         },
     )
 
@@ -423,7 +424,7 @@ def multi_export_details(request, export_id):
             'runs': page_obj,
             'run_history_url': run_history_url,
             'page_size': page_size,
-            'page_sizes': [10, 20, 50],
+            'page_sizes': VALID_CONFIG_PAGE_SIZES,
         },
     )
 
