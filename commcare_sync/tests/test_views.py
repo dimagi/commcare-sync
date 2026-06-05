@@ -7,8 +7,6 @@ from commcare_sync.views import (
 )
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
-VALID_PAGE_SIZES = list(VALID_CONFIG_PAGE_SIZES)
-
 
 class TestGetConfigPageSize:
     def _req(self, params=''):
@@ -16,18 +14,18 @@ class TestGetConfigPageSize:
         return rf.get(f'/?{params}')
 
     def test_default_is_first_valid_size(self):
-        assert get_config_page_size(self._req()) == VALID_PAGE_SIZES[0]
+        assert get_config_page_size(self._req()) == VALID_CONFIG_PAGE_SIZES[0]
 
     def test_valid_sizes_accepted(self):
-        for size in VALID_PAGE_SIZES:
+        for size in VALID_CONFIG_PAGE_SIZES:
             assert get_config_page_size(self._req(f'page_size={size}')) == size
 
     def test_invalid_size_falls_back_to_default(self):
-        default = VALID_PAGE_SIZES[0]
+        default = VALID_CONFIG_PAGE_SIZES[0]
         assert get_config_page_size(self._req('page_size=7')) == default
 
     def test_non_integer_falls_back_to_default(self):
-        default = VALID_PAGE_SIZES[0]
+        default = VALID_CONFIG_PAGE_SIZES[0]
         assert get_config_page_size(self._req('page_size=abc')) == default
 
 
