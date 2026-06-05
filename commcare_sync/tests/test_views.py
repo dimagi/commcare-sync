@@ -15,18 +15,20 @@ class TestGetConfigPageSize:
         rf = RequestFactory()
         return rf.get(f'/?{params}')
 
-    def test_default_is_10(self):
-        assert get_config_page_size(self._req()) == 10
+    def test_default_is_first_valid_size(self):
+        assert get_config_page_size(self._req()) == VALID_PAGE_SIZES[0]
 
     def test_valid_sizes_accepted(self):
         for size in VALID_PAGE_SIZES:
             assert get_config_page_size(self._req(f'page_size={size}')) == size
 
     def test_invalid_size_falls_back_to_default(self):
-        assert get_config_page_size(self._req('page_size=7')) == 10
+        default = VALID_PAGE_SIZES[0]
+        assert get_config_page_size(self._req('page_size=7')) == default
 
     def test_non_integer_falls_back_to_default(self):
-        assert get_config_page_size(self._req('page_size=abc')) == 10
+        default = VALID_PAGE_SIZES[0]
+        assert get_config_page_size(self._req('page_size=abc')) == default
 
 
 class TestGetPageFromRequest:
