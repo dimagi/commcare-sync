@@ -9,62 +9,66 @@ from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
 
 class TestGetConfigPageSize:
-    def _req(self, params=''):
-        rf = RequestFactory()
-        return rf.get(f'/?{params}')
+    def _get_request(self, params=''):
+        factory = RequestFactory()
+        return factory.get(f'/?{params}')
 
     def test_default_is_first_valid_size(self):
-        assert get_config_page_size(self._req()) == VALID_CONFIG_PAGE_SIZES[0]
+        request = self._get_request()
+        assert get_config_page_size(request) == VALID_CONFIG_PAGE_SIZES[0]
 
     def test_valid_sizes_accepted(self):
         for size in VALID_CONFIG_PAGE_SIZES:
-            assert get_config_page_size(self._req(f'page_size={size}')) == size
+            request = self._get_request(f'page_size={size}')
+            assert get_config_page_size(request) == size
 
     def test_invalid_size_falls_back_to_default(self):
+        request = self._get_request('page_size=7')
         default = VALID_CONFIG_PAGE_SIZES[0]
-        assert get_config_page_size(self._req('page_size=7')) == default
+        assert get_config_page_size(request) == default
 
     def test_non_integer_falls_back_to_default(self):
+        request = self._get_request('page_size=abc')
         default = VALID_CONFIG_PAGE_SIZES[0]
-        assert get_config_page_size(self._req('page_size=abc')) == default
+        assert get_config_page_size(request) == default
 
 
 class TestGetPageFromRequest:
-    def _req(self, params=''):
-        rf = RequestFactory()
-        return rf.get(f'/?{params}')
+    def _get_request(self, params=''):
+        factory = RequestFactory()
+        return factory.get(f'/?{params}')
 
     def test_default_is_1(self):
-        assert get_page_from_request(self._req()) == 1
+        assert get_page_from_request(self._get_request()) == 1
 
     def test_valid_page_returned(self):
-        assert get_page_from_request(self._req('page=3')) == 3
+        assert get_page_from_request(self._get_request('page=3')) == 3
 
     def test_zero_clamped_to_1(self):
-        assert get_page_from_request(self._req('page=0')) == 1
+        assert get_page_from_request(self._get_request('page=0')) == 1
 
     def test_negative_clamped_to_1(self):
-        assert get_page_from_request(self._req('page=-5')) == 1
+        assert get_page_from_request(self._get_request('page=-5')) == 1
 
     def test_non_integer_returns_1(self):
-        assert get_page_from_request(self._req('page=abc')) == 1
+        assert get_page_from_request(self._get_request('page=abc')) == 1
 
 
 class TestGetRunStatusesFromRequest:
-    def _req(self, params=''):
-        rf = RequestFactory()
-        return rf.get(f'/?{params}')
+    def _get_request(self, params=''):
+        factory = RequestFactory()
+        return factory.get(f'/?{params}')
 
     def test_returns_none_when_no_param(self):
-        assert get_run_statuses_from_request(self._req()) is None
+        assert get_run_statuses_from_request(self._get_request()) is None
 
     def test_returns_empty_list_when_sentinel_but_no_statuses(self):
         assert get_run_statuses_from_request(
-            self._req('has_status_filter=1')
+            self._get_request('has_status_filter=1')
         ) == []
 
     def test_returns_checked_statuses(self):
-        request = self._req(
+        request = self._get_request(
             'has_status_filter=1&status_filter=queued&status_filter=completed'
         )
         assert set(get_run_statuses_from_request(request)) == {
@@ -72,7 +76,7 @@ class TestGetRunStatusesFromRequest:
         }
 
     def test_ignores_invalid_status_values(self):
-        request = self._req(
+        request = self._get_request(
             'has_status_filter=1&status_filter=bogus&status_filter=completed'
         )
         assert set(get_run_statuses_from_request(request)) == {'completed'}
