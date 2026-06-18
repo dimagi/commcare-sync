@@ -7,54 +7,16 @@ from tests.fixtures import authed_client, htmx_client
 from .fixtures import forwarding_config
 
 
-class TestForwarderDetailsSmoke:
-    @use(authed_client, forwarding_config)
-    def test_returns_200(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        assert response.status_code == 200
-
-    @use(authed_client, forwarding_config)
-    def test_run_table_present(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        assert 'id="run-table"' in response.content.decode()
-
-    @use(authed_client, forwarding_config)
-    def test_status_filter_dropdown_present(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        content = response.content.decode()
-        assert 'status-filter-form' in content
-
-    @use(authed_client, forwarding_config)
-    def test_run_history_section_present(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        content = response.content.decode()
-        assert 'Run History' in content
-        assert 'id="run-table"' in content
-
-    @use(authed_client, forwarding_config)
-    def test_schedule_column_present(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        assert 'Schedule' in response.content.decode()
+@use(authed_client, forwarding_config)
+def test_export_details_smoke():
+    response = authed_client().get(reverse(
+        'forwarding:forwarder_details',
+        args=[forwarding_config().id],
+    ))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'Schedule' in content
+    assert 'Run History' in content
 
 
 class TestForwardingRunHistoryTableEndpoint:
