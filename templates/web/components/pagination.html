@@ -7,7 +7,7 @@
     {% for size in page_sizes %}
       <a
         href="?page=1&page_size={{ size }}"
-        class="btn btn-sm {% if page_size == size %}btn-secondary{% else %}btn-outline-secondary{% endif %} py-0"
+        class="btn btn-sm {% if page_size == size %}btn-secondary disabled{% else %}btn-outline-secondary{% endif %} py-0"
       >
         {{ size }}
       </a>
