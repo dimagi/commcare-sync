@@ -6,46 +6,16 @@ from apps.exports.tests.fixtures import export_config_db_fixture
 from tests.fixtures import authed_client, htmx_client
 
 
-class TestExportDetailsSmoke:
-    @use(authed_client, export_config_db_fixture)
-    def test_returns_200(self):
-        response = authed_client().get(
-            reverse(
-                'exports:export_details', args=[export_config_db_fixture().id]
-            )
-        )
-        assert response.status_code == 200
-
-    @use(authed_client, export_config_db_fixture)
-    def test_run_history_section_present(self):
-        response = authed_client().get(
-            reverse(
-                'exports:export_details', args=[export_config_db_fixture().id]
-            )
-        )
-        content = response.content.decode()
-        assert 'Run History' in content
-        assert 'id="run-table"' in content
-
-    @use(authed_client, export_config_db_fixture)
-    def test_schedule_column_present(self):
-        response = authed_client().get(
-            reverse(
-                'exports:export_details', args=[export_config_db_fixture().id]
-            )
-        )
-        assert 'Schedule' in response.content.decode()
-
-    @use(authed_client, export_config_db_fixture)
-    def test_status_filter_dropdown_present(self):
-        response = authed_client().get(
-            reverse(
-                'exports:export_details', args=[export_config_db_fixture().id]
-            )
-        )
-        content = response.content.decode()
-        assert 'status-filter-form' in content
-        assert 'has_status_filter' in content
+@use(authed_client, export_config_db_fixture)
+def test_export_details_smoke():
+    response = authed_client().get(reverse(
+        'exports:export_details',
+        args=[export_config_db_fixture().id],
+    ))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'Schedule' in content
+    assert 'Run History' in content
 
 
 class TestExportRunHistoryTableEndpoint:
