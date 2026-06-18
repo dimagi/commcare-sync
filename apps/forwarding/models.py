@@ -71,6 +71,15 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
     def details_url(self):
         return reverse('forwarding:forwarder_details', args=[self.id])
 
+    @property
+    def edit_url(self):
+        return reverse('forwarding:edit_forwarding_config', args=[self.id])
+
+    @property
+    def last_run_log_url(self):
+        run = self.last_run
+        return None if run is None else reverse('forwarding:run_log', args=[run.id])
+
     def save(self, *args, **kwargs):
         with reversion.create_revision():
             super().save(*args, **kwargs)
