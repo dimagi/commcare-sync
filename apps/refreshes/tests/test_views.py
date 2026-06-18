@@ -318,7 +318,7 @@ class TestRefreshConfigTableView:
         _refresh_config()
         client = authed_client()
         response = client.get(reverse('refreshes:config_table'))
-        match = re.search(r'data-etag="([a-f0-9]+)"', response.content.decode())
+        match = re.search(r'"etag":\s*"([a-f0-9]+)"', response.content.decode())
         assert match
         etag = match.group(1)
         response2 = client.get(reverse('refreshes:config_table'), {'etag': etag})

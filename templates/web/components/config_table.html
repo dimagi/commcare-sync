@@ -5,11 +5,10 @@
 
 <div
   id="{{ table_id }}"
-  data-etag="{{ etag }}"
   hx-get="{{ config_table_url }}"
   hx-trigger="every 60s"
   hx-swap="outerHTML"
-  hx-vals="js:{page: '{{ page_obj.number }}', page_size: '{{ page_size }}', etag: document.getElementById('{{ table_id }}').dataset.etag}"
+  hx-vals='{"page": "{{ page_obj.number }}", "page_size": "{{ page_size }}", "etag": "{{ etag }}"}'
 >
   {% if page_obj.object_list %}
     <table class="table table-sm small mb-0">
