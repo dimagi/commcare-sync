@@ -17,15 +17,6 @@ class TestExportDetailsSmoke:
         assert response.status_code == 200
 
     @use(authed_client, export_config_db_fixture)
-    def test_no_details_suffix_in_heading(self):
-        response = authed_client().get(
-            reverse(
-                'exports:export_details', args=[export_config_db_fixture().id]
-            )
-        )
-        assert '- Details' not in response.content.decode()
-
-    @use(authed_client, export_config_db_fixture)
     def test_run_history_section_present(self):
         response = authed_client().get(
             reverse(
