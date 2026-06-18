@@ -6,7 +6,7 @@
 <div
   id="exports-config-table"
   data-etag="{{ etag }}"
-  hx-get="{% url 'exports:config_table' %}"
+  hx-get="{{ config_table_url }}"
   hx-trigger="every 60s"
   hx-swap="outerHTML"
   hx-vals="js:{page: '{{ page_obj.number }}', page_size: '{{ page_size }}', etag: document.getElementById('exports-config-table').dataset.etag}"
