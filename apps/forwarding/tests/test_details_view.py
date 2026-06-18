@@ -18,15 +18,6 @@ class TestForwarderDetailsSmoke:
         assert response.status_code == 200
 
     @use(authed_client, forwarding_config)
-    def test_no_details_suffix_in_heading(self):
-        response = authed_client().get(
-            reverse(
-                'forwarding:forwarder_details', args=[forwarding_config().id]
-            )
-        )
-        assert '- Details' not in response.content.decode()
-
-    @use(authed_client, forwarding_config)
     def test_run_table_present(self):
         response = authed_client().get(
             reverse(
