@@ -135,9 +135,9 @@ class TestConfigTableView:
         response = client.get(reverse('exports:config_table'))
         assert response.status_code == 200
         match = re.search(
-            r'data-etag="([a-f0-9]+)"', response.content.decode()
+            r'"etag":\s*"([a-f0-9]+)"', response.content.decode()
         )
-        assert match, 'data-etag not found in response'
+        assert match, 'etag not found in hx-vals'
         etag = match.group(1)
 
         # Second request with matching etag — should return HX-Reswap: none
