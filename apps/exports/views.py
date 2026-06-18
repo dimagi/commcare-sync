@@ -117,6 +117,7 @@ def home(request):
         'page_size': page_size,
         'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,
+        'config_table_url': reverse('exports:config_table'),
         'stats_period': readable_timedelta(period, short=True),
         'export_stats': _get_export_statistics(current_start, previous_start),
         'refresh_stats': _get_refresh_statistics(current_start, previous_start),
@@ -146,6 +147,7 @@ def config_table(request):
             'page_size': page_size,
             'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
+            'config_table_url': reverse('exports:config_table'),
         },
     )
 
