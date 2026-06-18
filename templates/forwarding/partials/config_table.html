@@ -104,64 +104,7 @@
     </table>
 
     {# Pagination footer #}
-    <div
-      class="d-flex justify-content-between align-items-center mt-2 px-1 small"
-    >
-      <div class="d-flex align-items-center gap-1">
-        <span class="text-muted me-1">{% trans "Per page:" %}</span>
-        {% for size in page_sizes %}
-          <a
-            href="?page=1&page_size={{ size }}"
-            class="btn btn-sm {% if page_size == size %}btn-secondary{% else %}btn-outline-secondary{% endif %} py-0"
-          >
-            {{ size }}
-          </a>
-        {% endfor %}
-      </div>
-      {% if page_obj.paginator.num_pages > 1 %}
-        <nav aria-label="{% trans 'Pagination' %}">
-          <ul class="pagination pagination-sm mb-0">
-            {% if page_obj.has_previous %}
-              <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page={{ page_obj.previous_page_number }}&page_size={{ page_size }}"
-                  >&laquo;</a
-                >
-              </li>
-            {% else %}
-              <li class="page-item disabled">
-                <span class="page-link">&laquo;</span>
-              </li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-              <li
-                class="page-item {% if num == page_obj.number %}active{% endif %}"
-              >
-                <a
-                  class="page-link"
-                  href="?page={{ num }}&page_size={{ page_size }}"
-                  >{{ num }}</a
-                >
-              </li>
-            {% endfor %}
-            {% if page_obj.has_next %}
-              <li class="page-item">
-                <a
-                  class="page-link"
-                  href="?page={{ page_obj.next_page_number }}&page_size={{ page_size }}"
-                  >&raquo;</a
-                >
-              </li>
-            {% else %}
-              <li class="page-item disabled">
-                <span class="page-link">&raquo;</span>
-              </li>
-            {% endif %}
-          </ul>
-        </nav>
-      {% endif %}
-    </div>
+    {% include "web/components/pagination.html" %}
   {% else %}
     <div class="alert alert-warning">
       {% trans "No forwarding configurations found!" %}
