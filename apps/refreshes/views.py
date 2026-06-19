@@ -40,9 +40,8 @@ logger = logging.getLogger(__name__)
 def _compute_refresh_etag(configs_list):
     parts = []
     for config in configs_list:
-        # Use prefetched _all_runs if available, else DB query
         all_runs = getattr(config, '_all_runs', None)
-        run = all_runs[0] if all_runs else config.runs.order_by('-created_at').first()
+        run = all_runs[0] if all_runs else None
         if run:
             parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
         else:
