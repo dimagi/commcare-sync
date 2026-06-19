@@ -15,22 +15,16 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.stats import (
-    _get_export_statistics,
-    _get_forwarding_statistics,
-    _get_refresh_statistics,
-)
-from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
+    dashboard_stats_context,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
@@ -85,11 +79,6 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
 
 @login_required
 def home(request):
-    now = timezone.now()
-    period = settings.DASHBOARD_STATS_PERIOD
-    current_start = now - period
-    previous_start = current_start - period
-
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     page_obj = _merged_export_configs(page_size, page_num)
@@ -102,10 +91,7 @@ def home(request):
         'page_sizes': VALID_CONFIG_PAGE_SIZES,
         'etag': etag,
         'config_table_url': reverse('exports:config_table'),
-        'stats_period': readable_timedelta(period, short=True),
-        'export_stats': _get_export_statistics(current_start, previous_start),
-        'refresh_stats': _get_refresh_statistics(current_start, previous_start),
-        'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+        **dashboard_stats_context(),
     })
 
 
