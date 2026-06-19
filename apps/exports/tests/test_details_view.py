@@ -21,26 +21,30 @@ def test_export_details_smoke():
 class TestExportRunHistoryTableEndpoint:
     @use(htmx_client, export_config_db_fixture)
     def test_returns_200(self):
-        url = reverse(
-            'exports:run_history_table', args=[export_config_db_fixture().id]
-        )
-        assert htmx_client().get(url).status_code == 200
+        response = htmx_client().get(reverse(
+            'exports:run_history_table',
+            args=[export_config_db_fixture().id],
+        ))
+        assert response.status_code == 200
 
     @use(authed_client, export_config_db_fixture)
     def test_non_htmx_request_rejected(self):
-        url = reverse(
-            'exports:run_history_table', args=[export_config_db_fixture().id]
-        )
-        assert authed_client().get(url).status_code == 400
+        response = authed_client().get(reverse(
+            'exports:run_history_table',
+            args=[export_config_db_fixture().id],
+        ))
+        assert response.status_code == 400
 
     @use(htmx_client, export_config_db_fixture)
     def test_status_filter_excludes_unchecked(self):
         config = export_config_db_fixture()
         completed_run = ExportRun.objects.create(
-            base_export_config=config, status=ExportRun.Status.COMPLETED
+            base_export_config=config,
+            status=ExportRun.Status.COMPLETED,
         )
         failed_run = ExportRun.objects.create(
-            base_export_config=config, status=ExportRun.Status.FAILED
+            base_export_config=config,
+            status=ExportRun.Status.FAILED,
         )
         url = reverse('exports:run_history_table', args=[config.id])
         content = (
@@ -56,7 +60,8 @@ class TestExportRunHistoryTableEndpoint:
     def test_empty_filter_shows_nothing(self):
         config = export_config_db_fixture()
         run = ExportRun.objects.create(
-            base_export_config=config, status=ExportRun.Status.COMPLETED
+            base_export_config=config,
+            status=ExportRun.Status.COMPLETED,
         )
         url = reverse('exports:run_history_table', args=[config.id])
         content = htmx_client().get(url).content.decode()
@@ -69,7 +74,8 @@ class TestExportRunHistoryTableEndpoint:
         config = export_config_db_fixture()
         for _ in range(15):
             ExportRun.objects.create(
-                base_export_config=config, status=ExportRun.Status.COMPLETED
+                base_export_config=config,
+                status=ExportRun.Status.COMPLETED,
             )
         url = reverse('exports:run_history_table', args=[config.id])
         response = htmx_client().get(

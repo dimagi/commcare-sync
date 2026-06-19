@@ -22,24 +22,19 @@ def test_export_details_smoke():
 class TestForwardingRunHistoryTableEndpoint:
     @use(htmx_client, forwarding_config)
     def test_returns_200(self):
-        assert (
-            htmx_client()
-            .get(
-                reverse(
-                    'forwarding:run_history_table',
-                    args=[forwarding_config().id],
-                )
-            )
-            .status_code
-            == 200
-        )
+        response = htmx_client().get(reverse(
+            'forwarding:run_history_table',
+            args=[forwarding_config().id],
+        ))
+        assert response.status_code == 200
 
     @use(authed_client, forwarding_config)
     def test_non_htmx_request_rejected(self):
-        url = reverse(
-            'forwarding:run_history_table', args=[forwarding_config().id]
-        )
-        assert authed_client().get(url).status_code == 400
+        response = authed_client().get(reverse(
+            'forwarding:run_history_table',
+            args=[forwarding_config().id],
+        ))
+        assert response.status_code == 400
 
     @use(htmx_client, forwarding_config)
     def test_status_filter_excludes_unchecked(self):
