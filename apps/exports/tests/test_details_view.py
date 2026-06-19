@@ -3,7 +3,7 @@ from unmagic import use
 
 from apps.exports.models import ExportRun
 from apps.exports.tests.fixtures import export_config_db_fixture
-from tests.fixtures import authed_client
+from tests.fixtures import authed_client, htmx_client
 
 
 class TestExportDetailsSmoke:
@@ -58,29 +58,21 @@ class TestExportDetailsSmoke:
 
 
 class TestExportRunHistoryTableEndpoint:
-    @use(authed_client, export_config_db_fixture)
+    @use(htmx_client, export_config_db_fixture)
     def test_returns_200(self):
         url = reverse(
             'exports:run_history_table', args=[export_config_db_fixture().id]
         )
-        assert authed_client().get(url).status_code == 200
+        assert htmx_client().get(url).status_code == 200
 
     @use(authed_client, export_config_db_fixture)
-    def test_no_filter_shows_all_statuses(self):
-        config = export_config_db_fixture()
-        completed_run = ExportRun.objects.create(
-            base_export_config=config, status=ExportRun.Status.COMPLETED
+    def test_non_htmx_request_rejected(self):
+        url = reverse(
+            'exports:run_history_table', args=[export_config_db_fixture().id]
         )
-        failed_run = ExportRun.objects.create(
-            base_export_config=config, status=ExportRun.Status.FAILED
-        )
-        url = reverse('exports:run_history_table', args=[config.id])
-        content = authed_client().get(url).content.decode()
-        # Use log-{id} marker which only appears in rendered run rows
-        assert f'log-{completed_run.id}' in content
-        assert f'log-{failed_run.id}' in content
+        assert authed_client().get(url).status_code == 400
 
-    @use(authed_client, export_config_db_fixture)
+    @use(htmx_client, export_config_db_fixture)
     def test_status_filter_excludes_unchecked(self):
         config = export_config_db_fixture()
         completed_run = ExportRun.objects.create(
@@ -91,34 +83,27 @@ class TestExportRunHistoryTableEndpoint:
         )
         url = reverse('exports:run_history_table', args=[config.id])
         content = (
-            authed_client()
-            .get(
-                url,
-                QUERY_STRING='has_status_filter=1&status_filter=completed',
-            )
+            htmx_client()
+            .get(url, QUERY_STRING='status_filter=completed')
             .content.decode()
         )
         # Use log-{id} marker which only appears in rendered run rows
         assert f'log-{completed_run.id}' in content
         assert f'log-{failed_run.id}' not in content
 
-    @use(authed_client, export_config_db_fixture)
+    @use(htmx_client, export_config_db_fixture)
     def test_empty_filter_shows_nothing(self):
         config = export_config_db_fixture()
         run = ExportRun.objects.create(
             base_export_config=config, status=ExportRun.Status.COMPLETED
         )
         url = reverse('exports:run_history_table', args=[config.id])
-        content = (
-            authed_client()
-            .get(url, QUERY_STRING='has_status_filter=1')
-            .content.decode()
-        )
+        content = htmx_client().get(url).content.decode()
         # No status values sent → no runs visible; use log-{id} marker which only
         # appears when a run row is rendered, not in URL paths.
         assert f'log-{run.id}' not in content
 
-    @use(authed_client, export_config_db_fixture)
+    @use(htmx_client, export_config_db_fixture)
     def test_pagination_default_10(self):
         config = export_config_db_fixture()
         for _ in range(15):
@@ -126,7 +111,10 @@ class TestExportRunHistoryTableEndpoint:
                 base_export_config=config, status=ExportRun.Status.COMPLETED
             )
         url = reverse('exports:run_history_table', args=[config.id])
-        response = authed_client().get(url)
+        response = htmx_client().get(
+            url,
+            QUERY_STRING='status_filter=completed',
+        )
         assert response.status_code == 200
         # Pagination controls should appear when there are > 10 runs
         assert 'pagination' in response.content.decode()
