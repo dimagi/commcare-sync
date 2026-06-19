@@ -22,30 +22,30 @@ def test_export_details_smoke():
 class TestRefreshRunHistoryTableEndpoint:
     @use(htmx_client, refresh_config)
     def test_returns_200(self):
-        assert (
-            htmx_client()
-            .get(
-                reverse(
-                    'refreshes:run_history_table', args=[refresh_config().id]
-                )
-            )
-            .status_code
-            == 200
-        )
+        response = htmx_client().get(reverse(
+            'refreshes:run_history_table',
+            args=[refresh_config().id],
+        ))
+        assert response.status_code == 200
 
     @use(authed_client, refresh_config)
     def test_non_htmx_request_rejected(self):
-        url = reverse('refreshes:run_history_table', args=[refresh_config().id])
-        assert authed_client().get(url).status_code == 400
+        response = authed_client().get(reverse(
+            'refreshes:run_history_table',
+            args=[refresh_config().id],
+        ))
+        assert response.status_code == 400
 
     @use(htmx_client, refresh_config)
     def test_status_filter_excludes_unchecked(self):
         config = refresh_config()
         completed_run = RefreshRun.objects.create(
-            refresh_config=config, status=RefreshRun.Status.COMPLETED
+            refresh_config=config,
+            status=RefreshRun.Status.COMPLETED,
         )
         failed_run = RefreshRun.objects.create(
-            refresh_config=config, status=RefreshRun.Status.FAILED
+            refresh_config=config,
+            status=RefreshRun.Status.FAILED,
         )
         url = reverse('refreshes:run_history_table', args=[config.id])
         content = (
@@ -61,7 +61,8 @@ class TestRefreshRunHistoryTableEndpoint:
     def test_empty_filter_shows_nothing(self):
         config = refresh_config()
         run = RefreshRun.objects.create(
-            refresh_config=config, status=RefreshRun.Status.COMPLETED
+            refresh_config=config,
+            status=RefreshRun.Status.COMPLETED,
         )
         url = reverse('refreshes:run_history_table', args=[config.id])
         content = htmx_client().get(url).content.decode()
@@ -72,7 +73,8 @@ class TestRefreshRunHistoryTableEndpoint:
         config = refresh_config()
         for _ in range(15):
             RefreshRun.objects.create(
-                refresh_config=config, status=RefreshRun.Status.COMPLETED
+                refresh_config=config,
+                status=RefreshRun.Status.COMPLETED,
             )
         url = reverse('refreshes:run_history_table', args=[config.id])
         response = htmx_client().get(
