@@ -1,4 +1,3 @@
-import hashlib
 import json
 import logging
 import os
@@ -31,6 +30,7 @@ from apps.web.stats import (
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
+    compute_configs_etag,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
@@ -86,19 +86,6 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
         return paginator.page(paginator.num_pages)
 
 
-def _compute_exports_etag(configs_list):
-    """MD5 fingerprint of (run.id, created_at, status) for each config's latest run."""
-    parts = []
-    for config in configs_list:
-        all_runs = getattr(config, '_all_runs', None)
-        run = all_runs[0] if all_runs else None
-        if run:
-            parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
-        else:
-            parts.append(f'config:{config.id}:no-runs')
-    return hashlib.md5('|'.join(parts).encode()).hexdigest()
-
-
 @login_required
 def home(request):
     now = timezone.now()
@@ -109,7 +96,7 @@ def home(request):
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     page_obj = _merged_export_configs(page_size, page_num)
-    etag = _compute_exports_etag(page_obj.object_list)
+    etag = compute_configs_etag(page_obj.object_list)
 
     return render(request, 'exports/exports_home.html', {
         'active_tab': 'exports',
@@ -133,7 +120,7 @@ def config_table(request):
     page_num = get_page_from_request(request)
     page_obj = _merged_export_configs(page_size, page_num)
 
-    etag = _compute_exports_etag(page_obj.object_list)
+    etag = compute_configs_etag(page_obj.object_list)
     if request.GET.get('etag') == etag:
         response = HttpResponse()
         response['HX-Reswap'] = 'none'
