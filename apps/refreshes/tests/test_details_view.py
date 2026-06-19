@@ -4,14 +4,14 @@ from unmagic import use
 from apps.refreshes.models import RefreshRun
 from tests.fixtures import authed_client, htmx_client
 
-from .fixtures import refresh_config as _refresh_config
+from .fixtures import refresh_config
 
 
-@use(authed_client, _refresh_config)
+@use(authed_client, refresh_config)
 def test_export_details_smoke():
     response = authed_client().get(reverse(
         'refreshes:refresh_details',
-        args=[_refresh_config().id],
+        args=[refresh_config().id],
     ))
     assert response.status_code == 200
     content = response.content.decode()
@@ -20,27 +20,27 @@ def test_export_details_smoke():
 
 
 class TestRefreshRunHistoryTableEndpoint:
-    @use(htmx_client, _refresh_config)
+    @use(htmx_client, refresh_config)
     def test_returns_200(self):
         assert (
             htmx_client()
             .get(
                 reverse(
-                    'refreshes:run_history_table', args=[_refresh_config().id]
+                    'refreshes:run_history_table', args=[refresh_config().id]
                 )
             )
             .status_code
             == 200
         )
 
-    @use(authed_client, _refresh_config)
+    @use(authed_client, refresh_config)
     def test_non_htmx_request_rejected(self):
-        url = reverse('refreshes:run_history_table', args=[_refresh_config().id])
+        url = reverse('refreshes:run_history_table', args=[refresh_config().id])
         assert authed_client().get(url).status_code == 400
 
-    @use(htmx_client, _refresh_config)
+    @use(htmx_client, refresh_config)
     def test_status_filter_excludes_unchecked(self):
-        config = _refresh_config()
+        config = refresh_config()
         completed_run = RefreshRun.objects.create(
             refresh_config=config, status=RefreshRun.Status.COMPLETED
         )
@@ -57,9 +57,9 @@ class TestRefreshRunHistoryTableEndpoint:
         assert f'log-{completed_run.id}' in content
         assert f'log-{failed_run.id}' not in content
 
-    @use(htmx_client, _refresh_config)
+    @use(htmx_client, refresh_config)
     def test_empty_filter_shows_nothing(self):
-        config = _refresh_config()
+        config = refresh_config()
         run = RefreshRun.objects.create(
             refresh_config=config, status=RefreshRun.Status.COMPLETED
         )
@@ -67,9 +67,9 @@ class TestRefreshRunHistoryTableEndpoint:
         content = htmx_client().get(url).content.decode()
         assert f'log-{run.id}' not in content
 
-    @use(htmx_client, _refresh_config)
+    @use(htmx_client, refresh_config)
     def test_pagination_default_10(self):
-        config = _refresh_config()
+        config = refresh_config()
         for _ in range(15):
             RefreshRun.objects.create(
                 refresh_config=config, status=RefreshRun.Status.COMPLETED
