@@ -46,14 +46,12 @@ _VALID_RUN_STATUSES = set(RunBaseModel.Status.values)
 
 
 def get_run_statuses_from_request(request):
-    """Return list of statuses to filter runs by, or None if no filter active.
-
-    Returns None  → filter not submitted; show all runs (initial page load).
-    Returns list  → filter active; show only runs whose status is in the list
-                    (list may be empty, which means show nothing).
     """
-    if 'has_status_filter' not in request.GET:
-        return None
+    Returns a list of statuses to filter runs by.
+
+    Show only runs whose status is in the list. (If the list is empty,
+    show nothing.)
+    """
     return [
         s for s in request.GET.getlist('status_filter')
         if s in _VALID_RUN_STATUSES

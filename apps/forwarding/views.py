@@ -329,8 +329,7 @@ def run_history_table(request, forwarder_id):
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
     runs_qs = forwarder.runs.order_by('-created_at')
     statuses = get_run_statuses_from_request(request)
-    if statuses is not None:
-        runs_qs = runs_qs.filter(status__in=statuses)
+    runs_qs = runs_qs.filter(status__in=statuses)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     paginator = Paginator(runs_qs, page_size)
