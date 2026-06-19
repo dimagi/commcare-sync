@@ -1,4 +1,3 @@
-import hashlib
 import logging
 
 from django.conf import settings
@@ -24,6 +23,7 @@ from apps.web.stats import (
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
+    compute_configs_etag,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
@@ -35,18 +35,6 @@ from .models import RefreshConfig, RefreshRun
 from .tasks import run_refresh_task
 
 logger = logging.getLogger(__name__)
-
-
-def _compute_refresh_etag(configs_list):
-    parts = []
-    for config in configs_list:
-        all_runs = getattr(config, '_all_runs', None)
-        run = all_runs[0] if all_runs else None
-        if run:
-            parts.append(f"{run.id}:{run.created_at.isoformat()}:{run.status}")
-        else:
-            parts.append(f"config:{config.id}:no-runs")
-    return hashlib.md5('|'.join(parts).encode()).hexdigest()
 
 
 @login_required
@@ -68,7 +56,7 @@ def refresh_configs(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    etag = _compute_refresh_etag(page_obj.object_list)
+    etag = compute_configs_etag(page_obj.object_list)
 
     return render(
         request,
@@ -103,7 +91,7 @@ def config_table(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    etag = _compute_refresh_etag(page_obj.object_list)
+    etag = compute_configs_etag(page_obj.object_list)
     if request.GET.get('etag') == etag:
         response = HttpResponse()
         response['HX-Reswap'] = 'none'

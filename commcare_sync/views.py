@@ -1,3 +1,5 @@
+import hashlib
+
 from django.conf import settings
 
 from apps.commcare.models import RunBaseModel
@@ -56,3 +58,19 @@ def get_run_statuses_from_request(request):
         s for s in request.GET.getlist('status_filter')
         if s in _VALID_RUN_STATUSES
     ]
+
+
+def compute_configs_etag(configs_list):
+    """
+    Returns MD5 fingerprint of (run.id, created_at, status) for each
+    config's latest run.
+    """
+    parts = []
+    for config in configs_list:
+        all_runs = getattr(config, '_all_runs', None)
+        run = all_runs[0] if all_runs else None
+        if run:
+            parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
+        else:
+            parts.append(f'config:{config.id}:no-runs')
+    return hashlib.md5('|'.join(parts).encode()).hexdigest()
