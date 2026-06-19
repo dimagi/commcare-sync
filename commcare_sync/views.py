@@ -2,8 +2,15 @@ import hashlib
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
+from django.utils import timezone
 
 from apps.commcare.models import RunBaseModel
+from apps.web.stats import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
+from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
 
@@ -48,6 +55,20 @@ def paginate(object_list, page_size, page_num):
         return paginator.page(page_num)
     except EmptyPage:
         return paginator.page(paginator.num_pages)
+
+
+def dashboard_stats_context():
+    """Template context for the cross-app dashboard statistics shown on each config list page."""
+    now = timezone.now()
+    period = settings.DASHBOARD_STATS_PERIOD
+    current_start = now - period
+    previous_start = current_start - period
+    return {
+        'stats_period': readable_timedelta(period, short=True),
+        'export_stats': _get_export_statistics(current_start, previous_start),
+        'refresh_stats': _get_refresh_statistics(current_start, previous_start),
+        'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+    }
 
 
 # Per-run statuses available for filtering. RunBaseModel.Status is the shared base

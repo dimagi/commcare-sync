@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -8,21 +7,15 @@ from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.db.models import Database
 from apps.web.decorators import require_htmx
-from apps.web.stats import (
-    _get_export_statistics,
-    _get_forwarding_statistics,
-    _get_refresh_statistics,
-)
-from apps.web.templatetags.dateformat_tags import readable_timedelta
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
+    dashboard_stats_context,
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
@@ -40,11 +33,6 @@ logger = logging.getLogger(__name__)
 @login_required
 def refresh_configs(request):
     """List all refresh configurations."""
-    now = timezone.now()
-    period = settings.DASHBOARD_STATS_PERIOD
-    current_start = now - period
-    previous_start = current_start - period
-
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
@@ -64,10 +52,7 @@ def refresh_configs(request):
             'page_sizes': VALID_CONFIG_PAGE_SIZES,
             'etag': etag,
             'config_table_url': reverse('refreshes:config_table'),
-            'stats_period': readable_timedelta(period, short=True),
-            'export_stats': _get_export_statistics(current_start, previous_start),
-            'refresh_stats': _get_refresh_statistics(current_start, previous_start),
-            'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+            **dashboard_stats_context(),
         },
     )
 
