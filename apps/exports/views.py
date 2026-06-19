@@ -30,6 +30,7 @@ from commcare_sync.views import (
     get_run_statuses_from_request,
     get_ui_page_size,
     paginate,
+    render_config_table,
 )
 
 from .api_client import fetch_available_configs
@@ -102,23 +103,12 @@ def config_table(request):
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     page_obj = _merged_export_configs(page_size, page_num)
-
-    etag = compute_configs_etag(page_obj.object_list)
-    if request.GET.get('etag') == etag:
-        response = HttpResponse()
-        response['HX-Reswap'] = 'none'
-        return response
-
-    return render(
+    return render_config_table(
         request,
+        page_obj,
+        page_size,
         'exports/partials/config_table.html',
-        {
-            'page_obj': page_obj,
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-            'etag': etag,
-            'config_table_url': reverse('exports:config_table'),
-        },
+        reverse('exports:config_table'),
     )
 
 

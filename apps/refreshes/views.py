@@ -20,6 +20,7 @@ from commcare_sync.views import (
     get_page_from_request,
     get_run_statuses_from_request,
     paginate,
+    render_config_table,
 )
 
 from .db_utils import check_connection, get_materialized_views
@@ -67,20 +68,13 @@ def config_table(request):
         Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
     )
     page_obj = paginate(configs_qs, page_size, page_num)
-
-    etag = compute_configs_etag(page_obj.object_list)
-    if request.GET.get('etag') == etag:
-        response = HttpResponse()
-        response['HX-Reswap'] = 'none'
-        return response
-
-    return render(request, 'refreshes/partials/config_table.html', {
-        'page_obj': page_obj,
-        'page_size': page_size,
-        'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        'etag': etag,
-        'config_table_url': reverse('refreshes:config_table'),
-    })
+    return render_config_table(
+        request,
+        page_obj,
+        page_size,
+        'refreshes/partials/config_table.html',
+        reverse('refreshes:config_table'),
+    )
 
 
 @login_required

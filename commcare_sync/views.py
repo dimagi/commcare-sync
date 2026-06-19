@@ -2,6 +2,8 @@ import hashlib
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils import timezone
 
 from apps.commcare.models import RunBaseModel
@@ -105,3 +107,20 @@ def compute_configs_etag(configs_list):
         else:
             parts.append(f'config:{config.id}:no-runs')
     return hashlib.md5('|'.join(parts).encode()).hexdigest()
+
+
+def render_config_table(request, page_obj, page_size, template, config_table_url):
+    """Render a config table partial, returning an empty no-swap response when the ETag is unchanged."""
+    etag = compute_configs_etag(page_obj.object_list)
+    if request.GET.get('etag') == etag:
+        response = HttpResponse()
+        response['HX-Reswap'] = 'none'
+        return response
+
+    return render(request, template, {
+        'page_obj': page_obj,
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+        'etag': etag,
+        'config_table_url': config_table_url,
+    })
