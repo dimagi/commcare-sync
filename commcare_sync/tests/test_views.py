@@ -59,16 +59,12 @@ class TestGetRunStatusesFromRequest:
         factory = RequestFactory()
         return factory.get(f'/?{params}')
 
-    def test_returns_none_when_no_param(self):
-        assert get_run_statuses_from_request(self._get_request()) is None
-
-    def test_returns_empty_list_when_sentinel_but_no_statuses(self):
-        request = self._get_request('has_status_filter=1')
+    def test_returns_empty_list_when_no_statuses(self):
+        request = self._get_request()
         assert get_run_statuses_from_request(request) == []
 
     def test_returns_checked_statuses(self):
         request = self._get_request('&'.join((
-            'has_status_filter=1',
             'status_filter=queued',
             'status_filter=completed',
         )))
@@ -79,7 +75,6 @@ class TestGetRunStatusesFromRequest:
 
     def test_ignores_invalid_status_values(self):
         request = self._get_request('&'.join((
-            'has_status_filter=1',
             'status_filter=bogus',
             'status_filter=completed',
         )))

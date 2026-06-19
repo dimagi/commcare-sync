@@ -112,7 +112,7 @@ class TestRunHistoryTableEndpoint:
         data = test_data()
         export = create_export_config(data)
 
-        client = Client()
+        client = Client(headers={'HX-Request': 'true'})
         client.force_login(data['user'])
         response = client.get(
             reverse('exports:run_history_table', args=[export.id])

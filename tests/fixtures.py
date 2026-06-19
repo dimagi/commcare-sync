@@ -78,6 +78,16 @@ def authed_client():
 
 @fixture
 @use('db')
+def htmx_client():
+    # Sends the HX-Request header that HTMX adds to every request, for use
+    # against endpoints that only accept HTMX requests (see require_htmx).
+    client = Client(headers={'HX-Request': 'true'})
+    client.force_login(user())
+    yield client
+
+
+@fixture
+@use('db')
 def commcare_server():
     yield CommCareServer.objects.create(
         name='Test Server',

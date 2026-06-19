@@ -6,7 +6,7 @@ from django.urls import reverse
 from unmagic import fixture, use
 
 from apps.db.models import Database
-from tests.fixtures import authed_client, database
+from tests.fixtures import authed_client, database, htmx_client
 
 from ..models import RefreshConfig, RefreshRun
 from .fixtures import refresh_config as _refresh_config
@@ -173,11 +173,11 @@ class TestRefreshDetailsView:
 
 
 class TestRunHistoryTableView:
-    @use(authed_client, _refresh_config)
+    @use(htmx_client, _refresh_config)
     def test_returns_partial(self):
         config = _refresh_config()
         url = reverse('refreshes:run_history_table', args=[config.id])
-        response = authed_client().get(url)
+        response = htmx_client().get(url)
         assert response.status_code == 200
 
     @use(authed_client, _refresh_config)
