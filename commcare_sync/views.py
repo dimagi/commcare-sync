@@ -1,6 +1,7 @@
 import hashlib
 
 from django.conf import settings
+from django.core.paginator import EmptyPage, Paginator
 
 from apps.commcare.models import RunBaseModel
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -38,6 +39,15 @@ def get_page_from_request(request):
         return max(int(request.GET.get('page', 1)), 1)
     except ValueError:
         return 1
+
+
+def paginate(object_list, page_size, page_num):
+    """Return the requested page, clamping past-the-end requests to the last page."""
+    paginator = Paginator(object_list, page_size)
+    try:
+        return paginator.page(page_num)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
 
 
 # Per-run statuses available for filtering. RunBaseModel.Status is the shared base

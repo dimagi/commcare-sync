@@ -3,7 +3,6 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, Paginator
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -27,6 +26,7 @@ from commcare_sync.views import (
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
+    paginate,
 )
 
 from .db_utils import check_connection, get_materialized_views
@@ -50,11 +50,7 @@ def refresh_configs(request):
     configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
         Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
     )
-    paginator = Paginator(configs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
 
@@ -85,11 +81,7 @@ def config_table(request):
     configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
         Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
     )
-    paginator = Paginator(configs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
     if request.GET.get('etag') == etag:
@@ -204,11 +196,7 @@ def refresh_details(request, config_id):
     config = get_object_or_404(RefreshConfig, id=config_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(config.runs.order_by('-created_at'), page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(config.runs.order_by('-created_at'), page_size, page_num)
     return render(
         request,
         'refreshes/refresh_details.html',
@@ -234,11 +222,7 @@ def run_history_table(request, config_id):
     runs_qs = runs_qs.filter(status__in=statuses)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(runs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(runs_qs, page_size, page_num)
     return render(
         request,
         'refreshes/partials/run_history_table.html',

@@ -6,7 +6,7 @@ from itertools import chain
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, Page, Paginator
+from django.core.paginator import Page
 from django.db.models import Max, Prefetch
 from django.http import (
     Http404,
@@ -35,6 +35,7 @@ from commcare_sync.views import (
     get_page_from_request,
     get_run_statuses_from_request,
     get_ui_page_size,
+    paginate,
 )
 
 from .api_client import fetch_available_configs
@@ -79,11 +80,7 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
         key=lambda c: c.last_run_at or c.updated_at,  # type: ignore[attr-defined]
         reverse=True,
     )
-    paginator = Paginator(all_configs, page_size)
-    try:
-        return paginator.page(page_num)
-    except EmptyPage:
-        return paginator.page(paginator.num_pages)
+    return paginate(all_configs, page_size, page_num)
 
 
 @login_required
@@ -309,11 +306,7 @@ def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(export.runs.order_by('-created_at'), page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(export.runs.order_by('-created_at'), page_size, page_num)
     return render(
         request,
         'exports/export_details.html',
@@ -340,11 +333,7 @@ def run_history_table(request, export_id):
     runs_qs = runs_qs.filter(status__in=statuses)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(runs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(runs_qs, page_size, page_num)
     run_history_url = reverse('exports:run_history_table', args=[export.id])
     if is_multi_project:
         run_history_url += '?is_multi_project=true'
@@ -396,11 +385,7 @@ def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(export.runs.order_by('-created_at'), page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(export.runs.order_by('-created_at'), page_size, page_num)
     run_history_url = (
         reverse('exports:run_history_table', args=[export.id])
         + '?is_multi_project=true'
