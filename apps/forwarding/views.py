@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.web.decorators import admin_required
+from apps.web.decorators import admin_required, require_htmx
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -323,6 +323,7 @@ def forwarder_details(request, forwarder_id):
 
 @login_required
 @require_GET
+@require_htmx
 def run_history_table(request, forwarder_id):
     """HTMX endpoint to refresh the run history table."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)

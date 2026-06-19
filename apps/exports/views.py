@@ -22,7 +22,7 @@ from django.views.decorators.http import require_GET, require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
-from apps.web.decorators import admin_required
+from apps.web.decorators import admin_required, require_htmx
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -343,6 +343,7 @@ def export_details(request, export_id):
 
 @login_required
 @require_GET
+@require_htmx
 def run_history_table(request, export_id):
     """HTMX endpoint to refresh the run history table."""
     export = get_object_or_404(ExportConfig, id=export_id)

@@ -15,6 +15,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.db.models import Database
+from apps.web.decorators import require_htmx
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -237,6 +238,7 @@ def refresh_details(request, config_id):
 
 @login_required
 @require_GET
+@require_htmx
 def run_history_table(request, config_id):
     """HTMX endpoint to refresh the run history table."""
     config = get_object_or_404(RefreshConfig, id=config_id)
