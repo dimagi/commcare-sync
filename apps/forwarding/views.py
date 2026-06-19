@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, Paginator
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
@@ -24,6 +23,7 @@ from commcare_sync.views import (
     get_config_page_size,
     get_page_from_request,
     get_run_statuses_from_request,
+    paginate,
 )
 
 from .forms import (
@@ -48,11 +48,7 @@ def forwarders(request):
     configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
         Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
     )
-    paginator = Paginator(configs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
 
@@ -83,11 +79,7 @@ def config_table(request):
     configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
         Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
     )
-    paginator = Paginator(configs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
     if request.GET.get('etag') == etag:
@@ -289,11 +281,7 @@ def forwarder_details(request, forwarder_id):
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(forwarder.runs.order_by('-created_at'), page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(forwarder.runs.order_by('-created_at'), page_size, page_num)
     return render(
         request,
         'forwarding/forwarder_details.html',
@@ -319,11 +307,7 @@ def run_history_table(request, forwarder_id):
     runs_qs = runs_qs.filter(status__in=statuses)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    paginator = Paginator(runs_qs, page_size)
-    try:
-        page_obj = paginator.page(page_num)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+    page_obj = paginate(runs_qs, page_size, page_num)
     return render(
         request,
         'forwarding/partials/run_history_table.html',
