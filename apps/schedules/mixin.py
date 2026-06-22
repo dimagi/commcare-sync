@@ -131,6 +131,14 @@ class ScheduleMixin(models.Model):
         )
 
     @property
+    def has_active_run(self):
+        active = {RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED}
+        all_runs = getattr(self, '_all_runs', None)
+        if all_runs is not None:
+            return any(r.status in active for r in all_runs)
+        return self.runs.filter(status__in=active).exists()
+
+    @property
     def schedule_display(self):
         if not self.schedule_type:
             return ''
