@@ -2,7 +2,8 @@
 Tests for ScheduleMixin functionality.
 
 These tests exercise the schedule validation, celery schedule creation,
-and schedule_display logic via ForwardingConfig as the concrete model.
+schedule_display, last_run, and has_active_run logic via ForwardingConfig
+as the concrete model.
 """
 from datetime import date, time
 
@@ -10,7 +11,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from unmagic import use
 
-from apps.forwarding.models import ForwardingConfig
+from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.schedules.mixin import ScheduleMixin
 from tests.fixtures import database
 
@@ -495,3 +496,58 @@ class TestScheduleValidation:
             first_run_time=time(10, 0),
         )
         config.full_clean()
+
+
+@use('db', database, destination)
+class TestHasActiveRun:
+
+    def test_false_with_no_runs(self):
+        config = make_config(database(), destination())
+        assert config.has_active_run is False
+
+    def test_false_when_run_is_completed(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.COMPLETED,
+        )
+        assert config.has_active_run is False
+
+    def test_false_when_run_is_failed(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.FAILED,
+        )
+        assert config.has_active_run is False
+
+    def test_true_when_run_is_queued(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        assert config.has_active_run is True
+
+    def test_true_when_run_is_started(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.STARTED,
+        )
+        assert config.has_active_run is True
+
+    def test_uses_prefetched_runs_without_db_query(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        config = make_config(database(), destination())
+        run = ForwardingRun.objects.create(
+            forwarding_config=config,
+            status=ForwardingRun.Status.QUEUED,
+        )
+        config._all_runs = [run]
+        with CaptureQueriesContext(connection) as ctx:
+            result = config.has_active_run
+        assert len(ctx) == 0
+        assert result is True
