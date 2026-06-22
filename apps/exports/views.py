@@ -20,7 +20,7 @@ from django.views.decorators.http import require_GET, require_POST
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
-from apps.web.decorators import admin_required, require_htmx
+from apps.web.decorators import admin_required, htmx_run_response, require_htmx
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -406,9 +406,19 @@ def multi_export_run_details(request, export_id, run_id):
 @require_POST
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
+    is_htmx = bool(request.headers.get('HX-Request'))
 
-    options = json.loads(request.body)
-    force_sync = options.get('forceSync', False)
+    if is_htmx and export.has_active_run:
+        # The table Run button can be double-clicked in the brief window before
+        # the table refreshes; don't stack a second run on an active one.
+        return htmx_run_response(request)
+
+    # Only the detail-page JS posts a forceSync flag; the HTMX Run button
+    # sends no body.
+    force_sync = False
+    if not is_htmx:
+        force_sync = json.loads(request.body).get('forceSync', False)
+
     export_record = ExportRun.objects.create(
         base_export_config=export,
         export_config_version=export.latest_version,
@@ -420,16 +430,22 @@ def run_export(request, export_id):
         export_record.id,
         force_sync_all_data=force_sync,
     )
-    return HttpResponse(result.task_id)
+    return htmx_run_response(request, result)
 
 
 @login_required
 @require_POST
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    is_htmx = bool(request.headers.get('HX-Request'))
 
-    options = json.loads(request.body)
-    force_sync = options.get('forceSync', False)
+    if is_htmx and export.has_active_run:
+        return htmx_run_response(request)
+
+    force_sync = False
+    if not is_htmx:
+        force_sync = json.loads(request.body).get('forceSync', False)
+
     export_record = MultiProjectExportRun.objects.create(
         base_export_config=export,
         export_config_version=export.latest_version,
@@ -441,7 +457,7 @@ def run_multi_export(request, export_id):
         export_record.id,
         force_sync_all_data=force_sync,
     )
-    return HttpResponse(result.task_id)
+    return htmx_run_response(request, result)
 
 
 @login_required
