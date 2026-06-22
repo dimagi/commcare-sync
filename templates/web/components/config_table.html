@@ -6,7 +6,7 @@
 <div
   id="{{ table_id }}"
   hx-get="{{ config_table_url }}"
-  hx-trigger="every 60s"
+  hx-trigger="every 60s, runStarted from:body"
   hx-swap="outerHTML"
   hx-vals='{"page": "{{ page_obj.number }}", "page_size": "{{ page_size }}", "etag": "{{ etag }}"}'
 >
@@ -63,7 +63,25 @@
               {% endif %}
             </td>
             <td class="text-nowrap">
-              {% if config.last_run and config.last_run.status == 'completed' or config.last_run and config.last_run.status == 'failed' %}
+              {% if config.has_active_run %}
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  disabled
+                  title="{% trans 'Already running' %}"
+                >
+                  <i class="fa-solid fa-play"></i> {% trans "Run" %}
+                </button>
+              {% else %}
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  hx-post="{{ config.run_url }}"
+                  hx-swap="none"
+                  hx-disabled-elt="this"
+                >
+                  <i class="fa-solid fa-play"></i> {% trans "Run" %}
+                </button>
+              {% endif %}
+              {% if config.last_run and config.last_run.has_log %}
                 <button
                   class="btn btn-outline-secondary btn-sm"
                   :class="{'active': logOpen}"
