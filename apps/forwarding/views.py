@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.web.decorators import admin_required, require_htmx
+from apps.web.decorators import admin_required, htmx_run_response, require_htmx
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -314,4 +314,4 @@ def run_forwarding(request, forwarder_id):
     )
 
     result = run_forwarding_task.delay(forwarding_run.id)
-    return HttpResponse(result.task_id)
+    return htmx_run_response(request, result)
