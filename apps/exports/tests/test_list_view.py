@@ -380,3 +380,14 @@ class TestExportsHomeSmoke:
         content = response.content.decode()
         assert 'dropdown-toggle-split' in content
         assert 'Multi-Project Export' in content
+
+
+@use(authed_client, multi_export_config)
+class TestExportsRunButtonRendering:
+    def test_multi_export_run_button_uses_multi_url(self):
+        config = multi_export_config()
+        url = reverse('exports:config_table')
+        response = authed_client().get(url)
+        content = response.content.decode()
+        run_url = reverse('exports:run_multi_export', args=[config.id])
+        assert f'hx-post="{run_url}"' in content
