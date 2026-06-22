@@ -227,6 +227,96 @@ class TestExportsHomeViewUpdated:
         assert config.name in response.content.decode()
 
 
+@use(authed_client, export_config)
+class TestRunExportHtmxBranch:
+    def test_htmx_request_returns_204(self):
+        url = reverse('exports:run_export', args=[export_config().id])
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_triggers_table_refresh(self):
+        # The 204 carries HX-Trigger so the config table reloads and shows the
+        # new run's real status right away.
+        url = reverse('exports:run_export', args=[export_config().id])
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert response['HX-Trigger'] == 'runStarted'
+
+    def test_htmx_request_creates_export_run(self):
+        config = export_config()
+        url = reverse('exports:run_export', args=[config.id])
+        authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert ExportRun.objects.filter(
+            base_export_config=config,
+            triggered_from_ui=True,
+        ).exists()
+
+    def test_htmx_request_skips_when_active_run_exists(self):
+        # Guards the double-submit window: a Run posted while a run is already
+        # active must not stack a second run.
+        config = export_config()
+        ExportRun.objects.create(
+            base_export_config=config,
+            status=ExportRun.Status.STARTED,
+        )
+        url = reverse('exports:run_export', args=[config.id])
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+        assert ExportRun.objects.filter(base_export_config=config).count() == 1
+
+    def test_non_htmx_request_returns_200_with_task_id(self):
+        import json
+        url = reverse('exports:run_export', args=[export_config().id])
+        response = authed_client().post(
+            url,
+            data=json.dumps({'forceSync': False}),
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert len(response.content) > 0  # task ID in body
+
+    def test_non_htmx_force_sync_true_passes_flag(self):
+        """forceSync: true in JSON body passes force_sync_all_data=True to task."""
+        import json
+        from unittest.mock import patch
+        url = reverse('exports:run_export', args=[export_config().id])
+        with patch('apps.exports.views.run_export_task') as mock_task:
+            mock_task.delay.return_value.task_id = 'fake-id'
+            authed_client().post(
+                url,
+                data=json.dumps({'forceSync': True}),
+                content_type='application/json',
+            )
+        mock_task.delay.assert_called_once()
+        _, kwargs = mock_task.delay.call_args
+        assert kwargs['force_sync_all_data'] is True
+
+
+@use(authed_client, multi_export_config)
+class TestRunMultiExportHtmxBranch:
+    def test_htmx_request_returns_204(self):
+        url = reverse(
+            'exports:run_multi_export', args=[multi_export_config().id]
+        )
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert response.status_code == 204
+
+    def test_htmx_request_triggers_table_refresh(self):
+        url = reverse(
+            'exports:run_multi_export', args=[multi_export_config().id]
+        )
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert response['HX-Trigger'] == 'runStarted'
+
+    def test_htmx_request_creates_multi_export_run(self):
+        config = multi_export_config()
+        url = reverse('exports:run_multi_export', args=[config.id])
+        authed_client().post(url, HTTP_HX_REQUEST='true')
+        assert MultiProjectExportRun.objects.filter(
+            base_export_config=config,
+            triggered_from_ui=True,
+        ).exists()
+
+
 class TestExportsHomeSmoke:
     """Smoke tests: full-page renders with configs in various run states."""
 

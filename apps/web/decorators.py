@@ -2,7 +2,7 @@ from functools import wraps
 
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest
 
 
 def admin_required(view_func):
@@ -39,3 +39,14 @@ def require_htmx(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+def htmx_run_response(request, result=None):
+    """Return the standard response for a run-trigger endpoint.
+
+    HTMX callers get 204 + an HX-Trigger that fires an immediate table
+    refresh. Direct callers (e.g. the detail-page JS) get the Celery task ID.
+    """
+    if request.headers.get('HX-Request'):
+        return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
+    return HttpResponse(result.task_id)
