@@ -60,6 +60,10 @@ class ExportConfig(ExportConfigBase):
         return f'{self.name} - {self.project}'
 
     @property
+    def run_url(self):
+        return reverse('exports:run_export', args=[self.id])
+
+    @property
     def edit_url(self):
         return reverse('exports:edit_export_config', args=[self.id])
 
@@ -105,6 +109,10 @@ class MultiProjectExportConfig(ExportConfigBase):
             return mark_safe(
                 '<br>'.join(p.domain for p in self.projects.all())
             )
+
+    @property
+    def run_url(self):
+        return reverse('exports:run_multi_export', args=[self.id])
 
     @property
     def edit_url(self):

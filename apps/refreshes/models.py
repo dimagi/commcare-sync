@@ -52,6 +52,10 @@ class RefreshConfig(ScheduleMixin, BaseModel):
         return reverse('refreshes:refresh_details', args=[self.id])
 
     @property
+    def run_url(self):
+        return reverse('refreshes:run_refresh', args=[self.id])
+
+    @property
     def edit_url(self):
         return reverse('refreshes:edit_refresh_config', args=[self.id])
 

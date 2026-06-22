@@ -72,6 +72,10 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
         return reverse('forwarding:forwarder_details', args=[self.id])
 
     @property
+    def run_url(self):
+        return reverse('forwarding:run_forwarding', args=[self.id])
+
+    @property
     def edit_url(self):
         return reverse('forwarding:edit_forwarding_config', args=[self.id])
 
