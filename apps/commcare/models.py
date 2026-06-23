@@ -56,6 +56,10 @@ class RunBaseModel(BaseModel):
         abstract = True
 
     @property
+    def has_log(self):
+        return self.status in {self.Status.COMPLETED, self.Status.FAILED}
+
+    @property
     def duration(self):
         if self.completed_at and self.started_at:
             return self.completed_at - self.started_at

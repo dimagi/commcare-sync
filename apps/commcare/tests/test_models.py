@@ -10,6 +10,7 @@ from apps.commcare.models import (
 )
 from apps.db.models import Database
 from apps.exports.models import ExportConfig
+from apps.forwarding.models import ForwardingRun
 from tests.fixtures import commcare_project, commcare_server, user
 
 
@@ -161,3 +162,20 @@ class TestCommCareAccountIsInUse:
         config.config_file.save('test.xlsx', ContentFile(b''), save=False)
         config.save()
         assert acct.is_in_use() is True
+
+
+class TestRunBaseModelHasLog:
+    def test_false_for_queued(self):
+        assert ForwardingRun(status=ForwardingRun.Status.QUEUED).has_log is False
+
+    def test_false_for_started(self):
+        assert ForwardingRun(status=ForwardingRun.Status.STARTED).has_log is False
+
+    def test_false_for_skipped(self):
+        assert ForwardingRun(status=ForwardingRun.Status.SKIPPED).has_log is False
+
+    def test_true_for_completed(self):
+        assert ForwardingRun(status=ForwardingRun.Status.COMPLETED).has_log is True
+
+    def test_true_for_failed(self):
+        assert ForwardingRun(status=ForwardingRun.Status.FAILED).has_log is True

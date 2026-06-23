@@ -52,7 +52,7 @@
           </td>
           <td>
             <div class="d-flex gap-1">
-              {% if run.status == 'completed' or run.status == 'failed' %}
+              {% if run.has_log %}
                 <button
                   class="btn btn-outline-secondary btn-sm"
                   :class="{ active: logOpen[{{ run.id }}] }"
