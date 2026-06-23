@@ -33,6 +33,6 @@ class TestListPageRunButton:
         login(page, live_server, data['user'])
         navigate_to_exports_list(page, live_server)
 
-        run_button = page.locator('button.btn-outline-success').first
+        run_button = page.locator('button.btn-outline-primary').first
         expect(run_button).to_be_visible()
         expect(run_button).to_contain_text('Run')

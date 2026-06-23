@@ -35,7 +35,7 @@ class TestConfigTableRunButtonRendering:
         ]:
             response = client.get(table_url)
             content = response.content.decode()
-            assert 'btn-outline-success' in content
+            assert 'btn-outline-primary' in content
             assert f'hx-post="{config.run_url}"' not in content
 
     def test_edit_button_never_disabled(self):
