@@ -15,7 +15,7 @@ LOG_STREAM_DELAY = 30  # write the log every 30 seconds
 
 def run_multi_project_export(
     multi_export_run: MultiProjectExportRun,
-    force_sync_all_data: bool = False,
+    start_over: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
     multi_export_config = multi_export_run.base_export_config
     multi_export_run.status = MultiProjectExportRun.Status.STARTED
@@ -29,7 +29,7 @@ def run_multi_project_export(
             triggered_from_ui=multi_export_run.triggered_from_ui,
         )
         export_record = _run_export_for_project(
-            multi_export_config, project, export_record, force_sync_all_data
+            multi_export_config, project, export_record, start_over
         )
         runs.append(export_record)
 
@@ -45,22 +45,22 @@ def run_multi_project_export(
 
 def run_export(
     export_run: ExportRun,
-    force: bool = False,
+    start_over: bool = False,
 ) -> ExportRun:
     export_config = export_run.base_export_config
     return _run_export_for_project(
-        export_config, export_config.project, export_run, force
+        export_config, export_config.project, export_run, start_over
     )
 
 
-def _run_export_for_project(export_config, project, export_record, force):
+def _run_export_for_project(export_config, project, export_record, start_over):
     export_record.status = ExportRun.Status.STARTED
     export_record.started_at = timezone.now()
     export_record.save()
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         process = subprocess.Popen(
-            _compile_export_command(export_config, project, force),
+            _compile_export_command(export_config, project, start_over),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -99,7 +99,7 @@ def _stream_log(process, export_record):
     return log_buffer
 
 
-def _compile_export_command(export_config, project, force):
+def _compile_export_command(export_config, project, start_over):
     command = [
         settings.COMMCARE_EXPORT,
         '--project',
@@ -124,7 +124,7 @@ def _compile_export_command(export_config, project, force):
         '--log-dir',
         settings.LOG_DIR,
     ]
-    if force:
+    if start_over:
         command.append('--start-over')
 
     for extra_arg in export_config.extra_args.split(' '):

@@ -16,7 +16,7 @@ def test_custom_server_url():
     project = project_fixture()
     server = server_fixture()
 
-    command = _compile_export_command(config, project, force=False)
+    command = _compile_export_command(config, project, start_over=False)
 
     assert server.url in command
 
@@ -27,6 +27,6 @@ def test_default_server_url():
     config = export_config_db_fixture()
     project = project_db_fixture()
 
-    command = _compile_export_command(config, project, force=False)
+    command = _compile_export_command(config, project, start_over=False)
 
     assert 'https://www.commcarehq.org' in command

@@ -111,7 +111,7 @@ def _create_and_dispatch_export_run(
         triggered_from_ui=triggered_from_ui,
         triggered_by=triggered_by,
     )
-    next_task.delay(export_record.id, force_sync_all_data=False)
+    next_task.delay(export_record.id, start_over=False)
 
 
 def _enqueue_scheduled_export(export_config, run_model, next_task):
@@ -122,13 +122,13 @@ def _enqueue_scheduled_export(export_config, run_model, next_task):
 
 
 @shared_task(bind=True)
-def run_export_task(self, export_run_id, force_sync_all_data):
+def run_export_task(self, export_run_id, start_over):
     export_run = ExportRun.objects.select_related('base_export_config').get(
         id=export_run_id
     )
     if export_run.status != ExportRun.Status.QUEUED:
         return
-    export_run = run_export(export_run, force_sync_all_data)
+    export_run = run_export(export_run, start_over)
     return {
         'run_time': export_run.created_at.isoformat(),
         'status': export_run.status,
@@ -138,12 +138,12 @@ def run_export_task(self, export_run_id, force_sync_all_data):
 
 
 @shared_task(bind=True)
-def run_multi_project_export_task(self, export_run_id, force_sync_all_data):
+def run_multi_project_export_task(self, export_run_id, start_over):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
         'base_export_config'
     ).get(id=export_run_id)
-    export_runs = run_multi_project_export(export_run, force_sync_all_data)
+    export_runs = run_multi_project_export(export_run, start_over)
     export_run = export_runs[-1] if export_runs else None
     if export_run:
         return {
