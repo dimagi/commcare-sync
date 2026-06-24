@@ -5,7 +5,7 @@ Shared JavaScript for run button functionality.
 Parameters:
   - run_url_name: Django URL name (e.g., 'exports:run_export')
   - object_id: ID of the object to run
-  - include_force_sync: Whether to include forceSync checkbox value (default: false)
+  - include_start_over: Whether to include startOver checkbox value (default: false)
 {% endcomment %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!runButton) return;
 
   runButton.addEventListener('click', function() {
-    {% if include_force_sync %}
-    const forceSync = document.getElementById('force-sync-checkbox')?.checked || false;
+    {% if include_start_over %}
+    const startOver = document.getElementById('start-over-checkbox')?.checked || false;
     {% endif %}
 
     const csrfHeaders = JSON.parse(document.body.getAttribute('hx-headers') || '{}');
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'Content-Type': 'application/json',
         ...csrfHeaders,
       },
-      body: JSON.stringify({% if include_force_sync %}{ forceSync: forceSync }{% else %}{}{% endif %}),
+      body: JSON.stringify({% if include_start_over %}{ startOver: startOver }{% else %}{}{% endif %}),
     })
     .then(response => response.text())
     .then(taskId => {

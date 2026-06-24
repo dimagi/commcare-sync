@@ -80,10 +80,10 @@ def test_run_all_exports_task_enqueues_one_run_per_config(
     assert multi_runs.count() == 1
 
     mock_run_export.assert_called_once_with(
-        runs.first().id, force_sync_all_data=False
+        runs.first().id, start_over=False
     )
     mock_run_multi.assert_called_once_with(
-        multi_runs.first().id, force_sync_all_data=False
+        multi_runs.first().id, start_over=False
     )
 
 
