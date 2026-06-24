@@ -1,4 +1,5 @@
 import re
+from unittest.mock import patch
 
 from django.urls import reverse
 from unmagic import use
@@ -277,7 +278,6 @@ class TestRunExportHtmxBranch:
     def test_non_htmx_force_sync_true_passes_flag(self):
         """forceSync: true in JSON body passes force_sync_all_data=True to task."""
         import json
-        from unittest.mock import patch
         url = reverse('exports:run_export', args=[export_config().id])
         with patch('apps.exports.views.run_export_task') as mock_task:
             mock_task.delay.return_value.task_id = 'fake-id'

@@ -9,6 +9,8 @@ from datetime import date, time
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from unmagic import use
 
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
@@ -538,9 +540,6 @@ class TestHasActiveRun:
         assert config.has_active_run is True
 
     def test_uses_prefetched_runs_without_db_query(self):
-        from django.db import connection
-        from django.test.utils import CaptureQueriesContext
-
         config = make_config(database(), destination())
         run = ForwardingRun.objects.create(
             forwarding_config=config,

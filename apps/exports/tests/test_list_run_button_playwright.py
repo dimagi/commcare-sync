@@ -1,10 +1,12 @@
 """
 Playwright tests for Run button on the Exports list page.
 """
+from django.urls import reverse
 from playwright.sync_api import expect
 from unmagic import fixture, use
 
 from apps.exports.models import ExportConfig
+
 from .fixtures import test_data
 from .helpers import login
 
@@ -13,7 +15,6 @@ _live_server = fixture('live_server')
 
 
 def navigate_to_exports_list(page, live_server):
-    from django.urls import reverse
     page.goto(f"{live_server.url}{reverse('exports:home')}")
 
 
