@@ -65,7 +65,7 @@ class TestRunButtonStructure:
         section = page.locator('section:has(#run-now-button)').last
         expect(section).to_have_attribute(
             'x-data',
-            "{ running: false, forceSync: false }"
+            "{ running: false, startOver: false }"
         )
 
     def test_progress_section_has_x_show(self):
@@ -82,8 +82,8 @@ class TestRunButtonStructure:
         progress_section = page.locator('#run-status-progress')
         expect(progress_section).to_have_attribute('x-show', 'running')
 
-    def test_force_sync_checkbox_has_alpine_model(self):
-        """Test that force sync checkbox has x-model binding."""
+    def test_start_over_checkbox_has_alpine_model(self):
+        """Test that start over checkbox has x-model binding."""
         page = _page()
         live_server = _live_server()
         data = test_data()
@@ -92,10 +92,10 @@ class TestRunButtonStructure:
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
 
-        # Verify force sync checkbox has x-model
-        force_sync = page.locator('#force-sync-checkbox')
-        expect(force_sync).to_be_visible()
-        expect(force_sync).to_have_attribute('x-model', 'forceSync')
+        # Verify start over checkbox has x-model
+        start_over = page.locator('#start-over-checkbox')
+        expect(start_over).to_be_visible()
+        expect(start_over).to_have_attribute('x-model', 'startOver')
 
 
 @use('db')
@@ -160,8 +160,8 @@ class TestRunButtonWithMocks:
         }''')
         assert has_click_handler, "Run button should have click handler"
 
-    def test_force_sync_checkbox_alpine_binding(self):
-        """Test that force sync checkbox is bound to Alpine.js state."""
+    def test_start_over_checkbox_alpine_binding(self):
+        """Test that start over checkbox is bound to Alpine.js state."""
         page = _page()
         live_server = _live_server()
         data = test_data()
@@ -171,17 +171,17 @@ class TestRunButtonWithMocks:
         navigate_to_export_details(page, live_server, export.id)
 
         # Verify checkbox starts unchecked
-        force_sync = page.locator('#force-sync-checkbox')
-        expect(force_sync).not_to_be_checked()
+        start_over = page.locator('#start-over-checkbox')
+        expect(start_over).not_to_be_checked()
 
-        # Check the force sync checkbox
-        force_sync.check()
+        # Check the start over checkbox
+        start_over.check()
 
         # Verify checkbox is now checked
-        expect(force_sync).to_be_checked()
+        expect(start_over).to_be_checked()
 
         # Verify Alpine x-model binding exists
-        expect(force_sync).to_have_attribute('x-model', 'forceSync')
+        expect(start_over).to_have_attribute('x-model', 'startOver')
 
         # Use page.evaluate to verify Alpine state changed
         alpine_state = page.evaluate('''() => {
@@ -190,11 +190,11 @@ class TestRunButtonWithMocks:
             const section = button.closest('section[x-data]');
             if (!section || !Alpine || !Alpine.$data) return null;
             const data = Alpine.$data(section);
-            return data ? data.forceSync : null;
+            return data ? data.startOver : null;
         }''')
 
         assert alpine_state is True, (
-            'Alpine forceSync state should be true when checkbox is checked, '
+            'Alpine startOver state should be true when checkbox is checked, '
             f'got: {alpine_state}'
         )
 

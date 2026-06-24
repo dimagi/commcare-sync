@@ -269,26 +269,26 @@ class TestRunExportHtmxBranch:
         url = reverse('exports:run_export', args=[export_config().id])
         response = authed_client().post(
             url,
-            data=json.dumps({'forceSync': False}),
+            data=json.dumps({'startOver': False}),
             content_type='application/json',
         )
         assert response.status_code == 200
         assert len(response.content) > 0  # task ID in body
 
-    def test_non_htmx_force_sync_true_passes_flag(self):
-        """forceSync: true in JSON body passes force_sync_all_data=True to task."""
+    def test_non_htmx_start_over_true_passes_flag(self):
+        """startOver: true in JSON body passes start_over=True to task."""
         import json
         url = reverse('exports:run_export', args=[export_config().id])
         with patch('apps.exports.views.run_export_task') as mock_task:
             mock_task.delay.return_value.task_id = 'fake-id'
             authed_client().post(
                 url,
-                data=json.dumps({'forceSync': True}),
+                data=json.dumps({'startOver': True}),
                 content_type='application/json',
             )
         mock_task.delay.assert_called_once()
         _, kwargs = mock_task.delay.call_args
-        assert kwargs['force_sync_all_data'] is True
+        assert kwargs['start_over'] is True
 
 
 @use(authed_client, multi_export_config)

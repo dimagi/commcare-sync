@@ -417,11 +417,11 @@ def run_export(request, export_id):
         # the table refreshes; don't stack a second run on an active one.
         return htmx_run_response(request)
 
-    # Only the detail-page JS posts a forceSync flag; the HTMX Run button
+    # Only the detail-page JS posts a startOver flag; the HTMX Run button
     # sends no body.
-    force_sync = False
+    start_over = False
     if not is_htmx:
-        force_sync = json.loads(request.body).get('forceSync', False)
+        start_over = json.loads(request.body).get('startOver', False)
 
     export_record = ExportRun.objects.create(
         base_export_config=export,
@@ -432,7 +432,7 @@ def run_export(request, export_id):
 
     result = run_export_task.delay(
         export_record.id,
-        force_sync_all_data=force_sync,
+        start_over=start_over,
     )
     return htmx_run_response(request, result)
 
@@ -446,9 +446,9 @@ def run_multi_export(request, export_id):
     if is_htmx and export.has_active_run:
         return htmx_run_response(request)
 
-    force_sync = False
+    start_over = False
     if not is_htmx:
-        force_sync = json.loads(request.body).get('forceSync', False)
+        start_over = json.loads(request.body).get('startOver', False)
 
     export_record = MultiProjectExportRun.objects.create(
         base_export_config=export,
@@ -459,7 +459,7 @@ def run_multi_export(request, export_id):
 
     result = run_multi_project_export_task.delay(
         export_record.id,
-        force_sync_all_data=force_sync,
+        start_over=start_over,
     )
     return htmx_run_response(request, result)
 
