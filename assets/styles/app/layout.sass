@@ -48,7 +48,10 @@
   box-shadow: $default-shadow
   // Allow "alert" class to override color styles
   &:not(.alert)
-    background-color: white
+    background-color: $app-card-bg
+  table
+    --bs-table-bg: #{$app-table-bg}
+    box-shadow: $table-shadow
 
 #content-main
   max-width: 1152px

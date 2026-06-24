@@ -18,6 +18,9 @@ $default-shadow: 0 2px 4px rgba(55, 63, 67, 0.3);
 $font-family-sans-serif: "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 $body-bg: $bg-grey;
 $card-bg: #FFF;  // Override $body-bg above
+$app-card-bg: #fcfcfd;
+$app-table-bg: #fefefe;
+$table-shadow: 0 1px 3px rgba(55, 63, 67, 0.12);
 $input-bg: #FFF;
 $link-color: $COMMCARE_BLUE;
 
