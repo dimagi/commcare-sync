@@ -147,8 +147,6 @@ def test_run_all_exports_task_skips_configs_with_active_runs(
 @patch('apps.exports.tasks.run_export_task.delay')
 def test_run_all_exports_task_handles_unknown_user_id(mock_run, _mock_multi):
     config = export_config()
-    # Pass an id that doesn't correspond to any user — should warn and continue
-    # with no attribution.
     run_all_exports_task(user_id=999999)
 
     run = ExportRun.objects.get(base_export_config=config)
