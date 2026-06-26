@@ -7,7 +7,12 @@ from django.urls import reverse
 from unmagic import fixture, use
 
 from apps.db.models import Database
-from tests.fixtures import authed_client, database, htmx_client
+from tests.fixtures import (
+    authed_client,
+    database,
+    htmx_client,
+    mock_celery_task_dispatch,
+)
 
 from ..models import RefreshConfig, RefreshRun
 from .fixtures import refresh_config as _refresh_config
@@ -377,7 +382,7 @@ class TestRefreshRunLogView:
         assert response.status_code == 404
 
 
-@use(authed_client, _refresh_config)
+@use(authed_client, _refresh_config, mock_celery_task_dispatch)
 class TestRunRefreshHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse('refreshes:run_refresh', args=[_refresh_config().id])

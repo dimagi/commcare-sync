@@ -8,11 +8,17 @@ Imported explicitly by tests, e.g.:
     def test_something():
         ...
 """
+from unittest.mock import MagicMock, patch
+
 from django.contrib.auth import get_user_model
 from django.test import Client
 from unmagic import fixture, use
 
-from apps.commcare.models import CommCareAccount, CommCareProject, CommCareServer
+from apps.commcare.models import (
+    CommCareAccount,
+    CommCareProject,
+    CommCareServer,
+)
 from apps.db.models import Database
 
 
@@ -122,3 +128,13 @@ def database():
         name='Test Database',
         connection_string='postgresql://testuser:password@localhost:5432/testdb',
     )
+
+
+@fixture
+def mock_celery_task_dispatch():
+    # Prevent Celery from connecting to Redis when dispatching tasks.
+    with patch(
+        'celery.app.task.Task.apply_async',
+        return_value=MagicMock(id='test-task-id', task_id='test-task-id'),
+    ):
+        yield
