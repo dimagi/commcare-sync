@@ -30,19 +30,14 @@ class TestGetConfigPageSize:
         request = self._get_request(f'page_size={size}')
         assert get_config_page_size(request) == size
 
-    def test_default_is_first_valid_size(self):
-        request = self._get_request()
+    @pytest.mark.parametrize('params', [
+        '',  # no page_size → default
+        'page_size=7',  # not a valid size → default
+        'page_size=abc',  # non-integer → default
+    ])
+    def test_falls_back_to_default(self, params):
+        request = self._get_request(params)
         assert get_config_page_size(request) == VALID_CONFIG_PAGE_SIZES[0]
-
-    def test_invalid_size_falls_back_to_default(self):
-        request = self._get_request('page_size=7')
-        default = VALID_CONFIG_PAGE_SIZES[0]
-        assert get_config_page_size(request) == default
-
-    def test_non_integer_falls_back_to_default(self):
-        request = self._get_request('page_size=abc')
-        default = VALID_CONFIG_PAGE_SIZES[0]
-        assert get_config_page_size(request) == default
 
 
 class TestGetPageFromRequest:
