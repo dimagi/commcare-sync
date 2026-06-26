@@ -42,6 +42,7 @@ dev = [
     {include-group = "test"},
     "ipython",
     "pip-tools",
+    "kaapstorm-parsimony",
 ]
 test = [
     "django-stubs",
