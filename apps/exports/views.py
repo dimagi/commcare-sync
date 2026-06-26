@@ -410,35 +410,35 @@ def multi_export_run_details(request, export_id, run_id):
 @login_required
 @require_POST
 def run_export(request, export_id):
-    export = get_object_or_404(ExportConfig, id=export_id)
-    if export.has_active_run:
-        # Don't stack a second run on an active one. Avoids a race condition
-        # where a scheduled run has started or another user triggered a run.
-        return run_response(request)
-
-    start_over = False
-    if not bool(request.headers.get('HX-Request')):
-        # The HTMX Run button doesn't send a body. Only the detail-page JS
-        # posts a startOver flag.
-        start_over = json.loads(request.body).get('startOver', False)
-
-    export_record = ExportRun.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
-        triggered_from_ui=True,
-        triggered_by=request.user,
+    return _run_export(
+        request,
+        export_id,
+        ExportConfig,
+        ExportRun,
+        run_export_task,
     )
-    async_result = run_export_task.delay(
-        export_record.id,
-        start_over=start_over,
-    )
-    return run_response(request, async_result)
 
 
 @login_required
 @require_POST
 def run_multi_export(request, export_id):
-    export = get_object_or_404(MultiProjectExportConfig, id=export_id)
+    return _run_export(
+        request,
+        export_id,
+        MultiProjectExportConfig,
+        MultiProjectExportRun,
+        run_multi_project_export_task,
+    )
+
+
+def _run_export(
+    request,
+    export_id,
+    export_config_class,
+    export_run_class,
+    export_task,
+):
+    export = get_object_or_404(export_config_class, id=export_id)
     if export.has_active_run:
         return run_response(request)
 
@@ -446,13 +446,13 @@ def run_multi_export(request, export_id):
     if not bool(request.headers.get('HX-Request')):
         start_over = json.loads(request.body).get('startOver', False)
 
-    export_record = MultiProjectExportRun.objects.create(
+    export_record = export_run_class.objects.create(
         base_export_config=export,
         export_config_version=export.latest_version,
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    async_result = run_multi_project_export_task.delay(
+    async_result = export_task.delay(
         export_record.id,
         start_over=start_over,
     )
