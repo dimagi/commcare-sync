@@ -21,7 +21,7 @@ from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import htmx_run_response
+from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -416,7 +416,7 @@ def run_export(request, export_id):
     if is_htmx and export.has_active_run:
         # The table Run button can be double-clicked in the brief window before
         # the table refreshes; don't stack a second run on an active one.
-        return htmx_run_response(request)
+        return run_response(request)
 
     # Only the detail-page JS posts a startOver flag; the HTMX Run button
     # sends no body.
@@ -431,11 +431,11 @@ def run_export(request, export_id):
         triggered_by=request.user,
     )
 
-    result = run_export_task.delay(
+    async_result = run_export_task.delay(
         export_record.id,
         start_over=start_over,
     )
-    return htmx_run_response(request, result)
+    return run_response(request, async_result)
 
 
 @login_required
@@ -445,7 +445,7 @@ def run_multi_export(request, export_id):
     is_htmx = bool(request.headers.get('HX-Request'))
 
     if is_htmx and export.has_active_run:
-        return htmx_run_response(request)
+        return run_response(request)
 
     start_over = False
     if not is_htmx:
@@ -458,19 +458,19 @@ def run_multi_export(request, export_id):
         triggered_by=request.user,
     )
 
-    result = run_multi_project_export_task.delay(
+    async_result = run_multi_project_export_task.delay(
         export_record.id,
         start_over=start_over,
     )
-    return htmx_run_response(request, result)
+    return run_response(request, async_result)
 
 
 @login_required
 @require_POST
 def run_all_exports(request):
     """Kick off the "Run All" Celery task for every non-paused export."""
-    result = run_all_exports_task.delay(user_id=request.user.id)
-    return htmx_run_response(request, result)
+    async_result = run_all_exports_task.delay(user_id=request.user.id)
+    return run_response(request, async_result)
 
 
 @login_required

@@ -10,7 +10,7 @@ def home(request):
         return render(request, 'web/landing_page.html')
 
 
-def htmx_run_response(request, result=None):
+def run_response(request, async_result=None):
     """Return the standard response for a run-trigger endpoint.
 
     HTMX callers get 204 + an HX-Trigger that fires an immediate table
@@ -18,4 +18,4 @@ def htmx_run_response(request, result=None):
     """
     if request.headers.get('HX-Request'):
         return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
-    return HttpResponse(result.task_id)
+    return HttpResponse(async_result.task_id)
