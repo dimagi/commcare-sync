@@ -3,7 +3,12 @@ from django.test import Client
 from django.urls import reverse
 from unmagic import fixture, use
 
-from tests.fixtures import admin_client, database, regular_client
+from tests.fixtures import (
+    admin_client,
+    database,
+    mock_celery_task_dispatch,
+    regular_client,
+)
 
 from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
 
@@ -116,7 +121,7 @@ class TestDeleteDestinationView:
         assert '/accounts/login/' in response.url
 
 
-@use(regular_client, forwarding_config)
+@use(regular_client, forwarding_config, mock_celery_task_dispatch)
 class TestRunForwardingHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse(

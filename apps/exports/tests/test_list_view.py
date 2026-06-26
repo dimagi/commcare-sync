@@ -21,6 +21,7 @@ from tests.fixtures import (
     commcare_account,
     commcare_project,
     database,
+    mock_celery_task_dispatch,
 )
 
 
@@ -232,7 +233,7 @@ class TestExportsHomeViewUpdated:
         assert config.name in response.content.decode()
 
 
-@use(authed_client, export_config)
+@use(authed_client, export_config, mock_celery_task_dispatch)
 class TestRunExportHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse('exports:run_export', args=[export_config().id])
@@ -295,7 +296,7 @@ class TestRunExportHtmxBranch:
         assert kwargs['start_over'] is True
 
 
-@use(authed_client, multi_export_config)
+@use(authed_client, multi_export_config, mock_celery_task_dispatch)
 class TestRunMultiExportHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse(
