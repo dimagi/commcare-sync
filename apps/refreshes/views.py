@@ -11,7 +11,8 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.db.models import Database
-from apps.web.decorators import htmx_run_response, require_htmx
+from apps.web.decorators import require_htmx
+from apps.web.views import htmx_run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
