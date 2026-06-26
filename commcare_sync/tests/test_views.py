@@ -45,20 +45,15 @@ class TestGetPageFromRequest:
         factory = RequestFactory()
         return factory.get(f'/?{params}')
 
-    def test_default_is_1(self):
-        assert get_page_from_request(self._get_request()) == 1
-
-    def test_valid_page_returned(self):
-        assert get_page_from_request(self._get_request('page=3')) == 3
-
-    def test_zero_clamped_to_1(self):
-        assert get_page_from_request(self._get_request('page=0')) == 1
-
-    def test_negative_clamped_to_1(self):
-        assert get_page_from_request(self._get_request('page=-5')) == 1
-
-    def test_non_integer_returns_1(self):
-        assert get_page_from_request(self._get_request('page=abc')) == 1
+    @pytest.mark.parametrize('params,expected', [
+        ('', 1),          # default
+        ('page=3', 3),    # valid page returned
+        ('page=0', 1),    # zero clamped to 1
+        ('page=-5', 1),   # negative clamped to 1
+        ('page=abc', 1),  # non-integer returns 1
+    ])
+    def test_page_from_request(self, params, expected):
+        assert get_page_from_request(self._get_request(params)) == expected
 
 
 class TestGetRunStatusesFromRequest:
