@@ -19,24 +19,15 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def run_all_exports_task(user_id=None):
-    """Manual "Run All" trigger: enqueue a run for every non-paused export.
-
-    Skips configs that already have an active (queued or running) run so a
-    double-click — or clicking "Run All" while a per-config run is in flight —
-    doesn't pile up duplicate runs. This matches the per-row Run button, which
-    disables itself whenever ``has_active_run`` is true. Records are marked as
-    UI-triggered (and attributed to ``user_id`` when supplied) so they're
-    distinguishable from scheduled runs.
-    """
-    User = get_user_model()
+    """Manual "Run All" trigger: enqueue a run for every non-paused export."""
     user = None
     if user_id is not None:
+        User = get_user_model()
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             logger.warning(
-                'run_all_exports_task: user %s no longer exists; '
-                'continuing with no attribution.',
+                'run_all_exports_task: user %s no longer exists',
                 user_id,
             )
 
