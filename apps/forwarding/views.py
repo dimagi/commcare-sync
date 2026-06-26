@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import htmx_run_response
+from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -314,5 +314,5 @@ def run_forwarding(request, forwarder_id):
         triggered_by=request.user,
     )
 
-    result = run_forwarding_task.delay(forwarding_run.id)
-    return htmx_run_response(request, result)
+    async_result = run_forwarding_task.delay(forwarding_run.id)
+    return run_response(request, async_result)
