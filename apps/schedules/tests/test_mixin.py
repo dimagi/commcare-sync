@@ -507,37 +507,19 @@ class TestHasActiveRun:
         config = make_config(database(), destination())
         assert config.has_active_run is False
 
-    def test_false_when_run_is_completed(self):
+    @pytest.mark.parametrize('status,expected', [
+        (ForwardingRun.Status.COMPLETED, False),
+        (ForwardingRun.Status.FAILED, False),
+        (ForwardingRun.Status.QUEUED, True),
+        (ForwardingRun.Status.STARTED, True),
+    ])
+    def test_has_active_run_by_status(self, status, expected):
         config = make_config(database(), destination())
         ForwardingRun.objects.create(
             forwarding_config=config,
-            status=ForwardingRun.Status.COMPLETED,
+            status=status,
         )
-        assert config.has_active_run is False
-
-    def test_false_when_run_is_failed(self):
-        config = make_config(database(), destination())
-        ForwardingRun.objects.create(
-            forwarding_config=config,
-            status=ForwardingRun.Status.FAILED,
-        )
-        assert config.has_active_run is False
-
-    def test_true_when_run_is_queued(self):
-        config = make_config(database(), destination())
-        ForwardingRun.objects.create(
-            forwarding_config=config,
-            status=ForwardingRun.Status.QUEUED,
-        )
-        assert config.has_active_run is True
-
-    def test_true_when_run_is_started(self):
-        config = make_config(database(), destination())
-        ForwardingRun.objects.create(
-            forwarding_config=config,
-            status=ForwardingRun.Status.STARTED,
-        )
-        assert config.has_active_run is True
+        assert config.has_active_run is expected
 
     def test_uses_prefetched_runs_without_db_query(self):
         config = make_config(database(), destination())
