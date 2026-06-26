@@ -1,3 +1,4 @@
+import pytest
 from django.core.paginator import Paginator
 from django.test import RequestFactory
 
@@ -24,14 +25,14 @@ class TestGetConfigPageSize:
         factory = RequestFactory()
         return factory.get(f'/?{params}')
 
+    @pytest.mark.parametrize('size', VALID_CONFIG_PAGE_SIZES)
+    def test_valid_sizes_accepted(self, size):
+        request = self._get_request(f'page_size={size}')
+        assert get_config_page_size(request) == size
+
     def test_default_is_first_valid_size(self):
         request = self._get_request()
         assert get_config_page_size(request) == VALID_CONFIG_PAGE_SIZES[0]
-
-    def test_valid_sizes_accepted(self):
-        for size in VALID_CONFIG_PAGE_SIZES:
-            request = self._get_request(f'page_size={size}')
-            assert get_config_page_size(request) == size
 
     def test_invalid_size_falls_back_to_default(self):
         request = self._get_request('page_size=7')
