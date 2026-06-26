@@ -15,7 +15,12 @@ def pytest_configure(config):
 
     # Configure ALLOWED_HOSTS to accept localhost with any port
     # This is needed for pytest-django's live_server fixture which uses dynamic ports
-    settings.ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', '.localhost']
+    settings.ALLOWED_HOSTS = [
+        'localhost',
+        '127.0.0.1',
+        'testserver',
+        '.localhost',
+    ]
 
     # Disable allauth rate limiting for tests
     settings.ACCOUNT_RATE_LIMITS = {

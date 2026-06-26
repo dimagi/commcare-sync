@@ -20,4 +20,7 @@ def navigate_to_create_export(page, live_server):
 
 def navigate_to_export_details(page, live_server, export_id):
     """Helper to navigate to export details page."""
-    page.goto(f'{live_server.url}{reverse("exports:export_details", args=[export_id])}')
+    page.goto(f'{live_server.url}{reverse(
+        "exports:export_details",
+        args=[export_id],
+    )}')

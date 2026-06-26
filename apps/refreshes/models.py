@@ -62,7 +62,10 @@ class RefreshConfig(ScheduleMixin, BaseModel):
     @property
     def last_run_log_url(self):
         run = self.last_run
-        return None if run is None else reverse('refreshes:run_log', args=[run.id])
+        return None if run is None else reverse(
+            'refreshes:run_log',
+            args=[run.id],
+        )
 
     def save(self, *args, **kwargs):
         with reversion.create_revision():

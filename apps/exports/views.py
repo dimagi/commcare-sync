@@ -149,14 +149,10 @@ def create_export_config(request):
     else:
         config_form = ExportConfigForm()
 
-    return render(
-        request,
-        'exports/create_export.html',
-        {
-            'active_tab': 'create_export',
-            'config_form': config_form,
-        },
-    )
+    return render(request, 'exports/create_export.html', {
+        'active_tab': 'create_export',
+        'config_form': config_form,
+    })
 
 
 @login_required
@@ -175,14 +171,10 @@ def create_multi_export_config(request):
     else:
         config_form = MultiProjectExportConfigForm()
 
-    return render(
-        request,
-        'exports/create_multi_project_export.html',
-        {
-            'active_tab': 'create_multi_export',
-            'config_form': config_form,
-        },
-    )
+    return render(request, 'exports/create_multi_project_export.html', {
+        'active_tab': 'create_multi_export',
+        'config_form': config_form,
+    })
 
 
 @login_required
@@ -205,15 +197,11 @@ def edit_export_config(request, export_id):
     else:
         config_form = ExportConfigForm(instance=export)
 
-    return render(
-        request,
-        'exports/edit_export.html',
-        {
-            'active_tab': 'exports',
-            'config_form': config_form,
-            'export': export,
-        },
-    )
+    return render(request, 'exports/edit_export.html', {
+        'active_tab': 'exports',
+        'config_form': config_form,
+        'export': export,
+    })
 
 
 @login_required
@@ -234,14 +222,10 @@ def edit_multi_export_config(request, export_id):
     else:
         config_form = MultiProjectExportConfigForm(instance=export)
 
-    return render(
-        request,
-        'exports/edit_multi_project_export.html',
-        {
-            'active_tab': 'create_multi_export',
-            'config_form': config_form,
-        },
-    )
+    return render(request, 'exports/edit_multi_project_export.html', {
+        'active_tab': 'create_multi_export',
+        'config_form': config_form,
+    })
 
 
 @login_required
@@ -253,14 +237,10 @@ def delete_export_config(request, export_id):
             "Export file '{}' was successfully deleted."
         ).format(export.name))
         return HttpResponseRedirect(reverse('exports:home'))
-    return render(
-        request,
-        'exports/delete_export.html',
-        {
-            'active_tab': 'exports',
-            'export': export,
-        },
-    )
+    return render(request, 'exports/delete_export.html', {
+        'active_tab': 'exports',
+        'export': export,
+    })
 
 
 @login_required
@@ -272,14 +252,10 @@ def delete_multi_export_config(request, export_id):
             "Export file '{}' was successfully deleted."
         ).format(export.name))
         return HttpResponseRedirect(reverse('exports:home'))
-    return render(
-        request,
-        'exports/delete_export.html',
-        {
-            'active_tab': 'exports',
-            'export': export,
-        },
-    )
+    return render(request, 'exports/delete_export.html', {
+        'active_tab': 'exports',
+        'export': export,
+    })
 
 
 @login_required
@@ -287,19 +263,22 @@ def export_details(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    page_obj = paginate(export.runs.order_by('-created_at'), page_size, page_num)
-    return render(
-        request,
-        'exports/export_details.html',
-        {
-            'active_tab': 'exports',
-            'export': export,
-            'runs': page_obj,
-            'run_history_url': reverse('exports:run_history_table', args=[export.id]),
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
+    page_obj = paginate(
+        export.runs.order_by('-created_at'),
+        page_size,
+        page_num,
     )
+    return render(request, 'exports/export_details.html', {
+        'active_tab': 'exports',
+        'export': export,
+        'runs': page_obj,
+        'run_history_url': reverse(
+            'exports:run_history_table',
+            args=[export.id],
+        ),
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required
@@ -318,18 +297,14 @@ def run_history_table(request, export_id):
     run_history_url = reverse('exports:run_history_table', args=[export.id])
     if is_multi_project:
         run_history_url += '?is_multi_project=true'
-    return render(
-        request,
-        'exports/partials/run_history_table.html',
-        {
-            'export': export,
-            'runs': page_obj,
-            'is_multi_project': is_multi_project,
-            'run_history_url': run_history_url,
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
-    )
+    return render(request, 'exports/partials/run_history_table.html', {
+        'export': export,
+        'runs': page_obj,
+        'is_multi_project': is_multi_project,
+        'run_history_url': run_history_url,
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required
@@ -366,23 +341,23 @@ def multi_export_details(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    page_obj = paginate(export.runs.order_by('-created_at'), page_size, page_num)
+    page_obj = paginate(
+        export.runs.order_by('-created_at'),
+        page_size,
+        page_num,
+    )
     run_history_url = (
         reverse('exports:run_history_table', args=[export.id])
         + '?is_multi_project=true'
     )
-    return render(
-        request,
-        'exports/multi_project_export_details.html',
-        {
-            'active_tab': 'exports',
-            'export': export,
-            'runs': page_obj,
-            'run_history_url': run_history_url,
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
-    )
+    return render(request, 'exports/multi_project_export_details.html', {
+        'active_tab': 'exports',
+        'export': export,
+        'runs': page_obj,
+        'run_history_url': run_history_url,
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required
@@ -393,18 +368,12 @@ def multi_export_run_details(request, export_id, run_id):
             f'Export id {export_id} did not match run value of '
             f'{export_run.base_export_config.id}!'
         )
-    return render(
-        request,
-        'exports/multi_project_export_run_details.html',
-        {
-            'active_tab': 'exports',
-            'export_run': export_run,
-            'export': export_run.base_export_config,
-            'runs': export_run.partial_runs.order_by('-created_at')[
-                : get_ui_page_size(request)
-            ],
-        },
-    )
+    return render(request, 'exports/multi_project_export_run_details.html', {
+        'active_tab': 'exports',
+        'export_run': export_run,
+        'export': export_run.base_export_config,
+        'runs': export_run.partial_runs.order_by('-created_at')[: get_ui_page_size(request)],
+    })
 
 
 @login_required
@@ -496,16 +465,12 @@ def fetch_config_files(request):
             account_id,
             project_ids,
         )
-        return render(
-            request,
-            'exports/partials/config_options.html',
-            {
-                'configs': [],
-                'errors': ['Missing account_id or project_ids'],
-                'is_multi_project': False,
-                'current_value': current_value,
-            },
-        )
+        return render(request, 'exports/partials/config_options.html', {
+            'configs': [],
+            'errors': ['Missing account_id or project_ids'],
+            'is_multi_project': False,
+            'current_value': current_value,
+        })
 
     account = get_object_or_404(CommCareAccount, id=account_id)
     projects = CommCareProject.objects.filter(id__in=project_ids)
@@ -516,16 +481,12 @@ def fetch_config_files(request):
             account_id,
             project_ids,
         )
-        return render(
-            request,
-            'exports/partials/config_options.html',
-            {
-                'configs': [],
-                'errors': ['No valid projects found'],
-                'is_multi_project': False,
-                'current_value': current_value,
-            },
-        )
+        return render(request, 'exports/partials/config_options.html', {
+            'configs': [],
+            'errors': ['No valid projects found'],
+            'is_multi_project': False,
+            'current_value': current_value,
+        })
 
     all_configs = []
     errors = []
@@ -556,16 +517,12 @@ def fetch_config_files(request):
 
     is_multi_project = len(projects) > 1
 
-    return render(
-        request,
-        'exports/partials/config_options.html',
-        {
-            'configs': all_configs,
-            'errors': errors,
-            'is_multi_project': is_multi_project,
-            'current_value': current_value,
-        },
-    )
+    return render(request, 'exports/partials/config_options.html', {
+        'configs': all_configs,
+        'errors': errors,
+        'is_multi_project': is_multi_project,
+        'current_value': current_value,
+    })
 
 
 @admin_required

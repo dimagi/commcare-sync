@@ -49,7 +49,10 @@ def test_get_description(project_meta, page_description, expected):
 @pytest.mark.parametrize(
     ('page_image', 'expected'),
     [
-        ('https://example.com/custom-image.png', 'https://example.com/custom-image.png'),
+        (
+            'https://example.com/custom-image.png',
+            'https://example.com/custom-image.png',
+        ),
         (None, 'https://example.com/default-image.png'),
         ('', 'https://example.com/default-image.png'),
     ],

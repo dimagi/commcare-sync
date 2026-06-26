@@ -68,8 +68,14 @@ def dashboard_stats_context():
     return {
         'stats_period': readable_timedelta(period, short=True),
         'export_stats': _get_export_statistics(current_start, previous_start),
-        'refresh_stats': _get_refresh_statistics(current_start, previous_start),
-        'forwarding_stats': _get_forwarding_statistics(current_start, previous_start),
+        'refresh_stats': _get_refresh_statistics(
+            current_start,
+            previous_start,
+        ),
+        'forwarding_stats': _get_forwarding_statistics(
+            current_start,
+            previous_start,
+        ),
     }
 
 

@@ -66,12 +66,22 @@ def _get_export_statistics(since_datetime, previous_start=None):
 
     total_runs = recent_export_runs.count() + recent_multi_runs.count()
     successful_runs = (
-        recent_export_runs.filter(status=ExportRun.Status.COMPLETED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.Status.COMPLETED).count()
+        recent_export_runs
+        .filter(status=ExportRun.Status.COMPLETED)
+        .count()
+    ) + (
+        recent_multi_runs
+        .filter(status=MultiProjectExportRun.Status.COMPLETED)
+        .count()
     )
     failed_runs = (
-        recent_export_runs.filter(status=ExportRun.Status.FAILED).count() +
-        recent_multi_runs.filter(status=MultiProjectExportRun.Status.FAILED).count()
+        recent_export_runs
+        .filter(status=ExportRun.Status.FAILED)
+        .count()
+    ) + (
+        recent_multi_runs
+        .filter(status=MultiProjectExportRun.Status.FAILED)
+        .count()
     )
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
@@ -101,8 +111,13 @@ def _get_export_statistics(since_datetime, previous_start=None):
         prev_total = prev_export_runs.count() + prev_multi_runs.count()
         if prev_total > 0:
             prev_successful = (
-                prev_export_runs.filter(status=ExportRun.Status.COMPLETED).count() +
-                prev_multi_runs.filter(status=MultiProjectExportRun.Status.COMPLETED).count()
+                prev_export_runs
+                .filter(status=ExportRun.Status.COMPLETED)
+                .count()
+            ) + (
+                prev_multi_runs
+                .filter(status=MultiProjectExportRun.Status.COMPLETED)
+                .count()
             )
             prev_success_rate = prev_successful / prev_total * 100
 
@@ -193,7 +208,11 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
     successful_runs = recent_runs.filter(
         status=ForwardingRun.Status.COMPLETED
     ).count()
-    failed_runs = recent_runs.filter(status=ForwardingRun.Status.FAILED).count()
+    failed_runs = (
+        recent_runs
+        .filter(status=ForwardingRun.Status.FAILED)
+        .count()
+    )
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 

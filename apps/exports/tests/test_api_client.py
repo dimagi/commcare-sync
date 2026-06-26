@@ -12,8 +12,14 @@ from apps.exports.api_client import get_filename_from_response
         ('attachment; filename="report 2024.xlsx"', 'report 2024.xlsx'),
         ('inline; filename=data.xlsx', 'data.xlsx'),
         ('attachment; filename*=UTF-8\'\'config.xlsx', 'config.xlsx'),
-        ('attachment; filename*=UTF-8\'\'report%202024.xlsx', 'report 2024.xlsx'),
-        ('attachment; filename="test.xlsx"; filename*=UTF-8\'\'test.xlsx', 'test.xlsx'),
+        (
+            'attachment; filename*=UTF-8\'\'report%202024.xlsx',
+            'report 2024.xlsx',
+        ),
+        (
+            'attachment; filename="test.xlsx"; filename*=UTF-8\'\'test.xlsx',
+            'test.xlsx',
+        ),
         ('attachment', 'default.xlsx'),
         ('', 'default.xlsx'),
     ],

@@ -67,7 +67,11 @@ def create_project(request):
 def edit_project(request, project_id):
     project = get_object_or_404(CommCareProject, id=project_id)
     if request.method == 'POST':
-        form = CommCareProjectForm(request.POST, request.FILES, instance=project)
+        form = CommCareProjectForm(
+            request.POST,
+            request.FILES,
+            instance=project,
+        )
         if form.is_valid():
             project = form.save()
             messages.success(request, _(
