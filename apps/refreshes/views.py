@@ -37,26 +37,29 @@ def refresh_configs(request):
     """List all refresh configurations."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = (
+        RefreshConfig
+        .objects
+        .order_by('-updated_at')
+        .prefetch_related(Prefetch(
+            'runs',
+            queryset=RefreshRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        ))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
 
-    return render(
-        request,
-        'refreshes/refresh_configs.html',
-        {
-            'active_tab': 'refreshes',
-            'page_obj': page_obj,
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-            'etag': etag,
-            'config_table_url': reverse('refreshes:config_table'),
-            **dashboard_stats_context(),
-        },
-    )
+    return render(request, 'refreshes/refresh_configs.html', {
+        'active_tab': 'refreshes',
+        'page_obj': page_obj,
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+        'etag': etag,
+        'config_table_url': reverse('refreshes:config_table'),
+        **dashboard_stats_context(),
+    })
 
 
 @login_required
@@ -65,8 +68,15 @@ def config_table(request):
     """HTMX endpoint: paginated + ETag-guarded refresh config table partial."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = RefreshConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=RefreshRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = (
+        RefreshConfig
+        .objects
+        .order_by('-updated_at')
+        .prefetch_related(Prefetch(
+            'runs',
+            queryset=RefreshRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        ))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
     return render_config_table(
@@ -105,14 +115,10 @@ def create_refresh_config(request):
     else:
         config_form = RefreshConfigForm()
 
-    return render(
-        request,
-        'refreshes/create_refresh_config.html',
-        {
-            'active_tab': 'create_refresh',
-            'config_form': config_form,
-        },
-    )
+    return render(request, 'refreshes/create_refresh_config.html', {
+        'active_tab': 'create_refresh',
+        'config_form': config_form,
+    })
 
 
 @login_required
@@ -136,15 +142,11 @@ def edit_refresh_config(request, config_id):
     else:
         config_form = RefreshConfigForm(instance=config)
 
-    return render(
-        request,
-        'refreshes/edit_refresh_config.html',
-        {
-            'active_tab': 'refreshes',
-            'config_form': config_form,
-            'config': config,
-        },
-    )
+    return render(request, 'refreshes/edit_refresh_config.html', {
+        'active_tab': 'refreshes',
+        'config_form': config_form,
+        'config': config,
+    })
 
 
 @login_required
@@ -160,14 +162,10 @@ def delete_refresh_config(request, config_id):
         ).format(config_name))
         return HttpResponseRedirect(reverse('refreshes:refresh_configs'))
 
-    return render(
-        request,
-        'refreshes/delete_refresh_config.html',
-        {
-            'active_tab': 'refreshes',
-            'config': config,
-        },
-    )
+    return render(request, 'refreshes/delete_refresh_config.html', {
+        'active_tab': 'refreshes',
+        'config': config,
+    })
 
 
 @login_required
@@ -176,19 +174,22 @@ def refresh_details(request, config_id):
     config = get_object_or_404(RefreshConfig, id=config_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    page_obj = paginate(config.runs.order_by('-created_at'), page_size, page_num)
-    return render(
-        request,
-        'refreshes/refresh_details.html',
-        {
-            'active_tab': 'refreshes',
-            'config': config,
-            'runs': page_obj,
-            'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
+    page_obj = paginate(
+        config.runs.order_by('-created_at'),
+        page_size,
+        page_num,
     )
+    return render(request, 'refreshes/refresh_details.html', {
+        'active_tab': 'refreshes',
+        'config': config,
+        'runs': page_obj,
+        'run_history_url': reverse(
+            'refreshes:run_history_table',
+            args=[config.id],
+        ),
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required
@@ -203,17 +204,16 @@ def run_history_table(request, config_id):
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     page_obj = paginate(runs_qs, page_size, page_num)
-    return render(
-        request,
-        'refreshes/partials/run_history_table.html',
-        {
-            'config': config,
-            'runs': page_obj,
-            'run_history_url': reverse('refreshes:run_history_table', args=[config.id]),
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
-    )
+    return render(request, 'refreshes/partials/run_history_table.html', {
+        'config': config,
+        'runs': page_obj,
+        'run_history_url': reverse(
+            'refreshes:run_history_table',
+            args=[config.id],
+        ),
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required

@@ -35,26 +35,29 @@ def forwarders(request):
     """List all forwarding configurations."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = (
+        ForwardingConfig
+        .objects
+        .order_by('-updated_at')
+        .prefetch_related(Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        ))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
 
     etag = compute_configs_etag(page_obj.object_list)
 
-    return render(
-        request,
-        'forwarding/forwarders.html',
-        {
-            'active_tab': 'forwarders',
-            'page_obj': page_obj,
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-            'etag': etag,
-            'config_table_url': reverse('forwarding:config_table'),
-            **dashboard_stats_context(),
-        },
-    )
+    return render(request, 'forwarding/forwarders.html', {
+        'active_tab': 'forwarders',
+        'page_obj': page_obj,
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+        'etag': etag,
+        'config_table_url': reverse('forwarding:config_table'),
+        **dashboard_stats_context(),
+    })
 
 
 @login_required
@@ -63,8 +66,15 @@ def config_table(request):
     """HTMX endpoint: paginated + ETag-guarded forwarding config table partial."""
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    configs_qs = ForwardingConfig.objects.order_by('-updated_at').prefetch_related(
-        Prefetch('runs', queryset=ForwardingRun.objects.order_by('-created_at'), to_attr='_all_runs')
+    configs_qs = (
+        ForwardingConfig
+        .objects
+        .order_by('-updated_at')
+        .prefetch_related(Prefetch(
+            'runs',
+            queryset=ForwardingRun.objects.order_by('-created_at'),
+            to_attr='_all_runs',
+        ))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
     return render_config_table(
@@ -104,14 +114,10 @@ def create_forwarding_config(request):
     else:
         config_form = ForwardingConfigForm()
 
-    return render(
-        request,
-        'forwarding/create_forwarding.html',
-        {
-            'active_tab': 'create_forwarder',
-            'config_form': config_form,
-        },
-    )
+    return render(request, 'forwarding/create_forwarding.html', {
+        'active_tab': 'create_forwarder',
+        'config_form': config_form,
+    })
 
 
 @login_required
@@ -135,15 +141,11 @@ def edit_forwarding_config(request, forwarder_id):
     else:
         config_form = ForwardingConfigForm(instance=forwarder)
 
-    return render(
-        request,
-        'forwarding/edit_forwarding.html',
-        {
-            'active_tab': 'forwarders',
-            'config_form': config_form,
-            'forwarder': forwarder,
-        },
-    )
+    return render(request, 'forwarding/edit_forwarding.html', {
+        'active_tab': 'forwarders',
+        'config_form': config_form,
+        'forwarder': forwarder,
+    })
 
 
 @login_required
@@ -159,28 +161,20 @@ def delete_forwarding_config(request, forwarder_id):
         ).format(forwarder_name))
         return HttpResponseRedirect(reverse('forwarding:forwarders'))
 
-    return render(
-        request,
-        'forwarding/delete_forwarding.html',
-        {
-            'active_tab': 'forwarders',
-            'forwarder': forwarder,
-        },
-    )
+    return render(request, 'forwarding/delete_forwarding.html', {
+        'active_tab': 'forwarders',
+        'forwarder': forwarder,
+    })
 
 
 @login_required
 def destinations(request):
     """List all forwarding destinations."""
     destinations = ForwardingDestination.objects.order_by('name')
-    return render(
-        request,
-        'forwarding/destinations.html',
-        {
-            'active_tab': 'destinations',
-            'destinations': destinations,
-        },
-    )
+    return render(request, 'forwarding/destinations.html', {
+        'active_tab': 'destinations',
+        'destinations': destinations,
+    })
 
 
 @admin_required
@@ -197,14 +191,10 @@ def create_destination(request):
     else:
         form = CreateForwardingDestinationForm()
 
-    return render(
-        request,
-        'forwarding/create_destination.html',
-        {
-            'active_tab': 'destinations',
-            'form': form,
-        },
-    )
+    return render(request, 'forwarding/create_destination.html', {
+        'active_tab': 'destinations',
+        'form': form,
+    })
 
 
 @admin_required
@@ -212,7 +202,10 @@ def edit_destination(request, destination_id):
     """Edit an existing forwarding destination."""
     destination = get_object_or_404(ForwardingDestination, id=destination_id)
     if request.method == 'POST':
-        form = EditForwardingDestinationForm(request.POST, instance=destination)
+        form = EditForwardingDestinationForm(
+            request.POST,
+            instance=destination,
+        )
         if form.is_valid():
             destination = form.save()
             messages.success(request, _(
@@ -222,15 +215,11 @@ def edit_destination(request, destination_id):
     else:
         form = EditForwardingDestinationForm(instance=destination)
 
-    return render(
-        request,
-        'forwarding/edit_destination.html',
-        {
-            'active_tab': 'destinations',
-            'form': form,
-            'destination': destination,
-        },
-    )
+    return render(request, 'forwarding/edit_destination.html', {
+        'active_tab': 'destinations',
+        'form': form,
+        'destination': destination,
+    })
 
 
 @admin_required
@@ -261,19 +250,22 @@ def forwarder_details(request, forwarder_id):
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
-    page_obj = paginate(forwarder.runs.order_by('-created_at'), page_size, page_num)
-    return render(
-        request,
-        'forwarding/forwarder_details.html',
-        {
-            'active_tab': 'forwarders',
-            'forwarder': forwarder,
-            'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
+    page_obj = paginate(
+        forwarder.runs.order_by('-created_at'),
+        page_size,
+        page_num,
     )
+    return render(request, 'forwarding/forwarder_details.html', {
+        'active_tab': 'forwarders',
+        'forwarder': forwarder,
+        'runs': page_obj,
+        'run_history_url': reverse(
+            'forwarding:run_history_table',
+            args=[forwarder.id],
+        ),
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required
@@ -288,17 +280,16 @@ def run_history_table(request, forwarder_id):
     page_size = get_config_page_size(request)
     page_num = get_page_from_request(request)
     page_obj = paginate(runs_qs, page_size, page_num)
-    return render(
-        request,
-        'forwarding/partials/run_history_table.html',
-        {
-            'forwarder': forwarder,
-            'runs': page_obj,
-            'run_history_url': reverse('forwarding:run_history_table', args=[forwarder.id]),
-            'page_size': page_size,
-            'page_sizes': VALID_CONFIG_PAGE_SIZES,
-        },
-    )
+    return render(request, 'forwarding/partials/run_history_table.html', {
+        'forwarder': forwarder,
+        'runs': page_obj,
+        'run_history_url': reverse(
+            'forwarding:run_history_table',
+            args=[forwarder.id],
+        ),
+        'page_size': page_size,
+        'page_sizes': VALID_CONFIG_PAGE_SIZES,
+    })
 
 
 @login_required

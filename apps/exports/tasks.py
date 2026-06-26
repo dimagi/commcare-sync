@@ -44,7 +44,12 @@ def run_all_exports_task(user_id=None):
             triggered_by=user,
         )
 
-    for multi_export in MultiProjectExportConfig.objects.select_related('periodic_task').all():
+    for multi_export in (
+        MultiProjectExportConfig
+        .objects
+        .select_related('periodic_task')
+        .all()
+    ):
         if multi_export.is_paused or multi_export.has_active_run:
             continue
         _create_and_dispatch_export_run(

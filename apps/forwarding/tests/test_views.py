@@ -67,7 +67,12 @@ class TestDeleteDestinationView:
         response = admin_client().post(url)
         assert response.status_code == 302
         assert reverse('forwarding:destinations') in response.url
-        assert not ForwardingDestination.objects.filter(id=destination_id).exists()
+        assert not (
+            ForwardingDestination
+            .objects
+            .filter(id=destination_id)
+            .exists()
+        )
 
     @use(admin_client, destination_in_use)
     def test_get_with_in_use_destination_redirects_with_error(self):
