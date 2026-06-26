@@ -2,6 +2,7 @@ import json
 import re
 from unittest.mock import MagicMock, patch
 
+import pytest
 from django.urls import reverse
 from unmagic import fixture, use
 
@@ -407,34 +408,20 @@ class TestRefreshesListPageSmoke:
         assert response.status_code == 200
         assert config.name in response.content.decode()
 
+    @pytest.mark.parametrize('status,expected', [
+        (RefreshRun.Status.COMPLETED, 'completed'),
+        (RefreshRun.Status.FAILED, 'failed'),
+        (RefreshRun.Status.STARTED, 'started'),
+    ])
     @use(authed_client, _refresh_config)
-    def test_renders_with_completed_run(self):
+    def test_renders_with_run_in_status(self, status, expected):
+        config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
-            status=RefreshRun.Status.COMPLETED,
-            log='Refreshed 2 views.',
+            refresh_config=config,
+            status=status,
         )
         response = authed_client().get(reverse('refreshes:refresh_configs'))
         assert response.status_code == 200
-        assert 'completed' in response.content.decode()
-
-    @use(authed_client, _refresh_config)
-    def test_renders_with_failed_run(self):
-        RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
-            status=RefreshRun.Status.FAILED,
-            log='Error refreshing.',
-        )
-        response = authed_client().get(reverse('refreshes:refresh_configs'))
-        assert response.status_code == 200
-        assert 'failed' in response.content.decode()
-
-    @use(authed_client, _refresh_config)
-    def test_renders_with_started_run(self):
-        RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
-            status=RefreshRun.Status.STARTED,
-        )
-        response = authed_client().get(reverse('refreshes:refresh_configs'))
-        assert response.status_code == 200
-        assert 'started' in response.content.decode()
+        content = response.content.decode()
+        assert config.name in content
+        assert expected in content
