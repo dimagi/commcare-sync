@@ -411,17 +411,15 @@ def multi_export_run_details(request, export_id, run_id):
 @require_POST
 def run_export(request, export_id):
     export = get_object_or_404(ExportConfig, id=export_id)
-    is_htmx = bool(request.headers.get('HX-Request'))
-
-    if is_htmx and export.has_active_run:
-        # The table Run button can be double-clicked in the brief window before
-        # the table refreshes; don't stack a second run on an active one.
+    if export.has_active_run:
+        # Don't stack a second run on an active one. Avoids a race condition
+        # where a scheduled run has started or another user triggered a run.
         return run_response(request)
 
-    # Only the detail-page JS posts a startOver flag; the HTMX Run button
-    # sends no body.
     start_over = False
-    if not is_htmx:
+    if not bool(request.headers.get('HX-Request')):
+        # The HTMX Run button doesn't send a body. Only the detail-page JS
+        # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
     export_record = ExportRun.objects.create(
@@ -430,7 +428,6 @@ def run_export(request, export_id):
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-
     async_result = run_export_task.delay(
         export_record.id,
         start_over=start_over,
@@ -442,13 +439,11 @@ def run_export(request, export_id):
 @require_POST
 def run_multi_export(request, export_id):
     export = get_object_or_404(MultiProjectExportConfig, id=export_id)
-    is_htmx = bool(request.headers.get('HX-Request'))
-
-    if is_htmx and export.has_active_run:
+    if export.has_active_run:
         return run_response(request)
 
     start_over = False
-    if not is_htmx:
+    if not bool(request.headers.get('HX-Request')):
         start_over = json.loads(request.body).get('startOver', False)
 
     export_record = MultiProjectExportRun.objects.create(
@@ -457,7 +452,6 @@ def run_multi_export(request, export_id):
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-
     async_result = run_multi_project_export_task.delay(
         export_record.id,
         start_over=start_over,
