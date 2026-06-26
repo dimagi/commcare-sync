@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.db.models import Database
 from apps.web.decorators import require_htmx
-from apps.web.views import htmx_run_response
+from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -229,8 +229,8 @@ def run_refresh(request, config_id):
         triggered_by=request.user,
     )
 
-    result = run_refresh_task.delay(refresh_run.id)
-    return htmx_run_response(request, result)
+    async_result = run_refresh_task.delay(refresh_run.id)
+    return run_response(request, async_result)
 
 
 @login_required
