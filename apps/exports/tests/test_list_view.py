@@ -1,6 +1,7 @@
 import re
 from unittest.mock import patch
 
+import pytest
 from django.urls import reverse
 from unmagic import use
 
@@ -327,40 +328,23 @@ class TestExportsHomeSmoke:
         assert response.status_code == 200
         assert config.name in response.content.decode()
 
+    @pytest.mark.parametrize('status,expected', [
+        (ExportRun.Status.COMPLETED, 'completed'),
+        (ExportRun.Status.FAILED, 'failed'),
+        (ExportRun.Status.STARTED, 'started'),
+    ])
     @use(authed_client, export_config)
-    def test_renders_with_completed_run(self):
+    def test_renders_with_run_in_status(self, status, expected):
         config = export_config()
         ExportRun.objects.create(
             base_export_config=config,
-            status=ExportRun.Status.COMPLETED,
-            log='Exported 100 rows.',
+            status=status,
         )
         response = authed_client().get(reverse('exports:home'))
         assert response.status_code == 200
         content = response.content.decode()
         assert config.name in content
-        assert 'completed' in content
-
-    @use(authed_client, export_config)
-    def test_renders_with_failed_run(self):
-        ExportRun.objects.create(
-            base_export_config=export_config(),
-            status=ExportRun.Status.FAILED,
-            log='Error: connection refused.',
-        )
-        response = authed_client().get(reverse('exports:home'))
-        assert response.status_code == 200
-        assert 'failed' in response.content.decode()
-
-    @use(authed_client, export_config)
-    def test_renders_with_started_run(self):
-        ExportRun.objects.create(
-            base_export_config=export_config(),
-            status=ExportRun.Status.STARTED,
-        )
-        response = authed_client().get(reverse('exports:home'))
-        assert response.status_code == 200
-        assert 'started' in response.content.decode()
+        assert expected in content
 
     @use(authed_client, multi_export_config)
     def test_renders_multi_config_with_completed_run(self):
