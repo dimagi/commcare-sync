@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pytest
 from unmagic import fixture, use
 
 from apps.schedules.mixin import ScheduleMixin
@@ -113,39 +114,26 @@ def test_run_all_exports_task_skips_paused_configs(mock_run, _mock_multi):
     mock_run.assert_not_called()
 
 
+@pytest.mark.parametrize('status', [
+    ExportRun.Status.QUEUED,
+    ExportRun.Status.STARTED,
+])
 @use(export_config)
 @patch('apps.exports.tasks.run_multi_project_export_task.delay')
 @patch('apps.exports.tasks.run_export_task.delay')
-def test_run_all_exports_task_skips_configs_with_queued_runs(
-    mock_run, _mock_multi
+def test_run_all_exports_task_skips_configs_with_active_runs(
+    mock_run,
+    _mock_multi,
+    status
 ):
     config = export_config()
-    # Pre-existing queued run — Run All should not stack another on top.
+    # A run is already queued or in progress. "Run All" must not stack
+    # another run on top, the same way the per-row "Run" button disables
+    # itself for an active run.
     ExportRun.objects.create(
         base_export_config=config,
         triggered_from_ui=False,
-        status=ExportRun.Status.QUEUED,
-    )
-
-    run_all_exports_task()
-
-    assert ExportRun.objects.filter(base_export_config=config).count() == 1
-    mock_run.assert_not_called()
-
-
-@use(export_config)
-@patch('apps.exports.tasks.run_multi_project_export_task.delay')
-@patch('apps.exports.tasks.run_export_task.delay')
-def test_run_all_exports_task_skips_configs_with_started_runs(
-    mock_run, _mock_multi
-):
-    config = export_config()
-    # A run already in progress — Run All must not stack another on top, the
-    # same way the per-row Run button disables itself for an active run.
-    ExportRun.objects.create(
-        base_export_config=config,
-        triggered_from_ui=False,
-        status=ExportRun.Status.STARTED,
+        status=status,
     )
 
     run_all_exports_task()
