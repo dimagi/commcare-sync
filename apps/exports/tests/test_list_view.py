@@ -46,7 +46,10 @@ class TestMultiExportConfigProperties:
 
     def test_multi_export_config_edit_url(self):
         config = multi_export_config()
-        expected = reverse('exports:edit_multi_export_config', args=[config.id])
+        expected = reverse(
+            'exports:edit_multi_export_config',
+            args=[config.id],
+        )
         assert config.edit_url == expected
 
     def test_last_run_log_url_none_when_no_run_multi(self):

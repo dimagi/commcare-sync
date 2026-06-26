@@ -12,7 +12,11 @@ class CustomUser(AbstractUser):
     """
     Abstract base class for users, with a small amount of added functionality
     """
-    avatar = models.FileField(upload_to='profile-pictures/', null=True, blank=True)
+    avatar = models.FileField(
+        upload_to='profile-pictures/',
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.email
@@ -37,4 +41,8 @@ class CustomUser(AbstractUser):
     @property
     def gravatar_id(self):
         # https://en.gravatar.com/site/implement/hash/
-        return hashlib.md5(self.email.lower().strip().encode('utf-8')).hexdigest()
+        return (
+            hashlib
+            .md5(self.email.lower().strip().encode('utf-8'))
+            .hexdigest()
+        )

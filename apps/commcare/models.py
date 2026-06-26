@@ -129,7 +129,10 @@ class CommCareAccount(BaseModel):
         max_length=255,
         help_text=_('Your API key is available under "My Account Settings" in CommCare.')
     )
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         unique_together = ('server', 'username')

@@ -165,7 +165,12 @@ class TestDeleteProjectView:
         url = reverse('commcare:delete_project', args=[commcare_project().id])
         response = regular_client().post(url)
         assert response.status_code == 302
-        assert CommCareProject.objects.filter(id=commcare_project().id).exists()
+        assert (
+            CommCareProject
+            .objects
+            .filter(id=commcare_project().id)
+            .exists()
+        )
 
 
 class TestDeleteAccountView:
@@ -239,4 +244,9 @@ class TestDeleteAccountView:
         url = reverse('commcare:delete_account', args=[commcare_account().id])
         response = regular_client().post(url)
         assert response.status_code == 302
-        assert CommCareAccount.objects.filter(id=commcare_account().id).exists()
+        assert (
+            CommCareAccount
+            .objects
+            .filter(id=commcare_account().id)
+            .exists()
+        )
