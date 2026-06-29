@@ -1,4 +1,6 @@
 import reversion
+from cryptography.fernet import Fernet, MultiFernet
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -21,11 +23,37 @@ class ForwardingDestination(BaseModel):
         blank=True,
         help_text=_('Username for basic authentication'),
     )
-    api_password = models.CharField(
-        max_length=200,
+    api_password_encrypted = models.CharField(
+        max_length=500,
         blank=True,
         help_text=_('Password for basic authentication'),
     )
+
+    @property
+    def api_password(self):
+        """Decrypt and return the API password."""
+        if not self.api_password_encrypted:
+            return ''
+
+        fernet_keys = (  # Include rotated keys for decryption
+            key.encode() if isinstance(key, str) else key
+            for key in settings.FERNET_KEYS
+        )
+        fernet = MultiFernet([Fernet(k) for k in fernet_keys])
+        decrypted = fernet.decrypt(self.api_password_encrypted.encode())
+        return decrypted.decode()
+
+    @api_password.setter
+    def api_password(self, value):
+        """Encrypt and store the API password."""
+        if not value:
+            self.api_password_encrypted = ''
+            return
+
+        key = settings.FERNET_KEYS[0]  # Encrypt using the current key
+        fernet = Fernet(key.encode() if isinstance(key, str) else key)
+        encrypted = fernet.encrypt(value.encode())
+        self.api_password_encrypted = encrypted.decode()
 
     def __str__(self):
         return self.name
