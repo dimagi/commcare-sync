@@ -409,10 +409,12 @@ def _run_export(
 ):
     export = get_object_or_404(export_config_class, id=export_id)
     if export.has_active_run:
-        return run_response(request)
+        return run_response(request, async_result=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
+        # The HTMX Run button doesn't send a body. Only the detail-page JS
+        # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
     export_record = export_run_class.objects.create(
