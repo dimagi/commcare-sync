@@ -6,11 +6,11 @@ from django.urls import reverse
 
 def login(page, live_server, user):
     """Helper to log in a user."""
-    page.goto(f'{live_server.url}/accounts/login/')
-    page.fill('input[name="login"]', user.email)
+    page.goto(f'{live_server.url}{reverse("login")}')
+    page.fill('input[name="username"]', user.email)
     page.fill('input[name="password"]', 'testpass')
     page.click('button[type="submit"]')
-    page.wait_for_url(lambda url: '/accounts/login/' not in url)
+    page.wait_for_url(lambda url: reverse('login') not in url)
 
 
 def navigate_to_create_export(page, live_server):
