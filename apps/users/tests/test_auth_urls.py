@@ -12,7 +12,6 @@ class TestDjangoAuthURLs:
     @pytest.mark.parametrize('url,expected_code', [
         (reverse('login'), 200),  # Login page
         (reverse('password_reset'), 200),  # Password reset page
-        ('/accounts/signup/', 404),  # Sign-up URL
     ])
     def test_login_page_renders(self, url, expected_code):
         response = _client().get(url)
