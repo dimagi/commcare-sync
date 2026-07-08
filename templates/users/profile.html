@@ -26,21 +26,21 @@
             <label for="{{ form.email.id_for_label }}" class="form-label"
               >{% trans "Email" %}</label
             >
-            <div>{{ form.email }}</div>
+            {{ form.email }}
             {{ form.email.errors }}
           </div>
           <div class="mb-3">
             <label for="{{ form.first_name.id_for_label }}" class="form-label"
               >{% trans "First Name" %}</label
             >
-            <div>{{ form.first_name }}</div>
+            {{ form.first_name }}
             {{ form.first_name.errors }}
           </div>
           <div class="mb-3">
             <label for="{{ form.last_name.id_for_label }}" class="form-label"
               >{% trans "Last Name" %}</label
             >
-            <div>{{ form.last_name }}</div>
+            {{ form.last_name }}
             {{ form.last_name.errors }}
           </div>
           <div class="d-flex gap-2">

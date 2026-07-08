@@ -14,7 +14,7 @@
       <input type="hidden" name="server" value="{{ default_server.pk }}" />
     {% endwith %}
   {% else %}
-    <div>{{ form.server }}</div>
+    {{ form.server }}
   {% endif %}
   {{ form.server.errors }}
 </div>

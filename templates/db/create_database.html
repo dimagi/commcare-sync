@@ -10,7 +10,7 @@
         <label for="{{ form.name.id_for_label }}" class="form-label"
           >{% trans "Name" %}</label
         >
-        <div>{{ form.name }}</div>
+        {{ form.name }}
         {{ form.name.errors }}
       </div>
       <div class="mb-3">
@@ -19,7 +19,7 @@
           class="form-label"
           >{% trans "Connection String" %}</label
         >
-        <div>{{ form.connection_string }}</div>
+        {{ form.connection_string }}
         {{ form.connection_string.errors }}
       </div>
       <div class="d-flex gap-2">
