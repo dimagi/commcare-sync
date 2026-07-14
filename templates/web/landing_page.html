@@ -13,12 +13,9 @@
       <h1 class="display-4">{{ project_meta.NAME }}</h1>
       <h2 class="h3 text-muted">{{ project_meta.DESCRIPTION }}</h2>
       <p class="d-flex gap-2">
-        <a class="btn btn-primary btn-lg" href="{% url 'account_signup' %}">
-          {% trans "Create account" %}
-        </a>
         <a
           class="btn btn-outline-primary btn-lg"
-          href="{% url 'account_login' %}"
+          href="{% url 'login' %}"
         >
           {% trans "Sign in" %}
         </a>

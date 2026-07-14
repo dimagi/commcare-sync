@@ -22,13 +22,6 @@ def pytest_configure(config):
         '.localhost',
     ]
 
-    # Disable allauth rate limiting for tests
-    settings.ACCOUNT_RATE_LIMITS = {
-        'login_failed': None,
-        'login': None,
-        'signup': None,
-    }
-
 
 @pytest.fixture(scope='session')
 def browser_context_args(browser_context_args):

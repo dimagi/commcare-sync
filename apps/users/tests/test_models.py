@@ -1,8 +1,56 @@
 """Tests for CustomUser model."""
 
-from django.contrib.auth import get_user_model
+import pytest
+from django.contrib.auth import authenticate, get_user_model
+from django.db import IntegrityError
+from unmagic import use
 
 User = get_user_model()
+
+
+@use('db')
+class TestEmailUsername:
+    def test_authenticate_by_email(self):
+        User.objects.create_user(
+            username='alice',
+            email='alice@example.com',
+            password='hunter2',
+        )
+        user = authenticate(username='alice@example.com', password='hunter2')
+        assert user is not None
+        assert user.email == 'alice@example.com'
+
+    def test_email_is_lowercased_on_save(self):
+        user = User.objects.create_user(
+            username='casey',
+            email='Casey@Example.COM',
+            password='hunter2',
+        )
+        user.refresh_from_db()
+        assert user.email == 'casey@example.com'
+
+    def test_authenticate_is_case_insensitive(self):
+        User.objects.create_user(
+            username='dana',
+            email='dana@example.com',
+            password='hunter2',
+        )
+        user = authenticate(username='Dana@Example.COM', password='hunter2')
+        assert user is not None
+        assert user.email == 'dana@example.com'
+
+    def test_email_must_be_unique(self):
+        User.objects.create_user(
+            username='alice',
+            email='dup@example.com',
+            password='hunter2',
+        )
+        with pytest.raises(IntegrityError):
+            User.objects.create_user(
+                username='alice2',
+                email='dup@example.com',
+                password='hunter2',
+            )
 
 
 class TestCustomUserIsAdmin:

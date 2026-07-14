@@ -1,22 +1,39 @@
 import hashlib
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.urls import reverse
 
 
+class CustomUserManager(UserManager):
+
+    def get_by_natural_key(self, username):
+        # USERNAME_FIELD is 'email' and emails are stored lowercased on
+        # `save`, but lookups should still be case-insensitive to
+        # accommodate any legacy or admin-created mixed-case rows.
+        return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
+
+
 class CustomUser(AbstractUser):
-    """
-    Add additional fields to the user model here.
-    """
     """
     Abstract base class for users, with a small amount of added functionality
     """
+    email = models.EmailField(unique=True)
     avatar = models.FileField(
         upload_to='profile-pictures/',
         null=True,
         blank=True,
     )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    objects = CustomUserManager()
+
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email

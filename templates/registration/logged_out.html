@@ -1,0 +1,14 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block body %}
+  <section class="py-5 container">
+    <h1 class="h4">{% trans "Signed out" %}</h1>
+    <p>{% trans "You have been signed out." %}</p>
+    <p>
+      <a class="btn btn-primary" href="{% url 'login' %}">
+        {% trans "Sign in again" %}
+      </a>
+    </p>
+  </section>
+{% endblock %}

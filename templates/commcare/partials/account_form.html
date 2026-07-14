@@ -6,7 +6,7 @@
   <label for="{{ form.username.id_for_label }}" class="form-label"
     >{% trans "Username" %}</label
   >
-  <div>{{ form.username }}</div>
+  {{ form.username }}
   <p class="form-text">{{ form.username.help_text }}</p>
   {{ form.username.errors }}
 </div>
@@ -14,7 +14,7 @@
   <label for="{{ form.api_key.id_for_label }}" class="form-label"
     >{% trans "API Key" %}</label
   >
-  <div>{{ form.api_key }}</div>
+  {{ form.api_key }}
   <p class="form-text">{{ form.api_key.help_text }}</p>
   {{ form.api_key.errors }}
 </div>
