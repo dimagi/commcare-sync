@@ -53,6 +53,48 @@ class TestEmailUsername:
             )
 
 
+@use('db')
+class TestManager:
+    def test_create_user_normalizes_email(self):
+        user = User.objects.create_user(
+            email='Erin@Example.COM',
+            password='hunter2',
+        )
+        user.refresh_from_db()
+        assert user.email == 'erin@example.com'
+        assert user.check_password('hunter2')
+        assert not user.is_staff
+        assert not user.is_superuser
+
+    def test_create_user_requires_email(self):
+        with pytest.raises(ValueError):
+            User.objects.create_user(email='', password='hunter2')
+
+    def test_create_superuser_sets_flags(self):
+        user = User.objects.create_superuser(
+            email='admin@example.com',
+            password='hunter2',
+        )
+        assert user.is_staff
+        assert user.is_superuser
+
+    def test_create_superuser_rejects_non_staff(self):
+        with pytest.raises(ValueError):
+            User.objects.create_superuser(
+                email='admin@example.com',
+                password='hunter2',
+                is_staff=False,
+            )
+
+    def test_create_superuser_rejects_non_superuser(self):
+        with pytest.raises(ValueError):
+            User.objects.create_superuser(
+                email='admin@example.com',
+                password='hunter2',
+                is_superuser=False,
+            )
+
+
 class TestCustomUserIsAdmin:
     """Tests for CustomUser.is_admin property"""
 

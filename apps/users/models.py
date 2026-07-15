@@ -1,11 +1,11 @@
 import hashlib
 
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.urls import reverse
 
 
-class CustomUserManager(UserManager):
+class CustomUserManager(BaseUserManager):
 
     def get_by_natural_key(self, username):
         # USERNAME_FIELD is 'email' and emails are stored lowercased on
@@ -13,6 +13,27 @@ class CustomUserManager(UserManager):
         # accommodate any legacy or admin-created mixed-case rows.
         return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
 
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required.')
+        # CustomUser.save() lowercases email. normalize_email() handles
+        # the domain portion for callers that bypass save()
+        email = self.normalize_email(email)
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        if extra_fields['is_staff'] is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields['is_superuser'] is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
     """
