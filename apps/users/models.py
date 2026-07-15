@@ -35,10 +35,12 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **extra_fields)
 
+
 class CustomUser(AbstractUser):
     """
     Abstract base class for users, with a small amount of added functionality
     """
+    username = None  # type: ignore[assignment]
     email = models.EmailField(unique=True)
     avatar = models.FileField(
         upload_to='profile-pictures/',
@@ -47,9 +49,9 @@ class CustomUser(AbstractUser):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()
+    objects = CustomUserManager()  # type: ignore[assignment, misc]
 
     def save(self, *args, **kwargs):
         if self.email:
