@@ -18,7 +18,6 @@ class TestCommCareAccountAPIKey:
     def setup_method(self):
         User = get_user_model()
         user = User(
-            username='testuser',
             email='test@example.com',
             password='testpass',
         )

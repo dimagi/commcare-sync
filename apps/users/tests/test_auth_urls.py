@@ -20,7 +20,6 @@ class TestDjangoAuthURLs:
     def test_login_with_email(self):
         User = get_user_model()
         User.objects.create_user(
-            username='bob',
             email='bob@example.com',
             password='hunter2',
         )
