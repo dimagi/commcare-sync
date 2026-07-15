@@ -130,7 +130,7 @@ Install CommCare Data Pipeline:
    docker-compose exec web uv run manage.py createsuperuser
    ```
 
-   Use the email address as the username value too.
+   You'll be prompted for an email address and a password.
 
 CommCare Data Pipeline is ready. Go to http://localhost:8001/ to log in.
 
