@@ -30,7 +30,6 @@ def regular_client():
 @use('db')
 def other_user():
     yield User.objects.create_user(
-        username='otheruser',
         email='other@example.com',
         password='testpass',
     )

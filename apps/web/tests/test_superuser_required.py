@@ -36,7 +36,10 @@ class TestAdminRequired:
 
     def test_authenticated_regular_user_gets_403(self):
         """Authenticated users without superuser+staff get 403, not a redirect."""
-        user = User.objects.create_user(username='regular', password='pass')
+        user = User.objects.create_user(
+            email='regular@example.com',
+            password='pass',
+        )
         request = self._get()
         request.user = user
         with pytest.raises(PermissionDenied):
@@ -45,7 +48,9 @@ class TestAdminRequired:
     def test_superuser_without_staff_gets_403(self):
         """is_superuser alone is not sufficient; is_staff is also required."""
         user = User.objects.create_user(
-            username='super_only', password='pass', is_superuser=True
+            email='super_only@example.com',
+            password='pass',
+            is_superuser=True,
         )
         request = self._get()
         request.user = user
@@ -55,7 +60,10 @@ class TestAdminRequired:
     def test_active_superuser_and_staff_can_access(self):
         """Active superuser+staff users reach the view normally."""
         user = User.objects.create_user(
-            username='admin', password='pass', is_superuser=True, is_staff=True
+            email='admin@example.com',
+            password='pass',
+            is_superuser=True,
+            is_staff=True,
         )
         request = self._get()
         request.user = user

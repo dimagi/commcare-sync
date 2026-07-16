@@ -27,7 +27,6 @@ from apps.db.models import Database
 def user():
     User = get_user_model()
     yield User.objects.create_user(
-        username='test@example.com',
         email='test@example.com',
         password='testpass',
     )
@@ -38,7 +37,6 @@ def user():
 def regular_user():
     User = get_user_model()
     yield User.objects.create_user(
-        username='regularuser',
         email='regular@example.com',
         password='pass',
     )
@@ -49,7 +47,6 @@ def regular_user():
 def admin_user():
     User = get_user_model()
     yield User.objects.create_user(
-        username='adminuser',
         email='admin@example.com',
         password='pass',
         is_active=True,
