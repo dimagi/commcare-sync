@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from unmagic import fixture, use
+from unmagic import use
 
 from tests.fixtures import database
 
@@ -8,25 +8,19 @@ from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
 from ..runner import run_forwarding
 
 
-@fixture
-@use('db')
-def put_destination():
-    yield ForwardingDestination.objects.create(
-        name='PUT Lookup Table',
-        api_url='https://example.com/api/lookup_table/abc/',
-        http_method=ForwardingDestination.HttpMethod.PUT,
-    )
-
-
 @use('db', database)
 class TestRunForwarding:
 
-    @use(put_destination)
     def test_method_passed_to_forwarder(self):
+        dest = ForwardingDestination.objects.create(
+            name='PUT Lookup Table',
+            api_url='https://example.com/api/lookup_table/abc/',
+            http_method=ForwardingDestination.HttpMethod.PUT,
+        )
         cfg = ForwardingConfig.objects.create(
             name='Lookup Table Refresh',
             database=database(),
-            destination=put_destination(),
+            destination=dest,
             query="SELECT '{\"rows\": []}'",
         )
         fwd_run = ForwardingRun.objects.create(forwarding_config=cfg)
