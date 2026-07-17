@@ -25,9 +25,7 @@
           >{% trans "HTTP Method" %}</label
         >
         <div>{{ form.http_method }}</div>
-        {% if form.http_method.help_text %}
-          <div class="form-text">{{ form.http_method.help_text }}</div>
-        {% endif %}
+        <div class="form-text">{{ form.http_method.help_text }}</div>
         {{ form.http_method.errors }}
       </div>
       <div class="mb-3">
