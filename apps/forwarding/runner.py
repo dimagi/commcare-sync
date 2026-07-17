@@ -51,7 +51,7 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
             f'result size: {len(str(result)) if result else 0} characters'
         )
 
-        method = fwd_config.destination.method
+        method = fwd_config.destination.http_method
         log_lines.append(
             f'{datetime.now()}: Forwarding to {method} {api_url}'
         )

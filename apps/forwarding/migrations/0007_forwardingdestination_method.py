@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="forwardingdestination",
-            name="method",
+            name="http_method",
             field=models.CharField(
                 choices=[("POST", "POST"), ("PUT", "PUT")],
                 default="POST",

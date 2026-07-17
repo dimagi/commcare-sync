@@ -314,17 +314,17 @@ class TestForwardingDestination:
             api_url='https://example.com/api',
         )
 
-        assert dest.method == ForwardingDestination.HttpMethod.POST
-        assert dest.method == 'POST'
+        assert dest.http_method == ForwardingDestination.HttpMethod.POST
+        assert dest.http_method == 'POST'
 
     def test_method_can_be_put(self):
         dest = ForwardingDestination.objects.create(
             name='PUT API',
             api_url='https://example.com/api',
-            method=ForwardingDestination.HttpMethod.PUT,
+            http_method=ForwardingDestination.HttpMethod.PUT,
         )
 
-        assert dest.method == 'PUT'
+        assert dest.http_method == 'PUT'
 
 
 @use('db')

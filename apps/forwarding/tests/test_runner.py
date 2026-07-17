@@ -14,7 +14,7 @@ def put_destination():
     yield ForwardingDestination.objects.create(
         name='PUT Lookup Table',
         api_url='https://example.com/api/lookup_table/abc/',
-        method=ForwardingDestination.HttpMethod.PUT,
+        http_method=ForwardingDestination.HttpMethod.PUT,
     )
 
 

@@ -158,7 +158,7 @@ class TestDestinationMethodField:
             {
                 'name': 'PUT Destination',
                 'api_url': 'https://example.com/api/lookup_table/abc/',
-                'method': 'PUT',
+                'http_method': 'PUT',
                 'api_username': '',
                 'api_password': '',
             },
@@ -166,14 +166,14 @@ class TestDestinationMethodField:
 
         assert response.status_code == 302
         dest = ForwardingDestination.objects.get(name='PUT Destination')
-        assert dest.method == 'PUT'
+        assert dest.http_method == 'PUT'
 
     def test_edit_destination_changes_method(self):
         dest = ForwardingDestination.objects.create(
             name='Editable',
             api_url='https://example.com/api',
         )
-        assert dest.method == 'POST'
+        assert dest.http_method == 'POST'
 
         client = admin_client()
         response = client.post(
@@ -181,7 +181,7 @@ class TestDestinationMethodField:
             {
                 'name': dest.name,
                 'api_url': dest.api_url,
-                'method': 'PUT',
+                'http_method': 'PUT',
                 'api_username': '',
                 'api_password': '',
             },
@@ -189,7 +189,7 @@ class TestDestinationMethodField:
 
         assert response.status_code == 302
         dest.refresh_from_db()
-        assert dest.method == 'PUT'
+        assert dest.http_method == 'PUT'
 
     def test_create_destination_rejects_invalid_method(self):
         client = admin_client()
@@ -198,7 +198,7 @@ class TestDestinationMethodField:
             {
                 'name': 'Bad Method',
                 'api_url': 'https://example.com/api',
-                'method': 'PATCH',
+                'http_method': 'PATCH',
                 'api_username': '',
                 'api_password': '',
             },
@@ -212,12 +212,12 @@ class TestDestinationMethodField:
         ForwardingDestination.objects.create(
             name='POST One',
             api_url='https://example.com/post',
-            method='POST',
+            http_method='POST',
         )
         ForwardingDestination.objects.create(
             name='PUT One',
             api_url='https://example.com/put',
-            method='PUT',
+            http_method='PUT',
         )
         client = admin_client()
         response = client.get(reverse('forwarding:destinations'))
