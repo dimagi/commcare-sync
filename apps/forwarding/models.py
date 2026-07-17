@@ -23,7 +23,7 @@ class ForwardingDestination(BaseModel):
         max_length=500, help_text=_('API endpoint URL where data will be sent')
     )
     http_method = models.CharField(
-        max_length=4,
+        max_length=7,
         choices=HttpMethod.choices,
         default=HttpMethod.POST,
         help_text=_('HTTP method used to send data to the destination'),

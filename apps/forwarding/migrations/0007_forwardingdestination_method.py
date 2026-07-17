@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 choices=[("POST", "POST"), ("PUT", "PUT")],
                 default="POST",
                 help_text="HTTP method used to send data to the destination",
-                max_length=4,
+                max_length=7,
             ),
         ),
     ]
