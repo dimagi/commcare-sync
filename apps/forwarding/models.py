@@ -20,7 +20,8 @@ class ForwardingDestination(BaseModel):
 
     name = models.CharField(max_length=100)
     api_url = models.URLField(
-        max_length=500, help_text=_('API endpoint URL where data will be sent')
+        max_length=500,
+        help_text=_('API endpoint URL where data will be sent'),
     )
     http_method = models.CharField(
         max_length=7,
