@@ -51,10 +51,11 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
             f'result size: {len(str(result)) if result else 0} characters'
         )
 
+        method = fwd_config.destination.http_method
         log_lines.append(
-            f'{datetime.now()}: Forwarding to {api_url}'
+            f'{datetime.now()}: Forwarding to {method} {api_url}'
         )
-        response = forward_to_api(api_url, result, credentials)
+        response = forward_to_api(api_url, result, credentials, method=method)
         log_lines.append(
             f'{datetime.now()}: Forwarded successfully, '
             f'status code: {response.status_code}'

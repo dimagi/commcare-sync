@@ -18,13 +18,23 @@
           >{% trans "API URL" %}</label
         >
         {{ form.api_url }}
+        <div class="form-text">{{ form.api_url.help_text }}</div>
         {{ form.api_url.errors }}
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.http_method.id_for_label }}" class="form-label"
+          >{% trans "HTTP Method" %}</label
+        >
+        <div>{{ form.http_method }}</div>
+        <div class="form-text">{{ form.http_method.help_text }}</div>
+        {{ form.http_method.errors }}
       </div>
       <div class="mb-3">
         <label for="{{ form.api_username.id_for_label }}" class="form-label"
           >{% trans "API Username" %}</label
         >
         {{ form.api_username }}
+        <div class="form-text">{{ form.api_username.help_text }}</div>
         {{ form.api_username.errors }}
       </div>
       <div class="mb-3">
@@ -32,7 +42,7 @@
           >{% trans "API Password" %}</label
         >
         {{ form.api_password }}
-        {% if form.api_password.help_text %}<div class="form-text">{{ form.api_password.help_text }}</div>{% endif %}
+        <div class="form-text">{{ form.api_password.help_text }}</div>
         {{ form.api_password.errors }}
       </div>
       <div class="d-flex gap-2">
