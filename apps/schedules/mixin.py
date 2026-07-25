@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -6,6 +7,17 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.commcare.models import RunBaseModel
+
+logger = logging.getLogger(__name__)
+
+# Fields whose value determines the schedule. apps/schedules/signals.py uses
+# this to decide whether a save actually changed the schedule (and so must
+# recompute next_run_at) or merely touched an unrelated field (e.g. a rename).
+SCHEDULE_FIELDS = frozenset({
+    'schedule_type', 'interval_value', 'interval_unit',
+    'first_run_date', 'first_run_time', 'timezone',
+    'days_of_week', 'schedule_enabled',
+})
 
 
 def _validate_days_of_week(value):
@@ -25,7 +37,7 @@ class ScheduleMixin(models.Model):
 
     Concrete models must define:
         SCHEDULED_TASK: str - dotted path to the task run on schedule
-        PERIODIC_TASK_PREFIX: str - prefix for the PeriodicTask name
+        SCHEDULED_TASK_OPTIONS: dict - optional django-q2 q_options for it
         runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
     """
 
@@ -43,7 +55,7 @@ class ScheduleMixin(models.Model):
         DAYS = 'days', _('Days')
 
     SCHEDULED_TASK: str
-    PERIODIC_TASK_PREFIX: str
+    SCHEDULED_TASK_OPTIONS: dict = {}
 
     schedule_type = models.CharField(
         max_length=20,
@@ -82,15 +94,23 @@ class ScheduleMixin(models.Model):
         ),
         validators=[_validate_days_of_week],
     )
-    periodic_task = models.OneToOneField(
-        'django_celery_beat.PeriodicTask',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
+    schedule_enabled = models.BooleanField(
+        default=True,
+        help_text=_('Uncheck to pause scheduled runs'),
     )
+    next_run_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     class Meta:
         abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Snapshot the schedule fields as loaded/constructed, so the
+        # post_save handler in apps/schedules/signals.py can tell whether a
+        # later save() actually changed the schedule (vs. e.g. a rename).
+        self._schedule_snapshot = {
+            field: getattr(self, field) for field in SCHEDULE_FIELDS
+        }
 
     @property
     def has_schedule(self):
@@ -98,17 +118,8 @@ class ScheduleMixin(models.Model):
 
     @property
     def is_paused(self):
-        """
-        Returns True if scheduling is paused.
-
-        A config is considered paused if:
-        - It has no schedule, or
-        - The schedule has no periodic_task, or
-        - The periodic_task is disabled
-        """
-        if not self.has_schedule or not self.periodic_task:
-            return True
-        return not self.periodic_task.enabled
+        """True when the config has no active schedule."""
+        return not (self.has_schedule and self.schedule_enabled)
 
     def has_queued_runs(self):
         last_run = self.runs.order_by('-created_at').first()
@@ -215,6 +226,11 @@ class ScheduleMixin(models.Model):
 
         Calendar schedules follow cron semantics: a monthly schedule
         anchored on day 31 skips months without a 31st.
+
+        Note: a ``first_run_time`` that falls in a DST gap or the
+        repeated DST-fallback hour in a non-UTC ``timezone`` resolves to
+        whatever ``zoneinfo`` picks for that wall-clock time; this is not
+        specially handled.
         """
         if not self.has_schedule:
             return None
@@ -240,6 +256,15 @@ class ScheduleMixin(models.Model):
             if candidate > after and self._runs_on(candidate_date):
                 return candidate
             candidate_date += timedelta(days=1)
+        # No matching day within the scan window (e.g. an ANNUALLY schedule
+        # anchored on 29 February can be up to four years out). Rather than
+        # silently reporting "unscheduled", log it so a dead schedule is
+        # diagnosable.
+        logger.warning(
+            'compute_next_run: no matching day found within %d days for '
+            '%s(pk=%s, schedule_type=%s); treating as unscheduled',
+            366 * 2, type(self).__name__, self.pk, self.schedule_type,
+        )
         return None
 
     def _runs_on(self, day):
@@ -250,6 +275,10 @@ class ScheduleMixin(models.Model):
             # days_of_week uses 0=Sunday; date.weekday() uses 0=Monday.
             return (day.weekday() + 1) % 7 in self.days_of_week
         anchor = self.first_run_date
+        if anchor is None:
+            # clean() requires first_run_date for calendar types, but
+            # objects.create()/loaddata/shell edits can bypass validation.
+            return False
         if day.day != anchor.day:
             return False
         months_apart = (day.year - anchor.year) * 12 + day.month - anchor.month
@@ -260,79 +289,3 @@ class ScheduleMixin(models.Model):
             self.ScheduleType.ANNUALLY: 12,
         }[self.schedule_type]
         return months_apart % cadence == 0
-
-    def create_celery_schedule(self):
-        """
-        Creates and returns the appropriate django-celery-beat schedule object
-        (IntervalSchedule or CrontabSchedule) based on the schedule_type.
-        """
-        if self.schedule_type == self.ScheduleType.INTERVAL:
-            return self._create_interval_schedule()
-        else:
-            return self._create_crontab_schedule()
-
-    def _create_interval_schedule(self):
-        """Create an IntervalSchedule for INTERVAL type schedules."""
-        from django_celery_beat.models import IntervalSchedule
-
-        period_mapping = {
-            self.IntervalUnit.MINUTES: IntervalSchedule.MINUTES,
-            self.IntervalUnit.HOURS: IntervalSchedule.HOURS,
-            self.IntervalUnit.DAYS: IntervalSchedule.DAYS,
-        }
-
-        schedule, __ = IntervalSchedule.objects.get_or_create(
-            every=self.interval_value,
-            period=period_mapping[self.interval_unit],
-        )
-        return schedule
-
-    def _create_crontab_schedule(self):
-        """Create a CrontabSchedule for all non-INTERVAL schedule types."""
-        from django_celery_beat.models import CrontabSchedule
-
-        hour = self.first_run_time.hour
-        minute = self.first_run_time.minute
-        day = self.first_run_date.day if self.first_run_date else 1
-        month = self.first_run_date.month if self.first_run_date else 1
-
-        if self.schedule_type == self.ScheduleType.WEEKLY:
-            schedule, __ = CrontabSchedule.objects.get_or_create(
-                minute=str(minute),
-                hour=str(hour),
-                day_of_week=','.join(
-                    str(d) for d in sorted(self.days_of_week)
-                ),
-                day_of_month='*',
-                month_of_year='*',
-                timezone=self.timezone,
-            )
-            return schedule
-
-        # MONTHLY, QUARTERLY, SEMI_ANNUALLY, ANNUALLY all share the same
-        # crontab shape — they differ only in which months to run.
-        if self.schedule_type == self.ScheduleType.MONTHLY:
-            month_of_year = '*'
-        elif self.schedule_type == self.ScheduleType.QUARTERLY:
-            # Every 3 months starting from `month`, wrapping around December.
-            months = [str((month - 1 + i * 3) % 12 + 1) for i in range(4)]
-            month_of_year = ','.join(sorted(months, key=int))
-        elif self.schedule_type == self.ScheduleType.SEMI_ANNUALLY:
-            months = [str(month), str((month - 1 + 6) % 12 + 1)]
-            month_of_year = ','.join(sorted(months, key=int))
-        elif self.schedule_type == self.ScheduleType.ANNUALLY:
-            month_of_year = str(month)
-        else:
-            raise ValueError(
-                f'Unsupported schedule_type: {self.schedule_type}'
-            )
-
-        schedule, __ = CrontabSchedule.objects.get_or_create(
-            minute=str(minute),
-            hour=str(hour),
-            day_of_month=str(day),
-            day_of_week='*',
-            month_of_year=month_of_year,
-            timezone=self.timezone,
-        )
-        return schedule

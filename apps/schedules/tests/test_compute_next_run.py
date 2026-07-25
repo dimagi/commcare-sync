@@ -1,5 +1,6 @@
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as dt_timezone
+from unittest.mock import patch
 
 import pytest
 
@@ -148,8 +149,39 @@ class TestComputeNextRun:
             datetime(2027, 2, 15, 6, 0, tzinfo=dt_timezone.utc),
             id='annual-anniversary',
         ),
+        pytest.param(
+            # clean() requires first_run_date for calendar schedules, but
+            # objects.create()/loaddata/shell edits can bypass validation.
+            # _runs_on must degrade to False rather than raise AttributeError.
+            {'schedule_type': ScheduleMixin.ScheduleType.MONTHLY},
+            AFTER,
+            None,
+            id='calendar-schedule-without-first-run-date-returns-none',
+        ),
     ])
     def test_compute_next_run(self, schedule, after, expected):
         # Unsaved instance: compute_next_run reads only schedule fields.
         cfg = ExportConfig(**schedule)
         assert cfg.compute_next_run(after) == expected
+
+
+class TestComputeNextRunScanExhaustion:
+
+    def test_logs_warning_and_returns_none_when_window_exhausted(self):
+        # Anchored on 29 Feb, an ANNUALLY schedule only fires in leap
+        # years. Queried just after a non-leap Feb, the next occurrence
+        # (three years out) falls outside the two-year scan window, so
+        # the schedule should be reported as diagnosably dead, not
+        # silently unscheduled.
+        cfg = ExportConfig(
+            schedule_type=ScheduleMixin.ScheduleType.ANNUALLY,
+            first_run_date=date(2024, 2, 29),
+            first_run_time=time(0, 0),
+        )
+        after = datetime(2025, 3, 1, tzinfo=dt_timezone.utc)
+
+        with patch('apps.schedules.mixin.logger') as mock_logger:
+            result = cfg.compute_next_run(after)
+
+        assert result is None
+        mock_logger.warning.assert_called_once()

@@ -1,11 +1,7 @@
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save
 
-from apps.schedules.signals import (
-    create_or_update_periodic_task,
-    delete_periodic_task,
-)
+from apps.schedules.signals import update_next_run
 
 from .models import ForwardingConfig
 
-post_save.connect(create_or_update_periodic_task, sender=ForwardingConfig)
-pre_delete.connect(delete_periodic_task, sender=ForwardingConfig)
+post_save.connect(update_next_run, sender=ForwardingConfig)
