@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django_q.models import OrmQ
 from unmagic import fixture, use
 
 from apps.db.models import Database
@@ -11,7 +12,6 @@ from tests.fixtures import (
     authed_client,
     database,
     htmx_client,
-    mock_celery_task_dispatch,
 )
 
 from ..models import RefreshConfig, RefreshRun
@@ -382,7 +382,17 @@ class TestRefreshRunLogView:
         assert response.status_code == 404
 
 
-@use(authed_client, _refresh_config, mock_celery_task_dispatch)
+@fixture
+def mock_async_task_dispatch():
+    # Suppress dispatch so these view tests don't leave a live django-q
+    # OrmQ row queued behind them (async_task's ORM broker really does
+    # insert a row, even though nothing consumes it in tests).
+    with patch('apps.refreshes.views.async_task') as mock:
+        mock.return_value = 'test-task-id'
+        yield mock
+
+
+@use(authed_client, _refresh_config, mock_async_task_dispatch)
 class TestRunRefreshHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
@@ -397,6 +407,7 @@ class TestRunRefreshHtmxBranch:
             refresh_config=config,
             triggered_from_ui=True,
         ).exists()
+        assert OrmQ.objects.count() == 0
 
     def test_non_htmx_request_returns_200(self):
         url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
