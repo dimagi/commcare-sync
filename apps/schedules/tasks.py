@@ -33,7 +33,14 @@ def _scheduled_models():
 
 
 def run_due_schedules():
-    """Enqueue a run for every scheduled config that is due."""
+    """Enqueue a run for every scheduled config that is due.
+
+    Each config is handled independently: a config whose schedule fields
+    are malformed (e.g. an invalid timezone reaching ``compute_next_run``
+    via a shell edit, ``loaddata``, or ``objects.create()`` bypassing
+    validation) must not prevent the other due configs - possibly for
+    other models entirely - from being enqueued.
+    """
     now = timezone.now()
     launched = []
     for model in _scheduled_models():
@@ -41,14 +48,26 @@ def run_due_schedules():
             schedule_enabled=True, next_run_at__lte=now
         )
         for config in due:
-            async_task(
-                config.SCHEDULED_TASK,
-                config.id,
-                q_options=dict(config.SCHEDULED_TASK_OPTIONS),
-            )
-            model.objects.filter(pk=config.pk).update(
-                next_run_at=config.compute_next_run(now)
-            )
+            try:
+                async_task(
+                    config.SCHEDULED_TASK,
+                    config.id,
+                    q_options=dict(config.SCHEDULED_TASK_OPTIONS),
+                )
+                model.objects.filter(pk=config.pk).update(
+                    next_run_at=config.compute_next_run(now)
+                )
+            except Exception:
+                # config.__str__ could itself raise on a malformed row, so
+                # log by model name and pk rather than the instance.
+                logger.exception(
+                    'Failed to enqueue scheduled run for %s(pk=%s)',
+                    model.__name__, config.pk,
+                )
+                continue
             launched.append(f'{model.__name__}:{config.pk}')
-            logger.info('Enqueued scheduled run for %s', config)
+            logger.info(
+                'Enqueued scheduled run for %s(pk=%s)',
+                model.__name__, config.pk,
+            )
     return launched
