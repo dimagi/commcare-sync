@@ -2,7 +2,7 @@
 
 Retrieve the shared `commcare-export` log to investigate run-time behaviour
 beyond what individual export-run logs show. The pipeline exposes this single,
-cross-run log through the application; deeper host-side logs (Celery worker
+cross-run log through the application; deeper host-side logs (task worker
 output, Django errors, system logs) live on the server and are managed by the
 Ansible deployment.
 
@@ -49,7 +49,7 @@ run's own log is truncated, or when you need to compare behaviour across runs.
 ## Host-side logs
 
 Anything not written by `commcare-export` is not exposed through the app. To
-investigate Celery worker behaviour, Django request errors, runserver output, or
+investigate task worker behaviour, Django request errors, runserver output, or
 system-level issues, sign in to the host and look at the deployment's log
 directory.
 
@@ -57,7 +57,7 @@ directory.
   deployment overrides this; consult the
   [Ansible system administration guide](https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html)
   for the configured path and for rotation, retention, and access conventions.
-- Celery workers, the Django app server, and the scheduler each emit their own
+- The task worker, the Django app server, and the scheduler each emit their own
   logs to the locations the Ansible playbook configures.
 
 <!-- prettier-ignore-start -->

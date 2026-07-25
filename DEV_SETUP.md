@@ -1,8 +1,9 @@
 # Developer setup
 
-This is the development setup for CommCare Data Pipeline. Postgres and Redis run
-in Docker; Celery and the Django runserver run natively so they're easy to
-attach a debugger to. Everything lives in a single `tmux` session.
+This is the development setup for CommCare Data Pipeline. There are no external
+services to run — the app database is a local SQLite file, and the task queue
+runs against that same database. `manage.py runserver` and `manage.py qcluster`
+both run natively.
 
 For production setup, see
 <https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html>.
@@ -13,8 +14,6 @@ For production setup, see
 - [Python 3.12 or newer (and older than 3.15)](https://www.python.org/) —
   matches `requires-python` in `pyproject.toml`
 - [uv](https://docs.astral.sh/uv/) for Python dependency management
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [tmux](https://github.com/tmux/tmux/wiki)
 - [Node.js](https://nodejs.org/) and `npm` for the frontend assets
 
 ## Clone and install
@@ -46,54 +45,34 @@ Generate a Fernet key:
 ./fernet-gen
 ```
 
-The Docker services in `docker-compose.yml` read these from `.env.dev`, but the
-natively-run runserver and Celery worker read them from the environment or from
-`commcare_sync/settings_local.py`.
-
 ## First-time database setup
 
-The host ports for Postgres (`5433`) and Redis (`6380`) are deliberately offset
-in `docker-compose.yml` so they don't clash with a CommCare HQ checkout running
-on the same machine.
-
 ```bash
-source .venv/bin/activate
-docker-compose up -d db redis
-./manage.py migrate
-./manage.py createsuperuser
-docker-compose down
+uv run python3 manage.py migrate
+uv run python3 manage.py createsuperuser
 ```
 
-## Run the stack in tmux
+This creates `db.sqlite3` in the repo root.
 
-Save the following script as `run_dev.sh` in the repo root, make it executable
-with `chmod +x run_dev.sh`, and run it.
+## Running the app
 
 ```bash
-#!/bin/bash
-
-tmux new-session -s ccsync  -n docker ' \
-        source .venv/bin/activate; \
-        docker-compose up db redis' \; \
-    new-window -n worker ' \
-        source .venv/bin/activate; \
-        sleep 2s; \
-        celery -A commcare_sync worker -l INFO -B' \; \
-    new-window -n runserver ' \
-        source .venv/bin/activate; \
-        sleep 2s; \
-        ./manage.py runserver 0.0.0.0:8001' \;
+uv run python3 manage.py runserver 0.0.0.0:8001
 ```
 
-This opens a `tmux` session named `ccsync` with three windows:
+Run the task worker and scheduler in a second terminal:
 
-- `docker` — Postgres and Redis via Docker Compose.
-- `worker` — Celery worker, with embedded beat scheduler (`-B`).
-- `runserver` — Django dev server on <http://127.0.0.1:8001/>.
+```bash
+uv run python3 manage.py qcluster
+```
 
-Reattach later with `tmux attach -t ccsync`. Tear it all down with
-`tmux kill-session -t ccsync` (which stops Celery and runserver) followed by
-`docker-compose down`.
+The app is now at <http://127.0.0.1:8001/>. The app database is a local SQLite
+file (`db.sqlite3`); no database or message-broker service is required. If you
+want your exports and refreshes to write somewhere real, add a database
+connection through the app itself — see
+[Add a database](docs/users/add-database.md) — pointing at whatever warehouse
+database (Postgres, MySQL, SQL Server, …) you already have available; this is
+independent of the app's own SQLite database.
 
 ## Front-end assets
 
@@ -149,21 +128,7 @@ PWDEBUG=1 uv run pytest apps/exports/tests/test_run_button_playwright.py
 
 <!-- prettier-ignore-start -->
 > [!NOTE]
-> **Port already in use** — If `docker-compose up` complains about port `5433`
-> or `6380` already being bound, you likely have something else listening on
-> those ports. Stop them, or change the host ports in `docker-compose.yml`.
-<!-- prettier-ignore-end -->
-
-<!-- prettier-ignore-start -->
-> [!NOTE]
-> **`runserver` can't connect to the database** — Make sure the `docker` tmux
-> window is healthy. Postgres takes a few seconds to start; the `sleep 2s` in
-> the script handles the common case but not slow machines.
-<!-- prettier-ignore-end -->
-
-<!-- prettier-ignore-start -->
-> [!NOTE]
-> **`SECRET_KEY` or `FERNET_KEYS` not set** — The runserver and Celery worker
+> **`SECRET_KEY` or `FERNET_KEYS` not set** — `runserver` and `qcluster`
 > read these from the environment or `commcare_sync/settings_local.py`. See
 > the "Configure `SECRET_KEY` and `FERNET_KEYS`" section above.
 <!-- prettier-ignore-end -->

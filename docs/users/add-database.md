@@ -41,11 +41,10 @@ the standard choice.
    - **Name** — a short label for this connection, shown wherever you pick a
      database (for example `Docs walkthrough`).
    - **Connection String** — a SQLAlchemy URL pointing at the target database.
-     For a PostgreSQL database running on the pipeline's dev stack, that looks
-     like:
+     For a local PostgreSQL database, that looks like:
 
      ```
-     postgresql://postgres:postgres@localhost:5433/ccsync_docs_walkthrough
+     postgresql://postgres:postgres@localhost:5432/ccsync_docs_walkthrough
      ```
 
      The general shape is `dialect://user:password@host:port/database_name`. Use
@@ -61,16 +60,6 @@ the standard choice.
 > connection is when an export runs against it. If the host, port, user,
 > password, or database name is wrong, that export run fails with the
 > driver's error message in the run log.
-<!-- prettier-ignore-end -->
-
-<!-- prettier-ignore-start -->
-> [!NOTE]
-> If you're running the pipeline in Docker alongside the database
-> container, the host the pipeline needs to reach is not always the host
-> you'd use from your laptop. The connection string should use the
-> database container's service name (for example `db`) rather than
-> `localhost`, and the in-container port (typically `5432`) rather than
-> any host-port mapping.
 <!-- prettier-ignore-end -->
 
 <!-- prettier-ignore-start -->
