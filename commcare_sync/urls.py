@@ -28,5 +28,4 @@ urlpatterns = [
     path('users/', include('apps.users.urls')),
 
     path('', include('apps.web.urls')),
-    path('celery-progress/', include('celery_progress.urls')),
 ]
