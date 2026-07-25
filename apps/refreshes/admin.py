@@ -13,7 +13,7 @@ class RefreshConfigAdmin(VersionAdmin):
         'updated_at',
     ]
     list_filter = ['database', 'created_at', 'updated_at']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'next_run_at']
 
     fieldsets = (
         (
@@ -30,6 +30,7 @@ class RefreshConfigAdmin(VersionAdmin):
             'Scheduling',
             {
                 'fields': (
+                    'schedule_enabled',
                     'schedule_type',
                     'first_run_date',
                     'first_run_time',
@@ -37,6 +38,7 @@ class RefreshConfigAdmin(VersionAdmin):
                     'interval_value',
                     'interval_unit',
                     'days_of_week',
+                    'next_run_at',
                 )
             },
         ),
