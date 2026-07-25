@@ -40,7 +40,7 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
             )
         return
 
-    for attr in ('CELERY_TASK', 'PERIODIC_TASK_PREFIX'):
+    for attr in ('SCHEDULED_TASK', 'PERIODIC_TASK_PREFIX'):
         if not isinstance(getattr(instance, attr, None), str):
             raise TypeError(
                 f'{type(instance).__name__} must define {attr} as a string '
@@ -51,7 +51,7 @@ def create_or_update_periodic_task(sender, instance, created, **kwargs):
         f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
     )
     task_kwargs = {
-        'task': instance.CELERY_TASK,
+        'task': instance.SCHEDULED_TASK,
         'name': task_name,
         'args': json.dumps([instance.id]),
         'crontab': None,

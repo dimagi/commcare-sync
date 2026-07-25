@@ -29,7 +29,7 @@ class ScheduleMixin(models.Model):
     Abstract model mixin that adds scheduling fields to any config model.
 
     Concrete models must define:
-        CELERY_TASK: str - dotted path to the Celery task for scheduled runs
+        SCHEDULED_TASK: str - dotted path to the task run on schedule
         PERIODIC_TASK_PREFIX: str - prefix for the PeriodicTask name
         runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
     """
@@ -47,7 +47,7 @@ class ScheduleMixin(models.Model):
         HOURS = 'hours', _('Hours')
         DAYS = 'days', _('Days')
 
-    CELERY_TASK: str
+    SCHEDULED_TASK: str
     PERIODIC_TASK_PREFIX: str
 
     schedule_type = models.CharField(

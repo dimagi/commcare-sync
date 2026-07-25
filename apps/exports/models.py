@@ -44,7 +44,7 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):
-    CELERY_TASK = 'apps.exports.tasks.run_scheduled_export_task'
+    SCHEDULED_TASK = 'apps.exports.tasks.run_scheduled_export_task'
     PERIODIC_TASK_PREFIX = 'Run export'
 
     project = models.ForeignKey(
@@ -78,7 +78,7 @@ class ExportConfig(ExportConfigBase):
 
 @reversion.register()
 class MultiProjectExportConfig(ExportConfigBase):
-    CELERY_TASK = 'apps.exports.tasks.run_scheduled_multi_export_task'
+    SCHEDULED_TASK = 'apps.exports.tasks.run_scheduled_multi_export_task'
     PERIODIC_TASK_PREFIX = 'Run multi-project export'
 
     projects = models.ManyToManyField('commcare.CommCareProject')
