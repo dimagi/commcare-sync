@@ -14,7 +14,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
+
+from apps.web import views as web_views
 
 
 urlpatterns = [
@@ -29,4 +31,9 @@ urlpatterns = [
 
     path('', include('apps.web.urls')),
     path('celery-progress/', include('celery_progress.urls')),
+    path(
+        'tasks/<str:task_id>/status/',
+        web_views.task_status,
+        name='task_status',
+    ),
 ]
