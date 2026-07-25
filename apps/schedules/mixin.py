@@ -1,10 +1,13 @@
-from datetime import time
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.commcare.models import RunBaseModel
+
+type AwareDatetime = datetime
 
 
 def _validate_days_of_week(value):
@@ -206,6 +209,60 @@ class ScheduleMixin(models.Model):
                             )
                         }
                     )
+
+    def compute_next_run(self, after: AwareDatetime) -> AwareDatetime | None:
+        """
+        Return the next scheduled run as a timezome-aware datetime
+        strictly after ``after`` (also an aware datetime), or None if
+        there is no schedule.
+
+        Calendar schedules follow cron semantics: a monthly schedule
+        anchored on day 31 skips months without a 31st.
+        """
+        if not self.has_schedule:
+            return None
+        tz = ZoneInfo(self.timezone)
+
+        if self.schedule_type == self.ScheduleType.INTERVAL:
+            interval = timedelta(**{self.interval_unit: self.interval_value})  # type: ignore
+            if self.first_run_date:
+                first = datetime.combine(
+                    self.first_run_date, self.first_run_time, tzinfo=tz
+                )
+                if first > after:
+                    return first
+            return after + interval
+
+        # Calendar-based schedules: scan forward day by day (bounded to
+        # two years, enough for ANNUALLY plus skipped short months).
+        candidate_date = after.astimezone(tz).date()
+        for _i in range(366 * 2):
+            candidate = datetime.combine(
+                candidate_date, self.first_run_time, tzinfo=tz
+            )
+            if candidate > after and self._runs_on(candidate_date):
+                return candidate
+            candidate_date += timedelta(days=1)
+        return None
+
+    def _runs_on(self, day):
+        """True if the calendar schedule fires on ``day`` (a date)."""
+        if self.first_run_date and day < self.first_run_date:
+            return False
+        if self.schedule_type == self.ScheduleType.WEEKLY:
+            # days_of_week uses 0=Sunday; date.weekday() uses 0=Monday.
+            return (day.weekday() + 1) % 7 in self.days_of_week
+        anchor = self.first_run_date
+        if day.day != anchor.day:
+            return False
+        months_apart = (day.year - anchor.year) * 12 + day.month - anchor.month
+        cadence = {
+            self.ScheduleType.MONTHLY: 1,
+            self.ScheduleType.QUARTERLY: 3,
+            self.ScheduleType.SEMI_ANNUALLY: 6,
+            self.ScheduleType.ANNUALLY: 12,
+        }[self.schedule_type]
+        return months_apart % cadence == 0
 
     def create_celery_schedule(self):
         """
