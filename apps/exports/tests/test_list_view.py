@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
-from unmagic import use
+from django_q.models import OrmQ
+from unmagic import fixture, use
 
 from apps.exports.models import (
     ExportConfig,
@@ -21,7 +22,6 @@ from tests.fixtures import (
     commcare_account,
     commcare_project,
     database,
-    mock_celery_task_dispatch,
 )
 
 
@@ -233,7 +233,17 @@ class TestExportsHomeViewUpdated:
         assert config.name in response.content.decode()
 
 
-@use(authed_client, export_config, mock_celery_task_dispatch)
+@fixture
+def mock_async_task_dispatch():
+    # Suppress dispatch so these view tests don't leave a live django-q
+    # OrmQ row queued behind them (async_task's ORM broker really does
+    # insert a row, even though nothing consumes it in tests).
+    with patch('apps.exports.views.async_task') as mock:
+        mock.return_value = 'test-task-id'
+        yield mock
+
+
+@use(authed_client, export_config, mock_async_task_dispatch)
 class TestRunExportHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse('exports:run_export', args=[export_config().id])
@@ -255,6 +265,7 @@ class TestRunExportHtmxBranch:
             base_export_config=config,
             triggered_from_ui=True,
         ).exists()
+        assert OrmQ.objects.count() == 0
 
     def test_htmx_request_skips_when_active_run_exists(self):
         # Guards the double-submit window: a Run posted while a run is already
@@ -296,7 +307,7 @@ class TestRunExportHtmxBranch:
         assert kwargs['start_over'] is True
 
 
-@use(authed_client, multi_export_config, mock_celery_task_dispatch)
+@use(authed_client, multi_export_config, mock_async_task_dispatch)
 class TestRunMultiExportHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse(
