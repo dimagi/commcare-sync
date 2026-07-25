@@ -2,7 +2,7 @@
 Playwright tests for Run button functionality.
 
 Tests that verify the Run button's Alpine.js state management,
-HTMX table refresh, and integration with Celery progress tracking.
+HTMX table refresh, and integration with background task-status polling.
 """
 import json
 
@@ -264,19 +264,19 @@ class TestRunButtonWithMocks:
                 body='test-task-id-12345'
             )
 
-        def mock_celery_progress(route):
+        def mock_task_status(route):
             route.fulfill(
                 status=200,
                 content_type='application/json',
                 body=json.dumps({
-                    'state': 'PENDING',
                     'complete': False,
-                    'success': False,
+                    'success': None,
+                    'result': None,
                 })
             )
 
         page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/celery-progress/**', mock_celery_progress)
+        page.route('**/tasks/**', mock_task_status)
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
