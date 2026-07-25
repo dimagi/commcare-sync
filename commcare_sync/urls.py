@@ -30,7 +30,6 @@ urlpatterns = [
     path('users/', include('apps.users.urls')),
 
     path('', include('apps.web.urls')),
-    path('celery-progress/', include('celery_progress.urls')),
     path(
         'tasks/<str:task_id>/status/',
         web_views.task_status,
