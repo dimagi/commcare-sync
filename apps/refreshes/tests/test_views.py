@@ -1,6 +1,6 @@
 import json
 import re
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
@@ -196,19 +196,19 @@ class TestRunHistoryTableView:
 
 class TestRunRefreshView:
     @use(authed_client, _refresh_config)
-    @patch('apps.refreshes.views.run_refresh_task')
-    def test_triggers_task(self, mock_task):
+    @patch('apps.refreshes.views.async_task')
+    def test_triggers_task(self, mock_async):
         config = _refresh_config()
-        mock_result = MagicMock()
-        mock_result.task_id = 'test-task-id'
-        mock_task.delay.return_value = mock_result
+        mock_async.return_value = 'test-task-id'
 
         url = reverse('refreshes:run_refresh', args=[config.id])
         response = authed_client().post(url)
 
         assert response.status_code == 200
         assert response.content.decode() == 'test-task-id'
-        mock_task.delay.assert_called_once()
+        mock_async.assert_called_once()
+        _, kwargs = mock_async.call_args
+        assert kwargs['q_options'] == {'timeout': 3660}
         assert RefreshRun.objects.filter(
             refresh_config=config,
             triggered_from_ui=True,
