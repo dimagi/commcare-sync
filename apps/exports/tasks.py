@@ -1,8 +1,8 @@
 import logging
 
-from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django_q.tasks import async_task
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
@@ -17,7 +17,6 @@ from .runner import run_export, run_multi_project_export
 logger = logging.getLogger(__name__)
 
 
-@shared_task
 def run_all_exports_task(user_id=None):
     """Manual "Run All" trigger: enqueue a run for every non-paused export."""
     user = None
@@ -61,9 +60,8 @@ def run_all_exports_task(user_id=None):
         )
 
 
-@shared_task
 def run_scheduled_export_task(export_config_id):
-    """Celery-beat entry point for a single ExportConfig."""
+    """Scheduler entry point for a single ExportConfig."""
     try:
         export = ExportConfig.objects.get(id=export_config_id)
     except ExportConfig.DoesNotExist:
@@ -76,9 +74,8 @@ def run_scheduled_export_task(export_config_id):
     _enqueue_scheduled_export(export, ExportRun, run_export_task)
 
 
-@shared_task
 def run_scheduled_multi_export_task(export_config_id):
-    """Celery-beat entry point for a single MultiProjectExportConfig."""
+    """Scheduler entry point for a single MultiProjectExportConfig."""
     try:
         export = MultiProjectExportConfig.objects.get(id=export_config_id)
     except MultiProjectExportConfig.DoesNotExist:
@@ -107,18 +104,17 @@ def _create_and_dispatch_export_run(
         triggered_from_ui=triggered_from_ui,
         triggered_by=triggered_by,
     )
-    next_task.delay(export_record.id, start_over=False)
+    async_task(next_task, export_record.id, start_over=False)
 
 
 def _enqueue_scheduled_export(export_config, run_model, next_task):
-    """Celery-beat entry point: skip if already queued, then create and dispatch."""
+    """Scheduler entry point: skip if already queued, then create and dispatch."""
     if export_config.has_queued_runs():
         return
     _create_and_dispatch_export_run(export_config, run_model, next_task)
 
 
-@shared_task(bind=True)
-def run_export_task(self, export_run_id, start_over):
+def run_export_task(export_run_id, start_over):
     export_run = ExportRun.objects.select_related('base_export_config').get(
         id=export_run_id
     )
@@ -133,8 +129,7 @@ def run_export_task(self, export_run_id, start_over):
     }
 
 
-@shared_task(bind=True)
-def run_multi_project_export_task(self, export_run_id, start_over):
+def run_multi_project_export_task(export_run_id, start_over):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
         'base_export_config'

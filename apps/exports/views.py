@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
+from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
@@ -409,7 +410,7 @@ def _run_export(
 ):
     export = get_object_or_404(export_config_class, id=export_id)
     if export.has_active_run:
-        return run_response(request, async_result=None)
+        return run_response(request, task_id=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
@@ -423,19 +424,20 @@ def _run_export(
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    async_result = export_task.delay(
+    task_id = async_task(
+        export_task,
         export_record.id,
         start_over=start_over,
     )
-    return run_response(request, async_result)
+    return run_response(request, task_id)
 
 
 @login_required
 @require_POST
 def run_all_exports(request):
-    """Kick off the "Run All" Celery task for every non-paused export."""
-    async_result = run_all_exports_task.delay(user_id=request.user.id)
-    return run_response(request, async_result)
+    """Kick off the "Run All" background task for every non-paused export."""
+    task_id = async_task(run_all_exports_task, user_id=request.user.id)
+    return run_response(request, task_id)
 
 
 @login_required
