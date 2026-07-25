@@ -251,6 +251,24 @@ class TestScheduleValidation:
         assert 'days_of_week' in exc_info.value.message_dict
 
     @use(database, destination)
+    def test_invalid_timezone_rejected(self):
+        config = make_unsaved_config(
+            database(), destination(),
+            timezone='America/Newyork',
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            config.full_clean()
+        assert 'timezone' in exc_info.value.message_dict
+
+    @use(database, destination)
+    def test_valid_timezone_passes_validation(self):
+        config = make_unsaved_config(
+            database(), destination(),
+            timezone='America/New_York',
+        )
+        config.full_clean()  # No ValidationError
+
+    @use(database, destination)
     def test_valid_interval_schedule_passes_validation(self):
         config = make_unsaved_config(
             database(), destination(),

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, time, timedelta
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -191,6 +191,17 @@ class ScheduleMixin(models.Model):
     def clean(self):
         """Validate that required fields are set based on schedule_type."""
         super().clean()
+
+        try:
+            ZoneInfo(self.timezone)
+        except (ZoneInfoNotFoundError, ValueError, TypeError):
+            raise ValidationError(
+                {
+                    'timezone': _(
+                        '%(timezone)s is not a recognized timezone.'
+                    ) % {'timezone': self.timezone}
+                }
+            )
 
         if not self.schedule_type:
             return
