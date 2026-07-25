@@ -110,9 +110,19 @@ encrypted credentials in `apps/db` and `apps/forwarding` are unreadable.
 ### Lifecycle
 
 - Desktop: closing the window triggers graceful shutdown; Q2 workers finish
-  or abandon the current task. Q2 acknowledges tasks on completion, so an
-  interrupted DET run is retried on next launch (matching today's
-  worker-restart behavior).
+  or abandon the current task. Q2 acknowledges (deletes) a task's queue row
+  only on completion, so a task abandoned mid-run is **not** retried on next
+  launch. With the ORM broker (`django_q/brokers/orm.py`), `dequeue()` sets
+  the row's `lock` to `now + Conf.RETRY` when it hands the task to a
+  worker; the row only becomes eligible for redelivery once that lock
+  expires — i.e. 8 hours later given this project's `retry: 8h`, not "on
+  next launch" as previously assumed here. A worker-side timeout is
+  enforced by `process.terminate()` on the worker process
+  (`django_q/cluster.py`), which kills the task with no in-process
+  exception, so nothing inside the task gets a chance to mark its own DB
+  row as failed. See the note under "Verification of key assumptions"
+  below for the consequence this has for `RefreshRun`/`ExportRun`/etc. rows
+  and why a Phase 2 reaper is needed.
 - Single instance: the launcher writes a port file in the data dir; a second
   launch detects a live instance and opens the existing URL instead of
   starting a second process.
@@ -204,6 +214,16 @@ Existing Postgres + Celery installations migrate once via
 existing `FERNET_KEYS`. The export/import follow-up feature productizes this
 path; until then it is a documented manual procedure.
 
+**Known defect (found during Phase 1 review, unresolved):** this path does
+not currently work as stated. A `dumpdata` taken from a pre-branch (Celery +
+`django_celery_beat`) database includes a `periodic_task` field on the
+`ExportConfig`/`MultiProjectExportConfig`/`ForwardingConfig`/`RefreshConfig`
+fixtures, referencing `django_celery_beat.PeriodicTask` rows. Neither that
+field nor that model exists after this branch, so `loaddata` rejects the
+dump outright. Fold a fixup step (or a documented `jq`/script transform
+that drops the stale field and backfills `schedule_enabled`/`next_run_at`)
+into the export/import follow-up feature.
+
 ## Open questions
 
 None — decisions above were settled during design review on 2026-07-09.
@@ -212,9 +232,34 @@ None — decisions above were settled during design review on 2026-07-09.
 
 - Django-Q2 scheduler catch-up semantics for schedules missed while the app
   was closed; add a "run overdue now" nudge if it does not catch up on start.
-- Django-Q2 retry semantics for tasks interrupted by shutdown (the "abandoned
-  DET run is retried on next launch" behavior above), and how they compare to
-  the current Celery configuration.
+- Django-Q2 retry semantics for tasks interrupted by shutdown: **verified
+  during Phase 1 review, and the semantics are not what this spec
+  originally assumed.** See the corrected Lifecycle section above. In
+  short: with the ORM broker and this project's `retry: 8h`, an abandoned
+  task is redelivered 8 hours after it was dequeued, not "on next launch";
+  and a worker timeout kills the process directly (`process.terminate()`),
+  so a task's own exception-handling code never runs and never gets to
+  mark its DB row as failed.
 - pywebview + WebView2 behavior on a clean Windows 10 machine (WebView2 is
   preinstalled on current Windows 10/11 builds; the Inno Setup installer can
   bootstrap it if absent).
+
+## Phase 2 follow-up: stale STARTED run reaper
+
+A direct consequence of the retry semantics above: a run interrupted by
+worker timeout (`Q_CLUSTER['timeout']`) or by process shutdown/kill leaves
+its `RefreshRun`/`ExportRun`/`ForwardingRun`/etc. row stuck in `STARTED`
+(or `QUEUED`) forever — nothing marks it FAILED, because the worker
+process is killed rather than raising inside the task. Since
+`run_scheduled_*_task` skips any config with an active
+(`QUEUED`/`STARTED`) run, and `has_active_run` blocks the UI's Run button,
+**one timed-out or shutdown-interrupted run permanently disables that
+config's schedule and its manual Run button**, with no expiry.
+
+This was tolerable for Phase 1 (closing the app was rare and Celery didn't
+have this failure mode in the same shape), but Phase 2 needs a stale-run
+reaper: on cluster start, mark any `STARTED` run older than
+`Q_CLUSTER['timeout']` as `FAILED` (with a log line noting the
+abandonment) so its config becomes runnable again. "Closing the window
+abandons the current task" becomes a routine lifecycle event once desktop
+packaging ships, so this can't stay a manual cleanup step.
