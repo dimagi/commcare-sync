@@ -31,7 +31,7 @@ def run_scheduled_forwarding_task(fwd_config_id):
     """
     Creates and executes a forwarding run for scheduled tasks.
 
-    This task is called by Celery Beat for scheduled forwarding runs.
+    Scheduler entry point for scheduled forwarding runs.
 
     :param fwd_config_id: The ID of the ForwardingConfig to execute
 

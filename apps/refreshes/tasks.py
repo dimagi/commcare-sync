@@ -27,7 +27,7 @@ def run_scheduled_refresh_task(refresh_config_id):
     """
     Create and execute a refresh run for scheduled tasks.
 
-    Called by Celery Beat for scheduled refresh runs.
+    Scheduler entry point for scheduled refresh runs.
     """
     try:
         refresh_config = RefreshConfig.objects.get(id=refresh_config_id)

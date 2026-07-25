@@ -52,8 +52,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'celery_progress',
-    'django_celery_beat',
     'django_q',
     'reversion',
 ]
@@ -189,11 +187,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Django sites
 SITE_ID = 1
-
-
-# Celery setup (using Redis)
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
 # Django-Q2 task queue, brokered by the app database (ORM broker).
