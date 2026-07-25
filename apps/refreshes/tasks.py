@@ -1,7 +1,5 @@
-"""Celery tasks for materialized view refreshes."""
+"""Background tasks for materialized view refreshes."""
 import logging
-
-from celery import shared_task
 
 from .models import RefreshConfig, RefreshRun
 from .runner import run_refresh
@@ -9,7 +7,6 @@ from .runner import run_refresh
 logger = logging.getLogger(__name__)
 
 
-@shared_task(soft_time_limit=3600, time_limit=3660)
 def run_refresh_task(refresh_run_id):
     """
     Execute a refresh run for the given RefreshRun.
@@ -26,7 +23,6 @@ def run_refresh_task(refresh_run_id):
     return refresh_run.id
 
 
-@shared_task(soft_time_limit=3600, time_limit=3660)
 def run_scheduled_refresh_task(refresh_config_id):
     """
     Create and execute a refresh run for scheduled tasks.

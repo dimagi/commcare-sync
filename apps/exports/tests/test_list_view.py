@@ -284,15 +284,15 @@ class TestRunExportHtmxBranch:
         """startOver: true in JSON body passes start_over=True to task."""
         import json
         url = reverse('exports:run_export', args=[export_config().id])
-        with patch('apps.exports.views.run_export_task') as mock_task:
-            mock_task.delay.return_value.task_id = 'fake-id'
+        with patch('apps.exports.views.async_task') as mock_async:
+            mock_async.return_value = 'fake-id'
             authed_client().post(
                 url,
                 data=json.dumps({'startOver': True}),
                 content_type='application/json',
             )
-        mock_task.delay.assert_called_once()
-        _, kwargs = mock_task.delay.call_args
+        mock_async.assert_called_once()
+        _, kwargs = mock_async.call_args
         assert kwargs['start_over'] is True
 
 

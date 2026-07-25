@@ -1,7 +1,5 @@
-"""Celery tasks for data forwarding."""
+"""Background tasks for data forwarding."""
 import logging
-
-from celery import shared_task
 
 from .models import ForwardingConfig, ForwardingRun
 from .runner import run_forwarding
@@ -9,7 +7,6 @@ from .runner import run_forwarding
 logger = logging.getLogger(__name__)
 
 
-@shared_task
 def run_forwarding_task(fwd_run_id):
     """
     Executes a forwarding run for the given ForwardingRun.
@@ -30,7 +27,6 @@ def run_forwarding_task(fwd_run_id):
     return fwd_run.id
 
 
-@shared_task
 def run_scheduled_forwarding_task(fwd_config_id):
     """
     Creates and executes a forwarding run for scheduled tasks.

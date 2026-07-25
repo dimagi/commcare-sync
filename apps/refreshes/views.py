@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
+from django_q.tasks import async_task
 
 from apps.db.models import Database
 from apps.web.decorators import require_htmx
@@ -229,8 +230,10 @@ def run_refresh(request, config_id):
         triggered_by=request.user,
     )
 
-    async_result = run_refresh_task.delay(refresh_run.id)
-    return run_response(request, async_result)
+    task_id = async_task(
+        run_refresh_task, refresh_run.id, q_options={'timeout': 3660}
+    )
+    return run_response(request, task_id)
 
 
 @login_required
