@@ -108,12 +108,17 @@ FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'commcare_sync',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+            # WAL allows the web process and task workers to share the DB.
+            'init_command': (
+                'PRAGMA journal_mode=WAL;'
+                'PRAGMA busy_timeout=5000;'
+                'PRAGMA synchronous=NORMAL;'
+            ),
+            'transaction_mode': 'IMMEDIATE',
+        },
     }
 }
 
