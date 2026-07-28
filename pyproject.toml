@@ -19,6 +19,9 @@ dependencies = [
     "waitress>=3.0.2",
 ]
 
+[project.scripts]
+commcare-sync = "commcare_sync.launcher:main"
+
 [project.optional-dependencies]
 postgres = [
     "commcare-export[postgres]",
