@@ -20,7 +20,11 @@ from ..models import Database
 
 
 class TestCreateDatabaseView:
+    @use(admin_user)
     def test_anonymous_redirects_to_login(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        admin_user()
         url = reverse('db:create_database')
         response = Client().get(url)
         assert response.status_code == 302
@@ -54,7 +58,11 @@ class TestCreateDatabaseView:
 
 @use(database)
 class TestEditDatabaseView:
+    @use(admin_user)
     def test_anonymous_redirects_to_login(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        admin_user()
         url = reverse('db:edit_database', args=[database().id])
         response = Client().get(url)
         assert response.status_code == 302
@@ -84,7 +92,11 @@ class TestEditDatabaseView:
 
 @use(database)
 class TestDeleteDatabaseView:
+    @use(admin_user)
     def test_anonymous_redirects_to_login(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        admin_user()
         url = reverse('db:delete_database', args=[database().id])
         response = Client().get(url)
         assert response.status_code == 302

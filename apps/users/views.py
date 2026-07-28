@@ -1,12 +1,45 @@
 import mimetypes
 
+from django.conf import settings
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse, FileResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.users.models import CustomUser
-from .forms import CustomUserChangeForm, UploadAvatarForm
+from .forms import CustomUserChangeForm, FirstRunSetupForm, UploadAvatarForm
+
+
+def first_run_setup(request):
+    """Create the first superuser on a fresh install, then log them in.
+
+    Defense in depth beyond ``FirstRunSetupMiddleware``: refuses (redirects
+    to login) if a user already exists, including the race where a
+    concurrent request created one between this GET and this POST.
+    """
+    if CustomUser.objects.exists():
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = FirstRunSetupForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                if CustomUser.objects.exists():
+                    # Lost the race to another request; don't create a
+                    # second admin.
+                    return redirect('login')
+                user = CustomUser.objects.create_superuser(
+                    email=form.cleaned_data['email'],
+                    password=form.cleaned_data['password1'],
+                )
+            login(request, user)
+            return redirect(settings.LOGIN_REDIRECT_URL)
+    else:
+        form = FirstRunSetupForm()
+
+    return render(request, 'users/setup.html', {'form': form})
 
 
 @login_required
@@ -17,10 +50,9 @@ def profile(request):
             form.save()
     else:
         form = CustomUserChangeForm(instance=request.user)
-    return render(request, 'users/profile.html', {
-        'form': form,
-        'active_tab': 'profile'
-    })
+    return render(
+        request, 'users/profile.html', {'form': form, 'active_tab': 'profile'}
+    )
 
 
 @login_required

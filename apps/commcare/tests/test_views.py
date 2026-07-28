@@ -36,7 +36,11 @@ def other_user():
 
 
 class TestProjectsView:
+    @use(user)
     def test_anonymous_redirects_to_login(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        user()
         url = reverse('commcare:projects')
         response = Client().get(url)
         assert response.status_code == 302
@@ -50,7 +54,11 @@ class TestProjectsView:
 
 
 class TestAccountsView:
+    @use(user)
     def test_anonymous_redirects_to_login(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        user()
         url = reverse('commcare:accounts')
         response = Client().get(url)
         assert response.status_code == 302
@@ -66,10 +74,13 @@ class TestAccountsView:
 @use(regular_client, commcare_server)
 def test_create_project_redirect():
     url = reverse('commcare:create_project')
-    response = regular_client().post(url, {
-        'server': commcare_server().id,
-        'domain': 'new-domain',
-    })
+    response = regular_client().post(
+        url,
+        {
+            'server': commcare_server().id,
+            'domain': 'new-domain',
+        },
+    )
     assert response.status_code == 302
     assert reverse('commcare:projects') in response.url
 
@@ -77,10 +88,13 @@ def test_create_project_redirect():
 @use(regular_client, commcare_server, commcare_project)
 def test_edit_project_redirect():
     url = reverse('commcare:edit_project', args=[commcare_project().id])
-    response = regular_client().post(url, {
-        'server': commcare_server().id,
-        'domain': 'renamed-domain',
-    })
+    response = regular_client().post(
+        url,
+        {
+            'server': commcare_server().id,
+            'domain': 'renamed-domain',
+        },
+    )
     assert response.status_code == 302
     assert reverse('commcare:projects') in response.url
 
@@ -89,11 +103,14 @@ def test_edit_project_redirect():
 def test_create_account_redirect():
     url = reverse('commcare:create_account')
     with override_settings(FERNET_KEYS=[FERNET_KEY]):
-        response = regular_client().post(url, {
-            'server': commcare_server().id,
-            'username': 'newaccount@example.com',
-            'api_key': 'some-api-key',
-        })
+        response = regular_client().post(
+            url,
+            {
+                'server': commcare_server().id,
+                'username': 'newaccount@example.com',
+                'api_key': 'some-api-key',
+            },
+        )
     assert response.status_code == 302
     assert reverse('commcare:accounts') in response.url
 
@@ -102,11 +119,14 @@ def test_create_account_redirect():
 def test_edit_account_redirect():
     url = reverse('commcare:edit_account', args=[commcare_account().id])
     with override_settings(FERNET_KEYS=[FERNET_KEY]):
-        response = regular_client().post(url, {
-            'server': commcare_server().id,
-            'username': 'updated@example.com',
-            'api_key': 'updated-api-key',
-        })
+        response = regular_client().post(
+            url,
+            {
+                'server': commcare_server().id,
+                'username': 'updated@example.com',
+                'api_key': 'updated-api-key',
+            },
+        )
     assert response.status_code == 302
     assert reverse('commcare:accounts') in response.url
 
@@ -164,12 +184,9 @@ class TestDeleteProjectView:
         url = reverse('commcare:delete_project', args=[commcare_project().id])
         response = regular_client().post(url)
         assert response.status_code == 302
-        assert (
-            CommCareProject
-            .objects
-            .filter(id=commcare_project().id)
-            .exists()
-        )
+        assert CommCareProject.objects.filter(
+            id=commcare_project().id
+        ).exists()
 
 
 class TestDeleteAccountView:
@@ -243,9 +260,6 @@ class TestDeleteAccountView:
         url = reverse('commcare:delete_account', args=[commcare_account().id])
         response = regular_client().post(url)
         assert response.status_code == 302
-        assert (
-            CommCareAccount
-            .objects
-            .filter(id=commcare_account().id)
-            .exists()
-        )
+        assert CommCareAccount.objects.filter(
+            id=commcare_account().id
+        ).exists()

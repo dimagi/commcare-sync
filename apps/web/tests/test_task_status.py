@@ -7,7 +7,7 @@ from django.utils import timezone
 from django_q.models import Task
 from unmagic import use
 
-from tests.fixtures import authed_client
+from tests.fixtures import authed_client, user
 
 
 @use(authed_client)
@@ -72,6 +72,10 @@ class TestTaskStatus:
         return task_id
 
 
+@use(user)
 def test_task_status_requires_login():
+    # A user must exist, or FirstRunSetupMiddleware redirects to /setup/
+    # instead of /accounts/login/.
+    user()
     response = Client().get(reverse('task_status', args=['x']))
     assert response.status_code == 302

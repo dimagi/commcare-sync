@@ -20,8 +20,18 @@ from apps.refreshes.models import (
     RefreshConfig,
     RefreshRun,
 )
-from apps.web.stats import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
-from tests.fixtures import authed_client, commcare_account, commcare_project, database
+from apps.web.stats import (
+    _get_export_statistics,
+    _get_forwarding_statistics,
+    _get_refresh_statistics,
+)
+from tests.fixtures import (
+    authed_client,
+    commcare_account,
+    commcare_project,
+    database,
+    user,
+)
 
 
 @fixture
@@ -79,7 +89,11 @@ class TestHomeView:
         assert response.status_code == 302
         assert response.url == reverse('exports:home')
 
+    @use(user)
     def test_home_shows_landing_page_when_unauthenticated(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of showing the landing page.
+        user()
         response = Client().get(reverse('web:home'))
         assert response.status_code == 200
 

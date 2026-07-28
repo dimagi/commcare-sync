@@ -8,12 +8,19 @@ _client = fixture('client')
 
 @use('db', _client)
 class TestDjangoAuthURLs:
-
-    @pytest.mark.parametrize('url,expected_code', [
-        (reverse('login'), 200),  # Login page
-        (reverse('password_reset'), 200),  # Password reset page
-    ])
+    @pytest.mark.parametrize(
+        'url,expected_code',
+        [
+            (reverse('login'), 200),  # Login page
+            (reverse('password_reset'), 200),  # Password reset page
+        ],
+    )
     def test_login_page_renders(self, url, expected_code):
+        # FirstRunSetupMiddleware redirects everything to /setup/ until an
+        # admin exists, so these pages need a user to be reachable at all.
+        User = get_user_model()
+        User.objects.create_user(email='someone@example.com', password='x')
+
         response = _client().get(url)
         assert response.status_code == expected_code
 

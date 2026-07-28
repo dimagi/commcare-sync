@@ -8,6 +8,7 @@ from unmagic import fixture, use
 
 from tests.fixtures import (
     admin_client,
+    admin_user,
     database,
     regular_client,
 )
@@ -54,7 +55,11 @@ class TestDestinationsView:
         response = admin_client().get(url)
         assert response.status_code == 200
 
+    @use(admin_user)
     def test_anonymous_redirects(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        admin_user()
         url = reverse('forwarding:destinations')
         response = Client().get(url)
         assert response.status_code == 302
@@ -75,10 +80,7 @@ class TestDeleteDestinationView:
         assert response.status_code == 302
         assert reverse('forwarding:destinations') in response.url
         assert not (
-            ForwardingDestination
-            .objects
-            .filter(id=destination_id)
-            .exists()
+            ForwardingDestination.objects.filter(id=destination_id).exists()
         )
 
     @use(admin_client, destination_in_use)
@@ -115,8 +117,11 @@ class TestDeleteDestinationView:
         assert response.status_code == 403
         assert ForwardingDestination.objects.filter(pk=dest.pk).exists()
 
-    @use(destination)
+    @use(destination, admin_user)
     def test_anonymous_get_redirects(self):
+        # A user must exist, or FirstRunSetupMiddleware redirects to
+        # /setup/ instead of /accounts/login/.
+        admin_user()
         url = reverse('forwarding:delete_destination', args=[destination().id])
         response = Client().get(url)
         assert response.status_code == 302
@@ -165,7 +170,6 @@ class TestRunForwardingHtmxBranch:
 
 @use('db', admin_client)
 class TestDestinationMethodField:
-
     def test_create_destination_with_method_put(self):
         client = admin_client()
         response = client.post(
@@ -221,7 +225,9 @@ class TestDestinationMethodField:
 
         # Form re-rendered with errors, not a redirect
         assert response.status_code == 200
-        assert not ForwardingDestination.objects.filter(name='Bad Method').exists()
+        assert not ForwardingDestination.objects.filter(
+            name='Bad Method'
+        ).exists()
 
     def test_destinations_list_shows_method(self):
         ForwardingDestination.objects.create(
