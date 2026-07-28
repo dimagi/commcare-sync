@@ -130,3 +130,34 @@ class TestFirstRunSetupView:
         assert not CustomUser.objects.filter(
             email='admin@example.com'
         ).exists()
+
+    def test_concurrent_same_email_submission_redirects_without_crashing(
+        self, monkeypatch
+    ):
+        """Two concurrent submissions of the same email: under READ
+        COMMITTED, both requests' in-transaction ``exists()`` re-check can
+        miss the other's insert, so the real backstop is the unique
+        constraint on email raising IntegrityError. That must be caught
+        (redirect to login) rather than surfacing as a 500, and must not
+        leave a duplicate/partial user behind."""
+        # Represents the concurrent request that already claimed this
+        # email, from this request's point of view.
+        CustomUser.objects.create_user(email='admin@example.com', password='z')
+        # Simulate the READ COMMITTED miss: this request's own re-checks
+        # don't see the row above.
+        monkeypatch.setattr(
+            CustomUser.objects, 'exists', lambda *a, **kw: False
+        )
+
+        response = _client().post(
+            reverse('setup'),
+            {
+                'email': 'admin@example.com',
+                'password1': VALID_PASSWORD,
+                'password2': VALID_PASSWORD,
+            },
+        )
+
+        assert response.status_code == 302
+        assert response.url == reverse('login')
+        assert CustomUser.objects.count() == 1
