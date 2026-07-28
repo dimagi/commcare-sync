@@ -24,6 +24,7 @@ from commcare_sync.launcher import (
     PortUnavailableError,
     build_parser,
     find_free_port,
+    main,
     port_is_available,
     resolve_listen_address,
     run_until_shutdown,
@@ -268,6 +269,40 @@ class TestRunUntilShutdown:
             assert run_until_shutdown(supervisor, threading.Event()) == 1
         finally:
             supervisor.stop()
+
+
+class TestAlreadyRunning:
+    """``main()`` bails out early when another instance is already live."""
+
+    def test_desktop_mode_opens_browser_and_exits_zero(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(
+            'commcare_sync.launcher.read_live_instance', lambda data_dir: 4242
+        )
+        opened = []
+        monkeypatch.setattr(
+            'commcare_sync.launcher.webbrowser.open', opened.append
+        )
+
+        exit_code = main(['--desktop', '--data-dir', str(tmp_path)])
+
+        assert exit_code == 0
+        assert opened == ['http://127.0.0.1:4242/']
+
+    def test_server_mode_errors_and_exits_nonzero(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(
+            'commcare_sync.launcher.read_live_instance', lambda data_dir: 4242
+        )
+        opened = []
+        monkeypatch.setattr(
+            'commcare_sync.launcher.webbrowser.open', opened.append
+        )
+
+        exit_code = main(['--server', '--data-dir', str(tmp_path)])
+
+        assert exit_code == 1
+        assert opened == []
 
 
 def launcher_command():

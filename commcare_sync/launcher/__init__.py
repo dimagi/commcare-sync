@@ -22,10 +22,16 @@ import subprocess
 import sys
 import threading
 import time
+import webbrowser
 from collections.abc import Callable
 from pathlib import Path
 
 from commcare_sync.launcher.datadir import resolve_data_dir
+from commcare_sync.launcher.instance import (
+    read_live_instance,
+    remove_instance_file,
+    write_instance_file,
+)
 from commcare_sync.launcher.secrets import bootstrap_secrets
 
 DESKTOP = 'desktop'
@@ -407,6 +413,17 @@ def main(argv: list[str] | None = None) -> int:
 
     data_dir = resolve_data_dir(args.data_dir)
     configure_logging(data_dir)
+
+    live_port = read_live_instance(data_dir)
+    if live_port is not None:
+        url = server_url(LOOPBACK, live_port)
+        if args.mode == DESKTOP:
+            logger.info('Already running at %s; opening browser', url)
+            webbrowser.open(url)
+            return 0
+        logger.error('Already running at %s (data dir %s)', url, data_dir)
+        return 1
+
     bootstrap_secrets(data_dir)
 
     try:
@@ -429,7 +446,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         start_web_server(host, port)
         logger.info('Serving at %s', server_url(host, port))
-        return run_until_shutdown(supervisor, shutdown)
+        write_instance_file(data_dir, port, os.getpid())
+        try:
+            return run_until_shutdown(supervisor, shutdown)
+        finally:
+            remove_instance_file(data_dir)
     except OSError as err:
         logger.error('Cannot listen on %s:%s: %s', host, port, err)
         return 1
