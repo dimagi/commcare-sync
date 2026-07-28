@@ -23,6 +23,16 @@ def run_forwarding_task(fwd_run_id):
         logger.error(f'ForwardingRun {fwd_run_id} does not exist')
         return None
 
+    if fwd_run.status != ForwardingRun.Status.QUEUED:
+        # The task was redelivered — most likely by a restart clearing the
+        # queue lock — after the run reached a terminal status. Re-running it
+        # would resurrect a run that history already reports as finished.
+        logger.info(
+            f'Skipping ForwardingRun {fwd_run_id}: '
+            f'status is {fwd_run.status}, not queued'
+        )
+        return None
+
     run_forwarding(fwd_run)
     return fwd_run.id
 

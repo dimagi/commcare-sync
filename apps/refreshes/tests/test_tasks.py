@@ -30,6 +30,25 @@ def test_run_refresh_task_nonexistent_run(mock_run_refresh):
 
 @use(_refresh_config)
 @patch('apps.refreshes.tasks.run_refresh')
+def test_run_refresh_task_skips_a_run_that_already_finished(mock_run_refresh):
+    # A redelivered task — e.g. after a restart cleared the queue lock on a
+    # run that the same restart had already reaped — must not resurrect it.
+    config = _refresh_config()
+    refresh_run = RefreshRun.objects.create(
+        refresh_config=config,
+        status=RefreshRun.Status.FAILED,
+    )
+
+    result = run_refresh_task(refresh_run.id)
+
+    assert result is None
+    mock_run_refresh.assert_not_called()
+    refresh_run.refresh_from_db()
+    assert refresh_run.status == RefreshRun.Status.FAILED
+
+
+@use(_refresh_config)
+@patch('apps.refreshes.tasks.run_refresh')
 def test_run_scheduled_refresh_task(mock_run_refresh):
     config = _refresh_config()
     result = run_scheduled_refresh_task(config.id)

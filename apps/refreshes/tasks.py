@@ -19,6 +19,16 @@ def run_refresh_task(refresh_run_id):
         logger.error(f'RefreshRun {refresh_run_id} does not exist')
         return None
 
+    if refresh_run.status != RefreshRun.Status.QUEUED:
+        # The task was redelivered — most likely by a restart clearing the
+        # queue lock — after the run reached a terminal status. Re-running it
+        # would resurrect a run that history already reports as finished.
+        logger.info(
+            f'Skipping RefreshRun {refresh_run_id}: '
+            f'status is {refresh_run.status}, not queued'
+        )
+        return None
+
     run_refresh(refresh_run)
     return refresh_run.id
 
