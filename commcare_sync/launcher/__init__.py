@@ -33,6 +33,7 @@ from commcare_sync.launcher.instance import (
     write_instance_file,
 )
 from commcare_sync.launcher.secrets import bootstrap_secrets
+from commcare_sync.launcher.window import run_desktop_ui
 
 DESKTOP = 'desktop'
 SERVER = 'server'
@@ -446,9 +447,12 @@ def main(argv: list[str] | None = None) -> int:
     supervisor.start()
     try:
         start_web_server(host, port)
-        logger.info('Serving at %s', server_url(host, port))
+        url = server_url(host, port)
+        logger.info('Serving at %s', url)
         write_instance_file(data_dir, port, os.getpid())
         try:
+            if args.mode == DESKTOP:
+                return run_desktop_ui(url, shutdown, shutdown.set)
             return run_until_shutdown(supervisor, shutdown)
         finally:
             remove_instance_file(data_dir)

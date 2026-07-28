@@ -305,6 +305,98 @@ class TestAlreadyRunning:
         assert opened == []
 
 
+class FakeSupervisor:
+    """A ``ClusterSupervisor`` stand-in that starts and stops nothing."""
+
+    def __init__(self, *args, **kwargs):
+        self.gave_up = threading.Event()
+        self.started = False
+        self.stopped = False
+
+    def start(self):
+        self.started = True
+
+    def stop(self):
+        self.stopped = True
+
+
+class TestDesktopUiRouting:
+    """``main()`` shows the desktop UI only in desktop mode."""
+
+    def patch_startup(self, monkeypatch, tmp_path):
+        """Stub out everything past address resolution except the seam."""
+        monkeypatch.setattr(
+            'commcare_sync.launcher.bootstrap_secrets', lambda data_dir: None
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.setup_django', lambda: None
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.prepare_database', lambda: None
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.ClusterSupervisor', FakeSupervisor
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.start_web_server',
+            lambda host, port: None,
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.install_shutdown_handlers',
+            lambda: threading.Event(),
+        )
+
+    def test_desktop_mode_calls_run_desktop_ui(self, tmp_path, monkeypatch):
+        self.patch_startup(monkeypatch, tmp_path)
+        calls = []
+        monkeypatch.setattr(
+            'commcare_sync.launcher.run_desktop_ui',
+            lambda url, shutdown, request_shutdown: calls.append(url) or 0,
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.run_until_shutdown',
+            lambda supervisor, shutdown: pytest.fail(
+                'server-mode wait used in desktop mode'
+            ),
+        )
+
+        exit_code = main(['--desktop', '--data-dir', str(tmp_path)])
+
+        assert exit_code == 0
+        assert len(calls) == 1
+        assert calls[0].startswith('http://127.0.0.1:')
+
+    def test_server_mode_does_not_call_run_desktop_ui(
+        self, tmp_path, monkeypatch
+    ):
+        self.patch_startup(monkeypatch, tmp_path)
+        port = find_free_port(LOOPBACK)
+        monkeypatch.setattr(
+            'commcare_sync.launcher.run_desktop_ui',
+            lambda url, shutdown, request_shutdown: pytest.fail(
+                'run_desktop_ui used in server mode'
+            ),
+        )
+        monkeypatch.setattr(
+            'commcare_sync.launcher.run_until_shutdown',
+            lambda supervisor, shutdown: 0,
+        )
+
+        exit_code = main(
+            [
+                '--server',
+                '--data-dir',
+                str(tmp_path),
+                '--bind',
+                LOOPBACK,
+                '--port',
+                str(port),
+            ]
+        )
+
+        assert exit_code == 0
+
+
 def launcher_command():
     """The installed ``commcare-sync`` console script, if there is one.
 
