@@ -307,6 +307,7 @@ dependencies = [
     { name = "django-anymail" },
     { name = "django-q2" },
     { name = "django-reversion" },
+    { name = "platformdirs" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pyopenssl" },
 ]
@@ -371,6 +372,7 @@ requires-dist = [
     { name = "django-q2", specifier = ">=1.10.0" },
     { name = "django-reversion", specifier = ">=5.0.4" },
     { name = "gunicorn", extras = ["eventlet"], marker = "extra == 'prod'" },
+    { name = "platformdirs", specifier = ">=4.11.0" },
     { name = "psycopg", extras = ["binary"] },
     { name = "pyopenssl", specifier = ">=20.0.1" },
 ]
@@ -1091,6 +1093,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4a/db/c6e2a02db5d98aa5f3250a305ce71e8bc3d1a022d1f47a54d14492ae23de/pip_tools-7.5.3.tar.gz", hash = "sha256:8fa364779ebc010cbfe17cb9de404457ac733e100840423f28f6955de7742d41", size = 176153, upload-time = "2026-02-11T18:25:07.72Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6e/74/59906d876c6cb1137f42a137164f2fe683b06283cde84bfcf7f5dd43970b/pip_tools-7.5.3-py3-none-any.whl", hash = "sha256:3aac0c473240ae90db7213c033401f345b05197293ccbdd2704e52e7a783785e", size = 71359, upload-time = "2026-02-11T18:25:06.119Z" },
+]
+
+[[package]]
+name = "platformdirs"
+version = "4.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/9b/560e4be8e26f6fd133a03630a8df0c663b9e8d61b4ade152b72005aec83b/platformdirs-4.11.0.tar.gz", hash = "sha256:0555d18370482847566ffabcaa53ad7c6c1c29f195989ae1ed634a05f76ea1e0", size = 31953, upload-time = "2026-07-21T13:09:36.565Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/68/d8d58938dfb1370b266a1a729e6d77a985be23689a0496498ee17b2cbf90/platformdirs-4.11.0-py3-none-any.whl", hash = "sha256:360ccded2b7fce0af0ff80cc8f5942a1c5d99b0e856033acb030bfc634709e74", size = 23247, upload-time = "2026-07-21T13:09:35.422Z" },
 ]
 
 [[package]]
