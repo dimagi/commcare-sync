@@ -1,8 +1,9 @@
 """Desktop/server launcher for commcare-sync.
 
 ``main()`` is the ``commcare-sync`` console script: it resolves the data
-directory, boots Django, brings the database up to date, repairs whatever a
-previous process left behind, then runs the web server (waitress) with a
+directory, boots Django, brings the database and collected static files up to
+date, repairs whatever a previous process left behind, then runs the web
+server (waitress) with a
 supervised Django-Q2 cluster child process alongside it until a shutdown
 signal arrives.
 
@@ -378,11 +379,17 @@ def setup_django() -> None:
     django.setup()
 
 
-def prepare_database() -> None:
-    """Migrate, then repair the state a previous process left behind."""
+def prepare_instance() -> None:
+    """Migrate, collect static files, then repair what a previous run left."""
     from django.core.management import call_command
 
     call_command('migrate', interactive=False, verbosity=0)
+
+    # Launcher mode runs with DEBUG=False, so WhiteNoise serves static files
+    # from STATIC_ROOT only — nothing else populates it, and an unstyled app
+    # is the result if this doesn't run. `clear` keeps a stale STATIC_ROOT
+    # from an older version out of the way after an upgrade.
+    call_command('collectstatic', interactive=False, verbosity=0, clear=True)
 
     # Imported here, not at module level: it touches Django models.
     from commcare_sync.launcher import maintenance
@@ -441,7 +448,7 @@ def main(argv: list[str] | None = None) -> int:
     logger.info('Starting commcare-sync in %s mode', args.mode)
     logger.info('Using data directory %s', data_dir)
     setup_django()
-    prepare_database()
+    prepare_instance()
 
     shutdown = install_shutdown_handlers()
     supervisor = ClusterSupervisor()

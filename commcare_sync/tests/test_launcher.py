@@ -332,7 +332,7 @@ class TestDesktopUiRouting:
             'commcare_sync.launcher.setup_django', lambda: None
         )
         monkeypatch.setattr(
-            'commcare_sync.launcher.prepare_database', lambda: None
+            'commcare_sync.launcher.prepare_instance', lambda: None
         )
         monkeypatch.setattr(
             'commcare_sync.launcher.ClusterSupervisor', FakeSupervisor
@@ -470,6 +470,12 @@ def test_server_mode_boots_serves_and_stops_cleanly(tmp_path):
     try:
         status = wait_for_http(f'http://{LOOPBACK}:{port}/', process)
         assert status in (200, 302)
+
+        # Launcher mode runs DEBUG=False, so a served stylesheet proves
+        # `collectstatic` ran into the data dir and WhiteNoise found it.
+        css_url = f'http://{LOOPBACK}:{port}/static/css/site.css'
+        assert wait_for_http(css_url, process) == 200
+        assert (data_dir / 'static_root' / 'css' / 'site.css').is_file()
 
         db_path = data_dir / 'db.sqlite3'
         assert db_path.is_file()

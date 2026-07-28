@@ -39,6 +39,10 @@ def apply_launcher_overlay(
     databases['default']['NAME'] = str(data_dir / 'db.sqlite3')
     module_globals['LOG_DIR'] = str(data_dir / 'logs')
     module_globals['MEDIA_ROOT'] = str(data_dir / 'media')
+    # Collected static files go to the data dir too: the code an installed
+    # commcare-sync runs from (site-packages, or a frozen bundle) may well be
+    # read-only, but the data dir is ours by definition.
+    module_globals['STATIC_ROOT'] = str(data_dir / 'static_root')
 
     # --- Secrets: env vars win, else the data-dir secrets file.
     if 'SECRET_KEY' not in os.environ or 'FERNET_KEYS' not in os.environ:
