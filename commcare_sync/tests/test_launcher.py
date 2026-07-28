@@ -239,6 +239,45 @@ class TestClusterSupervisor:
         assert not healthy.killed
         assert len(spawned) == 1
 
+    def test_a_stop_during_a_restart_does_not_orphan_the_new_child(self):
+        # A stop that lands between spawning a replacement child and the
+        # supervisor recording it used to terminate the dead child it
+        # replaced, leaving the new one running after shutdown.
+        crashed = FakeProcess(pid=1, exits_with=1)
+        replacement = FakeProcess(pid=2)
+        spawned = []
+        supervisor = None
+
+        def popen_factory():
+            if not spawned:
+                spawned.append(crashed)
+                return crashed
+            supervisor._stopping.set()  # a stop, mid-spawn
+            spawned.append(replacement)
+            return replacement
+
+        supervisor = ClusterSupervisor(
+            popen_factory=popen_factory,
+            backoff=0,
+            poll_interval=0.01,
+            stop_timeout=0.05,
+        )
+        supervisor.start()
+        try:
+            assert wait_until(lambda: replacement.terminated)
+            assert spawned == [crashed, replacement]
+        finally:
+            supervisor.stop()
+
+    def test_a_stop_before_the_first_spawn_starts_no_child(self):
+        supervisor, spawned = self.make_supervisor([FakeProcess()])
+        supervisor._stopping.set()
+
+        supervisor.start()
+        supervisor.stop()
+
+        assert spawned == []
+
     def test_stop_kills_a_child_that_ignores_sigterm(self):
         stubborn = FakeProcess(hangs_on_terminate=True)
         supervisor, _spawned = self.make_supervisor([stubborn])

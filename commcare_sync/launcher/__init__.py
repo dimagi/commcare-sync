@@ -215,15 +215,38 @@ class ClusterSupervisor:
         self._restarts: list[float] = []
         self._stopping = threading.Event()
         self._thread: threading.Thread | None = None
+        # Serializes spawning against stopping, so a stop can never miss a
+        # child that is being spawned at that moment.
+        self._lock = threading.Lock()
         self.gave_up = threading.Event()
 
     def start(self) -> None:
-        self._process = self._popen_factory()
-        logger.info('Started task cluster (pid %s)', self._process.pid)
+        process = self._spawn()
+        if process is not None:
+            logger.info('Started task cluster (pid %s)', process.pid)
         self._thread = threading.Thread(
             target=self._supervise, name='cluster-supervisor', daemon=True
         )
         self._thread.start()
+
+    def _spawn(self) -> subprocess.Popen | None:
+        """Start a cluster child, or nothing if a stop is underway.
+
+        Both the lock and the re-check after the factory returns are needed
+        to close the window between spawning a child and :attr:`_process`
+        naming it: a ``stop()`` landing in that window would otherwise
+        terminate the child this one replaced and leave this one orphaned,
+        still running against the database after shutdown.
+        """
+        with self._lock:
+            if self._stopping.is_set():
+                return None
+            process = self._popen_factory()
+            self._process = process
+            if self._stopping.is_set():
+                self._terminate(process)
+                return None
+            return process
 
     def _supervise(self) -> None:
         while not self._stopping.is_set():
@@ -244,14 +267,18 @@ class ClusterSupervisor:
                 return
             if self._stopping.wait(self._backoff):
                 return
-            self._process = self._popen_factory()
-            logger.info('Restarted task cluster (pid %s)', self._process.pid)
+            process = self._spawn()
+            if process is None:  # a stop beat the restart to it
+                return
+            logger.info('Restarted task cluster (pid %s)', process.pid)
 
     def _wait_for_exit(self) -> int | None:
         """Block until the child exits, or ``None`` if we're stopping."""
-        assert self._process is not None
+        process = self._process
+        if process is None:  # never spawned, because we are stopping
+            return None
         while not self._stopping.is_set():
-            returncode = self._process.poll()
+            returncode = process.poll()
             if returncode is not None:
                 return returncode
             self._stopping.wait(self._poll_interval)
@@ -271,21 +298,28 @@ class ClusterSupervisor:
     def stop(self) -> None:
         """Stop supervising and shut the child down, SIGKILLing if it hangs."""
         self._stopping.set()
-        process = self._process
-        if process is not None and process.poll() is None:
-            logger.info('Stopping task cluster (pid %s)', process.pid)
-            process.terminate()
-            try:
-                process.wait(timeout=self._stop_timeout)
-            except subprocess.TimeoutExpired:
-                logger.warning(
-                    'Task cluster did not stop within %s seconds; killing it',
-                    self._stop_timeout,
-                )
-                process.kill()
-                process.wait()
+        with self._lock:
+            process = self._process
+            if process is not None:
+                self._terminate(process)
         if self._thread is not None:
             self._thread.join(timeout=self._poll_interval * 4)
+
+    def _terminate(self, process: subprocess.Popen) -> None:
+        """SIGTERM a still-running child, SIGKILLing it if it hangs."""
+        if process.poll() is not None:
+            return
+        logger.info('Stopping task cluster (pid %s)', process.pid)
+        process.terminate()
+        try:
+            process.wait(timeout=self._stop_timeout)
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                'Task cluster did not stop within %s seconds; killing it',
+                self._stop_timeout,
+            )
+            process.kill()
+            process.wait()
 
 
 # --- Web server -----------------------------------------------------------
