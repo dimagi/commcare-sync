@@ -1,4 +1,5 @@
 import json
+import os
 import stat
 
 from cryptography.fernet import Fernet
@@ -33,6 +34,22 @@ def test_does_not_overwrite_existing_secrets_file(tmp_path):
 
 def test_secrets_file_has_owner_only_permissions(tmp_path):
     bootstrap_secrets(tmp_path)
+
+    secrets_path = tmp_path / SECRETS_FILENAME
+    mode = stat.S_IMODE(secrets_path.stat().st_mode)
+
+    assert mode == stat.S_IRUSR | stat.S_IWUSR
+
+
+def test_secrets_file_permissions_survive_permissive_umask(tmp_path):
+    # A permissive process umask (e.g. 022) must not leave the secrets file
+    # briefly or permanently world/group-readable: the restrictive mode is
+    # applied atomically at creation via os.open(), not via a later chmod().
+    old_umask = os.umask(0o022)
+    try:
+        bootstrap_secrets(tmp_path)
+    finally:
+        os.umask(old_umask)
 
     secrets_path = tmp_path / SECRETS_FILENAME
     mode = stat.S_IMODE(secrets_path.stat().st_mode)

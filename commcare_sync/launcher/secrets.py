@@ -24,19 +24,29 @@ def bootstrap_secrets(data_dir: Path) -> None:
     """Create ``<data_dir>/secrets.json`` on first run.
 
     Does nothing if the file already exists, so existing secrets are never
-    overwritten. The file is written with mode 0600 (owner read/write only).
+    overwritten. The file is created with mode 0600 (owner read/write only)
+    atomically at open time — via ``os.O_CREAT | os.O_EXCL`` with the mode
+    passed to ``os.open`` — so it is never briefly world/group-readable, and
+    a crash mid-write cannot leave a permanently wrong-mode file behind (the
+    exclusive create also means a concurrent bootstrap loses the race
+    cleanly instead of truncating the winner's file).
     """
     secrets_path = data_dir / SECRETS_FILENAME
-    if secrets_path.exists():
-        return
 
     secrets = {
         'SECRET_KEY': get_random_secret_key(),
         'FERNET_KEYS': [Fernet.generate_key().decode()],
     }
 
-    secrets_path.write_text(json.dumps(secrets, indent=2) + '\n')
-    os.chmod(secrets_path, _FILE_MODE)
+    try:
+        fd = os.open(
+            secrets_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, _FILE_MODE
+        )
+    except FileExistsError:
+        return
+
+    with os.fdopen(fd, 'w') as f:
+        f.write(json.dumps(secrets, indent=2) + '\n')
 
 
 def load_secrets(data_dir: Path) -> dict:
