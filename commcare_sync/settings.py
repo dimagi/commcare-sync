@@ -1,6 +1,7 @@
 """
 Django settings for CommCare Data Pipeline
 """
+
 import json
 import os
 from datetime import timedelta
@@ -14,14 +15,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # in commcare_sync/settings_local.py.
 #
 # Generate with `openssl rand -base64 48`
-#SECRET_KEY = '<replace with secret key>'
+# SECRET_KEY = '<replace with secret key>'
 #
 # Generate with `./fernet-gen`
-#FERNET_KEYS = [
+# FERNET_KEYS = [
 #    '<replace with Fernet key>',
 #    # Current key at the top, previous keys below
 #
-#]
+# ]
 #
 # If using environment variables, store FERNET_KEYS as a JSON list, with
 # the current key first, and previous keys after. e.g.
@@ -84,9 +85,7 @@ ROOT_URLCONF = 'commcare_sync.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'templates')
-        ],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -147,9 +146,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-)
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 
 LANGUAGE_CODE = 'en-us'
@@ -216,7 +213,7 @@ COMMCARE_SYNC_UI_PAGE_SIZE = 25
 PROJECT_METADATA = {
     'NAME': 'CommCare Data Pipeline',
     'URL': 'http://localhost:8001',
-    'DESCRIPTION': "Continuously exports CommCare data into your own databases and BI platforms",
+    'DESCRIPTION': 'Continuously exports CommCare data into your own databases and BI platforms',
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export, Data, Pipeline',
 }
@@ -234,7 +231,25 @@ GOOGLE_ANALYTICS_ID = ''
 DASHBOARD_STATS_PERIOD = timedelta(hours=24)
 
 
-try:
-    from .settings_local import *  # noqa
-except ImportError:
-    pass
+_launcher_data_dir = os.environ.get('COMMCARE_SYNC_DATA_DIR', '')
+
+if _launcher_data_dir:
+    # Launcher mode (desktop/server packaged install): the data dir is the
+    # only override channel. settings_local.py is intentionally NOT loaded
+    # here — see commcare_sync/launcher/settings_overlay.py for why.
+    from pathlib import Path
+
+    from commcare_sync.launcher.settings_overlay import apply_launcher_overlay
+
+    apply_launcher_overlay(
+        data_dir=Path(_launcher_data_dir),
+        mode=os.environ.get('COMMCARE_SYNC_MODE'),
+        port=os.environ.get('COMMCARE_SYNC_PORT'),
+        module_globals=globals(),
+    )
+else:
+    # Dev mode (unchanged): local overrides via settings_local.py.
+    try:
+        from .settings_local import *  # noqa
+    except ImportError:
+        pass
