@@ -1,7 +1,6 @@
 """
 Django settings for CommCare Data Pipeline
 """
-
 import json
 import os
 from datetime import timedelta
@@ -15,14 +14,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # in commcare_sync/settings_local.py.
 #
 # Generate with `openssl rand -base64 48`
-# SECRET_KEY = '<replace with secret key>'
+#SECRET_KEY = '<replace with secret key>'
 #
 # Generate with `./fernet-gen`
-# FERNET_KEYS = [
+#FERNET_KEYS = [
 #    '<replace with Fernet key>',
 #    # Current key at the top, previous keys below
 #
-# ]
+#]
 #
 # If using environment variables, store FERNET_KEYS as a JSON list, with
 # the current key first, and previous keys after. e.g.
@@ -85,7 +84,9 @@ ROOT_URLCONF = 'commcare_sync.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -146,7 +147,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 
 LANGUAGE_CODE = 'en-us'
@@ -213,7 +216,7 @@ COMMCARE_SYNC_UI_PAGE_SIZE = 25
 PROJECT_METADATA = {
     'NAME': 'CommCare Data Pipeline',
     'URL': 'http://localhost:8001',
-    'DESCRIPTION': 'Continuously exports CommCare data into your own databases and BI platforms',
+    'DESCRIPTION': "Continuously exports CommCare data into your own databases and BI platforms",
     'IMAGE': 'https://files.dimagi.com/wp-content/uploads/2015/11/cc23.jpg',
     'KEYWORDS': 'CommCare, Export, Data, Pipeline',
 }

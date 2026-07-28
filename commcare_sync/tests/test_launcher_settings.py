@@ -161,6 +161,25 @@ def test_data_dir_settings_py_override_applies(tmp_path):
     assert result['page_size'] == 999
 
 
+def _run_setup_expecting_failure(
+    data_dir: Path,
+) -> subprocess.CompletedProcess:
+    env = {
+        'PATH': subprocess_path(),
+        'DJANGO_SETTINGS_MODULE': 'commcare_sync.settings',
+        'COMMCARE_SYNC_DATA_DIR': str(data_dir),
+        'COMMCARE_SYNC_MODE': 'server',
+    }
+    return subprocess.run(
+        [sys.executable, '-c', 'import django\ndjango.setup()\n'],
+        cwd=str(REPO_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+
 def test_data_dir_settings_py_redefining_databases_raises(tmp_path):
     data_dir = _bootstrapped_data_dir(tmp_path)
     (data_dir / 'settings.py').write_text(
@@ -168,24 +187,22 @@ def test_data_dir_settings_py_redefining_databases_raises(tmp_path):
         "'NAME': 'elsewhere.sqlite3'}}\n"
     )
 
-    env = {
-        'PATH': subprocess_path(),
-        'DJANGO_SETTINGS_MODULE': 'commcare_sync.settings',
-        'COMMCARE_SYNC_DATA_DIR': str(data_dir),
-        'COMMCARE_SYNC_MODE': 'server',
-    }
-    result = subprocess.run(
-        [
-            sys.executable,
-            '-c',
-            'import django\ndjango.setup()\n',
-        ],
-        cwd=str(REPO_ROOT),
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
+    result = _run_setup_expecting_failure(data_dir)
+
+    assert result.returncode != 0
+    assert 'ImproperlyConfigured' in result.stderr
+    assert 'DATABASES' in result.stderr
+
+
+def test_data_dir_settings_py_mutating_databases_in_place_raises(tmp_path):
+    # The more natural way an operator would try to "just change the path" --
+    # must be caught the same as a full reassignment of DATABASES.
+    data_dir = _bootstrapped_data_dir(tmp_path)
+    (data_dir / 'settings.py').write_text(
+        "DATABASES['default']['NAME'] = '/somewhere/else.sqlite3'\n"
     )
+
+    result = _run_setup_expecting_failure(data_dir)
 
     assert result.returncode != 0
     assert 'ImproperlyConfigured' in result.stderr

@@ -7,6 +7,7 @@ install's settings look like, so the data-dir file is the only override
 channel and precedence is explicit rather than depending on import order.
 """
 
+import copy
 import os
 from pathlib import Path
 
@@ -70,13 +71,16 @@ def apply_launcher_overlay(
 
     # --- Optional data-dir settings.py: exec'd last so it can override
     # anything above, except DATABASES (the app DB location is fixed for a
-    # packaged install).
+    # packaged install). The pre-exec snapshot is a deep copy compared by
+    # value (not identity) after, so both reassignment (``DATABASES =
+    # {...}``) and in-place mutation (``DATABASES['default']['NAME'] =
+    # ...``) are caught.
     override_path = data_dir / DATA_DIR_SETTINGS_FILENAME
     if override_path.is_file():
-        databases_before = module_globals['DATABASES']
+        databases_before = copy.deepcopy(module_globals['DATABASES'])
         code = compile(override_path.read_text(), str(override_path), 'exec')
         exec(code, module_globals)  # noqa: S102
-        if module_globals['DATABASES'] is not databases_before:
+        if module_globals['DATABASES'] != databases_before:
             raise ImproperlyConfigured(
                 f'{override_path} must not redefine DATABASES; the '
                 'application database location is not overridable in a '
