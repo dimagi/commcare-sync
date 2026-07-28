@@ -19,15 +19,19 @@ from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.forwarding.tests.fixtures import destination
 from apps.refreshes.models import RefreshRun
 from apps.refreshes.tests.fixtures import refresh_config
+from apps.users.models import CustomUser
 from commcare_sync.launcher.maintenance import (
     ABANDONED_MESSAGE,
     DISPATCHER_FUNC,
     RUN_MODELS,
     clear_stale_queue_locks,
+    ensure_admin_user,
     ensure_dispatcher_schedule,
     reap_stale_runs,
 )
 from tests.fixtures import commcare_project, database
+
+ADMIN_PASSWORD = 'S3curePass!23'  # noqa: S105 - test fixture password
 
 
 @use('db')
@@ -212,3 +216,58 @@ class TestReapStaleRuns:
             run.refresh_from_db()
             assert run.status == status_before
             assert ABANDONED_MESSAGE not in (run.log or '')
+
+
+@use('db')
+class TestEnsureAdminUser:
+    def test_creates_superuser_from_env_vars(self, monkeypatch):
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_EMAIL', 'admin@example.com')
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_PASSWORD', ADMIN_PASSWORD)
+
+        assert ensure_admin_user() is True
+
+        user = CustomUser.objects.get(email='admin@example.com')
+        assert user.is_superuser
+        assert user.is_staff
+        assert user.check_password(ADMIN_PASSWORD)
+
+    def test_noop_when_a_user_already_exists(self, monkeypatch):
+        CustomUser.objects.create_user(
+            email='existing@example.com', password='x'
+        )
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_EMAIL', 'admin@example.com')
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_PASSWORD', ADMIN_PASSWORD)
+
+        assert ensure_admin_user() is False
+
+        assert CustomUser.objects.count() == 1
+
+    def test_noop_when_neither_var_is_set(self, monkeypatch):
+        monkeypatch.delenv('COMMCARE_SYNC_ADMIN_EMAIL', raising=False)
+        monkeypatch.delenv('COMMCARE_SYNC_ADMIN_PASSWORD', raising=False)
+
+        assert ensure_admin_user() is False
+
+        assert not CustomUser.objects.exists()
+
+    def test_warns_and_skips_when_only_email_is_set(self, monkeypatch, caplog):
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_EMAIL', 'admin@example.com')
+        monkeypatch.delenv('COMMCARE_SYNC_ADMIN_PASSWORD', raising=False)
+
+        with caplog.at_level('WARNING'):
+            assert ensure_admin_user() is False
+
+        assert not CustomUser.objects.exists()
+        assert 'must both be set' in caplog.text
+
+    def test_warns_and_skips_when_only_password_is_set(
+        self, monkeypatch, caplog
+    ):
+        monkeypatch.delenv('COMMCARE_SYNC_ADMIN_EMAIL', raising=False)
+        monkeypatch.setenv('COMMCARE_SYNC_ADMIN_PASSWORD', ADMIN_PASSWORD)
+
+        with caplog.at_level('WARNING'):
+            assert ensure_admin_user() is False
+
+        assert not CustomUser.objects.exists()
+        assert 'must both be set' in caplog.text

@@ -388,6 +388,7 @@ def prepare_database() -> None:
     maintenance.ensure_dispatcher_schedule()
     maintenance.clear_stale_queue_locks()
     maintenance.reap_stale_runs()
+    maintenance.ensure_admin_user()
 
 
 def run_qcluster() -> int:

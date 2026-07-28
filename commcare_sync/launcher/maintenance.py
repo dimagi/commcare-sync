@@ -12,6 +12,7 @@ models, so it must only be imported after ``django.setup()``. That is why
 """
 
 import logging
+import os
 from datetime import timedelta
 
 from django.conf import settings
@@ -27,6 +28,9 @@ from apps.exports.models import (
 )
 from apps.forwarding.models import ForwardingRun
 from apps.refreshes.models import RefreshRun
+
+ADMIN_EMAIL_VAR = 'COMMCARE_SYNC_ADMIN_EMAIL'
+ADMIN_PASSWORD_VAR = 'COMMCARE_SYNC_ADMIN_PASSWORD'
 
 logger = logging.getLogger(__name__)
 
@@ -142,3 +146,38 @@ def reap_stale_runs():
     if reaped:
         logger.warning('Marked %s abandoned run(s) as failed', reaped)
     return reaped
+
+
+def ensure_admin_user():
+    """Create the admin user from environment variables, if needed.
+
+    A no-op if a user already exists — created through ``/setup/`` or a
+    previous launch. Otherwise, if both ``COMMCARE_SYNC_ADMIN_EMAIL`` and
+    ``COMMCARE_SYNC_ADMIN_PASSWORD`` are set, creates a superuser from
+    them; this is the non-interactive path for server installs that can't
+    use the browser-based setup page. If only one is set, that's a
+    misconfiguration: warn and skip rather than guessing.
+
+    Returns True if a user was created.
+    """
+    from apps.users.models import CustomUser
+
+    if CustomUser.objects.exists():
+        return False
+
+    email = os.environ.get(ADMIN_EMAIL_VAR)
+    password = os.environ.get(ADMIN_PASSWORD_VAR)
+
+    if email and password:
+        CustomUser.objects.create_superuser(email=email, password=password)
+        logger.info('Created admin user %s from environment variables', email)
+        return True
+
+    if email or password:
+        logger.warning(
+            '%s and %s must both be set to create an admin user at '
+            'startup; skipping',
+            ADMIN_EMAIL_VAR,
+            ADMIN_PASSWORD_VAR,
+        )
+    return False
