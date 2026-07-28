@@ -351,7 +351,9 @@ class TestDesktopUiRouting:
         calls = []
         monkeypatch.setattr(
             'commcare_sync.launcher.run_desktop_ui',
-            lambda url, shutdown, request_shutdown: calls.append(url) or 0,
+            lambda url, shutdown, request_shutdown, gave_up: (
+                calls.append(url) or 0
+            ),
         )
         monkeypatch.setattr(
             'commcare_sync.launcher.run_until_shutdown',
@@ -373,7 +375,7 @@ class TestDesktopUiRouting:
         port = find_free_port(LOOPBACK)
         monkeypatch.setattr(
             'commcare_sync.launcher.run_desktop_ui',
-            lambda url, shutdown, request_shutdown: pytest.fail(
+            lambda url, shutdown, request_shutdown, gave_up: pytest.fail(
                 'run_desktop_ui used in server mode'
             ),
         )

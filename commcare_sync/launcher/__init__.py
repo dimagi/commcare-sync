@@ -33,6 +33,7 @@ from commcare_sync.launcher.instance import (
     write_instance_file,
 )
 from commcare_sync.launcher.secrets import bootstrap_secrets
+from commcare_sync.launcher.waiting import wait_for_shutdown
 from commcare_sync.launcher.window import run_desktop_ui
 
 DESKTOP = 'desktop'
@@ -335,13 +336,13 @@ def run_until_shutdown(
 ) -> int:
     """Block until ``shutdown`` is set, and return the process exit code.
 
-    This is the seam desktop mode's window will sit in: the window runs its
-    own event loop in the foreground instead and closing it ends the wait.
+    This is the seam desktop mode's window sits in instead: the window
+    runs its own event loop in the foreground, and closing it (or the
+    cluster giving up) ends the wait the same way.
     """
-    while not shutdown.wait(CLUSTER_POLL_INTERVAL):
-        if supervisor.gave_up.is_set():
-            return 1
-    return 0
+    return wait_for_shutdown(
+        shutdown, supervisor.gave_up, CLUSTER_POLL_INTERVAL
+    )
 
 
 # --- Startup --------------------------------------------------------------
@@ -452,7 +453,9 @@ def main(argv: list[str] | None = None) -> int:
         write_instance_file(data_dir, port, os.getpid())
         try:
             if args.mode == DESKTOP:
-                return run_desktop_ui(url, shutdown, shutdown.set)
+                return run_desktop_ui(
+                    url, shutdown, shutdown.set, supervisor.gave_up
+                )
             return run_until_shutdown(supervisor, shutdown)
         finally:
             remove_instance_file(data_dir)
