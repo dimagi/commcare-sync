@@ -11,6 +11,7 @@
 {% endblock %}
 {% block body %}
   {% block notifications %}
+    {% include "web/components/failed_runs_banner.html" %}
   {% endblock %}
   <section class="py-4">
     <div class="container app-two-column" id="app-main">

@@ -1,0 +1,29 @@
+{% load i18n %}
+{% if failed_runs_banner %}
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong>
+      {% blocktrans count counter=failed_runs_banner.total_count %}
+        {{ counter }}
+        run failed {% plural %}
+        {{ counter }}
+        runs failed
+      {% endblocktrans %}
+    </strong>
+    {% trans "in the last 24 hours." %}
+    <ul class="mb-0">
+      {% for entry in failed_runs_banner.entries %}
+        <li>
+          {{ entry.label }} &mdash; {{ entry.model_name }}, {{ entry.when }}
+        </li>
+      {% endfor %}
+    </ul>
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="{% trans 'Close' %}"
+      hx-post="{% url 'web:dismiss_failed_runs_banner' %}"
+      hx-swap="none"
+    ></button>
+  </div>
+{% endif %}

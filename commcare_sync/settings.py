@@ -97,6 +97,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.web.context_processors.project_meta',
                 'apps.web.context_processors.google_analytics_id',
+                'apps.web.context_processors.failed_runs_banner',
             ],
         },
     },
