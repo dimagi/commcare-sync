@@ -15,6 +15,8 @@ dependencies = [
     "db-query-fwd",
     "django-q2>=1.10.0",
     "platformdirs>=4.11.0",
+    "whitenoise>=6.12.0",
+    "waitress>=3.0.2",
 ]
 
 [project.optional-dependencies]
