@@ -217,6 +217,10 @@ Q_CLUSTER = {
     'ack_failures': True,  # a failed run is complete, not re-delivered
     'catch_up': False,  # don't replay every missed minute of the dispatcher
     'label': 'Task queue',
+    'poll': 1.0,  # default 0.2s hammers SQLite with disk wakeups
+    'save_limit_per': 'func',  # per-task-func cap; keeps the dispatcher's
+    # 1440 successes/day from evicting real export/refresh results within
+    # hours of a global save_limit
 }
 
 
