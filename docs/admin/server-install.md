@@ -70,6 +70,11 @@ systemctl --user daemon-reload
 systemctl --user enable --now commcare-sync
 ```
 
+`commcare-sync --server` exits non-zero if `--port` is already taken, so a
+permanently occupied port makes `Restart=on-failure` retry-loop indefinitely
+rather than fail loudly once — check `journalctl --user -u commcare-sync` if the
+unit won't settle into a running state.
+
 - `COMMCARE_SYNC_ADMIN_EMAIL` / `COMMCARE_SYNC_ADMIN_PASSWORD` — create the
   admin account at startup instead of via `/setup/`. Both must be set together;
   only takes effect if no user exists yet.

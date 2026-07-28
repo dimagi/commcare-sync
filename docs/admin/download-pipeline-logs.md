@@ -2,9 +2,10 @@
 
 Retrieve the shared `commcare-export` log to investigate run-time behaviour
 beyond what individual export-run logs show. The pipeline exposes this single,
-cross-run log through the application; deeper host-side logs (task worker
-output, Django errors, launcher startup) live in the data directory of the
-`commcare-sync` process running the pipeline.
+cross-run log through the application; deeper host-side logs (Django request
+errors, task worker output, launcher startup) are not written to a file under
+the data directory — see [Host-side logs](#host-side-logs) for where they
+actually go.
 
 ## Prerequisites
 
@@ -46,19 +47,26 @@ run's own log is truncated, or when you need to compare behaviour across runs.
 
 ## Host-side logs
 
-Anything not written by `commcare-export` is not exposed through the app. To
-investigate task worker behaviour, Django request errors, or launcher startup
-issues, sign in to the host and look in the data directory of the running
-`commcare-sync` process.
+Anything not written by `commcare-export` is not exposed through the app.
+`commcare-sync` has no logging configuration for Django or the task worker
+(django-q2), so their output — request errors, task tracebacks, general runtime
+logging — is not written to a file at all; it goes to whatever captures the
+process's stdout/stderr. Only two things land in files, both under
+`<data-dir>/logs/` (`<data-dir>` is wherever `commcare-sync` was started with —
+the default per-user data directory unless overridden by `--data-dir` or
+`COMMCARE_SYNC_DATA_DIR`):
 
-- The application's `LOG_DIR` (and every other log written by Django or the task
-  worker) is `<data-dir>/logs/`, where `<data-dir>` is the directory
-  `commcare-sync` was started with — the default per-user data directory unless
-  overridden by `--data-dir` or `COMMCARE_SYNC_DATA_DIR`. See
-  [Install as a server](server-install.md) for locating the data directory on a
-  server install.
-- The launcher itself (startup, shutdown, task cluster supervision) logs to
-  `<data-dir>/logs/launcher.log`.
+- `commcare_export.log` — the same shared export log described above (`LOG_DIR`
+  points here).
+- `launcher.log` — the launcher's own startup, shutdown, and task cluster
+  supervision messages (not Django's or django-q2's).
+
+Everything else is wherever the process's stdout ended up:
+
+- Running `commcare-sync --server` directly in a terminal: its own stdout.
+- Running it under the sample systemd unit in
+  [Install as a server](server-install.md): `journalctl --user -u commcare-sync`
+  (or without `--user` for a system unit).
 
 <!-- prettier-ignore-start -->
 > [!NOTE]
