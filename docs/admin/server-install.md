@@ -12,16 +12,24 @@ reverse proxy.
 
 ## Install the command
 
+Clone the repository and install its dependencies:
+
 ```bash
-uv tool install commcare-sync
+git clone https://github.com/dimagi/commcare-sync.git
+cd commcare-sync
+uv sync
 ```
+
+Then run it with `uv run commcare-sync --server`.
 
 <!-- prettier-ignore-start -->
 > [!NOTE]
-> `commcare-sync` is not yet published to PyPI. Until then, install it
-> from a checkout with `uv tool install .`, adjusting the systemd unit's
-> `ExecStart` path below to match where `uv tool install` puts it (typically
-> `~/.local/bin/commcare-sync`).
+> `commcare-sync` is not yet published to PyPI, and cannot yet be installed
+> as a standalone command: `uv tool install` builds a wheel that is missing
+> the application itself, so the installed command does not start. Running
+> from a checkout, as above, is the supported path until the packaging work
+> lands; `uv tool install commcare-sync` arrives with that work. The systemd
+> unit below runs it from the checkout accordingly.
 <!-- prettier-ignore-end -->
 
 ## Provision the admin account non-interactively
@@ -52,7 +60,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/commcare-sync --server --port 8000
+WorkingDirectory=%h/commcare-sync
+ExecStart=%h/.local/bin/uv run commcare-sync --server --port 8000
 Restart=on-failure
 Environment=COMMCARE_SYNC_ADMIN_EMAIL=admin@example.com
 Environment=COMMCARE_SYNC_ADMIN_PASSWORD=change-me

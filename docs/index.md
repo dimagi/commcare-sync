@@ -32,21 +32,27 @@ CommCare Data Pipeline ships as a single `commcare-sync` command that runs the
 whole app — web server and task scheduler together — with no separate services
 to configure.
 
+For now it runs from a checkout of this repository:
+
 ```bash
-uv tool install commcare-sync
+git clone https://github.com/dimagi/commcare-sync.git
+cd commcare-sync
+uv sync
 ```
 
 <!-- prettier-ignore-start -->
 > [!NOTE]
-> `commcare-sync` is not yet published to PyPI. Until then, install it
-> from a checkout with `uv tool install .` or run it in place with
-> `uv run commcare-sync` — see [DEV_SETUP.md](../DEV_SETUP.md).
+> `commcare-sync` is not yet published to PyPI, and cannot yet be installed
+> as a standalone command: `uv tool install` builds a wheel that is missing
+> the application itself, so the installed command does not start. Until the
+> packaging work lands, run it from a checkout with `uv run commcare-sync`,
+> as below. `uv tool install commcare-sync` arrives with that work.
 <!-- prettier-ignore-end -->
 
 Run it for yourself, on your own computer:
 
 ```bash
-commcare-sync --desktop
+uv run commcare-sync --desktop
 ```
 
 This opens a native window (or your browser, on Linux) pointed at a local copy
@@ -56,7 +62,7 @@ Closing the window shuts everything down.
 Run it as a server other people connect to:
 
 ```bash
-commcare-sync --server
+uv run commcare-sync --server
 ```
 
 This listens on `0.0.0.0:8000` by default (override with `--bind` and `--port`),
