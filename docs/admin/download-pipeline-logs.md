@@ -3,8 +3,8 @@
 Retrieve the shared `commcare-export` log to investigate run-time behaviour
 beyond what individual export-run logs show. The pipeline exposes this single,
 cross-run log through the application; deeper host-side logs (task worker
-output, Django errors, system logs) live on the server and are managed by the
-Ansible deployment.
+output, Django errors, launcher startup) live in the data directory of the
+`commcare-sync` process running the pipeline.
 
 ## Prerequisites
 
@@ -39,26 +39,26 @@ run's own log is truncated, or when you need to compare behaviour across runs.
 
 <!-- prettier-ignore-start -->
 > [!NOTE]
-> The shared log is not rotated by the application. On a busy
-> deployment it can grow large. Production deployments managed via
-> Ansible typically rotate it via `logrotate` — see the
-> [Ansible deployment docs](https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html)
-> for details.
+> The shared log is not rotated by the application. On a busy deployment it
+> can grow large; rotate it yourself (e.g. with `logrotate`) if that matters
+> for your install.
 <!-- prettier-ignore-end -->
 
 ## Host-side logs
 
 Anything not written by `commcare-export` is not exposed through the app. To
-investigate task worker behaviour, Django request errors, runserver output, or
-system-level issues, sign in to the host and look at the deployment's log
-directory.
+investigate task worker behaviour, Django request errors, or launcher startup
+issues, sign in to the host and look in the data directory of the running
+`commcare-sync` process.
 
-- The application's `LOG_DIR` defaults to `<project root>/logs/`. The Ansible
-  deployment overrides this; consult the
-  [Ansible system administration guide](https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html)
-  for the configured path and for rotation, retention, and access conventions.
-- The task worker, the Django app server, and the scheduler each emit their own
-  logs to the locations the Ansible playbook configures.
+- The application's `LOG_DIR` (and every other log written by Django or the task
+  worker) is `<data-dir>/logs/`, where `<data-dir>` is the directory
+  `commcare-sync` was started with — the default per-user data directory unless
+  overridden by `--data-dir` or `COMMCARE_SYNC_DATA_DIR`. See
+  [Install as a server](server-install.md) for locating the data directory on a
+  server install.
+- The launcher itself (startup, shutdown, task cluster supervision) logs to
+  `<data-dir>/logs/launcher.log`.
 
 <!-- prettier-ignore-start -->
 > [!NOTE]

@@ -5,8 +5,7 @@ services to run — the app database is a local SQLite file, and the task queue
 runs against that same database. `manage.py runserver` and `manage.py qcluster`
 both run natively.
 
-For production setup, see
-<https://commcare-sync-ansible.readthedocs.io/en/latest/system-administration.html>.
+For production setup, see [Install as a server](docs/admin/server-install.md).
 
 ## Prerequisites
 
@@ -73,6 +72,20 @@ connection through the app itself — see
 [Add a database](docs/users/add-database.md) — pointing at whatever warehouse
 database (Postgres, MySQL, SQL Server, …) you already have available; this is
 independent of the app's own SQLite database.
+
+## Trying the packaged entry point
+
+The `commcare-sync` console script (what a real install runs) also works from a
+checkout, if you want to try it without the `runserver`/`qcluster` split:
+
+```bash
+uv run commcare-sync --server --data-dir /tmp/whatever
+```
+
+Point `--data-dir` at a scratch directory — it holds its own `db.sqlite3`,
+generated secrets, and logs, separate from the `runserver`/`qcluster` setup
+above. This is a convenience for trying the launcher locally; the `runserver` +
+`qcluster` flow above remains the primary way to develop.
 
 ## Front-end assets
 
