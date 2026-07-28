@@ -5,6 +5,7 @@ its siblings: it runs before ``django.setup()``, as part of deciding whether
 to start a second launcher process at all.
 """
 
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -44,14 +45,24 @@ def read_live_instance(data_dir: Path) -> int | None:
         remove_instance_file(data_dir)
         return None
 
+    # bool is a subclass of int, but a port is never a bool.
+    if isinstance(port, bool) or not isinstance(port, int):
+        remove_instance_file(data_dir)
+        return None
+
     try:
         urllib.request.urlopen(
             f'http://{LOOPBACK}:{port}/', timeout=LIVENESS_TIMEOUT
         )
     except urllib.error.HTTPError:
         pass  # any HTTP response, including an error status, means "live"
-    except (urllib.error.URLError, OSError, ValueError):
+    except (
+        urllib.error.URLError,
+        http.client.HTTPException,
+        OSError,
+        ValueError,
+    ):
         remove_instance_file(data_dir)
         return None
 
-    return int(port)
+    return port

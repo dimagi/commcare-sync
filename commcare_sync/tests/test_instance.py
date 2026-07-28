@@ -82,3 +82,47 @@ class TestReadLiveInstance:
 
         assert read_live_instance(tmp_path) is None
         assert not (tmp_path / 'instance.json').exists()
+
+    def test_non_integer_port_is_removed(self, tmp_path):
+        (tmp_path / 'instance.json').write_text(
+            json.dumps({'port': 'not-a-port', 'pid': 1})
+        )
+
+        assert read_live_instance(tmp_path) is None
+        assert not (tmp_path / 'instance.json').exists()
+
+    def test_boolean_port_is_removed(self, tmp_path):
+        # bool is a subclass of int in Python; must not pass as a port.
+        (tmp_path / 'instance.json').write_text(
+            json.dumps({'port': True, 'pid': 1})
+        )
+
+        assert read_live_instance(tmp_path) is None
+        assert not (tmp_path / 'instance.json').exists()
+
+    def test_non_http_responder_is_treated_as_stale(self, tmp_path):
+        # Something is listening on the port, but it doesn't speak HTTP: the
+        # probe must not crash, just treat this the same as "not live".
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((LOOPBACK, 0))
+        server_socket.listen(1)
+        port = server_socket.getsockname()[1]
+
+        def respond_with_garbage():
+            try:
+                conn, _ = server_socket.accept()
+            except OSError:
+                return
+            with conn:
+                conn.sendall(b'not an http response\r\n\r\n')
+
+        thread = threading.Thread(target=respond_with_garbage, daemon=True)
+        thread.start()
+        try:
+            write_instance_file(tmp_path, port=port, pid=1)
+
+            assert read_live_instance(tmp_path) is None
+            assert not (tmp_path / 'instance.json').exists()
+        finally:
+            server_socket.close()
+            thread.join(timeout=2)
