@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -8,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.commcare.models import RunBaseModel
 
 type AwareDatetime = datetime
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_days_of_week(value):
@@ -218,6 +221,11 @@ class ScheduleMixin(models.Model):
 
         Calendar schedules follow cron semantics: a monthly schedule
         anchored on day 31 skips months without a 31st.
+
+        .. note:: a ``first_run_time`` that falls in a DST gap or the
+           repeated DST-fallback hour in a non-UTC ``timezone`` resolves
+           to whatever timezone ``zoneinfo`` picks -- this is not
+           specially handled.
         """
         if not self.has_schedule:
             return None
@@ -243,6 +251,15 @@ class ScheduleMixin(models.Model):
             if candidate > after and self._runs_on(candidate_date):
                 return candidate
             candidate_date += timedelta(days=1)
+        # No matching day within the scan window (e.g. an ANNUALLY schedule
+        # anchored on 29 February can be up to four years out). Rather than
+        # silently reporting "unscheduled", log it so a dead schedule is
+        # diagnosable.
+        logger.warning(
+            'compute_next_run: no matching day found within %d days for '
+            '%s(pk=%s, schedule_type=%s); treating as unscheduled',
+            366 * 2, type(self).__name__, self.pk, self.schedule_type,
+        )
         return None
 
     def _runs_on(self, day):
@@ -253,6 +270,10 @@ class ScheduleMixin(models.Model):
             # days_of_week uses 0=Sunday; date.weekday() uses 0=Monday.
             return (day.weekday() + 1) % 7 in self.days_of_week
         anchor = self.first_run_date
+        if anchor is None:
+            # clean() requires first_run_date for calendar types, but
+            # objects.create()/loaddata/shell edits can bypass validation.
+            return False
         if day.day != anchor.day:
             return False
         months_apart = (day.year - anchor.year) * 12 + day.month - anchor.month
