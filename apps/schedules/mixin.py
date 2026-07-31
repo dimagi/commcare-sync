@@ -94,6 +94,33 @@ class ScheduleMixin(models.Model):
     class Meta:
         abstract = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Snapshot the schedule fields as loaded/constructed, so the
+        # post_save handler in `apps/schedules/signals.py` can tell
+        # whether a later save actually changed the schedule (as opposed
+        # to, for example, a rename).
+        self.take_schedule_snapshot()
+
+    def take_schedule_snapshot(self):
+        """Record the schedule fields as they currently stand.
+
+        Fields deferred by ``.only()``/``.defer()`` are left out rather
+        than read: reading a deferred field triggers a
+        ``refresh_from_db()``, which builds another instance, which lands
+        back here -- unbounded recursion. ``_schedule_changed`` in
+        ``apps/schedules/signals.py`` treats a snapshot that doesn't
+        cover every schedule field as "assume it changed", so an
+        incomplete snapshot costs a redundant recompute, never a missed
+        one.
+        """
+        deferred = self.get_deferred_fields()
+        self._schedule_snapshot = {
+            field: getattr(self, field)
+            for field in SCHEDULE_FIELDS
+            if field not in deferred
+        }
+
     @property
     def has_schedule(self):
         return bool(self.schedule_type)
@@ -272,3 +299,13 @@ class ScheduleMixin(models.Model):
             self.ScheduleType.ANNUALLY: 12,
         }[self.schedule_type]
         return months_apart % cadence == 0
+
+
+# Fields whose value determines the schedule, i.e. every `ScheduleMixin`
+# field except `next_run_at` (which is derived from the others). Used by
+# `apps/schedules/signals.py` to decide whether a save actually changed
+# the schedule (and so must recompute next_run_at) or merely touched an
+# unrelated field (e.g. a rename).
+SCHEDULE_FIELDS = frozenset(
+    f.name for f in ScheduleMixin._meta.local_fields
+) - {'next_run_at'}

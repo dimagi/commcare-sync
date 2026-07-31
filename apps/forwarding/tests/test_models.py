@@ -2,6 +2,8 @@ from datetime import timedelta
 
 import pytest
 import time_machine
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from reversion.models import Version
 from unmagic import fixture, use
@@ -361,6 +363,28 @@ class TestForwardingScheduling:
         assert cfg.next_run_at is None
 
     @use(database, destination)
+    def test_saving_without_schedule_change_leaves_next_run_unchanged(self):
+        # A save that doesn't touch any schedule field (e.g. a rename) must
+        # not defer a pending run by recomputing next_run_at = now + interval.
+        cfg = ForwardingConfig.objects.create(
+            name='Scheduled Config',
+            database=database(),
+            destination=destination(),
+            query='SELECT * FROM test',
+            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+        )
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
+
+        cfg.name = 'Renamed Config'
+        cfg.save()
+
+        cfg.refresh_from_db()
+        assert cfg.next_run_at == first
+
+    @use(database, destination)
     def test_updating_schedule_recomputes_next_run(self):
         cfg = ForwardingConfig.objects.create(
             name='Config to Update',
@@ -381,6 +405,78 @@ class TestForwardingScheduling:
         assert cfg.next_run_at > first
 
     @use(database, destination)
+    def test_deferred_load_does_not_read_the_deferred_fields(self):
+        # The snapshot is taken in __init__, so it must not touch fields
+        # that .only()/.defer() left deferred: reading one issues a
+        # refresh_from_db(), which builds another instance, which lands
+        # back in __init__ -- unbounded recursion. Query-counting pins
+        # this down, since a snapshot that quietly loaded the deferred
+        # fields would still return the right object.
+        ForwardingConfig.objects.create(
+            name='Scheduled Config',
+            database=database(),
+            destination=destination(),
+            query='SELECT * FROM test',
+            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+        )
+
+        with CaptureQueriesContext(connection) as queries:
+            [cfg] = ForwardingConfig.objects.only('id', 'name')
+
+        assert len(queries) == 1
+        assert cfg.name == 'Scheduled Config'
+
+    @use(database, destination)
+    def test_renaming_a_deferred_load_leaves_next_run_unchanged(self):
+        # Saving a deferred instance makes Django scope update_fields to
+        # the loaded columns, which settles it without the snapshot: only
+        # `name` was written, so a pending run must not be deferred.
+        cfg = ForwardingConfig.objects.create(
+            name='Scheduled Config',
+            database=database(),
+            destination=destination(),
+            query='SELECT * FROM test',
+            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+        )
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
+
+        partial = ForwardingConfig.objects.only('id', 'name').get(pk=cfg.pk)
+        partial.name = 'Renamed Config'
+        partial.save()
+
+        cfg.refresh_from_db()
+        assert cfg.next_run_at == first
+
+    @use(database, destination)
+    def test_full_save_of_a_deferred_load_recomputes_next_run(self):
+        # Deferring every non-pk field leaves update_fields unset, so the
+        # save is a full write and the snapshot is empty. An empty
+        # snapshot can't prove the schedule is unchanged, so the handler
+        # must recompute; skipping would silently drop a real change.
+        cfg = ForwardingConfig.objects.create(
+            name='Scheduled Config',
+            database=database(),
+            destination=destination(),
+            query='SELECT * FROM test',
+            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+        )
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
+
+        partial = ForwardingConfig.objects.only('id').get(pk=cfg.pk)
+        assert partial._schedule_snapshot == {}
+        partial.save()
+
+        cfg.refresh_from_db()
+        assert cfg.next_run_at > first
+
     def test_removing_schedule_clears_next_run(self):
         cfg = ForwardingConfig.objects.create(
             name='Config to Unschedule',
