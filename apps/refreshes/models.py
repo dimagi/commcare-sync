@@ -15,7 +15,6 @@ class RefreshConfig(ScheduleMixin, BaseModel):
     """Configuration for scheduled materialized view refreshes."""
 
     SCHEDULED_TASK = 'apps.refreshes.tasks.run_scheduled_refresh_task'
-    PERIODIC_TASK_PREFIX = 'Refresh materialized views'
 
     name = models.CharField(max_length=100)
     database = models.ForeignKey(

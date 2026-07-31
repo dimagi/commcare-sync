@@ -1,9 +1,10 @@
 """
 Tests for ScheduleMixin functionality.
 
-These tests exercise the schedule validation, celery schedule creation,
-schedule_display, last_run, and has_active_run logic via ForwardingConfig
-as the concrete model.
+These tests exercise the schedule validation, schedule_display, last_run,
+and has_active_run logic via ForwardingConfig as the concrete model.
+Periodicity computation (``compute_next_run``) is covered separately in
+apps/schedules/tests/test_compute_next_run.py.
 """
 from datetime import date, time
 
@@ -45,42 +46,6 @@ def make_unsaved_config(database_obj, destination_obj, **schedule_kwargs):
 class TestIntervalSchedule:
 
     @use(database, destination)
-    def test_create_interval_schedule_minutes(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.every == 30
-        assert celery_schedule.period == 'minutes'
-
-    @use(database, destination)
-    def test_create_interval_schedule_hours(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=2,
-            interval_unit=ScheduleMixin.IntervalUnit.HOURS,
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.every == 2
-        assert celery_schedule.period == 'hours'
-
-    @use(database, destination)
-    def test_create_interval_schedule_days(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=7,
-            interval_unit=ScheduleMixin.IntervalUnit.DAYS,
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.every == 7
-        assert celery_schedule.period == 'days'
-
-    @use(database, destination)
     def test_interval_schedule_display(self):
         config = make_config(
             database(), destination(),
@@ -95,23 +60,6 @@ class TestIntervalSchedule:
 class TestWeeklySchedule:
 
     @use(database, destination)
-    def test_create_weekly_schedule(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
-            days_of_week=[1, 3, 5],
-            first_run_time=time(14, 30),
-            timezone='America/New_York',
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.minute == '30'
-        assert celery_schedule.hour == '14'
-        assert celery_schedule.day_of_week == '1,3,5'
-        assert celery_schedule.day_of_month == '*'
-        assert celery_schedule.month_of_year == '*'
-        assert celery_schedule.timezone.key == 'America/New_York'
-
-    @use(database, destination)
     def test_weekly_schedule_display(self):
         config = make_config(
             database(), destination(),
@@ -122,37 +70,9 @@ class TestWeeklySchedule:
         )
         assert config.schedule_display == 'Weekly on Sun, Sat at 09:00:00'
 
-    @use(database, destination)
-    def test_weekly_schedule_unsorted_days(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
-            first_run_date=date(2025, 1, 1),
-            days_of_week=[5, 1, 3],
-            first_run_time=time(10, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.day_of_week == '1,3,5'
-
 
 @use('db')
 class TestMonthlySchedule:
-
-    @use(database, destination)
-    def test_create_monthly_schedule(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.MONTHLY,
-            first_run_date=date(2025, 3, 15),
-            first_run_time=time(8, 0),
-            timezone='UTC',
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.minute == '0'
-        assert celery_schedule.hour == '8'
-        assert celery_schedule.day_of_month == '15'
-        assert celery_schedule.day_of_week == '*'
-        assert celery_schedule.month_of_year == '*'
 
     @use(database, destination)
     def test_monthly_schedule_display(self):
@@ -169,51 +89,6 @@ class TestMonthlySchedule:
 class TestQuarterlySchedule:
 
     @use(database, destination)
-    def test_quarterly_starting_january(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.QUARTERLY,
-            first_run_date=date(2025, 1, 10),
-            first_run_time=time(12, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.day_of_month == '10'
-        assert celery_schedule.month_of_year == '1,4,7,10'
-
-    @use(database, destination)
-    def test_quarterly_starting_february(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.QUARTERLY,
-            first_run_date=date(2025, 2, 15),
-            first_run_time=time(12, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '2,5,8,11'
-
-    @use(database, destination)
-    def test_quarterly_starting_march(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.QUARTERLY,
-            first_run_date=date(2025, 3, 20),
-            first_run_time=time(12, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '3,6,9,12'
-
-    @use(database, destination)
-    def test_quarterly_starting_november(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.QUARTERLY,
-            first_run_date=date(2025, 11, 5),
-            first_run_time=time(12, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '2,5,8,11'
-
-    @use(database, destination)
     def test_quarterly_schedule_display(self):
         config = make_config(
             database(), destination(),
@@ -226,50 +101,6 @@ class TestQuarterlySchedule:
 
 @use('db')
 class TestSemiAnnuallySchedule:
-
-    @use(database, destination)
-    def test_semi_annually_starting_january(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.SEMI_ANNUALLY,
-            first_run_date=date(2025, 1, 1),
-            first_run_time=time(9, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '1,7'
-
-    @use(database, destination)
-    def test_semi_annually_starting_march(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.SEMI_ANNUALLY,
-            first_run_date=date(2025, 3, 15),
-            first_run_time=time(9, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '3,9'
-
-    @use(database, destination)
-    def test_semi_annually_starting_august(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.SEMI_ANNUALLY,
-            first_run_date=date(2025, 8, 20),
-            first_run_time=time(9, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '2,8'
-
-    @use(database, destination)
-    def test_semi_annually_starting_october(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.SEMI_ANNUALLY,
-            first_run_date=date(2025, 10, 10),
-            first_run_time=time(9, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.month_of_year == '4,10'
 
     @use(database, destination)
     def test_semi_annually_schedule_display(self):
@@ -286,30 +117,6 @@ class TestSemiAnnuallySchedule:
 class TestAnnuallySchedule:
 
     @use(database, destination)
-    def test_annually_schedule(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.ANNUALLY,
-            first_run_date=date(2025, 12, 25),
-            first_run_time=time(0, 0),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.day_of_month == '25'
-        assert celery_schedule.month_of_year == '12'
-
-    @use(database, destination)
-    def test_annually_different_month(self):
-        config = make_config(
-            database(), destination(),
-            schedule_type=ScheduleMixin.ScheduleType.ANNUALLY,
-            first_run_date=date(2025, 3, 1),
-            first_run_time=time(6, 30),
-        )
-        celery_schedule = config.create_celery_schedule()
-        assert celery_schedule.day_of_month == '1'
-        assert celery_schedule.month_of_year == '3'
-
-    @use(database, destination)
     def test_annually_schedule_display(self):
         config = make_config(
             database(), destination(),
@@ -322,31 +129,6 @@ class TestAnnuallySchedule:
 
 @use('db')
 class TestScheduleEdgeCases:
-
-    @use(database, destination)
-    def test_multiple_configs_reuse_celery_schedules(self):
-        db = database()
-        dest = destination()
-        config1 = make_config(
-            db, dest,
-            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
-            first_run_date=date(2025, 1, 1),
-            days_of_week=[1, 3, 5],
-            first_run_time=time(14, 30),
-        )
-        config2 = ForwardingConfig.objects.create(
-            name='Test Config 2',
-            database=db,
-            destination=dest,
-            query='SELECT 2',
-            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
-            first_run_date=date(2025, 1, 1),
-            days_of_week=[1, 3, 5],
-            first_run_time=time(14, 30),
-        )
-        celery_schedule1 = config1.create_celery_schedule()
-        celery_schedule2 = config2.create_celery_schedule()
-        assert celery_schedule1.id == celery_schedule2.id
 
     @use(database, destination)
     def test_has_schedule_false_when_no_schedule_type(self):

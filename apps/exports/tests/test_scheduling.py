@@ -1,7 +1,6 @@
-from django_celery_beat.models import PeriodicTask
 from unmagic import use
 
-from apps.exports.models import ExportRun
+from apps.exports.models import ExportConfig, ExportRun
 from apps.exports.tests.fixtures import export_config_db_fixture
 from apps.schedules.mixin import ScheduleMixin
 
@@ -9,8 +8,8 @@ from apps.schedules.mixin import ScheduleMixin
 @use('db', export_config_db_fixture)
 class TestExportScheduling:
 
-    def test_export_with_interval_schedule_creates_periodic_task(self):
-        """When schedule fields are set and saved, a PeriodicTask should be created via signals."""
+    def test_interval_schedule_sets_next_run(self):
+        """Saving a config with schedule fields set computes next_run_at via signals."""
         export_config = export_config_db_fixture()
 
         export_config.schedule_type = ScheduleMixin.ScheduleType.INTERVAL
@@ -19,9 +18,8 @@ class TestExportScheduling:
         export_config.save()
 
         export_config.refresh_from_db()
-        assert export_config.periodic_task is not None
-        assert export_config.periodic_task.enabled is True
-        assert not export_config.is_paused
+        assert export_config.next_run_at is not None
+        assert export_config.is_paused is False
 
     def test_export_without_schedule_is_paused(self):
         """An export with no schedule_type should be considered paused."""
@@ -45,8 +43,8 @@ class TestExportScheduling:
 
         run.delete()
 
-    def test_deleting_export_cleans_up_periodic_task(self):
-        """When an export with a PeriodicTask is deleted, the PeriodicTask should be cleaned up."""
+    def test_deleting_export_needs_no_schedule_cleanup(self):
+        """Deletion no longer has external state to clean up; it simply succeeds."""
         export_config = export_config_db_fixture()
 
         export_config.schedule_type = ScheduleMixin.ScheduleType.INTERVAL
@@ -55,7 +53,7 @@ class TestExportScheduling:
         export_config.save()
 
         export_config.refresh_from_db()
-        periodic_task_id = export_config.periodic_task.id
+        config_id = export_config.id
         export_config.delete()
 
-        assert not PeriodicTask.objects.filter(id=periodic_task_id).exists()
+        assert not ExportConfig.objects.filter(id=config_id).exists()

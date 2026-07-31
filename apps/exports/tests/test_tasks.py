@@ -23,9 +23,8 @@ from ..tasks import (
     run_multi_project_export_task,
 )
 
-# Schedule kwargs that make a config "non-paused" — adding schedule_type
-# triggers signal-based creation of an enabled PeriodicTask, which is what
-# ScheduleMixin.is_paused checks.
+# Schedule kwargs that make a config "non-paused" — ScheduleMixin.is_paused
+# is True unless the config has a schedule and schedule_enabled is True.
 SCHEDULED = {
     'schedule_type': ScheduleMixin.ScheduleType.INTERVAL,
     'interval_value': 30,

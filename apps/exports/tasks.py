@@ -30,9 +30,9 @@ def run_all_exports_task(user_id=None):
                 user_id,
             )
 
-    # ``is_paused`` is a derived property (depends on periodic_task state), not
-    # a DB column, so the filter has to happen in Python.
-    for export in ExportConfig.objects.select_related('periodic_task').all():
+    # ``is_paused`` derives from schedule fields (has_schedule and
+    # schedule_enabled), so the filter happens in Python for clarity.
+    for export in ExportConfig.objects.all():
         if export.is_paused or export.has_active_run:
             continue
         _create_and_dispatch_export_run(
@@ -43,12 +43,7 @@ def run_all_exports_task(user_id=None):
             triggered_by=user,
         )
 
-    for multi_export in (
-        MultiProjectExportConfig
-        .objects
-        .select_related('periodic_task')
-        .all()
-    ):
+    for multi_export in MultiProjectExportConfig.objects.all():
         if multi_export.is_paused or multi_export.has_active_run:
             continue
         _create_and_dispatch_export_run(
