@@ -7,7 +7,6 @@
   {% endwith %}
 {% endblock app %}
 {% block page_js %}
-  <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
   {% include 'web/components/run_button_script.html' with run_url_name='exports:run_multi_export' object_id=export.id include_start_over=True %}
   {% include 'web/components/expandable_logs_script.html' %}
 {% endblock page_js %}
