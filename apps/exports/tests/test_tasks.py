@@ -21,6 +21,7 @@ from ..tasks import (
     run_all_exports_task,
     run_export_task,
     run_multi_project_export_task,
+    run_scheduled_export_task,
 )
 
 # Schedule kwargs that make a config "non-paused" — ScheduleMixin.is_paused
@@ -84,12 +85,16 @@ class TestRunAllExportsTask:
         assert multi_runs.count() == 1
 
         mock_async.assert_any_call(
-            run_export_task, runs.first().id, start_over=False
+            run_export_task,
+            runs.first().id,
+            start_over=False,
+            q_options={},
         )
         mock_async.assert_any_call(
             run_multi_project_export_task,
             multi_runs.first().id,
             start_over=False,
+            q_options={},
         )
         assert mock_async.call_count == 2
 
@@ -151,3 +156,42 @@ class TestRunAllExportsTask:
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()
+
+
+class TestScheduledExportTask:
+
+    @use(export_config)
+    @patch('apps.exports.tasks.async_task')
+    def test_forwards_scheduled_task_options_to_the_run(self, mock_async):
+        # The dispatcher applies SCHEDULED_TASK_OPTIONS to
+        # run_scheduled_export_task, which only creates a run and
+        # enqueues the work. Unless they're forwarded from there, a
+        # timeout bounds that hop rather than the export it dispatches.
+        config = export_config()
+
+        with patch.object(
+            ExportConfig, 'SCHEDULED_TASK_OPTIONS', {'timeout': 3660}
+        ):
+            run_scheduled_export_task(config.id)
+
+        run = ExportRun.objects.get(base_export_config=config)
+        mock_async.assert_called_once_with(
+            run_export_task,
+            run.id,
+            start_over=False,
+            q_options={'timeout': 3660},
+        )
+
+    @use(export_config)
+    @patch('apps.exports.tasks.async_task')
+    def test_does_not_hand_out_the_shared_options_dict(self, mock_async):
+        # A task that mutates its q_options must not corrupt the options
+        # every later run of this config is dispatched with.
+        config = export_config()
+
+        with patch.object(
+            ExportConfig, 'SCHEDULED_TASK_OPTIONS', {'timeout': 3660}
+        ):
+            run_scheduled_export_task(config.id)
+            passed = mock_async.call_args.kwargs['q_options']
+            assert passed is not ExportConfig.SCHEDULED_TASK_OPTIONS
