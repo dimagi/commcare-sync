@@ -52,21 +52,21 @@ class RefreshConfigAdmin(VersionAdmin):
 @admin.register(models.RefreshRun)
 class RefreshRunAdmin(admin.ModelAdmin):
     list_display = [
-        'refresh_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
         'status',
     ]
     list_filter = [
-        'refresh_config',
+        'config',
         'status',
         'created_at',
         'started_at',
     ]
     readonly_fields = [
-        'refresh_config',
-        'refresh_config_version',
+        'config',
+        'config_version',
         'status',
         'started_at',
         'completed_at',
@@ -83,8 +83,8 @@ class RefreshRunAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': (
-                    'refresh_config',
-                    'refresh_config_version',
+                    'config',
+                    'config_version',
                     'status',
                 )
             },

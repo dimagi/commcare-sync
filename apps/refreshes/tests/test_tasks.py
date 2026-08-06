@@ -11,7 +11,7 @@ from .fixtures import refresh_config as _refresh_config
 @patch('apps.refreshes.tasks.run_refresh')
 def test_run_refresh_task(mock_run_refresh):
     config = _refresh_config()
-    refresh_run = RefreshRun.objects.create(refresh_config=config)
+    refresh_run = RefreshRun.objects.create(config=config)
 
     result = run_refresh_task(refresh_run.id)
 
@@ -38,7 +38,7 @@ def test_run_scheduled_refresh_task(mock_run_refresh):
     mock_run_refresh.assert_called_once()
 
     run = RefreshRun.objects.get(id=result)
-    assert run.refresh_config == config
+    assert run.config == config
     assert run.triggered_from_ui is False
 
 
@@ -47,7 +47,7 @@ def test_run_scheduled_refresh_task(mock_run_refresh):
 def test_run_scheduled_refresh_task_skips_if_queued(mock_run_refresh):
     config = _refresh_config()
     RefreshRun.objects.create(
-        refresh_config=config,
+        config=config,
         status=RefreshRun.Status.QUEUED,
     )
 
@@ -62,7 +62,7 @@ def test_run_scheduled_refresh_task_skips_if_queued(mock_run_refresh):
 def test_run_scheduled_refresh_task_skips_if_started(mock_run_refresh):
     config = _refresh_config()
     RefreshRun.objects.create(
-        refresh_config=config,
+        config=config,
         status=RefreshRun.Status.STARTED,
     )
 

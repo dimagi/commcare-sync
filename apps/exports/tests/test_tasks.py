@@ -77,10 +77,8 @@ class TestRunAllExportsTask:
 
         run_all_exports_task()
 
-        runs = ExportRun.objects.filter(base_export_config=config)
-        multi_runs = MultiProjectExportRun.objects.filter(
-            base_export_config=multi
-        )
+        runs = ExportRun.objects.filter(config=config)
+        multi_runs = MultiProjectExportRun.objects.filter(config=multi)
         assert runs.count() == 1
         assert multi_runs.count() == 1
 
@@ -106,7 +104,7 @@ class TestRunAllExportsTask:
 
         run_all_exports_task(user_id=user.id)
 
-        run = ExportRun.objects.get(base_export_config=config)
+        run = ExportRun.objects.get(config=config)
         assert run.triggered_from_ui is True
         assert run.triggered_by == user
 
@@ -117,9 +115,7 @@ class TestRunAllExportsTask:
 
         run_all_exports_task()
 
-        assert not ExportRun.objects.filter(
-            base_export_config=config
-        ).exists()
+        assert not ExportRun.objects.filter(config=config).exists()
         mock_async.assert_not_called()
 
     @pytest.mark.parametrize('status', [
@@ -134,16 +130,14 @@ class TestRunAllExportsTask:
         # another run on top, the same way the per-row "Run" button disables
         # itself for an active run.
         ExportRun.objects.create(
-            base_export_config=config,
+            config=config,
             triggered_from_ui=False,
             status=status,
         )
 
         run_all_exports_task()
 
-        assert ExportRun.objects.filter(
-            base_export_config=config
-        ).count() == 1
+        assert ExportRun.objects.filter(config=config).count() == 1
         mock_async.assert_not_called()
 
     @use(export_config)
@@ -152,7 +146,7 @@ class TestRunAllExportsTask:
         config = export_config()
         run_all_exports_task(user_id=999999)
 
-        run = ExportRun.objects.get(base_export_config=config)
+        run = ExportRun.objects.get(config=config)
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()
@@ -174,7 +168,7 @@ class TestScheduledExportTask:
         ):
             run_scheduled_export_task(config.id)
 
-        run = ExportRun.objects.get(base_export_config=config)
+        run = ExportRun.objects.get(config=config)
         mock_async.assert_called_once_with(
             run_export_task,
             run.id,

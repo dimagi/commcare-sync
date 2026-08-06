@@ -71,8 +71,8 @@ class TestRunRefresh:
     @patch('apps.refreshes.runner.refresh_materialized_view')
     def test_view_without_schema_uses_public(self, mock_refresh_view):
         run = _refresh_run()
-        run.refresh_config.materialized_views = ['view_no_schema']
-        run.refresh_config.save()
+        run.config.materialized_views = ['view_no_schema']
+        run.config.save()
 
         run_refresh(run)
 

@@ -95,12 +95,12 @@ class RefreshConfig(ScheduleMixin, BaseModel):
 class RefreshRun(RunBaseModel):
     """Record of a single materialized view refresh run."""
 
-    refresh_config = models.ForeignKey(
+    config = models.ForeignKey(
         RefreshConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    refresh_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version,
         on_delete=models.CASCADE,
         null=True,
@@ -108,4 +108,4 @@ class RefreshRun(RunBaseModel):
     view_results = models.JSONField(default=dict)
 
     def __str__(self):
-        return f'{self.refresh_config.name} ({self.created_at})'
+        return f'{self.config.name} ({self.created_at})'

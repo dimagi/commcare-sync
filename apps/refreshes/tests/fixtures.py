@@ -20,7 +20,7 @@ def refresh_config():
 def refresh_run():
     config = refresh_config()
     yield RefreshRun.objects.create(
-        refresh_config=config,
-        refresh_config_version=config.latest_version,
+        config=config,
+        config_version=config.latest_version,
         status=RefreshRun.Status.QUEUED,
     )

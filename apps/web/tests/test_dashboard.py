@@ -102,7 +102,7 @@ class TestExportStatistics:
 
         for i in range(5):
             ExportRun.objects.create(
-                base_export_config=export_config(),
+                config=export_config(),
                 status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -121,12 +121,12 @@ class TestExportStatistics:
         last_24h = timezone.now() - timedelta(hours=24)
 
         ExportRun.objects.create(
-            base_export_config=export_config(),
+            config=export_config(),
             status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
-            base_export_config=export_config(),
+            config=export_config(),
             status=ExportRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -144,12 +144,12 @@ class TestExportStatistics:
         last_24h = timezone.now() - timedelta(hours=24)
 
         ExportRun.objects.create(
-            base_export_config=export_config(),
+            config=export_config(),
             status=ExportRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ExportRun.objects.create(
-            base_export_config=export_config(),
+            config=export_config(),
             status=ExportRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -177,13 +177,13 @@ class TestExportStatistics:
 
         for i in range(successful):
             ExportRun.objects.create(
-                base_export_config=export_config(),
+                config=export_config(),
                 status=ExportRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             ExportRun.objects.create(
-                base_export_config=export_config(),
+                config=export_config(),
                 status=ExportRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
@@ -211,7 +211,7 @@ class TestRefreshStatistics:
 
         for i in range(4):
             RefreshRun.objects.create(
-                refresh_config=refresh_config(),
+                config=refresh_config(),
                 status=RefreshRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -230,12 +230,12 @@ class TestRefreshStatistics:
         last_24h = timezone.now() - timedelta(hours=24)
 
         RefreshRun.objects.create(
-            refresh_config=refresh_config(),
+            config=refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         RefreshRun.objects.create(
-            refresh_config=refresh_config(),
+            config=refresh_config(),
             status=RefreshRun.Status.FAILED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -253,12 +253,12 @@ class TestRefreshStatistics:
         last_24h = timezone.now() - timedelta(hours=24)
 
         RefreshRun.objects.create(
-            refresh_config=refresh_config(),
+            config=refresh_config(),
             status=RefreshRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         RefreshRun.objects.create(
-            refresh_config=refresh_config(),
+            config=refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )
@@ -286,13 +286,13 @@ class TestRefreshStatistics:
 
         for i in range(successful):
             RefreshRun.objects.create(
-                refresh_config=refresh_config(),
+                config=refresh_config(),
                 status=RefreshRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
         for i in range(failed):
             RefreshRun.objects.create(
-                refresh_config=refresh_config(),
+                config=refresh_config(),
                 status=RefreshRun.Status.FAILED,
                 created_at=timezone.now() - timedelta(hours=successful + i),
             )
@@ -320,7 +320,7 @@ class TestForwardingStatistics:
 
         for i in range(3):
             ForwardingRun.objects.create(
-                forwarding_config=forwarding_config(),
+                config=forwarding_config(),
                 status=ForwardingRun.Status.COMPLETED,
                 created_at=timezone.now() - timedelta(hours=i),
             )
@@ -339,12 +339,12 @@ class TestForwardingStatistics:
         last_24h = timezone.now() - timedelta(hours=24)
 
         ForwardingRun.objects.create(
-            forwarding_config=forwarding_config(),
+            config=forwarding_config(),
             status=ForwardingRun.Status.QUEUED,
             created_at=timezone.now() - timedelta(hours=1),
         )
         ForwardingRun.objects.create(
-            forwarding_config=forwarding_config(),
+            config=forwarding_config(),
             status=ForwardingRun.Status.COMPLETED,
             created_at=timezone.now() - timedelta(hours=2),
         )

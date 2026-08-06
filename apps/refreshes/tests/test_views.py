@@ -170,7 +170,7 @@ class TestRefreshDetailsView:
     def test_hide_skipped(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.SKIPPED,
         )
         url = reverse('refreshes:refresh_details', args=[config.id])
@@ -210,7 +210,7 @@ class TestRunRefreshView:
         _, kwargs = mock_async.call_args
         assert kwargs['q_options'] == {'timeout': 3660}
         assert RefreshRun.objects.filter(
-            refresh_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
 
@@ -350,7 +350,7 @@ class TestRefreshRunLogView:
     @use(authed_client, _refresh_config)
     def test_requires_login(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='hello log',
         )
@@ -362,7 +362,7 @@ class TestRefreshRunLogView:
     @use(authed_client, _refresh_config)
     def test_returns_log(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='refresh log content',
         )
@@ -404,7 +404,7 @@ class TestRunRefreshHtmxBranch:
         url = reverse('refreshes:run_refresh', args=[config.id])
         authed_client().post(url, HTTP_HX_REQUEST='true')
         assert RefreshRun.objects.filter(
-            refresh_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
         assert OrmQ.objects.count() == 0
@@ -445,7 +445,7 @@ class TestRefreshesListPageSmoke:
     def test_renders_with_run_in_status(self, status, expected):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=status,
         )
         response = authed_client().get(reverse('refreshes:refresh_configs'))

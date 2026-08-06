@@ -14,7 +14,7 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
 
     :returns: The updated ForwardingRun instance
     """
-    fwd_config = fwd_run.forwarding_config
+    fwd_config = fwd_run.config
     log_lines = [
         f'{datetime.now()}: Starting forwarding for {fwd_config}',
     ]
