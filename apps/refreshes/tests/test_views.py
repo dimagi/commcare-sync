@@ -207,8 +207,6 @@ class TestRunRefreshView:
         assert response.status_code == 200
         assert response.content.decode() == 'test-task-id'
         mock_async.assert_called_once()
-        _, kwargs = mock_async.call_args
-        assert kwargs['q_options'] == {'timeout': 3660}
         assert RefreshRun.objects.filter(
             config=config,
             triggered_from_ui=True,

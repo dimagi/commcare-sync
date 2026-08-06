@@ -230,9 +230,7 @@ def run_refresh(request, config_id):
         triggered_by=request.user,
     )
 
-    task_id = async_task(
-        run_refresh_task, refresh_run.id, q_options={'timeout': 3660}
-    )
+    task_id = async_task(run_refresh_task, refresh_run.id)
     return run_response(request, task_id)
 
 

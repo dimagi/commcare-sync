@@ -30,14 +30,8 @@ class ScheduleMixin(models.Model):
 
     Concrete models must define:
         SCHEDULED_TASK: str - dotted path to the task run on schedule
-        SCHEDULED_TASK_OPTIONS: dict - optional django-q2 q_options for it
         runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
-
-    ``SCHEDULED_TASK_OPTIONS`` is meant to govern the work, so where
-    ``SCHEDULED_TASK`` only enqueues a second task rather than doing the
-    work itself (as the export tasks do), that task is responsible for
-    passing these options on. Otherwise a ``timeout`` here would bound
-    the hop instead of the run it dispatches.
+        latest_version: the config's current ``reversion`` Version
     """
 
     class ScheduleType(models.TextChoices):
@@ -54,7 +48,6 @@ class ScheduleMixin(models.Model):
         DAYS = 'days', _('Days')
 
     SCHEDULED_TASK: str
-    SCHEDULED_TASK_OPTIONS: dict = {}
 
     schedule_type = models.CharField(
         max_length=20,

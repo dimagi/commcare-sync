@@ -56,7 +56,6 @@ def due_refresh_config(overdue_by=timedelta(minutes=5), **overrides):
 
 @use(database, destination, mock_async)
 class TestRunDueSchedules:
-
     def test_enqueues_due_config_and_advances_next_run(self):
         cfg = due_forwarding_config()
 
@@ -65,7 +64,6 @@ class TestRunDueSchedules:
         mock_async().assert_called_once_with(
             'apps.forwarding.tasks.run_scheduled_forwarding_task',
             cfg.id,
-            q_options={},
         )
         assert launched == [f'ForwardingConfig:{cfg.id}']
         cfg.refresh_from_db()
@@ -191,13 +189,10 @@ class TestRunDueSchedules:
         poison.refresh_from_db()
         assert poison.next_run_at < timezone.now()
 
-    def test_dispatches_with_non_empty_options_and_does_not_mutate_class_attr(
-        self,
-    ):
-        # RefreshConfig has non-empty SCHEDULED_TASK_OPTIONS, so it's the
-        # one that actually exercises the dict-copy in run_due_schedules:
-        # it proves the class-level dict is passed by value, not by
-        # reference.
+    def test_dispatches_the_configured_task_for_a_refresh_config(self):
+        # test_enqueues_due_config_and_advances_next_run covers this for
+        # ForwardingConfig; this is the equivalent check for
+        # RefreshConfig, whose SCHEDULED_TASK differs.
         cfg = due_refresh_config()
 
         launched = run_due_schedules()
@@ -205,13 +200,5 @@ class TestRunDueSchedules:
         mock_async().assert_called_once_with(
             'apps.refreshes.tasks.run_scheduled_refresh_task',
             cfg.id,
-            q_options={'timeout': 3660},
         )
         assert launched == [f'RefreshConfig:{cfg.id}']
-
-        # The dict handed to async_task must be a copy, not the shared
-        # class-level dict, so later dispatches (or mutation by a task)
-        # can't leak into or corrupt other configs' options.
-        passed_options = mock_async().call_args.kwargs['q_options']
-        assert passed_options is not RefreshConfig.SCHEDULED_TASK_OPTIONS
-        assert RefreshConfig.SCHEDULED_TASK_OPTIONS == {'timeout': 3660}

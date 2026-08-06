@@ -77,11 +77,7 @@ def run_due_schedules():
                 ).update(next_run_at=next_run)
                 if not claimed:
                     continue
-                async_task(
-                    config.SCHEDULED_TASK,
-                    config.id,
-                    q_options=dict(config.SCHEDULED_TASK_OPTIONS),
-                )
+                async_task(config.SCHEDULED_TASK, config.id)
             except Exception:
                 # config.__str__ could itself raise on a malformed row, so
                 # log by model name and pk rather than the instance.
