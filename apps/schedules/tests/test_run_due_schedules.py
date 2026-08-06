@@ -145,6 +145,17 @@ class TestRunDueSchedules:
 
         mock_async().assert_not_called()
 
+    def test_a_failing_reaper_does_not_stop_scheduling(self):
+        cfg = due_forwarding_config()
+
+        with patch(
+            'apps.schedules.tasks.reap_stale_runs',
+            side_effect=RuntimeError('lock timeout'),
+        ):
+            launched = run_due_schedules()
+
+        assert launched == [f'ForwardingConfig:{cfg.id}']
+
     def test_poison_config_does_not_starve_later_configs(self):
         # A config whose schedule fields are malformed enough to make
         # compute_next_run raise must not stop other due configs -

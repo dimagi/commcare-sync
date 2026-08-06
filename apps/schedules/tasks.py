@@ -15,13 +15,24 @@ every minute until an operator intervenes.
 """
 
 import logging
+from datetime import timedelta
 
+from django.conf import settings
+from django.db.models import F, Value
+from django.db.models.functions import Coalesce, Concat
 from django.utils import timezone
 from django_q.tasks import async_task
 
-from apps.exports.models import ExportConfig, MultiProjectExportConfig
-from apps.forwarding.models import ForwardingConfig
-from apps.refreshes.models import RefreshConfig
+from apps.commcare.models import RunBaseModel
+from apps.exports.models import (
+    ExportConfig,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+    MultiProjectPartialExportRun,
+)
+from apps.forwarding.models import ForwardingConfig, ForwardingRun
+from apps.refreshes.models import RefreshConfig, RefreshRun
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +42,72 @@ CONFIG_MODELS = [
     ForwardingConfig,
     RefreshConfig,
 ]
+
+# Every concrete run model. `test_run_models_lists_every_concrete_run_model` in
+# `apps/schedules/tests/test_reap_stale_runs.py` checks that none are missing.
+RUN_MODELS = [
+    ExportRun,
+    MultiProjectExportRun,
+    # Blocks nothing, because its parent run carries the config's active
+    # state. It is reaped so that run history doesn't show a dead partial
+    # run as running.
+    MultiProjectPartialExportRun,
+    ForwardingRun,
+    RefreshRun,
+]
+
+
+# Added to the task timeout when computing the reaper's cutoff. A run's
+# started_at is only set once a worker has started its task, so by the time
+# the task timeout has passed, Django Q2 has already stopped it. The margin
+# is a safety buffer on top of that.
+REAP_MARGIN = timedelta(seconds=60)
+
+
+def reap_stale_runs():
+    """Mark runs whose worker was killed or timed out as ``TIMEOUT``.
+
+    A run is left ``STARTED`` when its worker dies (OOM, SIGKILL, a
+    reboot), and also when Django Q2 stops it at the timeout. Those
+    would block its config forever, because ``has_active_run`` would
+    keep seeing it. Every runner sets ``started_at`` when it sets
+    ``STARTED``, so a ``STARTED`` run older than the task timeout (plus
+    ``REAP_MARGIN``) cannot still be running.
+
+    ``QUEUED`` runs are deliberately not reaped: they have no
+    ``started_at`` to measure from, and a run can legitimately sit
+    queued for a long time behind other work.
+
+    Returns the number of runs reaped.
+    """
+    now = timezone.now()
+    cutoff = (
+        now - timedelta(seconds=settings.Q_CLUSTER['timeout']) - REAP_MARGIN
+    )
+    reaped = 0
+    for run_model in RUN_MODELS:
+        count = run_model.objects.filter(
+            status=RunBaseModel.Status.STARTED,
+            started_at__lt=cutoff,
+        ).update(
+            status=RunBaseModel.Status.TIMEOUT,
+            completed_at=now,
+            # ``log`` is nullable and Concat propagates NULL, so an
+            # unlogged run would otherwise lose the note entirely.
+            log=Concat(
+                Coalesce(F('log'), Value('')),
+                Value(
+                    '\n[This run did not finish. It exceeded the time '
+                    'limit, or its worker stopped unexpectedly.]\n'
+                ),
+            ),
+        )
+        if count:
+            logger.warning(
+                'Reaped %d stale %s run(s)', count, run_model.__name__
+            )
+        reaped += count
+    return reaped
 
 
 def _advance_past(config, due_at, now):
@@ -58,7 +135,16 @@ def run_due_schedules():
     via a shell edit, ``loaddata``, or ``objects.create()`` bypassing
     validation) must not prevent the other due configs - possibly for
     other models entirely - from being enqueued.
+
+    Stale runs are reaped first, so a config is never skipped on account
+    of a run whose worker has already been killed. Reaping is
+    housekeeping: if it fails, the failure is logged and due configs are
+    still enqueued.
     """
+    try:
+        reap_stale_runs()
+    except Exception:
+        logger.exception('Failed to reap stale runs')
     now = timezone.now()
     launched = []
     for config_model in CONFIG_MODELS:

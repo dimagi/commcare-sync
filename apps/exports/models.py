@@ -142,7 +142,7 @@ class ExportRunBase(RunBaseModel):
         choices=Status.choices,
     )
 
-    class Meta:
+    class Meta(RunBaseModel.Meta):
         abstract = True
 
     def __str__(self):
