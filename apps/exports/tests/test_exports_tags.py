@@ -24,6 +24,10 @@ def test_doctests():
         ),
         (ExportRunBase.Status.QUEUED, 'fa-ellipsis', 'text-muted'),
         (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-muted'),
+        (ExportRunBase.Status.TIMEOUT, 'fa-clock', 'text-warning'),
+
+        # An unmapped status renders 'fa-solid None None' rather than raising.
+        ('unknown_status', 'None', 'None'),
     ],
 )
 def test_to_status_icon(status, expected_icon, expected_class):
@@ -37,16 +41,13 @@ def test_to_status_icon(status, expected_icon, expected_class):
     assert '</i>' in result
 
 
-def test_to_status_icon_unknown_status():
-    result = exports_tags.to_status_icon('unknown_status')
-
-    assert '<i' in result
-    assert 'title="unknown_status"' in result
-    assert 'fa' in result
-
-
 def test_to_status_icon_returns_safe_string():
     from django.utils.safestring import SafeString
 
     result = exports_tags.to_status_icon(ExportRunBase.Status.COMPLETED)
     assert isinstance(result, SafeString)
+
+
+def test_every_status_renders_an_icon():
+    for status in ExportRunBase.Status.values:
+        assert 'None' not in exports_tags.to_status_icon(status)

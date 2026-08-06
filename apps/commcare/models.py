@@ -22,12 +22,22 @@ class RunBaseModel(BaseModel):
     """
     Base model for all run records (exports, forwarding, refreshes).
     """
+    # ExportRunBase.Status restates these members to add MULTIPLE. Keep
+    # the two in sync.
     class Status(models.TextChoices):
         QUEUED = 'queued', _('Queued')
         STARTED = 'started', _('Started')
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
+
+    # Finished without succeeding.
+    FAILED_STATUSES = frozenset({Status.FAILED, Status.TIMEOUT})
+    # Finished with a log to show.
+    LOGGED_STATUSES = frozenset(
+        {Status.COMPLETED, Status.FAILED, Status.TIMEOUT}
+    )
 
     status = models.CharField(
         max_length=10,
@@ -57,7 +67,7 @@ class RunBaseModel(BaseModel):
 
     @property
     def has_log(self):
-        return self.status in {self.Status.COMPLETED, self.Status.FAILED}
+        return self.status in self.LOGGED_STATUSES
 
     @property
     def duration(self):

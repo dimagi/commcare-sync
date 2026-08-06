@@ -76,11 +76,11 @@ def _get_export_statistics(since_datetime, previous_start=None):
     )
     failed_runs = (
         recent_export_runs
-        .filter(status=ExportRun.Status.FAILED)
+        .filter(status__in=ExportRun.FAILED_STATUSES)
         .count()
     ) + (
         recent_multi_runs
-        .filter(status=MultiProjectExportRun.Status.FAILED)
+        .filter(status__in=MultiProjectExportRun.FAILED_STATUSES)
         .count()
     )
 
@@ -150,7 +150,9 @@ def _get_refresh_statistics(since_datetime, previous_start=None):
     successful_runs = recent_runs.filter(
         status=RefreshRun.Status.COMPLETED
     ).count()
-    failed_runs = recent_runs.filter(status=RefreshRun.Status.FAILED).count()
+    failed_runs = recent_runs.filter(
+        status__in=RefreshRun.FAILED_STATUSES
+    ).count()
 
     success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
 
@@ -210,7 +212,7 @@ def _get_forwarding_statistics(since_datetime, previous_start=None):
     ).count()
     failed_runs = (
         recent_runs
-        .filter(status=ForwardingRun.Status.FAILED)
+        .filter(status__in=ForwardingRun.FAILED_STATUSES)
         .count()
     )
 

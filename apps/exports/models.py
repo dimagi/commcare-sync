@@ -126,12 +126,14 @@ class MultiProjectExportConfig(ExportConfigBase):
 
 
 class ExportRunBase(RunBaseModel):
+    # Restates RunBaseModel.Status to add MULTIPLE. Keep the two in sync.
     class Status(models.TextChoices):
         QUEUED = 'queued', _('Queued')
         STARTED = 'started', _('Started')
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
         MULTIPLE = 'multiple', _('Multiple statuses')
 
     status = models.CharField(

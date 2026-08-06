@@ -79,10 +79,7 @@ def dashboard_stats_context():
     }
 
 
-# Per-run statuses available for filtering. RunBaseModel.Status is the shared base
-# enum (queued/started/completed/failed/skipped); ExportRunBase additionally
-# defines MULTIPLE — an aggregate for multi-project parent runs — which is
-# deliberately not a per-run filter state, so deriving from the base excludes it.
+# Statuses of individual runs, available for filtering.
 _VALID_RUN_STATUSES = set(RunBaseModel.Status.values)
 
 
