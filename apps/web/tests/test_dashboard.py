@@ -140,6 +140,26 @@ class TestExportStatistics:
         assert stats['status'] == 'error'
 
     @use(export_config)
+    def test_export_statistics_count_timed_out_runs_as_failed(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        ExportRun.objects.create(
+            config=export_config(),
+            status=ExportRun.Status.COMPLETED,
+            created_at=timezone.now() - timedelta(hours=1),
+        )
+        ExportRun.objects.create(
+            config=export_config(),
+            status=ExportRun.Status.TIMEOUT,
+            created_at=timezone.now() - timedelta(hours=2),
+        )
+
+        stats = _get_export_statistics(last_24h)
+
+        assert stats['success_rate'] == 50.0
+        assert stats['failed_count'] == 1
+
+    @use(export_config)
     def test_export_statistics_excludes_queued_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
@@ -249,6 +269,26 @@ class TestRefreshStatistics:
         assert stats['status'] == 'error'
 
     @use(refresh_config)
+    def test_refresh_statistics_count_timed_out_runs_as_failed(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        RefreshRun.objects.create(
+            config=refresh_config(),
+            status=RefreshRun.Status.COMPLETED,
+            created_at=timezone.now() - timedelta(hours=1),
+        )
+        RefreshRun.objects.create(
+            config=refresh_config(),
+            status=RefreshRun.Status.TIMEOUT,
+            created_at=timezone.now() - timedelta(hours=2),
+        )
+
+        stats = _get_refresh_statistics(last_24h)
+
+        assert stats['success_rate'] == 50.0
+        assert stats['failed_count'] == 1
+
+    @use(refresh_config)
     def test_refresh_statistics_excludes_queued_runs(self):
         last_24h = timezone.now() - timedelta(hours=24)
 
@@ -333,6 +373,26 @@ class TestForwardingStatistics:
         assert stats['successful_count'] == 3
         assert stats['failed_count'] == 0
         assert stats['status'] == 'healthy'
+
+    @use(forwarding_config)
+    def test_forwarding_statistics_count_timed_out_runs_as_failed(self):
+        last_24h = timezone.now() - timedelta(hours=24)
+
+        ForwardingRun.objects.create(
+            config=forwarding_config(),
+            status=ForwardingRun.Status.COMPLETED,
+            created_at=timezone.now() - timedelta(hours=1),
+        )
+        ForwardingRun.objects.create(
+            config=forwarding_config(),
+            status=ForwardingRun.Status.TIMEOUT,
+            created_at=timezone.now() - timedelta(hours=2),
+        )
+
+        stats = _get_forwarding_statistics(last_24h)
+
+        assert stats['success_rate'] == 50.0
+        assert stats['failed_count'] == 1
 
     @use(forwarding_config)
     def test_forwarding_statistics_excludes_queued_runs(self):
