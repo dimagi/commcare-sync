@@ -224,8 +224,8 @@ def run_refresh(request, config_id):
     config = get_object_or_404(RefreshConfig, id=config_id)
 
     refresh_run = RefreshRun.objects.create(
-        refresh_config=config,
-        refresh_config_version=config.latest_version,
+        config=config,
+        config_version=config.latest_version,
         triggered_from_ui=True,
         triggered_by=request.user,
     )

@@ -44,8 +44,8 @@ def run_scheduled_forwarding_task(fwd_config_id):
         return None
 
     fwd_run = ForwardingRun.objects.create(
-        forwarding_config=fwd_config,
-        forwarding_config_version=fwd_config.latest_version,
+        config=fwd_config,
+        config_version=fwd_config.latest_version,
         status=ForwardingRun.Status.QUEUED,
         triggered_from_ui=False,
     )

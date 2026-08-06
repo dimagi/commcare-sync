@@ -300,8 +300,8 @@ def run_forwarding(request, forwarder_id):
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
 
     forwarding_run = ForwardingRun.objects.create(
-        forwarding_config=forwarder,
-        forwarding_config_version=forwarder.latest_version,
+        config=forwarder,
+        config_version=forwarder.latest_version,
         triggered_from_ui=True,
         triggered_by=request.user,
     )

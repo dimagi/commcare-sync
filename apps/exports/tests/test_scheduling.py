@@ -34,7 +34,7 @@ class TestExportScheduling:
 
         assert not export_config.has_queued_runs()
 
-        run = ExportRun.objects.create(base_export_config=export_config)
+        run = ExportRun.objects.create(config=export_config)
         assert export_config.has_queued_runs()
 
         run.status = ExportRun.Status.COMPLETED

@@ -91,7 +91,7 @@ class MultiProjectExportConfig(ExportConfigBase):
     def get_last_run_for_project(self, project):
         try:
             return MultiProjectPartialExportRun.objects.filter(
-                parent_run__base_export_config=self,
+                parent_run__config=self,
                 project=project,
             ).order_by('-created_at')[0]
         except IndexError:
@@ -144,16 +144,16 @@ class ExportRunBase(RunBaseModel):
         abstract = True
 
     def __str__(self):
-        return f'{self.base_export_config.name} ({self.created_at})'
+        return f'{self.config.name} ({self.created_at})'
 
 
 class ExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(
+    config = models.ForeignKey(
         ExportConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    export_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version,
         on_delete=models.CASCADE,
         null=True,
@@ -161,12 +161,12 @@ class ExportRun(ExportRunBase):
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(
+    config = models.ForeignKey(
         MultiProjectExportConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    export_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version,
         on_delete=models.CASCADE,
         null=True,
