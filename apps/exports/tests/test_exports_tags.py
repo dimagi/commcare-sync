@@ -50,3 +50,15 @@ def test_to_status_icon_returns_safe_string():
 
     result = exports_tags.to_status_icon(ExportRunBase.Status.COMPLETED)
     assert isinstance(result, SafeString)
+
+
+def test_every_status_renders_an_icon():
+    """An unmapped status renders 'fa-solid None None' rather than raising."""
+    for status in ExportRunBase.Status.values:
+        assert 'None' not in exports_tags.to_status_icon(status)
+
+
+def test_timeout_icon():
+    icon = exports_tags.to_status_icon(ExportRunBase.Status.TIMEOUT)
+    assert 'fa-clock' in icon
+    assert 'text-warning' in icon

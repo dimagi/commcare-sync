@@ -28,6 +28,7 @@ class RunBaseModel(BaseModel):
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
 
     status = models.CharField(
         max_length=10,
@@ -57,7 +58,11 @@ class RunBaseModel(BaseModel):
 
     @property
     def has_log(self):
-        return self.status in {self.Status.COMPLETED, self.Status.FAILED}
+        return self.status in {
+            self.Status.COMPLETED,
+            self.Status.FAILED,
+            self.Status.TIMEOUT,
+        }
 
     @property
     def duration(self):

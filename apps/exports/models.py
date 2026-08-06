@@ -132,6 +132,7 @@ class ExportRunBase(RunBaseModel):
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
         MULTIPLE = 'multiple', _('Multiple statuses')
 
     status = models.CharField(
