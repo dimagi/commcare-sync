@@ -64,6 +64,9 @@ class RunBaseModel(BaseModel):
 
     class Meta:
         abstract = True
+        # `reap_stale_runs` filters on these every minute, and run
+        # history is never pruned.
+        indexes = [models.Index(fields=['status', 'started_at'])]
 
     @property
     def has_log(self):
