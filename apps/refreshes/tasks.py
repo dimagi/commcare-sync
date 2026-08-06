@@ -48,8 +48,8 @@ def run_scheduled_refresh_task(refresh_config_id):
         return None
 
     refresh_run = RefreshRun.objects.create(
-        refresh_config=refresh_config,
-        refresh_config_version=refresh_config.latest_version,
+        config=refresh_config,
+        config_version=refresh_config.latest_version,
         status=RefreshRun.Status.QUEUED,
         triggered_from_ui=False,
     )

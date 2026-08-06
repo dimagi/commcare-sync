@@ -316,7 +316,7 @@ class TestHasActiveRun:
     def test_has_active_run_by_status(self, status, expected):
         config = make_config(database(), destination())
         ForwardingRun.objects.create(
-            forwarding_config=config,
+            config=config,
             status=status,
         )
         assert config.has_active_run is expected
@@ -324,7 +324,7 @@ class TestHasActiveRun:
     def test_uses_prefetched_runs_without_db_query(self):
         config = make_config(database(), destination())
         run = ForwardingRun.objects.create(
-            forwarding_config=config,
+            config=config,
             status=ForwardingRun.Status.QUEUED,
         )
         config._all_runs = [run]

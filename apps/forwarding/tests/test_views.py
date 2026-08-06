@@ -147,7 +147,7 @@ class TestRunForwardingHtmxBranch:
         url = reverse('forwarding:run_forwarding', args=[config.id])
         regular_client().post(url, HTTP_HX_REQUEST='true')
         assert ForwardingRun.objects.filter(
-            forwarding_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
         # Proves dispatch suppression actually works, not just that the

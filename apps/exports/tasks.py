@@ -94,8 +94,8 @@ def _create_and_dispatch_export_run(
         triggered_by=None,
 ):
     export_record = run_model.objects.create(
-        base_export_config=export_config,
-        export_config_version=export_config.latest_version,
+        config=export_config,
+        config_version=export_config.latest_version,
         triggered_from_ui=triggered_from_ui,
         triggered_by=triggered_by,
     )
@@ -120,7 +120,7 @@ def _enqueue_scheduled_export(export_config, run_model, next_task):
 
 
 def run_export_task(export_run_id, start_over):
-    export_run = ExportRun.objects.select_related('base_export_config').get(
+    export_run = ExportRun.objects.select_related('config').get(
         id=export_run_id
     )
     if export_run.status != ExportRun.Status.QUEUED:
@@ -137,7 +137,7 @@ def run_export_task(export_run_id, start_over):
 def run_multi_project_export_task(export_run_id, start_over):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
-        'base_export_config'
+        'config'
     ).get(id=export_run_id)
     export_runs = run_multi_project_export(export_run, start_over)
     export_run = export_runs[-1] if export_runs else None

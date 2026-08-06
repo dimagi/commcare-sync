@@ -23,14 +23,14 @@ class ForwardingConfigAdmin(VersionAdmin):
 @admin.register(models.ForwardingRun)
 class ForwardingRunAdmin(admin.ModelAdmin):
     list_display = [
-        'forwarding_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
         'status',
     ]
     list_filter = [
-        'forwarding_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',

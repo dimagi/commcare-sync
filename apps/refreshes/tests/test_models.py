@@ -27,7 +27,7 @@ class TestRefreshConfig:
     def test_last_run_excludes_queued_runs(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.QUEUED,
         )
         assert config.last_run is None
@@ -36,11 +36,11 @@ class TestRefreshConfig:
     def test_last_run_returns_most_recent_non_queued(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.COMPLETED,
         )
         run2 = RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.COMPLETED,
         )
         assert config.last_run == run2
@@ -49,7 +49,7 @@ class TestRefreshConfig:
     def test_has_queued_runs(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.QUEUED,
         )
         assert config.has_queued_runs()
@@ -58,7 +58,7 @@ class TestRefreshConfig:
     def test_has_queued_runs_false(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.COMPLETED,
         )
         assert not config.has_queued_runs()
@@ -114,19 +114,19 @@ class TestRefreshConfig:
 class TestRefreshRun:
     @use(_refresh_config)
     def test_default_status_is_queued(self):
-        run = RefreshRun.objects.create(refresh_config=_refresh_config())
+        run = RefreshRun.objects.create(config=_refresh_config())
         assert run.status == RefreshRun.Status.QUEUED
 
     @use(_refresh_config)
     def test_str_method(self):
         config = _refresh_config()
-        run = RefreshRun.objects.create(refresh_config=config)
+        run = RefreshRun.objects.create(config=config)
         assert config.name in str(run)
 
     @use(_refresh_config)
     def test_duration_calculation(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.STARTED,
             started_at=timezone.now(),
         )
@@ -137,7 +137,7 @@ class TestRefreshRun:
     @use(_refresh_config)
     def test_duration_none_when_not_complete(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.STARTED,
             started_at=timezone.now(),
         )
@@ -146,7 +146,7 @@ class TestRefreshRun:
     @use(_refresh_config)
     def test_mark_skipped_success(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.QUEUED,
         )
         run.mark_skipped()
@@ -157,7 +157,7 @@ class TestRefreshRun:
     @use(_refresh_config)
     def test_mark_skipped_raises_exception_when_started(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.STARTED,
         )
         with pytest.raises(ValueError):
