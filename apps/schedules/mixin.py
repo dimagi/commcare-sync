@@ -51,7 +51,12 @@ class ScheduleMixin(models.Model):
 
     Concrete models must define:
         SCHEDULED_TASK: str - dotted path to the task run on schedule
-        runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
+        runs: reverse relation manager from the run model's ``config``
+            ForeignKey
+        latest_version: the config's current ``reversion`` Version
+
+    and the run model must have a ``config_version`` ForeignKey to
+    ``reversion``'s Version, which ``create_run`` sets.
     """
 
     class ScheduleType(models.TextChoices):
