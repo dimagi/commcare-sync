@@ -21,6 +21,11 @@ def run_refresh_task(refresh_run_id):
         logger.error(f'RefreshRun {refresh_run_id} does not exist')
         return None
 
+    if refresh_run.status != RefreshRun.Status.QUEUED:
+        # Django Q2 re-delivered a task whose run is already under way or
+        # finished. Redoing the work is worse than doing nothing.
+        return None
+
     run_refresh(refresh_run)
     return refresh_run.id
 

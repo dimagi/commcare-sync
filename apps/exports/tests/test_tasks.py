@@ -202,3 +202,17 @@ class TestExportTask:
             run_export_task(run.id)
 
         assert mock_run.call_args.args[1] is False
+
+
+class TestMultiProjectExportTask:
+    @use(multi_export_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = multi_export_config()
+        run = MultiProjectExportRun.objects.create(
+            config=config, status=MultiProjectExportRun.Status.STARTED
+        )
+
+        with patch('apps.exports.tasks.run_multi_project_export') as mock_run:
+            run_multi_project_export_task(run.id)
+
+        mock_run.assert_not_called()

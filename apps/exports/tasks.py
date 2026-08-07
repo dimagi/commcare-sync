@@ -108,7 +108,9 @@ def run_export_task(export_run_id, start_over=False):
         id=export_run_id
     )
     if export_run.status != ExportRun.Status.QUEUED:
-        return
+        # Django Q2 re-delivered a task whose run is already under way or
+        # finished. Redoing the work is worse than doing nothing.
+        return None
     export_run = run_export(export_run, start_over)
     return {
         'run_time': export_run.created_at.isoformat(),
@@ -123,6 +125,10 @@ def run_multi_project_export_task(export_run_id, start_over=False):
     export_run = MultiProjectExportRun.objects.select_related(
         'config'
     ).get(id=export_run_id)
+    if export_run.status != MultiProjectExportRun.Status.QUEUED:
+        # Django Q2 re-delivered a task whose run is already under way or
+        # finished. Redoing the work is worse than doing nothing.
+        return None
     export_runs = run_multi_project_export(export_run, start_over)
     export_run = export_runs[-1] if export_runs else None
     if export_run:

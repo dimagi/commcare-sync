@@ -5,7 +5,21 @@ from unmagic import use
 from .fixtures import forwarding_config
 
 from ..models import ForwardingConfig, ForwardingRun
-from ..tasks import run_scheduled_forwarding_task
+from ..tasks import run_forwarding_task, run_scheduled_forwarding_task
+
+
+class TestForwardingTask:
+    @use(forwarding_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = forwarding_config()
+        run = ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+
+        with patch('apps.forwarding.tasks.run_forwarding') as mock_run:
+            run_forwarding_task(run.id)
+
+        mock_run.assert_not_called()
 
 
 class TestScheduledForwardingTask:

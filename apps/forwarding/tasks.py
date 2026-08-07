@@ -25,6 +25,11 @@ def run_forwarding_task(fwd_run_id):
         logger.error(f'ForwardingRun {fwd_run_id} does not exist')
         return None
 
+    if fwd_run.status != ForwardingRun.Status.QUEUED:
+        # Django Q2 re-delivered a task whose run is already under way or
+        # finished. Redoing the work is worse than doing nothing.
+        return None
+
     run_forwarding(fwd_run)
     return fwd_run.id
 
