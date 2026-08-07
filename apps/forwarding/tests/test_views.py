@@ -127,8 +127,10 @@ class TestDeleteDestinationView:
 def mock_async_task_dispatch():
     # Suppress dispatch so these view tests don't leave a live django-q
     # OrmQ row queued behind them (async_task's ORM broker really does
-    # insert a row, even though nothing consumes it in tests).
-    with patch('apps.forwarding.views.async_task') as mock:
+    # insert a row, even though nothing consumes it in tests). The view
+    # now dispatches via apps.schedules.dispatch.create_run_and_dispatch,
+    # which is where async_task is actually called from.
+    with patch('apps.schedules.dispatch.async_task') as mock:
         mock.return_value = 'test-task-id'
         yield mock
 
@@ -161,6 +163,21 @@ class TestRunForwardingHtmxBranch:
         response = regular_client().post(url)
         assert response.status_code == 200
         assert len(response.content) > 0
+
+
+@use(regular_client, forwarding_config, mock_async_task_dispatch)
+class TestRunForwardingConcurrencyGuard:
+    def test_manual_forwarding_skipped_while_a_run_is_active(self):
+        config = forwarding_config()
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.QUEUED
+        )
+
+        response = regular_client().post(config.run_url)
+
+        assert response.status_code == 200
+        mock_async_task_dispatch().assert_not_called()
+        assert config.runs.count() == 1
 
 
 @use('db', admin_client)

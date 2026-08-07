@@ -1,6 +1,8 @@
 """Background tasks for data forwarding."""
 import logging
 
+from apps.schedules.dispatch import create_run
+
 from .models import ForwardingConfig, ForwardingRun
 from .runner import run_forwarding
 
@@ -40,14 +42,21 @@ def run_scheduled_forwarding_task(fwd_config_id):
     try:
         fwd_config = ForwardingConfig.objects.get(id=fwd_config_id)
     except ForwardingConfig.DoesNotExist:
-        logger.error(f'ForwardingConfig {fwd_config_id} does not exist')
+        logger.warning(
+            'run_scheduled_forwarding_task: ForwardingConfig %s no longer '
+            'exists, skipping.',
+            fwd_config_id,
+        )
         return None
 
-    fwd_run = ForwardingRun.objects.create(
-        config=fwd_config,
-        config_version=fwd_config.latest_version,
-        status=ForwardingRun.Status.QUEUED,
-        triggered_from_ui=False,
-    )
+    fwd_run = create_run(fwd_config)
+    if fwd_run is None:
+        logger.info(
+            'run_scheduled_forwarding_task: ForwardingConfig %s already has '
+            'an active run, skipping.',
+            fwd_config_id,
+        )
+        return None
+
     run_forwarding(fwd_run)
     return fwd_run.id
