@@ -329,6 +329,34 @@ class TestHasActiveRun:
         )
         config._all_runs = [run]
         with CaptureQueriesContext(connection) as ctx:
-            result = config.has_active_run
+            result = config.has_active_run_cached
         assert len(ctx) == 0
         assert result is True
+
+    def test_has_active_run_ignores_a_stale_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+        # A prefetch captured before the run existed must not be trusted
+        # by the dispatch guard.
+        config._all_runs = []
+
+        assert config.has_active_run is True
+
+    def test_has_active_run_cached_uses_the_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+        config._all_runs = []
+
+        assert config.has_active_run_cached is False
+
+    def test_has_active_run_cached_falls_back_without_a_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+
+        assert config.has_active_run_cached is True

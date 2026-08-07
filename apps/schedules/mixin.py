@@ -24,6 +24,12 @@ def _validate_days_of_week(value):
             )
 
 
+ACTIVE_RUN_STATUSES = frozenset({
+    RunBaseModel.Status.QUEUED,
+    RunBaseModel.Status.STARTED,
+})
+
+
 class ScheduleMixin(models.Model):
     """
     Abstract model mixin that adds scheduling fields to any config model.
@@ -154,11 +160,26 @@ class ScheduleMixin(models.Model):
 
     @property
     def has_active_run(self):
-        active = {RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED}
+        """True if a run is queued or started.
+
+        Always queries. This gates dispatch, so it must not be answered
+        from a prefetch captured for rendering, which may predate the run
+        it is being asked about.
+        """
+        return self.runs.filter(status__in=ACTIVE_RUN_STATUSES).exists()
+
+    @property
+    def has_active_run_cached(self):
+        """``has_active_run``, answered from ``_all_runs`` when prefetched.
+
+        For list pages, which prefetch every config's runs and would
+        otherwise issue a query per row. Falls back to the real thing when
+        there is no prefetch.
+        """
         all_runs = getattr(self, '_all_runs', None)
-        if all_runs is not None:
-            return any(r.status in active for r in all_runs)
-        return self.runs.filter(status__in=active).exists()
+        if all_runs is None:
+            return self.has_active_run
+        return any(r.status in ACTIVE_RUN_STATUSES for r in all_runs)
 
     @property
     def schedule_display(self):
