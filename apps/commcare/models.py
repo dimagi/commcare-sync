@@ -32,6 +32,8 @@ class RunBaseModel(BaseModel):
         SKIPPED = 'skipped', _('Skipped')
         TIMEOUT = 'timeout', _('Timed out')
 
+    # Queued or under way. A config with an active run gets no other run.
+    ACTIVE_STATUSES = frozenset({Status.QUEUED, Status.STARTED})
     # Finished without succeeding.
     FAILED_STATUSES = frozenset({Status.FAILED, Status.TIMEOUT})
     # Finished with a log to show.
