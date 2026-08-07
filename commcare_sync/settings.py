@@ -116,6 +116,10 @@ DATABASES = {
                 'PRAGMA busy_timeout=5000;'
                 'PRAGMA synchronous=NORMAL;'
             ),
+            # Take the write lock when a transaction begins, not at its
+            # first write. `create_run` (apps/schedules/dispatch.py)
+            # relies on this so two triggers can't both create an active
+            # run for one config.
             'transaction_mode': 'IMMEDIATE',
         },
     }
