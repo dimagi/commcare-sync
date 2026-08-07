@@ -237,8 +237,10 @@ class TestExportsHomeViewUpdated:
 def mock_async_task_dispatch():
     # Suppress dispatch so these view tests don't leave a live django-q
     # OrmQ row queued behind them (async_task's ORM broker really does
-    # insert a row, even though nothing consumes it in tests).
-    with patch('apps.exports.views.async_task') as mock:
+    # insert a row, even though nothing consumes it in tests). The view
+    # now dispatches via apps.schedules.dispatch.create_run_and_dispatch,
+    # which is where async_task is actually called from.
+    with patch('apps.schedules.dispatch.async_task') as mock:
         mock.return_value = 'test-task-id'
         yield mock
 
@@ -295,7 +297,7 @@ class TestRunExportHtmxBranch:
         """startOver: true in JSON body passes start_over=True to task."""
         import json
         url = reverse('exports:run_export', args=[export_config().id])
-        with patch('apps.exports.views.async_task') as mock_async:
+        with patch('apps.schedules.dispatch.async_task') as mock_async:
             mock_async.return_value = 'fake-id'
             authed_client().post(
                 url,

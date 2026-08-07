@@ -2,8 +2,8 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django_q.tasks import async_task
 
+from apps.schedules.dispatch import create_run, create_run_and_dispatch
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
 from .models import (
@@ -30,27 +30,31 @@ def run_all_exports_task(user_id=None):
                 user_id,
             )
 
+    # A CLI invocation (``manage.py run_all_exports``, with no user_id)
+    # is not a UI trigger. We key on ``user_id`` being supplied, not the
+    # User existing, so a deleted user's click is still recorded as
+    # UI-triggered.
+    triggered_from_ui = user_id is not None
+
     # ``is_paused`` derives from schedule fields (has_schedule and
     # schedule_enabled), so the filter happens in Python for clarity.
     for export in ExportConfig.objects.all():
-        if export.is_paused or export.has_active_run:
+        if export.is_paused:
             continue
-        _create_and_dispatch_export_run(
+        create_run_and_dispatch(
             export,
-            ExportRun,
             run_export_task,
-            triggered_from_ui=True,
+            triggered_from_ui=triggered_from_ui,
             triggered_by=user,
         )
 
     for multi_export in MultiProjectExportConfig.objects.all():
-        if multi_export.is_paused or multi_export.has_active_run:
+        if multi_export.is_paused:
             continue
-        _create_and_dispatch_export_run(
+        create_run_and_dispatch(
             multi_export,
-            MultiProjectExportRun,
             run_multi_project_export_task,
-            triggered_from_ui=True,
+            triggered_from_ui=triggered_from_ui,
             triggered_by=user,
         )
 
@@ -66,7 +70,15 @@ def run_scheduled_export_task(export_config_id):
             export_config_id,
         )
         return
-    _enqueue_scheduled_export(export, ExportRun, run_export_task)
+    run = create_run(export)
+    if run is None:
+        logger.info(
+            'run_scheduled_export_task: ExportConfig %s already has an '
+            'active run, skipping.',
+            export_config_id,
+        )
+        return
+    run_export(run)
 
 
 def run_scheduled_multi_export_task(export_config_id):
@@ -80,36 +92,18 @@ def run_scheduled_multi_export_task(export_config_id):
             export_config_id,
         )
         return
-    _enqueue_scheduled_export(
-        export, MultiProjectExportRun, run_multi_project_export_task
-    )
-
-
-def _create_and_dispatch_export_run(
-    export_config,
-        run_model,
-        next_task,
-        *,
-        triggered_from_ui=False,
-        triggered_by=None,
-):
-    export_record = run_model.objects.create(
-        config=export_config,
-        config_version=export_config.latest_version,
-        triggered_from_ui=triggered_from_ui,
-        triggered_by=triggered_by,
-    )
-    async_task(next_task, export_record.id, start_over=False)
-
-
-def _enqueue_scheduled_export(export_config, run_model, next_task):
-    """Scheduler entry point: skip if already queued, then create and dispatch."""
-    if export_config.has_queued_runs():
+    run = create_run(export)
+    if run is None:
+        logger.info(
+            'run_scheduled_multi_export_task: MultiProjectExportConfig %s '
+            'already has an active run, skipping.',
+            export_config_id,
+        )
         return
-    _create_and_dispatch_export_run(export_config, run_model, next_task)
+    run_multi_project_export(run)
 
 
-def run_export_task(export_run_id, start_over):
+def run_export_task(export_run_id, start_over=False):
     export_run = ExportRun.objects.select_related('config').get(
         id=export_run_id
     )
@@ -124,7 +118,7 @@ def run_export_task(export_run_id, start_over):
     }
 
 
-def run_multi_project_export_task(export_run_id, start_over):
+def run_multi_project_export_task(export_run_id, start_over=False):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
         'config'

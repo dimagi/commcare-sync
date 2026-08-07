@@ -21,6 +21,7 @@ from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -384,7 +385,6 @@ def run_export(request, export_id):
         request,
         export_id,
         ExportConfig,
-        ExportRun,
         run_export_task,
     )
 
@@ -396,7 +396,6 @@ def run_multi_export(request, export_id):
         request,
         export_id,
         MultiProjectExportConfig,
-        MultiProjectExportRun,
         run_multi_project_export_task,
     )
 
@@ -405,12 +404,9 @@ def _run_export(
     request,
     export_id,
     export_config_class,
-    export_run_class,
     export_task,
 ):
     export = get_object_or_404(export_config_class, id=export_id)
-    if export.has_active_run:
-        return run_response(request, task_id=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
@@ -418,15 +414,10 @@ def _run_export(
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    export_record = export_run_class.objects.create(
-        config=export,
-        config_version=export.latest_version,
-        triggered_from_ui=True,
-        triggered_by=request.user,
-    )
-    task_id = async_task(
+    _run, task_id = create_run_and_dispatch(
+        export,
         export_task,
-        export_record.id,
+        triggered_by=request.user,
         start_over=start_over,
     )
     return run_response(request, task_id)
