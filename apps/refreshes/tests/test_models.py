@@ -46,24 +46,6 @@ class TestRefreshConfig:
         assert config.last_run == run2
 
     @use(_refresh_config)
-    def test_has_queued_runs(self):
-        config = _refresh_config()
-        RefreshRun.objects.create(
-            config=config,
-            status=RefreshRun.Status.QUEUED,
-        )
-        assert config.has_queued_runs()
-
-    @use(_refresh_config)
-    def test_has_queued_runs_false(self):
-        config = _refresh_config()
-        RefreshRun.objects.create(
-            config=config,
-            status=RefreshRun.Status.COMPLETED,
-        )
-        assert not config.has_queued_runs()
-
-    @use(_refresh_config)
     def test_latest_version_returns_version(self):
         version = _refresh_config().latest_version
         assert version is not None

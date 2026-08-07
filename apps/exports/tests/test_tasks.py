@@ -203,6 +203,11 @@ class TestExportTask:
 
         assert mock_run.call_args.args[1] is False
 
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_export_task(999999) is None
+        assert 'no longer exists' in caplog.text
+
 
 class TestMultiProjectExportTask:
     @use(multi_export_config)
@@ -216,3 +221,8 @@ class TestMultiProjectExportTask:
             run_multi_project_export_task(run.id)
 
         mock_run.assert_not_called()
+
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_multi_project_export_task(999999) is None
+        assert 'no longer exists' in caplog.text

@@ -4,7 +4,11 @@ from apps.exports.tasks import run_all_exports_task
 
 
 class Command(BaseCommand):
-    help = 'Run all export configs in the database.'
+    help = (
+        'Queue a run for every non-paused export config, then return '
+        'immediately. A running Django-Q2 cluster is required to actually '
+        'execute the queued runs.'
+    )
 
     def handle(self, **options):
         run_all_exports_task()

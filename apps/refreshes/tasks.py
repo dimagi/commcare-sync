@@ -18,7 +18,10 @@ def run_refresh_task(refresh_run_id):
     try:
         refresh_run = RefreshRun.objects.get(id=refresh_run_id)
     except RefreshRun.DoesNotExist:
-        logger.error(f'RefreshRun {refresh_run_id} does not exist')
+        logger.warning(
+            'run_refresh_task: RefreshRun %s no longer exists, skipping.',
+            refresh_run_id,
+        )
         return None
 
     if refresh_run.status != RefreshRun.Status.QUEUED:

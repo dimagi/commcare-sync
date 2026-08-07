@@ -137,12 +137,6 @@ class ScheduleMixin(models.Model):
         """True when the config has no active schedule."""
         return not (self.has_schedule and self.schedule_enabled)
 
-    def has_queued_runs(self):
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == RunBaseModel.Status.QUEUED
-        return False
-
     @property
     def last_run(self):
         all_runs = getattr(self, '_all_runs', None)

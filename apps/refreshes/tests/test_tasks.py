@@ -34,12 +34,9 @@ def test_redelivered_task_does_not_redo_the_work(mock_run_refresh):
 
 
 @use('db')
-@patch('apps.refreshes.tasks.run_refresh')
-def test_run_refresh_task_nonexistent_run(mock_run_refresh):
-    result = run_refresh_task(99999)
-
-    assert result is None
-    mock_run_refresh.assert_not_called()
+def test_missing_run_logs_and_returns(caplog):
+    assert run_refresh_task(999999) is None
+    assert 'no longer exists' in caplog.text
 
 
 @use(_refresh_config)

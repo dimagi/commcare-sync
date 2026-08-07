@@ -21,6 +21,11 @@ class TestForwardingTask:
 
         mock_run.assert_not_called()
 
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_forwarding_task(999999) is None
+        assert 'no longer exists' in caplog.text
+
 
 class TestScheduledForwardingTask:
     @use(forwarding_config)

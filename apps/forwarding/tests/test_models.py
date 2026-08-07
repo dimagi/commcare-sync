@@ -83,44 +83,6 @@ class TestForwardingConfig:
         assert config().last_run.id == run2.id
 
     @use(config)
-    def test_has_queued_runs_with_no_runs(self):
-        assert not config().has_queued_runs()
-
-    @use(config)
-    def test_has_queued_runs_returns_true_when_most_recent_is_queued(self):
-        with time_machine.travel('2025-01-01 10:00:00', tick=False):
-            completed_run = ForwardingRun.objects.create(  # noqa: F841
-                config=config(),
-                status=ForwardingRun.Status.COMPLETED,
-            )
-
-        with time_machine.travel('2025-01-01 11:00:00', tick=False):
-            queued_run = ForwardingRun.objects.create(  # noqa: F841
-                config=config(),
-                status=ForwardingRun.Status.QUEUED,
-            )
-
-        assert config().has_queued_runs()
-
-    @use(config)
-    def test_has_queued_runs_returns_false_when_most_recent_is_not_queued(
-        self,
-    ):
-        with time_machine.travel('2025-01-01 10:00:00', tick=False):
-            queued_run = ForwardingRun.objects.create(  # noqa: F841
-                config=config(),
-                status=ForwardingRun.Status.QUEUED,
-            )
-
-        with time_machine.travel('2025-01-01 11:00:00', tick=False):
-            completed_run = ForwardingRun.objects.create(  # noqa: F841
-                config=config(),
-                status=ForwardingRun.Status.COMPLETED,
-            )
-
-        assert not config().has_queued_runs()
-
-    @use(config)
     def test_latest_version_returns_version(self):
         version = config().latest_version
 

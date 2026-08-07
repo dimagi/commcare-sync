@@ -22,7 +22,11 @@ def run_forwarding_task(fwd_run_id):
     try:
         fwd_run = ForwardingRun.objects.get(id=fwd_run_id)
     except ForwardingRun.DoesNotExist:
-        logger.error(f'ForwardingRun {fwd_run_id} does not exist')
+        logger.warning(
+            'run_forwarding_task: ForwardingRun %s no longer exists, '
+            'skipping.',
+            fwd_run_id,
+        )
         return None
 
     if fwd_run.status != ForwardingRun.Status.QUEUED:

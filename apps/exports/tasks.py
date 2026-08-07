@@ -104,9 +104,16 @@ def run_scheduled_multi_export_task(export_config_id):
 
 
 def run_export_task(export_run_id, start_over=False):
-    export_run = ExportRun.objects.select_related('config').get(
-        id=export_run_id
-    )
+    try:
+        export_run = ExportRun.objects.select_related('config').get(
+            id=export_run_id
+        )
+    except ExportRun.DoesNotExist:
+        logger.warning(
+            'run_export_task: ExportRun %s no longer exists, skipping.',
+            export_run_id,
+        )
+        return None
     if export_run.status != ExportRun.Status.QUEUED:
         # Django Q2 re-delivered a task whose run is already under way or
         # finished. Redoing the work is worse than doing nothing.
@@ -122,9 +129,17 @@ def run_export_task(export_run_id, start_over=False):
 
 def run_multi_project_export_task(export_run_id, start_over=False):
     run_start = timezone.now()
-    export_run = MultiProjectExportRun.objects.select_related(
-        'config'
-    ).get(id=export_run_id)
+    try:
+        export_run = MultiProjectExportRun.objects.select_related(
+            'config'
+        ).get(id=export_run_id)
+    except MultiProjectExportRun.DoesNotExist:
+        logger.warning(
+            'run_multi_project_export_task: MultiProjectExportRun %s no '
+            'longer exists, skipping.',
+            export_run_id,
+        )
+        return None
     if export_run.status != MultiProjectExportRun.Status.QUEUED:
         # Django Q2 re-delivered a task whose run is already under way or
         # finished. Redoing the work is worse than doing nothing.
