@@ -9,9 +9,9 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
-from django_q.tasks import async_task
 
 from apps.db.models import Database
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.decorators import require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -222,15 +222,9 @@ def run_history_table(request, config_id):
 def run_refresh(request, config_id):
     """Manually trigger a refresh run."""
     config = get_object_or_404(RefreshConfig, id=config_id)
-
-    refresh_run = RefreshRun.objects.create(
-        config=config,
-        config_version=config.latest_version,
-        triggered_from_ui=True,
-        triggered_by=request.user,
+    _run, task_id = create_run_and_dispatch(
+        config, run_refresh_task, triggered_by=request.user
     )
-
-    task_id = async_task(run_refresh_task, refresh_run.id)
     return run_response(request, task_id)
 
 

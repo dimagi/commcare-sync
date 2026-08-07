@@ -196,7 +196,7 @@ class TestRunHistoryTableView:
 
 class TestRunRefreshView:
     @use(authed_client, _refresh_config)
-    @patch('apps.refreshes.views.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_triggers_task(self, mock_async):
         config = _refresh_config()
         mock_async.return_value = 'test-task-id'
@@ -218,6 +218,22 @@ class TestRunRefreshView:
         url = reverse('refreshes:run_refresh', args=[config.id])
         response = authed_client().get(url)
         assert response.status_code == 405
+
+
+class TestRunRefreshConcurrencyGuard:
+    @use(authed_client, _refresh_config)
+    def test_manual_refresh_skipped_while_a_run_is_active(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            config=config, status=RefreshRun.Status.STARTED
+        )
+
+        with patch('apps.schedules.dispatch.async_task') as mock_async:
+            response = authed_client().post(config.run_url)
+
+        assert response.status_code == 200
+        mock_async.assert_not_called()
+        assert config.runs.count() == 1
 
 
 class TestFetchMaterializedViewsView:
@@ -384,8 +400,10 @@ class TestRefreshRunLogView:
 def mock_async_task_dispatch():
     # Suppress dispatch so these view tests don't leave a live django-q
     # OrmQ row queued behind them (async_task's ORM broker really does
-    # insert a row, even though nothing consumes it in tests).
-    with patch('apps.refreshes.views.async_task') as mock:
+    # insert a row, even though nothing consumes it in tests). The view
+    # now dispatches via apps.schedules.dispatch.create_run_and_dispatch,
+    # which is where async_task is actually called from.
+    with patch('apps.schedules.dispatch.async_task') as mock:
         mock.return_value = 'test-task-id'
         yield mock
 

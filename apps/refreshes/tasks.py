@@ -1,6 +1,8 @@
 """Background tasks for materialized view refreshes."""
 import logging
 
+from apps.schedules.dispatch import create_run
+
 from .models import RefreshConfig, RefreshRun
 from .runner import run_refresh
 
@@ -32,26 +34,21 @@ def run_scheduled_refresh_task(refresh_config_id):
     try:
         refresh_config = RefreshConfig.objects.get(id=refresh_config_id)
     except RefreshConfig.DoesNotExist:
-        logger.error(f'RefreshConfig {refresh_config_id} does not exist')
-        return None
-
-    if refresh_config.runs.filter(
-        status__in=[
-            RefreshRun.Status.QUEUED,
-            RefreshRun.Status.STARTED,
-        ]
-    ).exists():
-        logger.info(
-            f'Skipping scheduled refresh for {refresh_config} - '
-            f'already has queued or running run'
+        logger.warning(
+            'run_scheduled_refresh_task: RefreshConfig %s no longer exists, '
+            'skipping.',
+            refresh_config_id,
         )
         return None
 
-    refresh_run = RefreshRun.objects.create(
-        config=refresh_config,
-        config_version=refresh_config.latest_version,
-        status=RefreshRun.Status.QUEUED,
-        triggered_from_ui=False,
-    )
+    refresh_run = create_run(refresh_config)
+    if refresh_run is None:
+        logger.info(
+            'run_scheduled_refresh_task: RefreshConfig %s already has an '
+            'active run, skipping.',
+            refresh_config_id,
+        )
+        return None
+
     run_refresh(refresh_run)
     return refresh_run.id
