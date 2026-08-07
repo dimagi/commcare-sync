@@ -178,11 +178,28 @@ class ScheduleMixin(models.Model):
 
     @property
     def has_active_run(self):
-        active = {RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED}
+        """True if a run is queued or started.
+
+        Always queries. This guards against simultaneous runs, so it
+        must not be answered from a prefetch captured for rendering,
+        which may predate the run it is being asked about.
+        """
+        return self.runs.filter(
+            status__in=RunBaseModel.ACTIVE_STATUSES
+        ).exists()
+
+    @property
+    def has_active_run_from_prefetch(self):
+        """``has_active_run``, answered from the prefetched runs if any.
+
+        For list pages, which prefetch every config's runs, and would
+        otherwise issue a query per row. Falls back to ``has_active_run``
+        when there is no prefetch.
+        """
         all_runs = self._prefetched_runs()
-        if all_runs is not None:
-            return any(r.status in active for r in all_runs)
-        return self.runs.filter(status__in=active).exists()
+        if all_runs is None:
+            return self.has_active_run
+        return any(r.status in RunBaseModel.ACTIVE_STATUSES for r in all_runs)
 
     @property
     def schedule_display(self):
