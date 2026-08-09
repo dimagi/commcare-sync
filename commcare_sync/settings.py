@@ -52,8 +52,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'celery_progress',
-    'django_celery_beat',
+    'django_q',
     'reversion',
 ]
 
@@ -108,12 +107,17 @@ FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'commcare_sync',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+            # WAL allows the web process and task workers to share the DB.
+            'init_command': (
+                'PRAGMA journal_mode=WAL;'
+                'PRAGMA busy_timeout=5000;'
+                'PRAGMA synchronous=NORMAL;'
+            ),
+            'transaction_mode': 'IMMEDIATE',
+        },
     }
 }
 
@@ -185,9 +189,18 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 
 
-# Celery setup (using Redis)
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# Django-Q2 task queue, brokered by the app database (ORM broker).
+Q_CLUSTER = {
+    'name': 'commcare_sync',
+    'orm': 'default',
+    'workers': 2,
+    'timeout': 6 * 60 * 60,  # kill a run after 6h
+    'retry': 8 * 60 * 60,  # re-deliver 2h after the timeout
+    'max_attempts': 2,  # one retry for interrupted runs, then give up
+    'ack_failures': True,  # a failed run is complete, not re-delivered
+    'catch_up': False,  # don't replay every missed minute of the dispatcher
+    'label': 'Task queue',
+}
 
 
 # CommCare Config

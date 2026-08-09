@@ -10,8 +10,6 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('exports', '0020_encrypt_existing_connection_strings'),
-        ('forwarding', '0001_initial'),
-        ('refreshes', '0001_initial'),
     ]
 
     operations = [

@@ -7,8 +7,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('db', '0001_initial'),
         ('exports', '0020_encrypt_existing_connection_strings'),
-        ('forwarding', '0001_initial'),
-        ('refreshes', '0001_initial'),
     ]
 
     operations = [

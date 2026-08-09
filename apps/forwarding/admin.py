@@ -17,6 +17,7 @@ class ForwardingConfigAdmin(VersionAdmin):
         'updated_at',
     ]
     list_filter = ['database', 'destination', 'created_at', 'updated_at']
+    readonly_fields = ['next_run_at']
 
 
 @admin.register(models.ForwardingRun)

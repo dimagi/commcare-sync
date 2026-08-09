@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
+from django_q.tasks import async_task
 
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
@@ -305,5 +306,5 @@ def run_forwarding(request, forwarder_id):
         triggered_by=request.user,
     )
 
-    async_result = run_forwarding_task.delay(forwarding_run.id)
-    return run_response(request, async_result)
+    task_id = async_task(run_forwarding_task, forwarding_run.id)
+    return run_response(request, task_id)

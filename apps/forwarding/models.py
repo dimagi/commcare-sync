@@ -77,8 +77,7 @@ class ForwardingDestination(BaseModel):
 class ForwardingConfig(ScheduleMixin, BaseModel):
     """Configuration for a data forwarding job."""
 
-    CELERY_TASK = 'apps.forwarding.tasks.run_scheduled_forwarding_task'
-    PERIODIC_TASK_PREFIX = 'Run forwarding'
+    SCHEDULED_TASK = 'apps.forwarding.tasks.run_scheduled_forwarding_task'
 
     name = models.CharField(max_length=100)
     database = models.ForeignKey(Database, on_delete=models.PROTECT)
