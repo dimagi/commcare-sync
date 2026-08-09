@@ -171,55 +171,6 @@ class TestForwardingRun:
             assert duration_display == '2 hours 15 minutes'
 
     @use(config)
-    def test_mark_skipped_success(self):
-        run = ForwardingRun.objects.create(
-            config=config(),
-            status=ForwardingRun.Status.QUEUED,
-        )
-
-        run.mark_skipped()
-
-        run.refresh_from_db()
-        assert run.status == ForwardingRun.Status.SKIPPED
-        assert run.completed_at is not None
-
-    @use(config)
-    def test_mark_skipped_raises_exception_when_already_started(self):
-        run = ForwardingRun.objects.create(
-            config=config(),
-            status=ForwardingRun.Status.STARTED,
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            run.mark_skipped()
-
-        assert 'skipped' in str(exc_info.value)
-
-    @use(config)
-    def test_mark_skipped_raises_exception_when_already_completed(self):
-        run = ForwardingRun.objects.create(
-            config=config(),
-            status=ForwardingRun.Status.COMPLETED,
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            run.mark_skipped()
-
-        assert 'skipped' in str(exc_info.value)
-
-    @use(config)
-    def test_mark_skipped_raises_exception_when_already_failed(self):
-        run = ForwardingRun.objects.create(
-            config=config(),
-            status=ForwardingRun.Status.FAILED,
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            run.mark_skipped()
-
-        assert 'skipped' in str(exc_info.value)
-
-    @use(config)
     def test_default_status_is_queued(self):
         run = ForwardingRun.objects.create(
             config=config(),

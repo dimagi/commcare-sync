@@ -1,7 +1,6 @@
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
@@ -90,15 +89,6 @@ class RunBaseModel(BaseModel):
 
     def get_duration_display(self):
         return readable_timedelta(self.duration)
-
-    def mark_skipped(self):
-        if self.status != self.Status.QUEUED:
-            raise ValueError(
-                _('Can\'t mark a run "skipped" after it has been started.')
-            )
-        self.status = self.Status.SKIPPED
-        self.completed_at = timezone.now()
-        self.save()
 
 
 class CommCareServer(BaseModel):

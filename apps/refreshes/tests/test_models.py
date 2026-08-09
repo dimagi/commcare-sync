@@ -124,23 +124,3 @@ class TestRefreshRun:
             started_at=timezone.now(),
         )
         assert run.duration is None
-
-    @use(_refresh_config)
-    def test_mark_skipped_success(self):
-        run = RefreshRun.objects.create(
-            config=_refresh_config(),
-            status=RefreshRun.Status.QUEUED,
-        )
-        run.mark_skipped()
-        run.refresh_from_db()
-        assert run.status == RefreshRun.Status.SKIPPED
-        assert run.completed_at is not None
-
-    @use(_refresh_config)
-    def test_mark_skipped_raises_exception_when_started(self):
-        run = RefreshRun.objects.create(
-            config=_refresh_config(),
-            status=RefreshRun.Status.STARTED,
-        )
-        with pytest.raises(ValueError):
-            run.mark_skipped()
