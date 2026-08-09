@@ -194,10 +194,33 @@ Q_CLUSTER = {
     'name': 'commcare_sync',
     'orm': 'default',
     'workers': 2,
-    'timeout': 6 * 60 * 60,  # kill a run after 6h
-    'retry': 8 * 60 * 60,  # re-deliver 2h after the timeout
-    'max_attempts': 2,  # one retry for interrupted runs, then give up
-    'ack_failures': True,  # a failed run is complete, not re-delivered
+
+    # Kill a task's worker after 23h. A run stuck this way is left
+    # STARTED with no result recorded, so `attempt_count` (only
+    # incremented when a result is recorded, see `django_q/monitor.py`)
+    # never advances and `max_attempts` never applies to it. (See
+    # `max_attempts` below.)
+    #
+    # This is the ceiling on how long any single run may take, and it is
+    # deliberately generous. First-time exports of very large projects
+    # can take longer than this. Those are expected to be run manually
+    # using the CommCare Data Export Tool (commcare-export) instead.
+    'timeout': 23 * 60 * 60,
+
+    # If a task has no result, retry it 24h after it was queued (1h
+    # after the timeout kills its worker). `retry` needs to be greater
+    # than `timeout`, otherwise a task is retried while its first worker
+    # is still running.
+    #
+    # (If a run doesn't record a result, then it would repeat every 24h
+    # indefinitely. `reap_stale_runs` (apps/schedules/tasks.py) stops a
+    # timed-out run from blocking its config.)
+    'retry': 24 * 60 * 60,
+
+    # `max_attempts` bounds retries of tasks that raise or record a
+    # result. It does not bound timeout-killed tasks. (See `retry` above).
+    'max_attempts': 2,
+    'ack_failures': True,  # a failed run is complete, not retried
     'catch_up': False,  # don't replay every missed minute of the dispatcher
     'label': 'Task queue',
 }
