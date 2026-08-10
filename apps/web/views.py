@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django_q.tasks import fetch
 
@@ -22,6 +22,26 @@ def run_response(request, task_id=None):
     if request.headers.get('HX-Request'):
         return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
     return HttpResponse(task_id)
+
+
+def run_status_response(model, run_id):
+    """Return the poll payload for one run row.
+
+    One helper for all four endpoints, so the contract cannot drift
+    between them. ``status`` keys presentation, ``label`` carries the
+    wording so the browser never enumerates statuses for text, and
+    ``complete`` is what stops the poll.
+    """
+    run = get_object_or_404(model, id=run_id)
+    response = JsonResponse({
+        'status': run.status,
+        'label': run.get_status_display(),
+        'complete': run.is_terminal,
+    })
+    # A poll that reads a cached row would report a finished run as
+    # still running, indefinitely.
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @login_required

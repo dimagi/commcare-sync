@@ -160,6 +160,10 @@ class ExportRun(ExportRunBase):
         null=True,
     )
 
+    @property
+    def status_url(self):
+        return reverse('exports:run_status', args=[self.id])
+
 
 class MultiProjectExportRun(ExportRunBase):
     config = models.ForeignKey(
@@ -172,6 +176,10 @@ class MultiProjectExportRun(ExportRunBase):
         on_delete=models.CASCADE,
         null=True,
     )
+
+    @property
+    def status_url(self):
+        return reverse('exports:multi_run_status', args=[self.id])
 
 
 class MultiProjectPartialExportRun(ExportRunBase):

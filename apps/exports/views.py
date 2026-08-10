@@ -23,7 +23,7 @@ from reversion.models import Version
 from apps.commcare.models import CommCareAccount, CommCareProject
 from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import run_response
+from apps.web.views import run_response, run_status_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -133,6 +133,20 @@ def multi_run_log(request, run_id):
     """HTMX endpoint: log fragment for a MultiProjectExportRun."""
     run = get_object_or_404(MultiProjectExportRun, id=run_id)
     return render(request, 'exports/partials/run_log.html', {'run': run})
+
+
+@login_required
+@require_GET
+def run_status(request, run_id):
+    """Poll endpoint for the run button watching an ExportRun."""
+    return run_status_response(ExportRun, run_id)
+
+
+@login_required
+@require_GET
+def multi_run_status(request, run_id):
+    """Poll endpoint for the run button watching a MultiProjectExportRun."""
+    return run_status_response(MultiProjectExportRun, run_id)
 
 
 @login_required
