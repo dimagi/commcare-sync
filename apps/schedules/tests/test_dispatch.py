@@ -85,13 +85,11 @@ class TestCreateRunAndDispatch:
     def test_enqueues_the_task_with_the_run_id(self):
         config = forwarding_config()
 
-        task_id = create_run_and_dispatch(
-            config, triggered_from_ui=True
-        )
+        run = create_run_and_dispatch(config, triggered_from_ui=True)
 
-        assert task_id == 'task-id'
+        assert run == config.runs.get()
         mock_async().assert_called_once_with(
-            'apps.forwarding.tasks.run_forwarding_task', config.runs.get().id
+            'apps.forwarding.tasks.run_forwarding_task', run.id
         )
 
     def test_marks_the_run_as_ui_triggered(self):
@@ -129,11 +127,9 @@ class TestCreateRunAndDispatch:
             config=config, status=RunBaseModel.Status.STARTED
         )
 
-        task_id = create_run_and_dispatch(
-            config, triggered_from_ui=True
-        )
+        run = create_run_and_dispatch(config, triggered_from_ui=True)
 
-        assert task_id is None
+        assert run is None
         assert config.runs.count() == 1
         mock_async().assert_not_called()
 

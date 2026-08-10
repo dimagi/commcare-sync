@@ -296,9 +296,9 @@ def run_history_table(request, forwarder_id):
 def run_forwarding(request, forwarder_id):
     """Manually trigger a forwarding run."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-    task_id = create_run_and_dispatch(
+    run = create_run_and_dispatch(
         forwarder,
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    return run_response(request, task_id)
+    return run_response(request, run)
