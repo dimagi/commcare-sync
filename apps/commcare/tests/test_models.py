@@ -10,7 +10,7 @@ from apps.commcare.models import (
     RunBaseModel,
 )
 from apps.db.models import Database
-from apps.exports.models import ExportConfig
+from apps.exports.models import ExportConfig, ExportRun
 from apps.forwarding.models import ForwardingRun
 from tests.fixtures import commcare_project, commcare_server, user
 
@@ -189,3 +189,28 @@ def test_timeout_is_a_status():
 def test_timed_out_run_has_a_log():
     run = ForwardingRun(status=RunBaseModel.Status.TIMEOUT)
     assert run.has_log is True
+
+
+class TestIsTerminal:
+    def test_queued_and_started_are_not_terminal(self):
+        for status in [RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED]:
+            assert not ForwardingRun(status=status).is_terminal
+
+    def test_every_other_base_status_is_terminal(self):
+        for status in [
+            RunBaseModel.Status.COMPLETED,
+            RunBaseModel.Status.FAILED,
+            RunBaseModel.Status.SKIPPED,
+            RunBaseModel.Status.TIMEOUT,
+        ]:
+            assert ForwardingRun(status=status).is_terminal
+
+    def test_multiple_is_terminal_without_being_restated(self):
+        # ExportRunBase redefines Status to add MULTIPLE. Defining
+        # is_terminal as the complement of the active statuses is what
+        # gets this for free.
+        assert ExportRun(status=ExportRun.Status.MULTIPLE).is_terminal
+
+    def test_an_unknown_status_is_terminal(self):
+        # Terminal-by-default: a status added later must not poll forever.
+        assert ExportRun(status='invented-later').is_terminal

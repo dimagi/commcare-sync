@@ -82,6 +82,23 @@ class RunBaseModel(BaseModel):
         self.completed_at = timezone.now()
         self.save()
 
+    @property
+    def is_terminal(self):
+        """True when the run is over, for any value of over.
+
+        The complement of ``ACTIVE_RUN_STATUSES`` rather than its own
+        enumeration of terminal statuses: ``ExportRunBase`` redefines
+        ``Status`` to add ``MULTIPLE``, so an enumeration here would have
+        to be restated there. A status added later is terminal by default.
+        """
+        return self.status not in ACTIVE_RUN_STATUSES
+
+
+ACTIVE_RUN_STATUSES = frozenset({
+    RunBaseModel.Status.QUEUED,
+    RunBaseModel.Status.STARTED,
+})
+
 
 class CommCareServer(BaseModel):
     name = models.CharField(max_length=100, default='CommCare HQ')

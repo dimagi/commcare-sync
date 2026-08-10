@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.commcare.models import RunBaseModel
+from apps.commcare.models import ACTIVE_RUN_STATUSES, RunBaseModel
 
 type AwareDatetime = datetime
 
@@ -22,12 +22,6 @@ def _validate_days_of_week(value):
                 _('Invalid day of week: %(day)s. Must be an integer 0–6.'),
                 params={'day': day},
             )
-
-
-ACTIVE_RUN_STATUSES = frozenset({
-    RunBaseModel.Status.QUEUED,
-    RunBaseModel.Status.STARTED,
-})
 
 
 class ScheduleMixin(models.Model):
