@@ -48,7 +48,9 @@ class TestRunButtonStructure:
         # Verify Run button exists and has Alpine.js attributes
         run_button = page.locator('#run-now-button')
         expect(run_button).to_be_visible()
-        expect(run_button).to_have_attribute('@click', 'running = true')
+        expect(run_button).to_have_attribute(
+            '@click', "running = true; notice = ''"
+        )
         expect(run_button).to_have_attribute(':disabled', 'running')
 
     def test_section_has_alpine_data(self):
@@ -66,7 +68,7 @@ class TestRunButtonStructure:
         section = page.locator('section:has(#run-now-button)').last
         expect(section).to_have_attribute(
             'x-data',
-            "{ running: false, startOver: false }"
+            "{ running: false, startOver: false, notice: '' }"
         )
 
     def test_progress_section_has_x_show(self):
@@ -146,7 +148,9 @@ class TestRunButtonWithMocks:
         expect(run_button).to_be_visible()
 
         # Verify the button has Alpine @click handler
-        expect(run_button).to_have_attribute('@click', 'running = true')
+        expect(run_button).to_have_attribute(
+            '@click', "running = true; notice = ''"
+        )
 
         # Verify progress bar elements exist (will be shown when running=true)
         expect(page.locator('#progress-bar')).to_be_attached()
