@@ -4,7 +4,11 @@
 // component's root element.
 document.addEventListener('alpine:init', () => {
   const POLL = {
-    interval: 2000,  // 00:00:02
+    minInterval: 2000,  // 00:00:02
+    maxInterval: 10000,  // 00:00:10
+    maxElapsed: 30 * 60000,  // 00:30:00
+    // Failed polls retried before the poll gives up on the run.
+    maxRetries: 2,
     // How long a finished run's bar is shown before the button is released.
     outcomeDelay: 1000,  // 00:00:01
   };
@@ -51,9 +55,7 @@ document.addEventListener('alpine:init', () => {
       } else if (answer.failed) {
         this.releaseButton(this.$root.dataset.startFailed);
       } else {
-        // The first poll is immediate: a run that finishes in under a
-        // second should not sit behind "Waiting for the run to start...".
-        this.poll(answer.data.poll_url);
+        this.startPolling(answer.data.poll_url);
       }
     },
 
@@ -75,29 +77,116 @@ document.addEventListener('alpine:init', () => {
       }, POLL.outcomeDelay);
     },
 
-    async poll(url) {
+    startPolling(url) {
+      // One object per poll. A resume can start a second tick while the
+      // first one's fetch is still in flight. Whichever finishes first
+      // wins, and the loser's answer is ignored: once its poll has
+      // stopped, it must not re-arm the timer, repaint the bar or leave a
+      // notice.
+      const poll = {
+        url,
+        elapsed: 0,
+        lastTick: Date.now(),
+        lastRequest: 0,
+        retries: 0,
+        timer: null,
+        stopped: false,
+      };
+      poll.onVisibilityChange = () => this.resumeOrPause(poll);
+      document.addEventListener('visibilitychange', poll.onVisibilityChange);
+      // The first poll is immediate: a run that finishes in under a
+      // second should not sit behind "Waiting for the run to start...".
+      this.tick(poll);
+    },
+
+    stopPolling(poll) {
+      poll.stopped = true;
+      clearTimeout(poll.timer);
+      document.removeEventListener('visibilitychange', poll.onVisibilityChange);
+    },
+
+    giveUp(poll, notice) {
+      this.stopPolling(poll);
+      this.releaseButton(notice);
+    },
+
+    scheduleTick(poll) {
+      clearTimeout(poll.timer);
+      if (document.hidden) return;
+      // Check less often as the run goes on: wait a tenth of the time
+      // elapsed so far, between minInterval and maxInterval.
+      const wait = Math.min(
+        POLL.maxInterval,
+        Math.max(POLL.minInterval, poll.elapsed / 10),
+      );
+      poll.timer = setTimeout(() => this.tick(poll), wait);
+    },
+
+    resumeOrPause(poll) {
+      if (document.hidden) {
+        clearTimeout(poll.timer);
+        return;
+      }
+      // Time spent hidden doesn't count -- a background tab is not
+      // abandoned -- and poll at once rather than showing stale state up
+      // to maxInterval (but only poll if minInterval has passed since the
+      // last request, so that switching tabs quickly doesn't issue a
+      // flurry of requests).
+      const now = Date.now();
+      poll.lastTick = now;
+      const pollIsDue = now - poll.lastRequest >= POLL.minInterval;
+      if (pollIsDue) {
+        this.tick(poll);
+      } else {
+        this.scheduleTick(poll);
+      }
+    },
+
+    async tick(poll) {
+      if (poll.stopped) return;
+      const now = Date.now();
+      poll.elapsed += now - poll.lastTick;
+      poll.lastTick = now;
+      if (poll.elapsed >= POLL.maxElapsed) {
+        this.giveUp(poll, this.$root.dataset.stillRunning);
+        return;
+      }
+      poll.lastRequest = now;
+
       let answer;
       try {
-        const response = await fetch(url, { credentials: 'same-origin' });
+        const response = await fetch(poll.url, { credentials: 'same-origin' });
         answer = response.status === 404
           ? { gone: true }
           : await readAnswer(response);
       } catch (error) {
         answer = { failed: error };
       }
+      if (poll.stopped) return;
 
       if (answer.gone) {
-        this.releaseButton(this.$root.dataset.runGone);
+        this.giveUp(poll, this.$root.dataset.runGone);
       } else if (answer.expired) {
-        this.releaseButton(this.$root.dataset.sessionExpired);
+        this.giveUp(poll, this.$root.dataset.sessionExpired);
       } else if (answer.failed) {
-        console.error('Failed to poll the run:', answer.failed);
-        this.releaseButton(this.$root.dataset.pollFailed);
-      } else if (answer.data.complete) {
-        this.showOutcome(answer.data.tone, answer.data.label);
+        poll.retries += 1;
+        if (poll.retries > POLL.maxRetries) {
+          console.error('Gave up polling the run:', answer.failed);
+          this.giveUp(poll, this.$root.dataset.pollFailed);
+        } else {
+          this.scheduleTick(poll);
+        }
       } else {
-        this.message = answer.data.label;
-        setTimeout(() => this.poll(url), POLL.interval);
+        // Reset on every success, so a long run cannot accumulate its way
+        // to a false failure.
+        poll.retries = 0;
+        if (answer.data.complete) {
+          this.stopPolling(poll);
+          this.showOutcome(answer.data.tone, answer.data.label);
+        } else {
+          this.message = answer.data.label;
+          this.scheduleTick(poll);
+        }
       }
     },
   }));

@@ -5,6 +5,7 @@ Tests that verify the Run button's Alpine.js state management,
 HTMX table refresh, and polling of the run record.
 """
 import re
+from datetime import datetime
 from unittest.mock import patch
 
 from django.test import Client
@@ -20,10 +21,49 @@ from .helpers import (
     navigate_to_export_details,
     route_run_status,
     route_run_trigger,
+    set_document_hidden,
+    status_payload,
 )
 
 _page = fixture('page')
 _live_server = fixture('live_server')
+
+
+# Counts the page's status polls in `window.statusPolls`, and sets
+# `window.firstPollHandled` to a promise that resolves once the Run
+# button has finished handling the first poll's response.
+#
+# The button handles a response in microtasks: first when the response
+# arrives, and again when its JSON has been parsed, if the button reads
+# it. Microtasks always run to completion before the next macrotask
+# starts, so waiting for one macrotask after each of those points is
+# enough to know the button has finished.
+COUNT_STATUS_POLLS = """
+const afterMacrotask = () => new Promise(resolve => {
+  const channel = new MessageChannel();
+  channel.port1.onmessage = () => resolve();
+  channel.port2.postMessage(null);
+});
+window.statusPolls = 0;
+const realFetch = window.fetch;
+window.fetch = function (input, init) {
+  const result = realFetch.call(this, input, init);
+  const url = typeof input === 'string' ? input : input.url;
+  if (!url.includes('/status/')) return result;
+  window.statusPolls += 1;
+  if (window.statusPolls === 1) {
+    window.firstPollHandled = result.then(response => {
+      let parsed = null;
+      const json = response.json.bind(response);
+      response.json = () => (parsed = json());
+      return afterMacrotask().then(
+        () => parsed && parsed.catch(() => {}).then(afterMacrotask)
+      );
+    });
+  }
+  return result;
+};
+"""
 
 
 def create_export_config(data):
@@ -422,3 +462,140 @@ class TestRunButtonProgress:
         with patch('apps.schedules.dispatch.async_task'):
             run_button.click()
             expect(page.locator('#run-notice')).not_to_be_visible()
+
+    def test_a_single_failed_poll_does_not_paint_a_healthy_run_red(self):
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+        route_run_trigger(page, export)
+        polls = []
+
+        def fail_once(route):
+            polls.append(route.request.url)
+            if len(polls) == 1:
+                route.abort()
+            else:
+                route.fulfill(json=status_payload('completed'))
+
+        page.route('**/runs/**/status/', fail_once)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+        page.locator('#run-now-button').click()
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Completed', timeout=10000
+        )
+        expect(page.locator('#run-notice')).not_to_be_visible()
+
+    def test_a_login_redirect_stops_the_poll_and_says_so(self):
+        """OK-but-HTML must not read as a transient blip and then as
+        "still running"."""
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+        route_run_trigger(page, export)
+        page.route(
+            '**/runs/**/status/',
+            lambda route: route.fulfill(
+                status=200,
+                content_type='text/html',
+                body='<html><body>Sign in</body></html>',
+            ),
+        )
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        expect(page.locator('#run-notice')).to_have_text(
+            re.compile('Session expired'), timeout=5000
+        )
+        expect(run_button).not_to_be_disabled()
+
+    def test_a_resume_does_not_revive_a_poll_that_has_already_stopped(self):
+        """Returning to the tab starts a tick beside the in-flight one.
+
+        Whichever answer arrives first sets the run's status; the other
+        one must not be able to re-arm the timer afterwards.
+        """
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+        route_run_trigger(page, export)
+        held = []
+
+        def hold_the_first_poll(route):
+            # The first poll waits for the test to answer it; the
+            # resume's poll overtakes it and finds the run finished.
+            if held:
+                route.fulfill(json=status_payload('completed'))
+            else:
+                held.append(route)
+
+        page.route('**/runs/**/status/', hold_the_first_poll)
+
+        login(page, live_server, data['user'])
+        page.add_init_script(COUNT_STATUS_POLLS)
+        page.clock.install(time=datetime(2026, 1, 1, 12, 0))
+        navigate_to_export_details(page, live_server, export.id)
+        # From here, the page's timers only fire when the test says so.
+        page.clock.pause_at(datetime(2026, 1, 1, 12, 1))
+        run_button = page.locator('#run-now-button')
+        with page.expect_request('**/runs/**/status/'):
+            run_button.click()
+
+        # Leave the tab, and come back once a poll is due: the resume
+        # polls at once.
+        set_document_hidden(page, True)
+        page.clock.run_for(2000)
+        set_document_hidden(page, False)
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Completed'
+        )
+        page.clock.run_for(1000)  # finish() releases the button
+        expect(run_button).not_to_be_disabled()
+
+        # The first poll's answer arrives last, and says "still running".
+        held[0].fulfill(json=status_payload('started'))
+        page.evaluate('() => window.firstPollHandled')
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Completed'
+        )
+        page.clock.run_for(60000)  # time enough for a re-armed poll
+        assert page.evaluate('() => window.statusPolls') == 2, (
+            'the run finished on the second poll; polling should have '
+            'stopped there'
+        )
+
+    def test_the_poll_gives_up_honestly_at_the_ceiling(self):
+        """Giving up is not failure: a long export legitimately outlives
+        any ceiling, and the run table remains the authority."""
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+        route_run_trigger(page, export)
+        route_run_status(page, 'started')
+
+        login(page, live_server, data['user'])
+        page.clock.install(time=datetime(2026, 1, 1, 12, 0))
+        navigate_to_export_details(page, live_server, export.id)
+        page.clock.pause_at(datetime(2026, 1, 1, 12, 1))
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+        expect(page.locator('#progress-bar-message')).to_have_text('Started')
+
+        # Jump past the ceiling. The next poll, already due, finds it
+        # passed and gives up without asking the server.
+        page.clock.fast_forward(30 * 60 * 1000)
+
+        expect(page.locator('#run-notice')).to_have_text(
+            re.compile('Still running')
+        )
+        expect(run_button).not_to_be_disabled()

@@ -66,3 +66,18 @@ def status_payload(status):
         'tone': run.tone,
         'complete': run.is_terminal,
     }
+
+
+def set_document_hidden(page, hidden):
+    """Hide or show the page as a tab switch would, firing
+    ``visibilitychange``."""
+    page.evaluate(
+        '''hidden => {
+            Object.defineProperty(document, 'hidden',
+                {value: hidden, configurable: true});
+            Object.defineProperty(document, 'visibilityState',
+                {value: hidden ? 'hidden' : 'visible', configurable: true});
+            document.dispatchEvent(new Event('visibilitychange'));
+        }''',
+        hidden,
+    )
