@@ -70,4 +70,9 @@ urlpatterns = [
         views.run_log,
         name='run_log',
     ),
+    path(
+        'runs/<int:run_id>/status/',
+        views.run_status,
+        name='run_status',
+    ),
 ]
