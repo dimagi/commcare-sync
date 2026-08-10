@@ -133,6 +133,8 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
 class ForwardingRun(RunBaseModel):
     """Record of a single forwarding run."""
 
+    STATUS_URL_NAME = 'forwarding:run_status'
+
     config = models.ForeignKey(
         ForwardingConfig,
         on_delete=models.CASCADE,

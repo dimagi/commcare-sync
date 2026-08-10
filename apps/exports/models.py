@@ -155,6 +155,8 @@ class ExportRunBase(RunBaseModel):
 
 
 class ExportRun(ExportRunBase):
+    STATUS_URL_NAME = 'exports:run_status'
+
     config = models.ForeignKey(
         ExportConfig,
         on_delete=models.CASCADE,
@@ -168,6 +170,8 @@ class ExportRun(ExportRunBase):
 
 
 class MultiProjectExportRun(ExportRunBase):
+    STATUS_URL_NAME = 'exports:multi_run_status'
+
     config = models.ForeignKey(
         MultiProjectExportConfig,
         on_delete=models.CASCADE,
