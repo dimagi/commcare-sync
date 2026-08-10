@@ -402,21 +402,23 @@ def _run_export(request, export_id, export_config_class):
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    task_id = create_run_and_dispatch(
+    run = create_run_and_dispatch(
         export,
         triggered_from_ui=True,
         triggered_by=request.user,
         task_kwargs={'start_over': start_over},
     )
-    return run_response(request, task_id)
+    return run_response(request, run)
 
 
 @login_required
 @require_POST
 def run_all_exports(request):
     """Kick off the "Run All" background task for every non-paused export."""
-    task_id = async_task(run_all_exports_task, user_id=request.user.id)
-    return run_response(request, task_id)
+    async_task(run_all_exports_task, user_id=request.user.id)
+    # Not run_response(): there is no run to name, and passing None
+    # would mean "already active" to any caller that omits HX-Request.
+    return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
 
 
 @login_required

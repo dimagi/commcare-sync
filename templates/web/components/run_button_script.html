@@ -15,40 +15,94 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!runButton) return;
 
-  function finish(success) {
+  const POLL_INTERVAL = 2000;
+
+  // Colour per terminal status, following the run-history badges in
+  // apps/exports/templatetags/exports_tags.py. Wording is never decided
+  // here: it comes from the endpoint's `label`.
+  const TERMINAL_COLOURS = {
+    completed: 'bg-success',
+    failed: 'bg-danger',
+    timeout: 'bg-warning',
+    multiple: 'bg-warning',
+    skipped: 'bg-secondary',
+  };
+  // Every colour the bar can carry, including the bg-primary baked into
+  // its markup. With four outcome colours in play, a partial reset would
+  // leave the rendering to stylesheet order rather than to the status.
+  const BAR_COLOURS = [
+    'bg-primary', 'bg-success', 'bg-danger', 'bg-warning', 'bg-secondary',
+  ];
+
+  const ALREADY_RUNNING = '{% trans "Already running" %}';
+  const RUN_GONE = '{% trans "This run no longer exists" %}';
+  const SESSION_EXPIRED = '{% trans "Session expired — refresh the page" %}';
+  const START_FAILED = '{% trans "Could not start the run" %}';
+  const POLL_FAILED = '{% trans "Lost track of this run — refresh the page" %}';
+
+  function alpineState() {
+    const section = runButton.closest('section');
+    return section && Alpine.$data(section) ? Alpine.$data(section) : null;
+  }
+
+  // Alpine owns the button (:disabled="running") and the progress region
+  // (x-show="running"), so clearing `running` is what re-enables the
+  // button -- and it unmounts the progress message along with it.
+  // Anything the user still needs to read goes to `notice`, which is
+  // rendered outside that region.
+  function release(notice) {
+    const state = alpineState();
+    if (state) {
+      state.notice = notice || '';
+      state.running = false;
+    }
+  }
+
+  function finish(status, label) {
     progressBar.style.width = '100%';
-    progressBar.classList.add(success ? 'bg-success' : 'bg-danger');
-    progressMessage.textContent = success
-      ? '{% trans "Complete!" %}'
-      : '{% trans "Failed!" %}';
+    progressBar.classList.add(TERMINAL_COLOURS[status] || 'bg-secondary');
+    progressMessage.textContent = label;
     setTimeout(() => {
       htmx.trigger('#run-table', 'refresh');
-      runButton.disabled = false;
-
-      // Reset Alpine state
-      const section = runButton.closest('section');
-      if (section && Alpine.$data(section)) {
-        Alpine.$data(section).running = false;
-      }
+      release();
     }, 1000);
   }
 
-  function poll(taskId) {
-    const statusUrl =
-      '{% url "web:task_status" "TASK_ID" %}'.replace('TASK_ID', taskId);
-    fetch(statusUrl, { credentials: 'same-origin' })
-      .then(response => response.json())
+  // An expired session answers with a redirect to the login page, which
+  // arrives as response.ok with an HTML body. Without this check .json()
+  // throws and the failure is indistinguishable from a network blip.
+  function isJson(response) {
+    const contentType = response.headers.get('Content-Type') || '';
+    return !response.redirected && contentType.includes('application/json');
+  }
+
+  function poll(pollUrl) {
+    fetch(pollUrl, { credentials: 'same-origin' })
+      .then(response => {
+        if (response.status === 404) {
+          release(RUN_GONE);
+          return null;
+        }
+        if (response.ok && !isJson(response)) {
+          release(SESSION_EXPIRED);
+          return null;
+        }
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        return response.json();
+      })
       .then(data => {
-        if (!data.complete) {
-          progressMessage.textContent = '{% trans "Running..." %}';
-          setTimeout(() => poll(taskId), 2000);
+        if (data === null) return;
+        if (data.complete) {
+          finish(data.status, data.label);
         } else {
-          const failed = !data.success
-            || (data.result && data.result.status === 'failed');
-          finish(!failed);
+          progressMessage.textContent = data.label;
+          setTimeout(() => poll(pollUrl), POLL_INTERVAL);
         }
       })
-      .catch(() => finish(false));
+      .catch(error => {
+        console.error('Failed to poll the run:', error);
+        release(POLL_FAILED);
+      });
   }
 
   runButton.addEventListener('click', function() {
@@ -66,20 +120,35 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       body: JSON.stringify({% if include_start_over %}{ startOver: startOver }{% else %}{}{% endif %}),
     })
-    .then(response => response.text())
-    .then(taskId => {
-      progressBar.classList.remove('bg-danger', 'bg-success');
+    .then(response => {
+      if (response.status === 409) {
+        // Not an error: the run that blocked this click is the one the
+        // user needs to see, so refresh the table as a finished run does.
+        htmx.trigger('#run-table', 'refresh');
+        release(ALREADY_RUNNING);
+        return null;
+      }
+      if (response.ok && !isJson(response)) {
+        release(SESSION_EXPIRED);
+        return null;
+      }
+      if (!response.ok) {
+        release(START_FAILED);
+        return null;
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data === null) return;
+      progressBar.classList.remove(...BAR_COLOURS);
       progressBar.style.width = '0%';
-      poll(taskId);
+      // First poll is immediate: a run that finishes in under a second
+      // should not sit behind "Waiting for the run to start...".
+      poll(data.poll_url);
     })
     .catch(error => {
-      console.error('Failed to start task:', error);
-      runButton.disabled = false;
-
-      const section = runButton.closest('section');
-      if (section && Alpine.$data(section)) {
-        Alpine.$data(section).running = false;
-      }
+      console.error('Failed to start the run:', error);
+      release(START_FAILED);
     });
   });
 });
