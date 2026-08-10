@@ -15,9 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!runButton) return;
 
-  const POLL_INTERVAL = 2000;
+  const DEFAULT_POLL_CONFIG = {
+    minInterval: 2000,  // 00:00:02
+    maxInterval: 10000,  // 00:00:10
+    maxElapsed: 30 * 60000,  // 00:30:00
+  };
+  const MAX_RETRIES = 2;
 
-  // Colour per terminal status, following the run-history badges in
+  // Color per terminal status, following the run-history badges in
   // apps/exports/templatetags/exports_tags.py. Wording is never decided
   // here: it comes from the endpoint's `label`.
   const TERMINAL_COLOURS = {
@@ -27,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     multiple: 'bg-warning',
     skipped: 'bg-secondary',
   };
-  // Every colour the bar can carry, including the bg-primary baked into
-  // its markup. With four outcome colours in play, a partial reset would
+  // Every color the bar can carry, including the bg-primary baked into
+  // its markup. With four outcome colors in play, a partial reset would
   // leave the rendering to stylesheet order rather than to the status.
   const BAR_COLOURS = [
     'bg-primary', 'bg-success', 'bg-danger', 'bg-warning', 'bg-secondary',
@@ -39,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const SESSION_EXPIRED = '{% trans "Session expired — refresh the page" %}';
   const START_FAILED = '{% trans "Could not start the run" %}';
   const POLL_FAILED = '{% trans "Lost track of this run — refresh the page" %}';
+  const STILL_RUNNING = '{% trans "Still running — refresh the page to check" %}';
 
   function alpineState() {
     const section = runButton.closest('section');
@@ -76,33 +82,118 @@ document.addEventListener('DOMContentLoaded', function() {
     return !response.redirected && contentType.includes('application/json');
   }
 
-  function poll(pollUrl) {
-    fetch(pollUrl, { credentials: 'same-origin' })
-      .then(response => {
-        if (response.status === 404) {
-          release(RUN_GONE);
-          return null;
-        }
-        if (response.ok && !isJson(response)) {
-          release(SESSION_EXPIRED);
-          return null;
-        }
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        return response.json();
-      })
-      .then(data => {
-        if (data === null) return;
-        if (data.complete) {
-          finish(data.status, data.label);
+  function startPolling(pollUrl) {
+    // Overridable so the ceiling is testable: as consts in this closure
+    // the three numbers are unreachable from Playwright, and the test
+    // would have to wait out the real 30 minutes.
+    const config = {
+      ...DEFAULT_POLL_CONFIG,
+      ...(window.RUN_BUTTON_POLL_CONFIG || {}),
+    };
+    let elapsed = 0;
+    let lastTick = Date.now();
+    let lastRequest = 0;
+    let retries = 0;
+    let timer = null;
+    // A resume can start a second tick while the first one's fetch is
+    // still in flight. Whichever finishes first wins, and the loser must
+    // not be able to re-arm the timer after the poll has been torn down.
+    let stopped = false;
+
+    // Check about ten times per elapsed-time scale. The interval slides
+    // up, never faster than minInterval, never slower than maxInterval.
+    function interval() {
+      return Math.min(
+        config.maxInterval,
+        Math.max(config.minInterval, elapsed / 10),
+      );
+    }
+
+    function teardown() {
+      stopped = true;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    function stop(notice) {
+      teardown();
+      release(notice);
+    }
+
+    function schedule() {
+      if (stopped) return;
+      clearTimeout(timer);
+      if (document.hidden) return;
+      timer = setTimeout(tick, interval());
+    }
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearTimeout(timer);
+      } else {
+        // Time spent hidden doesn't count -- a background tab is not
+        // abandoned -- and poll at once rather than showing stale state
+        // up to maxInterval (but only poll if an interval has passed
+        // since the last request, so that switching tabs quickly
+        // doesn't issue a flurry of requests).
+        lastTick = Date.now();
+        if (Date.now() - lastRequest >= config.minInterval) {
+          tick();
         } else {
-          progressMessage.textContent = data.label;
-          setTimeout(() => poll(pollUrl), POLL_INTERVAL);
+          schedule();
         }
-      })
-      .catch(error => {
-        console.error('Failed to poll the run:', error);
-        release(POLL_FAILED);
-      });
+      }
+    }
+
+    function tick() {
+      if (stopped) return;
+      const now = Date.now();
+      elapsed += now - lastTick;
+      lastTick = now;
+      if (elapsed >= config.maxElapsed) {
+        stop(STILL_RUNNING);
+        return;
+      }
+      lastRequest = now;
+      fetch(pollUrl, { credentials: 'same-origin' })
+        .then(response => {
+          if (response.status === 404) {
+            stop(RUN_GONE);
+            return null;
+          }
+          if (response.ok && !isJson(response)) {
+            stop(SESSION_EXPIRED);
+            return null;
+          }
+          if (!response.ok) throw new Error(`status ${response.status}`);
+          return response.json();
+        })
+        .then(data => {
+          if (data === null) return;
+          // Reset on every success, so a long run cannot accumulate its
+          // way to a false failure.
+          retries = 0;
+          if (data.complete) {
+            teardown();
+            finish(data.status, data.label);
+          } else {
+            progressMessage.textContent = data.label;
+            schedule();
+          }
+        })
+        .catch(error => {
+          retries += 1;
+          if (retries > MAX_RETRIES) {
+            console.error('Gave up polling the run:', error);
+            stop(POLL_FAILED);
+          } else {
+            schedule();
+          }
+        });
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    tick();
   }
 
   runButton.addEventListener('click', function() {
@@ -142,9 +233,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data === null) return;
       progressBar.classList.remove(...BAR_COLOURS);
       progressBar.style.width = '0%';
-      // First poll is immediate: a run that finishes in under a second
-      // should not sit behind "Waiting for the run to start...".
-      poll(data.poll_url);
+      // The first poll is immediate: a run that finishes in under a
+      // second should not sit behind "Waiting for the run to start...".
+      startPolling(data.poll_url);
     })
     .catch(error => {
       console.error('Failed to start the run:', error);

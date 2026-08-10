@@ -493,3 +493,234 @@ class TestRunButtonWithMocks:
         expect(run_button).not_to_be_disabled(timeout=3000)
         expect(page.locator('#run-notice')).to_be_visible()
         expect(page.locator('#run-notice')).to_have_text('Already running')
+
+    def test_a_single_failed_poll_does_not_paint_a_healthy_run_red(self):
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps(
+                    {'run_id': 1, 'poll_url': '/exports/runs/1/status/'}
+                ),
+            )
+
+        attempts = []
+
+        def mock_run_status(route):
+            attempts.append(1)
+            if len(attempts) == 1:
+                route.abort()
+                return
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    'status': 'completed',
+                    'label': 'Completed',
+                    'complete': True,
+                }),
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/runs/**/status/', mock_run_status)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+        page.locator('#run-now-button').click()
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Completed', timeout=10000
+        )
+        expect(page.locator('#run-notice')).not_to_be_visible()
+
+    def test_a_login_redirect_stops_the_poll_and_says_so(self):
+        """OK-but-HTML must not read as a transient blip and then as
+        "still running"."""
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps(
+                    {'run_id': 1, 'poll_url': '/exports/runs/1/status/'}
+                ),
+            )
+
+        def mock_run_status(route):
+            route.fulfill(
+                status=200,
+                content_type='text/html',
+                body='<html><body>Sign in</body></html>',
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/runs/**/status/', mock_run_status)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        expect(page.locator('#run-notice')).to_have_text(
+            re.compile('Session expired'), timeout=5000
+        )
+        expect(run_button).not_to_be_disabled()
+
+    def test_a_resume_does_not_revive_a_poll_that_has_already_stopped(self):
+        """Returning to the tab starts a tick beside the in-flight one.
+
+        Whichever answer arrives first decides the run's fate; the other
+        one must not be able to re-arm the timer afterwards. Unguarded,
+        the loser's schedule() polls on past a finished run -- with the
+        visibility listener already removed and the button already
+        re-enabled.
+        """
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps(
+                    {'run_id': 1, 'poll_url': '/exports/runs/1/status/'}
+                ),
+            )
+
+        hits = []
+        # The first poll (held in flight below) and every poll after the
+        # second say "still running"; only the second is terminal.
+        payloads = [
+            {'status': 'started', 'label': 'Started', 'complete': False},
+            {'status': 'completed', 'label': 'Completed', 'complete': True},
+        ]
+
+        def mock_run_status(route):
+            hits.append(route.request.url)
+            payload = payloads.pop(0) if payloads else {
+                'status': 'started', 'label': 'Started', 'complete': False,
+            }
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps(payload),
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/runs/**/status/', mock_run_status)
+
+        login(page, live_server, data['user'])
+        # Poll fast, and hold the first poll's response in flight long
+        # enough for the resume's poll to overtake it. Both must be
+        # installed before navigation.
+        page.add_init_script(
+            'window.RUN_BUTTON_POLL_CONFIG ='
+            ' { minInterval: 50, maxInterval: 50, maxElapsed: 60000 };'
+            'const realFetch = window.fetch;'
+            'let statusCalls = 0;'
+            'window.fetch = function (input, init) {'
+            '  const url = typeof input === "string" ? input : input.url;'
+            '  const result = realFetch.call(this, input, init);'
+            '  if (url && url.includes("/status/") && ++statusCalls === 1) {'
+            '    return result.then(response => new Promise('
+            '      resolve => setTimeout(() => resolve(response), 1500)'
+            '    ));'
+            '  }'
+            '  return result;'
+            '};'
+        )
+        navigate_to_export_details(page, live_server, export.id)
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        # The first poll is now in flight. Leave the tab and come back:
+        # the resume starts a second poll, which answers first.
+        page.evaluate(
+            '() => {'
+            '  Object.defineProperty(document, "hidden",'
+            '    {value: true, configurable: true});'
+            '  Object.defineProperty(document, "visibilityState",'
+            '    {value: "hidden", configurable: true});'
+            '  document.dispatchEvent(new Event("visibilitychange"));'
+            '}'
+        )
+        page.wait_for_timeout(100)
+        page.evaluate(
+            '() => {'
+            '  Object.defineProperty(document, "hidden",'
+            '    {value: false, configurable: true});'
+            '  Object.defineProperty(document, "visibilityState",'
+            '    {value: "visible", configurable: true});'
+            '  document.dispatchEvent(new Event("visibilitychange"));'
+            '}'
+        )
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Completed', timeout=5000
+        )
+        expect(run_button).not_to_be_disabled(timeout=3000)
+
+        # Well past the held response's 1500ms and many 50ms intervals
+        # beyond it: an unguarded poll is still hammering the endpoint.
+        page.wait_for_timeout(2000)
+        assert len(hits) == 2, (
+            'the run finished on the second poll; polling should have '
+            f'stopped there, but the endpoint was hit {len(hits)} times'
+        )
+
+    def test_the_poll_gives_up_honestly_at_the_ceiling(self):
+        """Giving up is not failure: a long export legitimately outlives
+        any ceiling, and the run table remains the authority."""
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps(
+                    {'run_id': 1, 'poll_url': '/exports/runs/1/status/'}
+                ),
+            )
+
+        def mock_run_status(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    'status': 'started',
+                    'label': 'Started',
+                    'complete': False,
+                }),
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/runs/**/status/', mock_run_status)
+
+        login(page, live_server, data['user'])
+        # Read at click time, so it must be installed before navigation.
+        page.add_init_script(
+            'window.RUN_BUTTON_POLL_CONFIG ='
+            ' { minInterval: 50, maxInterval: 50, maxElapsed: 300 };'
+        )
+        navigate_to_export_details(page, live_server, export.id)
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        expect(page.locator('#run-notice')).to_have_text(
+            re.compile('Still running'), timeout=5000
+        )
+        expect(run_button).not_to_be_disabled()
