@@ -108,3 +108,7 @@ class RefreshRun(RunBaseModel):
 
     def __str__(self):
         return f'{self.config.name} ({self.created_at})'
+
+    @property
+    def status_url(self):
+        return reverse('refreshes:run_status', args=[self.id])
