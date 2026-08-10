@@ -1,8 +1,6 @@
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django_q.tasks import fetch
 
 
 def home(request):
@@ -50,25 +48,3 @@ def run_status_response(model, run_id):
     # still running, indefinitely.
     response['Cache-Control'] = 'no-store'
     return response
-
-
-@login_required
-def task_status(request, task_id):
-    """Poll endpoint for background task state, used by run buttons.
-
-    A task id is only found once the task has finished (django-q2 stores
-    completed tasks in the ORM); anything not found is still pending.
-    """
-    task = fetch(task_id)
-    if task is None:
-        return JsonResponse({
-            'complete': False,
-            'success': None,
-            'result': None,
-        })
-    return JsonResponse({
-        'complete': True,
-        'success': task.success,
-        # Failed tasks carry a traceback string; only expose dicts.
-        'result': task.result if isinstance(task.result, dict) else None,
-    })
