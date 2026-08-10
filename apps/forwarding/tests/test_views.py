@@ -157,12 +157,15 @@ class TestRunForwardingHtmxBranch:
         assert OrmQ.objects.count() == 0
 
     def test_non_htmx_request_returns_200(self):
-        url = reverse(
-            'forwarding:run_forwarding', args=[forwarding_config().id]
-        )
+        config = forwarding_config()
+        url = reverse('forwarding:run_forwarding', args=[config.id])
         response = regular_client().post(url)
+        run = config.runs.get()
         assert response.status_code == 200
-        assert len(response.content) > 0
+        assert response.json() == {
+            'run_id': run.id,
+            'poll_url': run.status_url,
+        }
 
 
 @use(regular_client, forwarding_config, mock_async_task_dispatch)
@@ -175,7 +178,8 @@ class TestRunForwardingConcurrencyGuard:
 
         response = regular_client().post(config.run_url)
 
-        assert response.status_code == 200
+        assert response.status_code == 409
+        assert response.json() == {'error': 'already_running'}
         mock_async_task_dispatch().assert_not_called()
         assert config.runs.count() == 1
 

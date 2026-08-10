@@ -229,10 +229,10 @@ def run_history_table(request, config_id):
 def run_refresh(request, config_id):
     """Manually trigger a refresh run."""
     config = get_object_or_404(RefreshConfig, id=config_id)
-    _run, task_id = create_run_and_dispatch(
+    run, _task_id = create_run_and_dispatch(
         config, run_refresh_task, triggered_by=request.user
     )
-    return run_response(request, task_id)
+    return run_response(request, run)
 
 
 @login_required
