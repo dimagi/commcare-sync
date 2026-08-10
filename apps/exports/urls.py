@@ -1,6 +1,9 @@
 from django.urls import path
 
+from apps.schedules.views import run_status
+
 from . import views
+from .models import ExportRun, MultiProjectExportRun
 
 
 app_name = 'exports'
@@ -85,6 +88,18 @@ urlpatterns = [
         r'runs/multi-project/<int:run_id>/log/',
         views.multi_run_log,
         name='multi_run_log',
+    ),
+    path(
+        r'runs/<int:run_id>/status/',
+        run_status,
+        {'model': ExportRun},
+        name='run_status',
+    ),
+    path(
+        r'runs/multi-project/<int:run_id>/status/',
+        run_status,
+        {'model': MultiProjectExportRun},
+        name='multi_run_status',
     ),
     path(
         r'download/commcare-export-log/',

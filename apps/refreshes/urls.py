@@ -1,6 +1,9 @@
 from django.urls import path
 
+from apps.schedules.views import run_status
+
 from . import views
+from .models import RefreshRun
 
 app_name = 'refreshes'
 
@@ -47,4 +50,10 @@ urlpatterns = [
     ),
     path(r'config-table/', views.config_table, name='config_table'),
     path(r'runs/<int:run_id>/log/', views.run_log, name='run_log'),
+    path(
+        r'runs/<int:run_id>/status/',
+        run_status,
+        {'model': RefreshRun},
+        name='run_status',
+    ),
 ]

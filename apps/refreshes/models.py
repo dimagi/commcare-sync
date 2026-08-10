@@ -94,6 +94,8 @@ class RefreshConfig(ScheduleMixin, BaseModel):
 class RefreshRun(RunBaseModel):
     """Record of a single materialized view refresh run."""
 
+    STATUS_URL_NAME = 'refreshes:run_status'
+
     config = models.ForeignKey(
         RefreshConfig,
         on_delete=models.CASCADE,
