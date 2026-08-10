@@ -47,4 +47,5 @@ urlpatterns = [
     ),
     path(r'config-table/', views.config_table, name='config_table'),
     path(r'runs/<int:run_id>/log/', views.run_log, name='run_log'),
+    path(r'runs/<int:run_id>/status/', views.run_status, name='run_status'),
 ]
