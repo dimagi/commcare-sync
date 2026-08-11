@@ -17,7 +17,7 @@ class TestRunStatus:
         (ExportRun.Status.FAILED, 'Failed', 'danger', True),
         (ExportRun.Status.TIMEOUT, 'Timed out', 'warning', True),
         (ExportRun.Status.SKIPPED, 'Skipped', 'secondary', True),
-        (ExportRun.Status.MULTIPLE, 'Multiple statuses', 'warning', True),
+        (ExportRun.Status.MULTIPLE, 'Multiple results', 'warning', True),
     ])
     def test_reports_the_run_status(self, status, label, tone, complete):
         run = ExportRun.objects.create(config=export_config(), status=status)
