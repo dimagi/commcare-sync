@@ -6,16 +6,17 @@ and has_active_run logic via ForwardingConfig as the concrete model.
 Periodicity computation (``compute_next_run``) is covered separately in
 apps/schedules/tests/test_compute_next_run.py.
 """
-from datetime import date, time
+from datetime import date, time, timedelta
 
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 from unmagic import use
 
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
-from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.mixin import OVERDUE_GRACE, ScheduleMixin
 from tests.fixtures import database
 
 from .fixtures import destination
@@ -360,3 +361,38 @@ class TestHasActiveRun:
         )
 
         assert config.has_active_run_cached is True
+
+
+@use('db', database, destination)
+class TestIsOverdue:
+
+    def make_config_due(self, due_at):
+        config = make_config(
+            database(), destination(),
+            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
+            interval_value=30,
+            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+        )
+        # Assign directly: save() would have the post_save handler in
+        # apps/schedules/signals.py recompute next_run_at.
+        config.next_run_at = due_at
+        return config
+
+    def test_not_overdue_when_unscheduled(self):
+        config = self.make_config_due(None)
+        assert config.is_overdue is False
+
+    def test_not_overdue_when_due_in_the_future(self):
+        config = self.make_config_due(timezone.now() + timedelta(minutes=30))
+        assert config.is_overdue is False
+
+    def test_not_overdue_within_the_grace_period(self):
+        # A dispatcher that runs once a minute is routinely a little late.
+        config = self.make_config_due(timezone.now() - timedelta(minutes=1))
+        assert config.is_overdue is False
+
+    def test_overdue_past_the_grace_period(self):
+        config = self.make_config_due(
+            timezone.now() - OVERDUE_GRACE - timedelta(minutes=1)
+        )
+        assert config.is_overdue is True
