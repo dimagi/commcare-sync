@@ -1,8 +1,10 @@
 import re
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from django_q.models import OrmQ
 from unmagic import fixture, use
 
@@ -396,6 +398,44 @@ class TestExportsHomeSmoke:
         content = response.content.decode()
         assert 'dropdown-toggle-split' in content
         assert 'Multi-Project Export' in content
+
+
+@use(authed_client, export_config)
+class TestNextRunColumn:
+    """The "Next Run" column in templates/web/components/config_table.html."""
+
+    def set_next_run_at(self, config, next_run_at):
+        # Update via the queryset so the post_save handler in
+        # apps/schedules/signals.py doesn't recompute next_run_at.
+        ExportConfig.objects.filter(pk=config.pk).update(
+            next_run_at=next_run_at
+        )
+
+    def get_table(self):
+        response = authed_client().get(reverse('exports:config_table'))
+        assert response.status_code == 200
+        return response.content.decode()
+
+    def test_unscheduled_config_shows_placeholder(self):
+        config = export_config()
+        assert config.next_run_at is None
+        assert '---' in self.get_table()
+
+    def test_scheduled_config_shows_the_time(self):
+        self.set_next_run_at(
+            export_config(), timezone.now() + timedelta(hours=2)
+        )
+        content = self.get_table()
+        assert 'from now' in content
+        assert 'Overdue' not in content
+
+    def test_overdue_config_shows_overdue(self):
+        self.set_next_run_at(
+            export_config(), timezone.now() - timedelta(hours=2)
+        )
+        content = self.get_table()
+        assert 'Overdue' in content
+        assert 'Scheduled runs are not being dispatched.' in content
 
 
 @use(authed_client, multi_export_config)

@@ -18,6 +18,7 @@
           <th>{% trans "Schedule" %}</th>
           <th>{% trans "Last Started" %}</th>
           <th>{% trans "Status" %}</th>
+          <th>{% trans "Next Run" %}</th>
           <th>{% trans "Actions" %}</th>
         </tr>
       </thead>
@@ -60,6 +61,21 @@
                 </div>
               {% else %}
                 <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not config.next_run_at %}
+                <span class="text-muted">---</span>
+              {% elif config.is_overdue %}
+                {% blocktrans asvar overdue_title trimmed with due=config.next_run_at|naturaltime %}
+                  Was due {{ due }}. Scheduled runs are not being dispatched.
+                {% endblocktrans %}
+                <span class="text-warning-emphasis" title="{{ overdue_title }}">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  {% trans "Overdue" %}
+                </span>
+              {% else %}
+                {{ config.next_run_at|naturaltime }}
               {% endif %}
             </td>
             <td class="text-nowrap">
@@ -106,7 +122,7 @@
             </td>
           </tr>
           <tr x-show="logOpen" x-cloak>
-            <td colspan="5" class="p-0 border-top-0">
+            <td colspan="6" class="p-0 border-top-0">
               <div
                 id="log-{{ config.id }}"
                 class="overflow-auto font-monospace small p-2 bg-light border-bottom"
