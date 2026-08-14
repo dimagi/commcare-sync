@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import run_response
+from apps.web.views import run_response, run_status_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -93,6 +93,13 @@ def run_log(request, run_id):
     """HTMX endpoint: log fragment for a ForwardingRun."""
     run = get_object_or_404(ForwardingRun, id=run_id)
     return render(request, 'forwarding/partials/run_log.html', {'run': run})
+
+
+@login_required
+@require_GET
+def run_status(request, run_id):
+    """Poll endpoint for the run button watching a ForwardingRun."""
+    return run_status_response(ForwardingRun, run_id)
 
 
 @login_required
@@ -298,7 +305,7 @@ def run_history_table(request, forwarder_id):
 def run_forwarding(request, forwarder_id):
     """Manually trigger a forwarding run."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-    _run, task_id = create_run_and_dispatch(
+    run, _task_id = create_run_and_dispatch(
         forwarder, run_forwarding_task, triggered_by=request.user
     )
-    return run_response(request, task_id)
+    return run_response(request, run)

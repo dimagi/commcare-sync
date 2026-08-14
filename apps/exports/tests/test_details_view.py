@@ -1,7 +1,7 @@
 from django.urls import reverse
 from unmagic import use
 
-from apps.exports.tests.fixtures import export_config_db_fixture
+from apps.exports.tests.fixtures import export_config, export_config_db_fixture
 from tests.fixtures import authed_client, htmx_client
 
 
@@ -33,3 +33,15 @@ class TestExportRunHistoryTableEndpoint:
             args=[export_config_db_fixture().id],
         ))
         assert response.status_code == 400
+
+
+@use(authed_client, export_config)
+def test_run_history_renders_a_notice_element():
+    # The poller's non-terminal endings write here rather than into the
+    # progress message, which Alpine unmounts when `running` clears.
+    response = authed_client().get(export_config().details_url)
+    content = response.content.decode()
+    assert 'id="run-notice"' in content
+    assert 'x-text="notice"' in content
+    # Cleared on click, so a stale notice never outlives the next run.
+    assert 'notice = &#x27;&#x27;' in content or "notice = ''" in content

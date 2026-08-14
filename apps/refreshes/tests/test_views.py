@@ -204,8 +204,12 @@ class TestRunRefreshView:
         url = reverse('refreshes:run_refresh', args=[config.id])
         response = authed_client().post(url)
 
+        run = config.runs.get()
         assert response.status_code == 200
-        assert response.content.decode() == 'test-task-id'
+        assert response.json() == {
+            'run_id': run.id,
+            'poll_url': run.status_url,
+        }
         mock_async.assert_called_once()
         assert RefreshRun.objects.filter(
             config=config,
@@ -231,7 +235,8 @@ class TestRunRefreshConcurrencyGuard:
         with patch('apps.schedules.dispatch.async_task') as mock_async:
             response = authed_client().post(config.run_url)
 
-        assert response.status_code == 200
+        assert response.status_code == 409
+        assert response.json() == {'error': 'already_running'}
         mock_async.assert_not_called()
         assert config.runs.count() == 1
 
@@ -426,10 +431,15 @@ class TestRunRefreshHtmxBranch:
         assert OrmQ.objects.count() == 0
 
     def test_non_htmx_request_returns_200(self):
-        url = reverse('refreshes:run_refresh', args=[_refresh_config().id])
+        config = _refresh_config()
+        url = reverse('refreshes:run_refresh', args=[config.id])
         response = authed_client().post(url)
+        run = config.runs.get()
         assert response.status_code == 200
-        assert len(response.content) > 0
+        assert response.json() == {
+            'run_id': run.id,
+            'poll_url': run.status_url,
+        }
 
 
 class TestRefreshesListPageSmoke:
