@@ -1,4 +1,5 @@
 from django import template
+from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 register = template.Library()
@@ -23,6 +24,10 @@ def readable_timedelta(timedelta_obj, short=False):
     '1d 2h 3m 4s'
     >>> readable_timedelta(timedelta(seconds=7204), short=True)
     '2h 4s'
+    >>> readable_timedelta(timedelta(milliseconds=250))
+    'less than a second'
+    >>> readable_timedelta(timedelta(milliseconds=250), short=True)
+    '<1s'
     >>> readable_timedelta(None)
     '---'
     """
@@ -64,6 +69,10 @@ def readable_timedelta(timedelta_obj, short=False):
             if short
             else ngettext('{} second', '{} seconds', secs).format(secs)
         )
+    if not strings:
+        # A duration under a second truncates to zero, leaving nothing to
+        # report. Say it is brief rather than rendering an empty string.
+        return '<1s' if short else _('less than a second')
     return ' '.join(strings)
 
 
