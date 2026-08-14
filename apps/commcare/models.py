@@ -1,5 +1,6 @@
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -121,6 +122,13 @@ class CommCareProject(BaseModel):
     server = models.ForeignKey(CommCareServer, on_delete=models.CASCADE)
     domain = models.CharField(
         max_length=100,
+        validators=[RegexValidator(
+            regex=r'^[a-z0-9]+(?:-[a-z0-9]+)*$',
+            message=_(
+                'Enter a valid CommCare domain: lowercase letters and '
+                'numbers, with single hyphens between them.'
+            ),
+        )],
         help_text=_("Your CommCare domain (available from the URL)")
     )
 
