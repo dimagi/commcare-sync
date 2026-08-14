@@ -95,6 +95,15 @@
   <ul class="nav flex-column">
     <li class="nav-item">
       <a
+        class="nav-link icon-link {% if active_tab == 'destinations' %}active{% endif %}"
+        href="{% url 'forwarding:destinations' %}"
+      >
+        <i class="fa-solid fa-globe"></i
+        ><span class="d-md-none d-lg-inline">{% trans "Destinations" %}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a
         class="nav-link icon-link {% if active_tab == 'forwarders' %}active{% endif %}"
         href="{% url 'forwarding:forwarders' %}"
       >
@@ -109,15 +118,6 @@
       >
         <i class="fa-solid fa-plus"></i
         ><span class="d-md-none d-lg-inline">{% trans "New Forwarder" %}</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a
-        class="nav-link icon-link {% if active_tab == 'destinations' %}active{% endif %}"
-        href="{% url 'forwarding:destinations' %}"
-      >
-        <i class="fa-solid fa-globe"></i
-        ><span class="d-md-none d-lg-inline">{% trans "Destinations" %}</span>
       </a>
     </li>
   </ul>
