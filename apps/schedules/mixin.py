@@ -24,20 +24,20 @@ def _validate_days_of_week(value):
             )
 
 
+ACTIVE_RUN_STATUSES = frozenset({
+    RunBaseModel.Status.QUEUED,
+    RunBaseModel.Status.STARTED,
+})
+
+
 class ScheduleMixin(models.Model):
     """
     Abstract model mixin that adds scheduling fields to any config model.
 
     Concrete models must define:
         SCHEDULED_TASK: str - dotted path to the task run on schedule
-        SCHEDULED_TASK_OPTIONS: dict - optional django-q2 q_options for it
         runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
-
-    ``SCHEDULED_TASK_OPTIONS`` is meant to govern the work, so where
-    ``SCHEDULED_TASK`` only enqueues a second task rather than doing the
-    work itself (as the export tasks do), that task is responsible for
-    passing these options on. Otherwise a ``timeout`` here would bound
-    the hop instead of the run it dispatches.
+        latest_version: the config's current ``reversion`` Version
     """
 
     class ScheduleType(models.TextChoices):
@@ -54,7 +54,6 @@ class ScheduleMixin(models.Model):
         DAYS = 'days', _('Days')
 
     SCHEDULED_TASK: str
-    SCHEDULED_TASK_OPTIONS: dict = {}
 
     schedule_type = models.CharField(
         max_length=20,
@@ -138,12 +137,6 @@ class ScheduleMixin(models.Model):
         """True when the config has no active schedule."""
         return not (self.has_schedule and self.schedule_enabled)
 
-    def has_queued_runs(self):
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == RunBaseModel.Status.QUEUED
-        return False
-
     @property
     def last_run(self):
         all_runs = getattr(self, '_all_runs', None)
@@ -161,11 +154,26 @@ class ScheduleMixin(models.Model):
 
     @property
     def has_active_run(self):
-        active = {RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED}
+        """True if a run is queued or started.
+
+        Always queries. This gates dispatch, so it must not be answered
+        from a prefetch captured for rendering, which may predate the run
+        it is being asked about.
+        """
+        return self.runs.filter(status__in=ACTIVE_RUN_STATUSES).exists()
+
+    @property
+    def has_active_run_cached(self):
+        """``has_active_run``, answered from ``_all_runs`` when prefetched.
+
+        For list pages, which prefetch every config's runs and would
+        otherwise issue a query per row. Falls back to the real thing when
+        there is no prefetch.
+        """
         all_runs = getattr(self, '_all_runs', None)
-        if all_runs is not None:
-            return any(r.status in active for r in all_runs)
-        return self.runs.filter(status__in=active).exists()
+        if all_runs is None:
+            return self.has_active_run
+        return any(r.status in ACTIVE_RUN_STATUSES for r in all_runs)
 
     @property
     def schedule_display(self):

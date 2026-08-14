@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def run_refresh(refresh_run):
     """Execute a refresh run for multiple materialized views."""
-    refresh_config = refresh_run.refresh_config
+    refresh_config = refresh_run.config
     log_lines = [
         f'{timezone.now()}: Starting refresh for {refresh_config}',
         (

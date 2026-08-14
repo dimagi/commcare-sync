@@ -21,6 +21,7 @@ from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -364,15 +365,15 @@ def multi_export_details(request, export_id):
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
-    if export_run.base_export_config.id != export_id:
+    if export_run.config.id != export_id:
         raise Http404(
             f'Export id {export_id} did not match run value of '
-            f'{export_run.base_export_config.id}!'
+            f'{export_run.config.id}!'
         )
     return render(request, 'exports/multi_project_export_run_details.html', {
         'active_tab': 'exports',
         'export_run': export_run,
-        'export': export_run.base_export_config,
+        'export': export_run.config,
         'runs': export_run.partial_runs.order_by('-created_at')[: get_ui_page_size(request)],
     })
 
@@ -384,7 +385,6 @@ def run_export(request, export_id):
         request,
         export_id,
         ExportConfig,
-        ExportRun,
         run_export_task,
     )
 
@@ -396,7 +396,6 @@ def run_multi_export(request, export_id):
         request,
         export_id,
         MultiProjectExportConfig,
-        MultiProjectExportRun,
         run_multi_project_export_task,
     )
 
@@ -405,12 +404,9 @@ def _run_export(
     request,
     export_id,
     export_config_class,
-    export_run_class,
     export_task,
 ):
     export = get_object_or_404(export_config_class, id=export_id)
-    if export.has_active_run:
-        return run_response(request, task_id=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
@@ -418,15 +414,10 @@ def _run_export(
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    export_record = export_run_class.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
-        triggered_from_ui=True,
-        triggered_by=request.user,
-    )
-    task_id = async_task(
+    _run, task_id = create_run_and_dispatch(
+        export,
         export_task,
-        export_record.id,
+        triggered_by=request.user,
         start_over=start_over,
     )
     return run_response(request, task_id)

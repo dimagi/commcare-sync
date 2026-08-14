@@ -1,6 +1,8 @@
 """Background tasks for data forwarding."""
 import logging
 
+from apps.schedules.dispatch import create_run
+
 from .models import ForwardingConfig, ForwardingRun
 from .runner import run_forwarding
 
@@ -20,7 +22,16 @@ def run_forwarding_task(fwd_run_id):
     try:
         fwd_run = ForwardingRun.objects.get(id=fwd_run_id)
     except ForwardingRun.DoesNotExist:
-        logger.error(f'ForwardingRun {fwd_run_id} does not exist')
+        logger.warning(
+            'run_forwarding_task: ForwardingRun %s no longer exists, '
+            'skipping.',
+            fwd_run_id,
+        )
+        return None
+
+    if fwd_run.status != ForwardingRun.Status.QUEUED:
+        # Django Q2 re-delivered a task whose run is already under way or
+        # finished. Redoing the work is worse than doing nothing.
         return None
 
     run_forwarding(fwd_run)
@@ -40,14 +51,21 @@ def run_scheduled_forwarding_task(fwd_config_id):
     try:
         fwd_config = ForwardingConfig.objects.get(id=fwd_config_id)
     except ForwardingConfig.DoesNotExist:
-        logger.error(f'ForwardingConfig {fwd_config_id} does not exist')
+        logger.warning(
+            'run_scheduled_forwarding_task: ForwardingConfig %s no longer '
+            'exists, skipping.',
+            fwd_config_id,
+        )
         return None
 
-    fwd_run = ForwardingRun.objects.create(
-        forwarding_config=fwd_config,
-        forwarding_config_version=fwd_config.latest_version,
-        status=ForwardingRun.Status.QUEUED,
-        triggered_from_ui=False,
-    )
+    fwd_run = create_run(fwd_config)
+    if fwd_run is None:
+        logger.info(
+            'run_scheduled_forwarding_task: ForwardingConfig %s already has '
+            'an active run, skipping.',
+            fwd_config_id,
+        )
+        return None
+
     run_forwarding(fwd_run)
     return fwd_run.id

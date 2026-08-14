@@ -133,14 +133,14 @@ class ForwardingConfig(ScheduleMixin, BaseModel):
 class ForwardingRun(RunBaseModel):
     """Record of a single forwarding run."""
 
-    forwarding_config = models.ForeignKey(
+    config = models.ForeignKey(
         ForwardingConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    forwarding_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version, on_delete=models.CASCADE, null=True
     )
 
     def __str__(self):
-        return f'{self.forwarding_config.name} ({self.created_at})'
+        return f'{self.config.name} ({self.created_at})'

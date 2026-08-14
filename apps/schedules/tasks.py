@@ -15,13 +15,24 @@ every minute until an operator intervenes.
 """
 
 import logging
+from datetime import timedelta
 
+from django.conf import settings
+from django.db.models import F, Value
+from django.db.models.functions import Coalesce, Concat
 from django.utils import timezone
 from django_q.tasks import async_task
 
-from apps.exports.models import ExportConfig, MultiProjectExportConfig
-from apps.forwarding.models import ForwardingConfig
-from apps.refreshes.models import RefreshConfig
+from apps.commcare.models import RunBaseModel
+from apps.exports.models import (
+    ExportConfig,
+    ExportRun,
+    MultiProjectExportConfig,
+    MultiProjectExportRun,
+    MultiProjectPartialExportRun,
+)
+from apps.forwarding.models import ForwardingConfig, ForwardingRun
+from apps.refreshes.models import RefreshConfig, RefreshRun
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +42,68 @@ CONFIG_MODELS = [
     ForwardingConfig,
     RefreshConfig,
 ]
+
+RUN_MODELS = [
+    ExportRun,
+    MultiProjectExportRun,
+    MultiProjectPartialExportRun,
+    ForwardingRun,
+    RefreshRun,
+]
+
+
+# Added to the task timeout when computing the reaper's cutoff. started_at
+# is set after Django Q2 hands the task to a worker, so the cutoff can never
+# precede Django Q2's own kill on a single host — but that invariant only
+# holds if the scheduler and the worker agree on the time. The margin gives
+# it room to survive ordinary clock skew between hosts.
+REAP_MARGIN = timedelta(seconds=60)
+
+
+def reap_stale_runs():
+    """Mark runs whose worker was killed as ``TIMEOUT``.
+
+    A run is left ``STARTED`` when its worker is killed, which would
+    otherwise block its config forever: ``has_active_run`` would keep
+    seeing it, and the re-delivered task returns immediately because the
+    run is no longer ``QUEUED``. Every runner sets ``started_at`` when it
+    sets ``STARTED``, so a ``STARTED`` run older than the task timeout
+    (plus ``REAP_MARGIN`` for clock skew) cannot still be running.
+
+    ``QUEUED`` runs are deliberately not reaped: they have no
+    ``started_at`` to measure from, and a run can legitimately sit queued
+    for a long time behind other work.
+
+    Returns the number of runs reaped.
+    """
+    now = timezone.now()
+    cutoff = (
+        now - timedelta(seconds=settings.Q_CLUSTER['timeout']) - REAP_MARGIN
+    )
+    reaped = 0
+    for run_model in RUN_MODELS:
+        count = run_model.objects.filter(
+            status=RunBaseModel.Status.STARTED,
+            started_at__lt=cutoff,
+        ).update(
+            status=RunBaseModel.Status.TIMEOUT,
+            completed_at=now,
+            # ``log`` is nullable and Concat propagates NULL, so an
+            # unlogged run would otherwise lose the note entirely.
+            log=Concat(
+                Coalesce(F('log'), Value('')),
+                Value(
+                    '\n[This run timed out. Its worker was killed by Django '
+                    'Q2 and the scheduler marked the run accordingly.]\n'
+                ),
+            ),
+        )
+        if count:
+            logger.warning(
+                'Reaped %d stale %s run(s)', count, run_model.__name__
+            )
+        reaped += count
+    return reaped
 
 
 def _advance_past(config, due_at, now):
@@ -58,7 +131,11 @@ def run_due_schedules():
     via a shell edit, ``loaddata``, or ``objects.create()`` bypassing
     validation) must not prevent the other due configs - possibly for
     other models entirely - from being enqueued.
+
+    Stale runs are reaped first, so a config is never skipped on account
+    of a run whose worker has already been killed.
     """
+    reap_stale_runs()
     now = timezone.now()
     launched = []
     for config_model in CONFIG_MODELS:
@@ -77,11 +154,7 @@ def run_due_schedules():
                 ).update(next_run_at=next_run)
                 if not claimed:
                     continue
-                async_task(
-                    config.SCHEDULED_TASK,
-                    config.id,
-                    q_options=dict(config.SCHEDULED_TASK_OPTIONS),
-                )
+                async_task(config.SCHEDULED_TASK, config.id)
             except Exception:
                 # config.__str__ could itself raise on a malformed row, so
                 # log by model name and pk rather than the instance.

@@ -7,6 +7,7 @@ from unmagic import fixture, use
 from apps.commcare.models import (
     CommCareAccount,
     CommCareServer,
+    RunBaseModel,
 )
 from apps.db.models import Database
 from apps.exports.models import ExportConfig
@@ -178,3 +179,13 @@ class TestRunBaseModelHasLog:
 
     def test_true_for_failed(self):
         assert ForwardingRun(status=ForwardingRun.Status.FAILED).has_log is True
+
+
+def test_timeout_is_a_status():
+    assert RunBaseModel.Status.TIMEOUT == 'timeout'
+    assert ForwardingRun.Status.TIMEOUT == 'timeout'
+
+
+def test_timed_out_run_has_a_log():
+    run = ForwardingRun(status=RunBaseModel.Status.TIMEOUT)
+    assert run.has_log is True

@@ -54,7 +54,7 @@ class TestForwardingConfig:
     @use(config)
     def test_last_run_excludes_queued_runs(self):
         queued_run = ForwardingRun.objects.create(  # noqa: F841
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.QUEUED,
         )
 
@@ -64,61 +64,23 @@ class TestForwardingConfig:
     def test_last_run_returns_most_recent_non_queued(self):
         with time_machine.travel('2025-01-01 10:00:00', tick=False):
             run1 = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
+                config=config(),
                 status=ForwardingRun.Status.COMPLETED,
             )
 
         with time_machine.travel('2025-01-01 11:00:00', tick=False):
             run2 = ForwardingRun.objects.create(
-                forwarding_config=config(),
+                config=config(),
                 status=ForwardingRun.Status.COMPLETED,
             )
 
         with time_machine.travel('2025-01-01 12:00:00', tick=False):
             queued_run = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
+                config=config(),
                 status=ForwardingRun.Status.QUEUED,
             )
 
         assert config().last_run.id == run2.id
-
-    @use(config)
-    def test_has_queued_runs_with_no_runs(self):
-        assert not config().has_queued_runs()
-
-    @use(config)
-    def test_has_queued_runs_returns_true_when_most_recent_is_queued(self):
-        with time_machine.travel('2025-01-01 10:00:00', tick=False):
-            completed_run = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
-                status=ForwardingRun.Status.COMPLETED,
-            )
-
-        with time_machine.travel('2025-01-01 11:00:00', tick=False):
-            queued_run = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
-                status=ForwardingRun.Status.QUEUED,
-            )
-
-        assert config().has_queued_runs()
-
-    @use(config)
-    def test_has_queued_runs_returns_false_when_most_recent_is_not_queued(
-        self,
-    ):
-        with time_machine.travel('2025-01-01 10:00:00', tick=False):
-            queued_run = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
-                status=ForwardingRun.Status.QUEUED,
-            )
-
-        with time_machine.travel('2025-01-01 11:00:00', tick=False):
-            completed_run = ForwardingRun.objects.create(  # noqa: F841
-                forwarding_config=config(),
-                status=ForwardingRun.Status.COMPLETED,
-            )
-
-        assert not config().has_queued_runs()
 
     @use(config)
     def test_latest_version_returns_version(self):
@@ -152,7 +114,7 @@ class TestForwardingRun:
     def test_str_method(self):
         with time_machine.travel('2025-01-15 14:30:00', tick=False):
             run = ForwardingRun.objects.create(
-                forwarding_config=config(),
+                config=config(),
                 status=ForwardingRun.Status.QUEUED,
             )
 
@@ -161,7 +123,7 @@ class TestForwardingRun:
     @use(config)
     def test_duration_with_both_timestamps(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.COMPLETED,
             started_at=timezone.now(),
         )
@@ -174,7 +136,7 @@ class TestForwardingRun:
     @use(config)
     def test_duration_with_missing_started_at(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.COMPLETED,
             completed_at=timezone.now(),
         )
@@ -184,7 +146,7 @@ class TestForwardingRun:
     @use(config)
     def test_duration_with_missing_completed_at(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.STARTED,
             started_at=timezone.now(),
         )
@@ -195,7 +157,7 @@ class TestForwardingRun:
     def test_get_duration_display(self):
         with time_machine.travel('2025-01-15 10:00:00', tick=False):
             run = ForwardingRun.objects.create(
-                forwarding_config=config(),
+                config=config(),
                 status=ForwardingRun.Status.STARTED,
                 started_at=timezone.now(),
             )
@@ -211,7 +173,7 @@ class TestForwardingRun:
     @use(config)
     def test_mark_skipped_success(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.QUEUED,
         )
 
@@ -224,7 +186,7 @@ class TestForwardingRun:
     @use(config)
     def test_mark_skipped_raises_exception_when_already_started(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.STARTED,
         )
 
@@ -236,7 +198,7 @@ class TestForwardingRun:
     @use(config)
     def test_mark_skipped_raises_exception_when_already_completed(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.COMPLETED,
         )
 
@@ -248,7 +210,7 @@ class TestForwardingRun:
     @use(config)
     def test_mark_skipped_raises_exception_when_already_failed(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
             status=ForwardingRun.Status.FAILED,
         )
 
@@ -260,7 +222,7 @@ class TestForwardingRun:
     @use(config)
     def test_default_status_is_queued(self):
         run = ForwardingRun.objects.create(
-            forwarding_config=config(),
+            config=config(),
         )
 
         assert run.status == ForwardingRun.Status.QUEUED

@@ -237,8 +237,10 @@ class TestExportsHomeViewUpdated:
 def mock_async_task_dispatch():
     # Suppress dispatch so these view tests don't leave a live django-q
     # OrmQ row queued behind them (async_task's ORM broker really does
-    # insert a row, even though nothing consumes it in tests).
-    with patch('apps.exports.views.async_task') as mock:
+    # insert a row, even though nothing consumes it in tests). The view
+    # now dispatches via apps.schedules.dispatch.create_run_and_dispatch,
+    # which is where async_task is actually called from.
+    with patch('apps.schedules.dispatch.async_task') as mock:
         mock.return_value = 'test-task-id'
         yield mock
 
@@ -262,7 +264,7 @@ class TestRunExportHtmxBranch:
         url = reverse('exports:run_export', args=[config.id])
         authed_client().post(url, HTTP_HX_REQUEST='true')
         assert ExportRun.objects.filter(
-            base_export_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
         assert OrmQ.objects.count() == 0
@@ -272,13 +274,13 @@ class TestRunExportHtmxBranch:
         # active must not stack a second run.
         config = export_config()
         ExportRun.objects.create(
-            base_export_config=config,
+            config=config,
             status=ExportRun.Status.STARTED,
         )
         url = reverse('exports:run_export', args=[config.id])
         response = authed_client().post(url, HTTP_HX_REQUEST='true')
         assert response.status_code == 204
-        assert ExportRun.objects.filter(base_export_config=config).count() == 1
+        assert ExportRun.objects.filter(config=config).count() == 1
 
     def test_non_htmx_request_returns_200_with_task_id(self):
         import json
@@ -295,7 +297,7 @@ class TestRunExportHtmxBranch:
         """startOver: true in JSON body passes start_over=True to task."""
         import json
         url = reverse('exports:run_export', args=[export_config().id])
-        with patch('apps.exports.views.async_task') as mock_async:
+        with patch('apps.schedules.dispatch.async_task') as mock_async:
             mock_async.return_value = 'fake-id'
             authed_client().post(
                 url,
@@ -328,7 +330,7 @@ class TestRunMultiExportHtmxBranch:
         url = reverse('exports:run_multi_export', args=[config.id])
         authed_client().post(url, HTTP_HX_REQUEST='true')
         assert MultiProjectExportRun.objects.filter(
-            base_export_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
 
@@ -352,7 +354,7 @@ class TestExportsHomeSmoke:
     def test_renders_with_run_in_status(self, status, expected):
         config = export_config()
         ExportRun.objects.create(
-            base_export_config=config,
+            config=config,
             status=status,
         )
         response = authed_client().get(reverse('exports:home'))
@@ -365,7 +367,7 @@ class TestExportsHomeSmoke:
     def test_renders_multi_config_with_completed_run(self):
         config = multi_export_config()
         MultiProjectExportRun.objects.create(
-            base_export_config=config,
+            config=config,
             status=MultiProjectExportRun.Status.COMPLETED,
         )
         response = authed_client().get(reverse('exports:home'))

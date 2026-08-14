@@ -134,6 +134,23 @@
               >{% trans "Skipped" %}</label
             >
           </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="status_filter"
+              value="timeout"
+              id="filter-timeout"
+              checked
+              hx-get="{{ run_history_url }}"
+              hx-target="#run-table"
+              hx-swap="outerHTML"
+              hx-include="#status-filter-form"
+            />
+            <label class="form-check-label" for="filter-timeout"
+              >{% trans "Timed out" %}</label
+            >
+          </div>
         </div>
       </div>
     </div>

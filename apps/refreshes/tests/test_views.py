@@ -170,7 +170,7 @@ class TestRefreshDetailsView:
     def test_hide_skipped(self):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=RefreshRun.Status.SKIPPED,
         )
         url = reverse('refreshes:refresh_details', args=[config.id])
@@ -196,7 +196,7 @@ class TestRunHistoryTableView:
 
 class TestRunRefreshView:
     @use(authed_client, _refresh_config)
-    @patch('apps.refreshes.views.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_triggers_task(self, mock_async):
         config = _refresh_config()
         mock_async.return_value = 'test-task-id'
@@ -207,10 +207,8 @@ class TestRunRefreshView:
         assert response.status_code == 200
         assert response.content.decode() == 'test-task-id'
         mock_async.assert_called_once()
-        _, kwargs = mock_async.call_args
-        assert kwargs['q_options'] == {'timeout': 3660}
         assert RefreshRun.objects.filter(
-            refresh_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
 
@@ -220,6 +218,22 @@ class TestRunRefreshView:
         url = reverse('refreshes:run_refresh', args=[config.id])
         response = authed_client().get(url)
         assert response.status_code == 405
+
+
+class TestRunRefreshConcurrencyGuard:
+    @use(authed_client, _refresh_config)
+    def test_manual_refresh_skipped_while_a_run_is_active(self):
+        config = _refresh_config()
+        RefreshRun.objects.create(
+            config=config, status=RefreshRun.Status.STARTED
+        )
+
+        with patch('apps.schedules.dispatch.async_task') as mock_async:
+            response = authed_client().post(config.run_url)
+
+        assert response.status_code == 200
+        mock_async.assert_not_called()
+        assert config.runs.count() == 1
 
 
 class TestFetchMaterializedViewsView:
@@ -350,7 +364,7 @@ class TestRefreshRunLogView:
     @use(authed_client, _refresh_config)
     def test_requires_login(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='hello log',
         )
@@ -362,7 +376,7 @@ class TestRefreshRunLogView:
     @use(authed_client, _refresh_config)
     def test_returns_log(self):
         run = RefreshRun.objects.create(
-            refresh_config=_refresh_config(),
+            config=_refresh_config(),
             status=RefreshRun.Status.COMPLETED,
             log='refresh log content',
         )
@@ -386,8 +400,10 @@ class TestRefreshRunLogView:
 def mock_async_task_dispatch():
     # Suppress dispatch so these view tests don't leave a live django-q
     # OrmQ row queued behind them (async_task's ORM broker really does
-    # insert a row, even though nothing consumes it in tests).
-    with patch('apps.refreshes.views.async_task') as mock:
+    # insert a row, even though nothing consumes it in tests). The view
+    # now dispatches via apps.schedules.dispatch.create_run_and_dispatch,
+    # which is where async_task is actually called from.
+    with patch('apps.schedules.dispatch.async_task') as mock:
         mock.return_value = 'test-task-id'
         yield mock
 
@@ -404,7 +420,7 @@ class TestRunRefreshHtmxBranch:
         url = reverse('refreshes:run_refresh', args=[config.id])
         authed_client().post(url, HTTP_HX_REQUEST='true')
         assert RefreshRun.objects.filter(
-            refresh_config=config,
+            config=config,
             triggered_from_ui=True,
         ).exists()
         assert OrmQ.objects.count() == 0
@@ -445,7 +461,7 @@ class TestRefreshesListPageSmoke:
     def test_renders_with_run_in_status(self, status, expected):
         config = _refresh_config()
         RefreshRun.objects.create(
-            refresh_config=config,
+            config=config,
             status=status,
         )
         response = authed_client().get(reverse('refreshes:refresh_configs'))
