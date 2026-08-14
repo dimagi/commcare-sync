@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.commcare.models import RunBaseModel
@@ -18,6 +19,9 @@ logger = logging.getLogger(__name__)
 # century falls in between. That is 2921 days, plus one for a scan
 # starting on the anchor date itself once ``first_run_time`` has passed.
 MAX_SCAN_DAYS = 2922
+
+# How late a scheduled run may be before ``is_overdue`` reports it.
+OVERDUE_GRACE = timedelta(minutes=5)
 
 # List pages prefetch each config's runs, newest first, into this
 # attribute, so that ``last_run`` and the table's active-run check don't
@@ -150,6 +154,21 @@ class ScheduleMixin(models.Model):
     @property
     def has_schedule(self):
         return bool(self.schedule_type)
+
+    @property
+    def is_overdue(self):
+        """True when ``next_run_at`` is far enough past to be a problem.
+
+        The dispatcher advances ``next_run_at`` as it enqueues each due
+        run (see ``apps/schedules/tasks.py``), so a value in the past
+        means no dispatcher has claimed the run yet. Being a little late
+        is routine -- the dispatcher only runs once a minute, and the
+        cluster may be busy -- so only report an overdue run once it is
+        later than ``OVERDUE_GRACE``.
+        """
+        if self.next_run_at is None:
+            return False
+        return self.next_run_at < timezone.now() - OVERDUE_GRACE
 
     @property
     def is_paused(self):
