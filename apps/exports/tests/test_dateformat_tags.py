@@ -12,46 +12,47 @@ def test_doctests():
 
 
 @pytest.mark.parametrize(
-    ('delta', 'expected'),
+    ('delta', 'expected', 'expected_short'),
     [
-        (timedelta(days=7), '7 days'),
-        (timedelta(seconds=45), '45 seconds'),
-        (timedelta(minutes=3, seconds=4), '3 minutes 4 seconds'),
-        (timedelta(days=1, seconds=30), '1 day 30 seconds'),
-        (timedelta(hours=25, minutes=30), '1 day 1 hour 30 minutes'),
+        (timedelta(days=7), '7 days', '7d'),
+        (timedelta(seconds=45), '45 seconds', '45s'),
+        (timedelta(minutes=3, seconds=4), '3 minutes 4 seconds', '3m 4s'),
+        (timedelta(days=1, seconds=30), '1 day 30 seconds', '1d 30s'),
+        (
+            timedelta(hours=25, minutes=30),
+            '1 day 1 hour 30 minutes',
+            '1d 1h 30m',
+        ),
         (
             timedelta(hours=2, minutes=3, seconds=4),
             '2 hours 3 minutes 4 seconds',
+            '2h 3m 4s',
         ),
         (
             timedelta(days=1, hours=2, minutes=3, seconds=4),
             '1 day 2 hours 3 minutes 4 seconds',
+            '1d 2h 3m 4s',
         ),
         (
             timedelta(days=365, hours=23, minutes=59, seconds=59),
             '365 days 23 hours 59 minutes 59 seconds',
+            '365d 23h 59m 59s',
         ),
-        (timedelta(seconds=60), '1 minute'),
-        (timedelta(seconds=3600), '1 hour'),
-        (timedelta(seconds=86400), '1 day'),
-        (None, '---'),
-        (timedelta(days=1, hours=0, minutes=-1), '23 hours 59 minutes'),
-    ],
-)
-def test_readable_timedelta(delta, expected):
-    result = dateformat_tags.readable_timedelta(delta)
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    ('delta', 'expected', 'expected_short'),
-    [
+        (timedelta(seconds=60), '1 minute', '1m'),
+        (timedelta(seconds=3600), '1 hour', '1h'),
+        (timedelta(seconds=86400), '1 day', '1d'),
         (timedelta(milliseconds=999), 'less than a second', '<1s'),
         (timedelta(milliseconds=250), 'less than a second', '<1s'),
         (timedelta(microseconds=1), 'less than a second', '<1s'),
+        (None, '---', '---'),
+        (
+            timedelta(days=1, hours=0, minutes=-1),
+            '23 hours 59 minutes',
+            '23h 59m',
+        ),
     ],
 )
-def test_readable_timedelta_sub_second(delta, expected, expected_short):
+def test_readable_timedelta(delta, expected, expected_short):
     assert dateformat_tags.readable_timedelta(delta) == expected
     assert dateformat_tags.readable_timedelta(delta, short=True) == (
         expected_short
