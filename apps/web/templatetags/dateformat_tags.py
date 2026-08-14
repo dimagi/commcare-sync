@@ -36,32 +36,29 @@ def readable_timedelta(timedelta_obj, short=False):
         return '---'
     secs = int(timedelta_obj.total_seconds())
     strings = []
-    if secs > 86400:  # 60sec * 60min * 24hrs
+    if secs >= 86400:  # 60sec * 60min * 24hrs
         days = secs // 86400
-        if days:
-            strings.append(
-                f'{days}d'
-                if short
-                else ngettext('{} day', '{} days', days).format(days)
-            )
+        strings.append(
+            f'{days}d'
+            if short
+            else ngettext('{} day', '{} days', days).format(days)
+        )
         secs = secs - days * 86400
-    if secs > 3600:
+    if secs >= 3600:
         hours = secs // 3600
-        if hours:
-            strings.append(
-                f'{hours}h'
-                if short
-                else ngettext('{} hour', '{} hours', hours).format(hours)
-            )
+        strings.append(
+            f'{hours}h'
+            if short
+            else ngettext('{} hour', '{} hours', hours).format(hours)
+        )
         secs = secs - hours * 3600
-    if secs > 60:
+    if secs >= 60:
         mins = secs // 60
-        if mins:
-            strings.append(
-                f'{mins}m'
-                if short
-                else ngettext('{} minute', '{} minutes', mins).format(mins)
-            )
+        strings.append(
+            f'{mins}m'
+            if short
+            else ngettext('{} minute', '{} minutes', mins).format(mins)
+        )
         secs = secs - mins * 60
     if secs:
         strings.append(
