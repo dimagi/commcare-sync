@@ -20,11 +20,23 @@
           <i class="fa-solid {{ icon }} me-1"></i> {{ title }}
         </h5>
         {% if stats.status == 'healthy' %}
-          <span class="badge bg-success">{% trans "Healthy" %}</span>
+          <span
+            class="badge bg-success"
+            title="{% trans '≥95% success rate' %}"
+            aria-label="{% trans '≥95% success rate' %}"
+          >{% trans "Healthy" %}</span>
         {% elif stats.status == 'warning' %}
-          <span class="badge bg-warning text-dark">{% trans "Warning" %}</span>
+          <span
+            class="badge bg-warning text-dark"
+            title="{% trans '80–94% success rate' %}"
+            aria-label="{% trans '80–94% success rate' %}"
+          >{% trans "Warning" %}</span>
         {% elif stats.status == 'error' %}
-          <span class="badge bg-danger">{% trans "Issue" %}</span>
+          <span
+            class="badge bg-danger"
+            title="{% trans 'Below 80% success rate' %}"
+            aria-label="{% trans 'Below 80% success rate' %}"
+          >{% trans "Issue" %}</span>
         {% else %}
           <span class="badge bg-light text-dark">{% trans "No Data" %}</span>
         {% endif %}
