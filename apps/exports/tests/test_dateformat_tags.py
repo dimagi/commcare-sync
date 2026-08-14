@@ -40,6 +40,21 @@ def test_readable_timedelta(delta, expected):
     assert result == expected
 
 
+@pytest.mark.parametrize(
+    ('delta', 'expected', 'expected_short'),
+    [
+        (timedelta(milliseconds=999), 'less than a second', '<1s'),
+        (timedelta(milliseconds=250), 'less than a second', '<1s'),
+        (timedelta(microseconds=1), 'less than a second', '<1s'),
+    ],
+)
+def test_readable_timedelta_sub_second(delta, expected, expected_short):
+    assert dateformat_tags.readable_timedelta(delta) == expected
+    assert dateformat_tags.readable_timedelta(delta, short=True) == (
+        expected_short
+    )
+
+
 def test_readable_timedelta_edge_cases():
     assert dateformat_tags.readable_timedelta(timedelta(seconds=0)) == '---'
     assert dateformat_tags.readable_timedelta(timedelta()) == '---'
