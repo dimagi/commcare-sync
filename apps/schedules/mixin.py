@@ -249,7 +249,7 @@ class ScheduleMixin(models.Model):
 
     def compute_next_run(self, after: AwareDatetime) -> AwareDatetime | None:
         """
-        Return the next scheduled run as a timezome-aware datetime
+        Return the next scheduled run as a timezone-aware datetime
         strictly after ``after`` (also an aware datetime), or None if
         there is no schedule.
 
