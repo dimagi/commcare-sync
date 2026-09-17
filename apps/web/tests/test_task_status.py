@@ -13,9 +13,6 @@ from tests.fixtures import authed_client
 @use(authed_client)
 class TestTaskStatus:
     def _create_task(self, name, success, result):
-        # Django Q2's Task.get_task only queries by ID when the ID looks
-        # like a UUID; anything shorter falls back to a lookup by
-        # `name`.
         task_id = uuid.uuid4().hex
         now = timezone.now()
         Task.objects.create(
