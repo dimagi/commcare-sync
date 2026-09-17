@@ -195,7 +195,8 @@ Q_CLUSTER = {
     'orm': 'default',
     'workers': 2,
     'timeout': 6 * 60 * 60,  # kill a run after 6h
-    'retry': 8 * 60 * 60,  # re-deliver 2h after the timeout
+    'retry': 8 * 60 * 60,  # retry if a worker dies without reporting back
+                           # (because OOM, SIGKILL, reboot, etc.)
     'max_attempts': 2,  # one retry for interrupted runs, then give up
     'ack_failures': True,  # a failed run is complete, not re-delivered
     'catch_up': False,  # don't replay every missed minute of the dispatcher
