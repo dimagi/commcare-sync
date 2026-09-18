@@ -12,6 +12,13 @@ type AwareDatetime = datetime
 
 logger = logging.getLogger(__name__)
 
+# How far ``compute_next_run()`` scans for the next calendar-schedule
+# day. The worst case is an annual schedule anchored on 29 February:
+# the next occurrence is four years away, or eight when a non-leap
+# century falls in between. That is 2921 days, plus one for a scan
+# starting on the anchor date itself once ``first_run_time`` has passed.
+MAX_SCAN_DAYS = 2922
+
 
 def _validate_days_of_week(value):
     if not isinstance(value, list):
@@ -275,24 +282,21 @@ class ScheduleMixin(models.Model):
                     return first
             return after + interval
 
-        # Calendar-based schedules: scan forward day by day (bounded to
-        # two years, enough for ANNUALLY plus skipped short months).
+        # Calendar-based schedules: scan forward day by day.
         candidate_date = after.astimezone(tz).date()
-        for _i in range(366 * 2):
+        for _i in range(MAX_SCAN_DAYS):
             candidate = datetime.combine(
                 candidate_date, self.first_run_time, tzinfo=tz
             )
             if candidate > after and self._runs_on(candidate_date):
                 return candidate
             candidate_date += timedelta(days=1)
-        # No matching day within the scan window (e.g. an ANNUALLY schedule
-        # anchored on 29 February can be up to four years out). Rather than
-        # silently reporting "unscheduled", log it so a dead schedule is
-        # diagnosable.
+        # No matching day within the scan window. Rather than silently
+        # reporting "unscheduled", log it so a dead schedule is diagnosable.
         logger.warning(
             'compute_next_run: no matching day found within %d days for '
             '%s(pk=%s, schedule_type=%s); treating as unscheduled',
-            366 * 2, type(self).__name__, self.pk, self.schedule_type,
+            MAX_SCAN_DAYS, type(self).__name__, self.pk, self.schedule_type,
         )
         return None
 

@@ -150,6 +150,33 @@ class TestComputeNextRun:
             id='annual-anniversary',
         ),
         pytest.param(
+            {
+                'schedule_type': ScheduleMixin.ScheduleType.ANNUALLY,
+                'first_run_date': date(2024, 2, 29),
+                'first_run_time': time(0, 0),
+            },
+            datetime(2025, 3, 1, tzinfo=dt_timezone.utc),
+            # Anchored on 29 February, an ANNUALLY schedule only fires in
+            # leap years, so the next occurrence is four years out.
+            datetime(2028, 2, 29, 0, 0, tzinfo=dt_timezone.utc),
+            id='annual-on-29-february-skips-common-years',
+        ),
+        pytest.param(
+            {
+                'schedule_type': ScheduleMixin.ScheduleType.ANNUALLY,
+                'first_run_date': date(2096, 2, 29),
+                'first_run_time': time(0, 0),
+            },
+            datetime(2096, 2, 29, 0, 30, tzinfo=dt_timezone.utc),
+            # The widest gap the Gregorian calendar allows: 2100 is
+            # divisible by 100 but not 400, so it is not a leap year and
+            # 2096 is followed by 2104. Starting on the anchor date with
+            # first_run_time already past makes this the exact worst case
+            # MAX_SCAN_DAYS is sized for.
+            datetime(2104, 2, 29, 0, 0, tzinfo=dt_timezone.utc),
+            id='annual-on-29-february-crosses-non-leap-century',
+        ),
+        pytest.param(
             # clean() requires first_run_date for calendar schedules, but
             # objects.create()/loaddata/shell edits can bypass validation.
             # _runs_on must degrade to False rather than raise AttributeError.
@@ -168,20 +195,19 @@ class TestComputeNextRun:
 class TestComputeNextRunScanExhaustion:
 
     def test_logs_warning_and_returns_none_when_window_exhausted(self):
-        # Anchored on 29 Feb, an ANNUALLY schedule only fires in leap
-        # years. Queried just after a non-leap Feb, the next occurrence
-        # (three years out) falls outside the two-year scan window, so
-        # the schedule should be reported as diagnosably dead, not
-        # silently unscheduled.
+        # clean() rejects a weekly schedule with no days selected, but
+        # objects.create()/loaddata/shell edits can bypass validation. Such
+        # a schedule never fires on any day, so the scan runs out. It
+        # should be reported as diagnosably dead, not silently unscheduled.
         cfg = ExportConfig(
-            schedule_type=ScheduleMixin.ScheduleType.ANNUALLY,
-            first_run_date=date(2024, 2, 29),
-            first_run_time=time(0, 0),
+            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
+            first_run_date=date(2026, 1, 1),
+            first_run_time=time(8, 0),
+            days_of_week=[],
         )
-        after = datetime(2025, 3, 1, tzinfo=dt_timezone.utc)
 
         with patch('apps.schedules.mixin.logger') as mock_logger:
-            result = cfg.compute_next_run(after)
+            result = cfg.compute_next_run(AFTER)
 
         assert result is None
         mock_logger.warning.assert_called_once()
