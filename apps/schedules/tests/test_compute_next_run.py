@@ -177,6 +177,30 @@ class TestComputeNextRun:
             id='annual-on-29-february-crosses-non-leap-century',
         ),
         pytest.param(
+            {
+                'schedule_type': ScheduleMixin.ScheduleType.MONTHLY,
+                'first_run_date': date(2050, 1, 1),
+                'first_run_time': time(8, 0),
+            },
+            AFTER,
+            # A first_run_date beyond MAX_SCAN_DAYS must not be reported as
+            # unscheduled: the scan starts at the anchor, not at `after`.
+            datetime(2050, 1, 1, 8, 0, tzinfo=dt_timezone.utc),
+            id='first-run-date-beyond-scan-window-still-scheduled',
+        ),
+        pytest.param(
+            {
+                'schedule_type': ScheduleMixin.ScheduleType.MONTHLY,
+                'first_run_date': date(2016, 3, 15),
+                'first_run_time': time(8, 0),
+            },
+            AFTER,
+            # The converse: a long-past anchor must not drag the scan back
+            # to it. The next run is the coming anniversary, not an old one.
+            datetime(2026, 7, 15, 8, 0, tzinfo=dt_timezone.utc),
+            id='first-run-date-long-past-scans-from-after',
+        ),
+        pytest.param(
             # clean() requires first_run_date for calendar schedules, but
             # objects.create()/loaddata/shell edits can bypass validation.
             # _runs_on must degrade to False rather than raise AttributeError.

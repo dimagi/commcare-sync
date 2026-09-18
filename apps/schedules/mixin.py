@@ -282,8 +282,11 @@ class ScheduleMixin(models.Model):
                     return first
             return after + interval
 
-        # Calendar-based schedules: scan forward day by day.
+        # Calendar-based schedules: scan forward day by day, starting at
+        # the first date the schedule can fire.
         candidate_date = after.astimezone(tz).date()
+        if self.first_run_date:
+            candidate_date = max(candidate_date, self.first_run_date)
         for _i in range(MAX_SCAN_DAYS):
             candidate = datetime.combine(
                 candidate_date, self.first_run_time, tzinfo=tz
