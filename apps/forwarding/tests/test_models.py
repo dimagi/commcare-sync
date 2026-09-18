@@ -1,9 +1,10 @@
-from datetime import date, time, timedelta
+from datetime import timedelta
 
 import pytest
 import time_machine
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
-from django_celery_beat.models import PeriodicTask
 from reversion.models import Version
 from unmagic import fixture, use
 
@@ -327,190 +328,134 @@ class TestForwardingDestination:
         assert dest.http_method == 'PUT'
 
 
-@use('db')
+INTERVAL_SCHEDULE = {
+    'schedule_type': ScheduleMixin.ScheduleType.INTERVAL,
+    'interval_value': 30,
+    'interval_unit': ScheduleMixin.IntervalUnit.MINUTES,
+}
+
+
+@use('db', database, destination)
 class TestForwardingScheduling:
 
-    @use(database, destination)
-    def test_creating_config_with_interval_schedule_creates_periodic_task(
-        self,
-    ):
-        cfg = ForwardingConfig.objects.create(
+    def _config(self, **overrides):
+        defaults = dict(
             name='Scheduled Config',
             database=database(),
             destination=destination(),
             query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+            **INTERVAL_SCHEDULE,
         )
+        defaults.update(overrides)
+        return ForwardingConfig.objects.create(**defaults)
 
+    def test_creating_config_with_schedule_sets_next_run(self):
+        cfg = self._config()
         cfg.refresh_from_db()
-        assert cfg.periodic_task is not None
-        assert isinstance(cfg.periodic_task, PeriodicTask)
-        assert cfg.periodic_task.enabled is True
-        assert (
-            cfg.periodic_task.task
-            == 'apps.forwarding.tasks.run_scheduled_forwarding_task'
-        )
-        assert f'{cfg.id}' in cfg.periodic_task.args
-
-    @use(database, destination)
-    def test_creating_config_with_weekly_schedule_creates_periodic_task(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Weekly Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.WEEKLY,
-            first_run_date=date(2025, 1, 1),
-            first_run_time=time(14, 30),
-            days_of_week=[1, 3, 5],
+        assert cfg.next_run_at is not None
+        assert cfg.next_run_at > timezone.now()
+        assert cfg.SCHEDULED_TASK == (
+            'apps.forwarding.tasks.run_scheduled_forwarding_task'
         )
 
-        cfg.refresh_from_db()
-        assert cfg.periodic_task is not None
-        assert isinstance(cfg.periodic_task, PeriodicTask)
-        assert cfg.periodic_task.crontab is not None
-        assert cfg.periodic_task.interval is None
-        assert cfg.periodic_task.crontab.day_of_week == '1,3,5'
-
-    @use(database, destination)
-    def test_creating_config_without_schedule_does_not_create_periodic_task(
-        self,
-    ):
-        cfg = ForwardingConfig.objects.create(
-            name='Unscheduled Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-        )
-
-        cfg.refresh_from_db()
-        assert cfg.periodic_task is None
-
-    @use(database, destination)
-    def test_updating_config_schedule_updates_periodic_task(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Config to Update',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
+    def test_creating_config_without_schedule_has_no_next_run(self):
+        cfg = self._config(
+            schedule_type=None, interval_value=None, interval_unit=None
         )
         cfg.refresh_from_db()
-        initial_task_id = cfg.periodic_task.id
+        assert cfg.next_run_at is None
 
-        # Update the schedule
+    def test_saving_without_schedule_change_leaves_next_run_unchanged(self):
+        # A save that doesn't touch any schedule field (e.g. a rename) must
+        # not defer a pending run by recomputing next_run_at = now + interval.
+        cfg = self._config()
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
+        cfg.name = 'Renamed Config'
+        cfg.save()
+        cfg.refresh_from_db()
+        assert cfg.next_run_at == first
+
+    def test_updating_schedule_recomputes_next_run(self):
+        cfg = self._config()
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
         cfg.interval_value = 60
         cfg.save()
+        cfg.refresh_from_db()
+        assert cfg.next_run_at > first
+
+    def test_deferred_load_does_not_read_the_deferred_fields(self):
+        # The snapshot is taken in __init__, so it must not touch fields
+        # that .only()/.defer() left deferred: reading one issues a
+        # refresh_from_db(), which builds another instance, which lands
+        # back in __init__ -- unbounded recursion. Query-counting pins
+        # this down, since a snapshot that quietly loaded the deferred
+        # fields would still return the right object.
+        self._config()
+        with CaptureQueriesContext(connection) as queries:
+            [cfg] = ForwardingConfig.objects.only('id', 'name')
+
+        assert len(queries) == 1
+        assert cfg.name == 'Scheduled Config'
+
+    def test_renaming_a_deferred_load_leaves_next_run_unchanged(self):
+        # Saving a deferred instance makes Django scope update_fields to
+        # the loaded columns, which settles it without the snapshot: only
+        # `name` was written, so a pending run must not be deferred.
+        cfg = self._config()
+        cfg.refresh_from_db()
+        first = cfg.next_run_at
+
+        partial = ForwardingConfig.objects.only('id', 'name').get(pk=cfg.pk)
+        partial.name = 'Renamed Config'
+        partial.save()
 
         cfg.refresh_from_db()
-        # The task should be updated (same ID)
-        assert cfg.periodic_task.id == initial_task_id
+        assert cfg.next_run_at == first
 
-    @use(database, destination)
-    def test_deleting_config_deletes_periodic_task(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Config to Delete',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
+    def test_full_save_of_a_deferred_load_recomputes_next_run(self):
+        # Deferring every non-pk field leaves update_fields unset, so the
+        # save is a full write and the snapshot is empty. An empty
+        # snapshot can't prove the schedule is unchanged, so the handler
+        # must recompute; skipping would silently drop a real change.
+        cfg = self._config()
         cfg.refresh_from_db()
-        task_id = cfg.periodic_task.id
+        first = cfg.next_run_at
 
-        cfg.delete()
+        partial = ForwardingConfig.objects.only('id').get(pk=cfg.pk)
+        assert partial._schedule_snapshot == {}
+        partial.save()
 
-        assert not PeriodicTask.objects.filter(id=task_id).exists()
-
-    @use(database, destination)
-    def test_removing_schedule_deletes_periodic_task(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Config to Unschedule',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
         cfg.refresh_from_db()
-        task_id = cfg.periodic_task.id
+        assert cfg.next_run_at > first
 
-        # Remove the schedule
+    def test_removing_schedule_clears_next_run(self):
+        cfg = self._config()
         cfg.schedule_type = None
         cfg.save()
-
         cfg.refresh_from_db()
-        assert cfg.periodic_task is None
-        assert not PeriodicTask.objects.filter(id=task_id).exists()
+        assert cfg.next_run_at is None
 
-    @use(database, destination)
-    def test_is_paused_returns_true_when_no_schedule(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Unscheduled Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-        )
-
-        assert cfg.is_paused is True
-
-    @use(database, destination)
-    def test_is_paused_returns_true_when_no_periodic_task(self):
-        cfg = ForwardingConfig.objects.create(
-            name='No Task Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
+    def test_disabling_schedule_clears_next_run(self):
+        cfg = self._config()
+        cfg.schedule_enabled = False
+        cfg.save()
         cfg.refresh_from_db()
-        # Delete the periodic task directly to simulate the condition
-        cfg.periodic_task.delete()
-        cfg.periodic_task = None
+        assert cfg.next_run_at is None
 
-        assert cfg.is_paused is True
-
-    @use(database, destination)
-    def test_is_paused_returns_false_when_periodic_task_enabled(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Enabled Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
-
-        cfg.refresh_from_db()
-        assert cfg.is_paused is False
-
-    @use(database, destination)
-    def test_is_paused_returns_true_when_periodic_task_disabled(self):
-        cfg = ForwardingConfig.objects.create(
-            name='Disabled Config',
-            database=database(),
-            destination=destination(),
-            query='SELECT * FROM test',
-            schedule_type=ScheduleMixin.ScheduleType.INTERVAL,
-            interval_value=30,
-            interval_unit=ScheduleMixin.IntervalUnit.MINUTES,
-        )
-
-        cfg.refresh_from_db()
-        cfg.periodic_task.enabled = False
-        cfg.periodic_task.save()
-
-        assert cfg.is_paused is True
+    @pytest.mark.parametrize(('schedule_overrides', 'paused'), [
+        pytest.param(
+            {'schedule_type': None, 'interval_value': None,
+             'interval_unit': None},
+            True, id='no-schedule',
+        ),
+        pytest.param({}, False, id='enabled'),
+        pytest.param({'schedule_enabled': False}, True, id='disabled'),
+    ])
+    def test_is_paused(self, schedule_overrides, paused):
+        cfg = self._config(**schedule_overrides)
+        assert cfg.is_paused is paused
 
 
 @use('db')

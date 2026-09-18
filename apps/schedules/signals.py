@@ -1,91 +1,72 @@
 """
 Generic signal handlers for models that inherit from ScheduleMixin.
 
-These handlers manage the lifecycle of django-celery-beat PeriodicTask
-objects. They are registered per-model in each app's signals.py via::
+They keep ``next_run_at`` in sync with the schedule fields. Registered
+per-model in each app's signals.py via::
 
-    from apps.schedules.signals import (
-        create_or_update_periodic_task,
-        delete_periodic_task,
-    )
-    post_save.connect(create_or_update_periodic_task, sender=MyConfig)
-    pre_delete.connect(delete_periodic_task, sender=MyConfig)
+    from apps.schedules.signals import update_next_run
+    post_save.connect(update_next_run, sender=MyConfig)
 """
 
-import json
 import logging
 
-from django_celery_beat.models import PeriodicTask
+from django.utils import timezone
 
-from .mixin import ScheduleMixin
+from .mixin import SCHEDULE_FIELDS
 
 logger = logging.getLogger(__name__)
 
 
-def create_or_update_periodic_task(sender, instance, created, **kwargs):
+def _schedule_changed(instance, update_fields):
     """
-    Create or update a PeriodicTask when a ScheduleMixin model is saved.
+    True if this save actually touched a schedule-relevant field.
 
-    If the instance no longer has a schedule but still has a PeriodicTask,
-    the orphaned PeriodicTask is cleaned up.
+    ``update_fields`` (only set when the caller passes it to ``save()``) is
+    a reliable "definitely unchanged" signal when it excludes every schedule
+    field, since those columns then simply aren't written. Otherwise fall
+    back to comparing against the snapshot ``ScheduleMixin.__init__`` took
+    when the instance was loaded/constructed.
     """
-    if not instance.has_schedule:
-        if instance.periodic_task:
-            instance.periodic_task.delete()
-            # Use QuerySet.update() rather than instance.save() to avoid
-            # triggering this post_save signal recursively.
-            sender.objects.filter(pk=instance.pk).update(periodic_task=None)
-            logger.info(
-                f'Deleted periodic task for {instance} (schedule removed)'
-            )
+    if update_fields is not None:
+        return bool(SCHEDULE_FIELDS & set(update_fields))
+    snapshot = getattr(instance, '_schedule_snapshot', None)
+    if snapshot is None:
+        # No snapshot to compare against (e.g. instance built without going
+        # through ScheduleMixin.__init__) — recompute to be safe.
+        return True
+    if snapshot.keys() != SCHEDULE_FIELDS:
+        # The instance was loaded with some schedule fields deferred, so
+        # the snapshot can't rule a change out. Recompute to be safe.
+        return True
+    return any(
+        snapshot[field] != getattr(instance, field)
+        for field in SCHEDULE_FIELDS
+    )
+
+
+def update_next_run(
+    sender, instance, created=False, update_fields=None, **kwargs
+):
+    """Recompute next_run_at when a scheduled config's schedule changes.
+
+    A save that touches no schedule field must not defer a pending run
+    (e.g. renaming a config must not push its next_run_at out), so such
+    saves are skipped entirely. A newly created instance always gets its
+    next_run_at computed.
+    """
+    if not created and not _schedule_changed(instance, update_fields):
         return
 
-    for attr in ('CELERY_TASK', 'PERIODIC_TASK_PREFIX'):
-        if not isinstance(getattr(instance, attr, None), str):
-            raise TypeError(
-                f'{type(instance).__name__} must define {attr} as a string '
-                'class attribute'
-            )
-
-    task_name = (
-        f'{instance.PERIODIC_TASK_PREFIX}: {instance} (ID: {instance.id})'
-    )
-    task_kwargs = {
-        'task': instance.CELERY_TASK,
-        'name': task_name,
-        'args': json.dumps([instance.id]),
-        'crontab': None,
-        'interval': None,
-    }
-
-    celery_schedule = instance.create_celery_schedule()
-    if instance.schedule_type == ScheduleMixin.ScheduleType.INTERVAL:
-        task_kwargs['interval'] = celery_schedule
+    if instance.has_schedule and instance.schedule_enabled:
+        next_run = instance.compute_next_run(timezone.now())
     else:
-        task_kwargs['crontab'] = celery_schedule
-
-    if instance.periodic_task:
-        periodic_task = instance.periodic_task
-        for key, value in task_kwargs.items():
-            setattr(periodic_task, key, value)
-        periodic_task.save()
-        logger.info(f'Updated periodic task for {instance}')
-    else:
-        # If `instance` already has a PeriodicTask, preserve its value
-        # of `enabled` so that a manually-paused task is not silently
-        # re-enabled. Default to `True`
-        task_kwargs['enabled'] = True
-        periodic_task = PeriodicTask.objects.create(**task_kwargs)
-        # Use QuerySet.update() rather than instance.save() to avoid
-        # triggering this post_save signal recursively.
-        sender.objects.filter(pk=instance.pk).update(
-            periodic_task=periodic_task
-        )
-        logger.info(f'Created periodic task for {instance}')
-
-
-def delete_periodic_task(sender, instance, **kwargs):
-    """Delete the PeriodicTask when a ScheduleMixin model is deleted."""
-    if instance.periodic_task:
-        instance.periodic_task.delete()
-        logger.info(f'Deleted periodic task for {instance}')
+        next_run = None
+    # Use QuerySet.update() rather than instance.save() to avoid
+    # triggering this post_save signal recursively.
+    sender.objects.filter(pk=instance.pk).update(next_run_at=next_run)
+    instance.next_run_at = next_run
+    # Refresh the snapshot so a later save() on this same in-memory instance
+    # is compared against the schedule state we just persisted, not the
+    # state from whenever the instance was first loaded/constructed.
+    instance.take_schedule_snapshot()
+    logger.debug('Set next_run_at=%s for %s', next_run, instance)

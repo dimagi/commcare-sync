@@ -1,8 +1,8 @@
 import logging
 
-from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django_q.tasks import async_task
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
@@ -17,7 +17,6 @@ from .runner import run_export, run_multi_project_export
 logger = logging.getLogger(__name__)
 
 
-@shared_task
 def run_all_exports_task(user_id=None):
     """Manual "Run All" trigger: enqueue a run for every non-paused export."""
     user = None
@@ -31,9 +30,9 @@ def run_all_exports_task(user_id=None):
                 user_id,
             )
 
-    # ``is_paused`` is a derived property (depends on periodic_task state), not
-    # a DB column, so the filter has to happen in Python.
-    for export in ExportConfig.objects.select_related('periodic_task').all():
+    # ``is_paused`` derives from schedule fields (has_schedule and
+    # schedule_enabled), so the filter happens in Python for clarity.
+    for export in ExportConfig.objects.all():
         if export.is_paused or export.has_active_run:
             continue
         _create_and_dispatch_export_run(
@@ -44,12 +43,7 @@ def run_all_exports_task(user_id=None):
             triggered_by=user,
         )
 
-    for multi_export in (
-        MultiProjectExportConfig
-        .objects
-        .select_related('periodic_task')
-        .all()
-    ):
+    for multi_export in MultiProjectExportConfig.objects.all():
         if multi_export.is_paused or multi_export.has_active_run:
             continue
         _create_and_dispatch_export_run(
@@ -61,9 +55,8 @@ def run_all_exports_task(user_id=None):
         )
 
 
-@shared_task
 def run_scheduled_export_task(export_config_id):
-    """Celery-beat entry point for a single ExportConfig."""
+    """Scheduler entry point for a single ExportConfig."""
     try:
         export = ExportConfig.objects.get(id=export_config_id)
     except ExportConfig.DoesNotExist:
@@ -76,9 +69,8 @@ def run_scheduled_export_task(export_config_id):
     _enqueue_scheduled_export(export, ExportRun, run_export_task)
 
 
-@shared_task
 def run_scheduled_multi_export_task(export_config_id):
-    """Celery-beat entry point for a single MultiProjectExportConfig."""
+    """Scheduler entry point for a single MultiProjectExportConfig."""
     try:
         export = MultiProjectExportConfig.objects.get(id=export_config_id)
     except MultiProjectExportConfig.DoesNotExist:
@@ -107,18 +99,27 @@ def _create_and_dispatch_export_run(
         triggered_from_ui=triggered_from_ui,
         triggered_by=triggered_by,
     )
-    next_task.delay(export_record.id, start_over=False)
+    # Forward SCHEDULED_TASK_OPTIONS to the task that runs the export.
+    # Unlike forwarding and refreshes, whose SCHEDULED_TASK does the work
+    # itself, an export's SCHEDULED_TASK is only the hop that gets us
+    # here - so the dispatcher applied these options to that hop, where a
+    # timeout would bound nothing that takes any time.
+    async_task(
+        next_task,
+        export_record.id,
+        start_over=False,
+        q_options=dict(export_config.SCHEDULED_TASK_OPTIONS),
+    )
 
 
 def _enqueue_scheduled_export(export_config, run_model, next_task):
-    """Celery-beat entry point: skip if already queued, then create and dispatch."""
+    """Scheduler entry point: skip if already queued, then create and dispatch."""
     if export_config.has_queued_runs():
         return
     _create_and_dispatch_export_run(export_config, run_model, next_task)
 
 
-@shared_task(bind=True)
-def run_export_task(self, export_run_id, start_over):
+def run_export_task(export_run_id, start_over):
     export_run = ExportRun.objects.select_related('base_export_config').get(
         id=export_run_id
     )
@@ -133,8 +134,7 @@ def run_export_task(self, export_run_id, start_over):
     }
 
 
-@shared_task(bind=True)
-def run_multi_project_export_task(self, export_run_id, start_over):
+def run_multi_project_export_task(export_run_id, start_over):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
         'base_export_config'

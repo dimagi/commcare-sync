@@ -8,14 +8,12 @@ dependencies = [
     "Django~=5.2",
     "psycopg[binary]",  # psycopg 3: https://www.psycopg.org/psycopg3/docs/basic/from_pg2.html
     "django-anymail[mailgun]",  # email services
-    "celery-progress",
-    "celery[redis]",
     "cryptography",
-    "django-celery-beat",
     "django-reversion>=5.0.4",
     "commcare-export",
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
     "db-query-fwd",
+    "django-q2>=1.10.0",
 ]
 
 [project.optional-dependencies]
