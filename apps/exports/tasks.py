@@ -87,11 +87,11 @@ def run_scheduled_multi_export_task(export_config_id):
 
 def _create_and_dispatch_export_run(
     export_config,
-        run_model,
-        next_task,
-        *,
-        triggered_from_ui=False,
-        triggered_by=None,
+    run_model,
+    next_task,
+    *,
+    triggered_from_ui=False,
+    triggered_by=None,
 ):
     export_record = run_model.objects.create(
         base_export_config=export_config,
