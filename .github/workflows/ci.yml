@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+      - run: cp commcare_sync/{settings_github.py,settings_local.py}
       - run: uv run --python 3.14 mypy apps/ commcare_sync/ *.py
 
   test:
