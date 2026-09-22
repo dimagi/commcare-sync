@@ -165,8 +165,8 @@ class TestScheduledExportTask:
     def test_forwards_scheduled_task_options_to_the_run(self, mock_async):
         # The dispatcher applies SCHEDULED_TASK_OPTIONS to
         # run_scheduled_export_task, which only creates a run and
-        # enqueues the work. Unless they're forwarded from there, a
-        # timeout bounds that hop rather than the export it dispatches.
+        # enqueues the work. Validate that the options are passed on to
+        # `async_task`, so that a timeout applies to the export.
         config = export_config()
 
         with patch.object(

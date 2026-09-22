@@ -76,7 +76,9 @@ class TestNextRunAtRendersOnAdminForms:
         assert response.status_code == 200
         content = response.content.decode()
         assert 'next_run_at' in content
-        # This is the actual pause affordance: without schedule_enabled in
-        # the Scheduling fieldset, a RefreshConfig cannot be paused by any
-        # means short of the shell.
+        # The admin is the only place a RefreshConfig can be paused:
+        # unlike ExportConfig and ForwardingConfig, it has no
+        # schedule_enabled checkbox in its own UI form. The "id_" prefix
+        # means an editable widget was rendered, not just the name
+        # appearing somewhere in the page.
         assert 'id_schedule_enabled' in content

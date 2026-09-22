@@ -86,10 +86,6 @@ class TestRunDueSchedules:
         assert cfg.next_run_at == due_at + timedelta(minutes=30)
 
     def test_missed_runs_are_skipped_rather_than_replayed(self):
-        # The cluster was down for a day, so a 30-minute schedule has 48
-        # slots in the past. Coming back up must cost exactly one run, and
-        # must leave next_run_at in the future - still on the original
-        # grid, so the drift-free property survives an outage.
         cfg = due_forwarding_config(overdue_by=timedelta(days=1))
         due_at = cfg.next_run_at
 
@@ -100,6 +96,8 @@ class TestRunDueSchedules:
         cfg.refresh_from_db()
         assert cfg.next_run_at > timezone.now()
         elapsed = cfg.next_run_at - due_at
+        # Validate that `next_run_at` is still in line with the original
+        # schedule.
         assert elapsed % timedelta(minutes=30) == timedelta(0)
 
     def test_claim_lost_to_a_concurrent_dispatcher_does_not_enqueue(self):
@@ -148,8 +146,6 @@ class TestRunDueSchedules:
         mock_async().assert_not_called()
 
     def test_skips_disabled_schedules(self):
-        # The helper back-dates next_run_at as if it had been set before
-        # the schedule was disabled.
         due_forwarding_config(schedule_enabled=False)
 
         run_due_schedules()
