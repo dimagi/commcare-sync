@@ -99,11 +99,9 @@ def _create_and_dispatch_export_run(
         triggered_from_ui=triggered_from_ui,
         triggered_by=triggered_by,
     )
-    # Forward SCHEDULED_TASK_OPTIONS to the task that runs the export.
     # Unlike forwarding and refreshes, whose SCHEDULED_TASK does the work
-    # itself, an export's SCHEDULED_TASK is only the hop that gets us
-    # here - so the dispatcher applied these options to that hop, where a
-    # timeout would bound nothing that takes any time.
+    # itself, an export's SCHEDULED_TASK just calls this function. Pass
+    # SCHEDULED_TASK_OPTIONS to the task that runs the export.
     async_task(
         next_task,
         export_record.id,

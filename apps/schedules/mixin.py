@@ -40,11 +40,12 @@ class ScheduleMixin(models.Model):
         SCHEDULED_TASK_OPTIONS: dict - optional django-q2 q_options for it
         runs: reverse relation manager (e.g. from a ForeignKey on a Run model)
 
-    ``SCHEDULED_TASK_OPTIONS`` is meant to govern the work, so where
-    ``SCHEDULED_TASK`` only enqueues a second task rather than doing the
-    work itself (as the export tasks do), that task is responsible for
-    passing these options on. Otherwise a ``timeout`` here would bound
-    the hop instead of the run it dispatches.
+    ``SCHEDULED_TASK_OPTIONS`` needs to apply to the task that does the
+    work. For example, where ``SCHEDULED_TASK`` just enqueues a second
+    task rather than doing the work itself (as the export tasks do), that
+    second task is responsible for passing these options on. If the options
+    were not passed on, then a ``timeout`` option would be applied to the
+    second task instead of the task that actually does the work.
     """
 
     class ScheduleType(models.TextChoices):
