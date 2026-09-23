@@ -82,6 +82,17 @@ class RunBaseModel(BaseModel):
         return self.status in self.LOGGED_STATUSES
 
     @property
+    def is_terminal(self):
+        """True when the run is over, for any value of over.
+
+        The complement of ``ACTIVE_STATUSES`` rather than its own
+        enumeration of terminal statuses: ``ExportRunBase`` redefines
+        ``Status`` to add ``MULTIPLE``, so an enumeration here would have
+        to be restated there. A status added later is terminal by default.
+        """
+        return self.status not in self.ACTIVE_STATUSES
+
+    @property
     def duration(self):
         if self.completed_at and self.started_at:
             return self.completed_at - self.started_at
