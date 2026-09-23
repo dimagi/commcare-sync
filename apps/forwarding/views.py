@@ -6,8 +6,8 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
-from django_q.tasks import async_task
 
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
@@ -28,7 +28,6 @@ from .forms import (
     EditForwardingDestinationForm,
 )
 from .models import ForwardingConfig, ForwardingDestination, ForwardingRun
-from .tasks import run_forwarding_task
 
 
 @login_required
@@ -290,13 +289,9 @@ def run_history_table(request, forwarder_id):
 def run_forwarding(request, forwarder_id):
     """Manually trigger a forwarding run."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-
-    forwarding_run = ForwardingRun.objects.create(
-        config=forwarder,
-        config_version=forwarder.latest_version,
+    task_id = create_run_and_dispatch(
+        forwarder,
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-
-    task_id = async_task(run_forwarding_task, forwarding_run.id)
     return run_response(request, task_id)
