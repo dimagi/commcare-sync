@@ -82,6 +82,11 @@ class RunBaseModel(BaseModel):
         return self.status in self.LOGGED_STATUSES
 
     @property
+    def is_terminal(self):
+        """True when the run is over, whatever its outcome."""
+        return self.status not in self.ACTIVE_STATUSES
+
+    @property
     def duration(self):
         if self.completed_at and self.started_at:
             return self.completed_at - self.started_at
