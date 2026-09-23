@@ -21,7 +21,6 @@ from django.conf import settings
 from django.db.models import F, Value
 from django.db.models.functions import Coalesce, Concat
 from django.utils import timezone
-from django_q.tasks import async_task
 
 from apps.commcare.models import RunBaseModel
 from apps.exports.models import (
@@ -33,6 +32,7 @@ from apps.exports.models import (
 )
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.refreshes.models import RefreshConfig, RefreshRun
+from apps.schedules.dispatch import create_run_and_dispatch
 
 logger = logging.getLogger(__name__)
 
@@ -174,12 +174,23 @@ def _dispatch_due_config(config_model, config, now):
         ).update(next_run_at=next_run)
         if not claimed:
             return False
-        async_task(config.SCHEDULED_TASK, config.id)
+        task_id = create_run_and_dispatch(
+            config, config.RUN_TASK, triggered_from_ui=False
+        )
     except Exception:
         # config.__str__ could itself raise on a malformed row, so log by
         # model name and pk rather than the instance.
         logger.exception(
             'Failed to enqueue scheduled run for %s(pk=%s)',
+            config_model.__name__, config.pk,
+        )
+        return False
+    if task_id is None:
+        # The slot is lost, not deferred: next_run_at has already moved
+        # on.
+        logger.info(
+            'Skipped scheduled run for %s(pk=%s): it already has an active '
+            'run',
             config_model.__name__, config.pk,
         )
         return False

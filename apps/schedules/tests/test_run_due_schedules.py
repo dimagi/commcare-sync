@@ -1,20 +1,24 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+from django.apps import apps
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from unmagic import fixture, use
 
-from apps.forwarding.models import ForwardingConfig
+from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.forwarding.tests.fixtures import destination
 from apps.refreshes.models import RefreshConfig
-from apps.schedules.tasks import run_due_schedules
+from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.tasks import CONFIG_MODELS, run_due_schedules
 from apps.schedules.tests.consts import SCHEDULED
 from tests.fixtures import database
 
 
 @fixture
 def mock_async():
-    with patch('apps.schedules.tasks.async_task') as mock:
+    with patch('apps.schedules.dispatch.async_task') as mock:
         yield mock
 
 
@@ -56,9 +60,11 @@ class TestRunDueSchedules:
 
         launched = run_due_schedules()
 
+        run = cfg.runs.get()
+        assert run.triggered_from_ui is False
         mock_async().assert_called_once_with(
-            'apps.forwarding.tasks.run_scheduled_forwarding_task',
-            cfg.id,
+            'apps.forwarding.tasks.run_forwarding_task',
+            run.id,
         )
         assert launched == [f'ForwardingConfig:{cfg.id}']
         cfg.refresh_from_db()
@@ -128,6 +134,20 @@ class TestRunDueSchedules:
         mock_async().assert_not_called()
         assert launched == []
 
+    def test_config_with_an_active_run_is_skipped_but_advanced(self):
+        cfg = due_forwarding_config()
+        ForwardingRun.objects.create(
+            config=cfg, status=ForwardingRun.Status.STARTED
+        )
+
+        launched = run_due_schedules()
+
+        mock_async().assert_not_called()
+        assert launched == []
+        assert cfg.runs.count() == 1
+        cfg.refresh_from_db()
+        assert cfg.next_run_at > timezone.now()
+
     def test_skips_configs_that_are_not_due(self):
         due_forwarding_config()
         ForwardingConfig.objects.update(
@@ -194,13 +214,29 @@ class TestRunDueSchedules:
     def test_dispatches_the_configured_task_for_a_refresh_config(self):
         # test_enqueues_due_config_and_advances_next_run covers this for
         # ForwardingConfig; this is the equivalent check for
-        # RefreshConfig, whose SCHEDULED_TASK differs.
+        # RefreshConfig, whose RUN_TASK differs.
         cfg = due_refresh_config()
 
         launched = run_due_schedules()
 
         mock_async().assert_called_once_with(
-            'apps.refreshes.tasks.run_scheduled_refresh_task',
-            cfg.id,
+            'apps.refreshes.tasks.run_refresh_task',
+            cfg.runs.get().id,
         )
         assert launched == [f'RefreshConfig:{cfg.id}']
+
+
+def test_config_models_lists_every_scheduled_config_model():
+    # A config model missing from CONFIG_MODELS is never scheduled.
+    scheduled_config_models = {
+        model for model in apps.get_models()
+        if issubclass(model, ScheduleMixin)
+    }
+    assert set(CONFIG_MODELS) == scheduled_config_models
+
+
+@pytest.mark.parametrize('config_model', CONFIG_MODELS)
+def test_run_task_names_a_task(config_model):
+    # The dispatcher names the task by its dotted path, so a renamed task
+    # would otherwise only fail when a worker tries to import it.
+    assert callable(import_string(config_model.RUN_TASK))
