@@ -55,36 +55,6 @@ def run_all_exports_task(user_id=None):
         )
 
 
-def run_scheduled_export_task(export_config_id):
-    """Scheduler entry point for a single ExportConfig."""
-    try:
-        export = ExportConfig.objects.get(id=export_config_id)
-    except ExportConfig.DoesNotExist:
-        logger.warning(
-            'run_scheduled_export_task: ExportConfig %s no longer exists, '
-            'skipping.',
-            export_config_id,
-        )
-        return
-    _enqueue_scheduled_export(export, ExportRun, run_export_task)
-
-
-def run_scheduled_multi_export_task(export_config_id):
-    """Scheduler entry point for a single MultiProjectExportConfig."""
-    try:
-        export = MultiProjectExportConfig.objects.get(id=export_config_id)
-    except MultiProjectExportConfig.DoesNotExist:
-        logger.warning(
-            'run_scheduled_multi_export_task: MultiProjectExportConfig %s no '
-            'longer exists, skipping.',
-            export_config_id,
-        )
-        return
-    _enqueue_scheduled_export(
-        export, MultiProjectExportRun, run_multi_project_export_task
-    )
-
-
 def _create_and_dispatch_export_run(
     export_config,
     run_model,
@@ -102,14 +72,7 @@ def _create_and_dispatch_export_run(
     async_task(next_task, export_record.id, start_over=False)
 
 
-def _enqueue_scheduled_export(export_config, run_model, next_task):
-    """Scheduler entry point: skip if already queued, then create and dispatch."""
-    if export_config.has_queued_runs():
-        return
-    _create_and_dispatch_export_run(export_config, run_model, next_task)
-
-
-def run_export_task(export_run_id, start_over):
+def run_export_task(export_run_id, start_over=False):
     export_run = ExportRun.objects.select_related('config').get(
         id=export_run_id
     )
@@ -124,7 +87,7 @@ def run_export_task(export_run_id, start_over):
     }
 
 
-def run_multi_project_export_task(export_run_id, start_over):
+def run_multi_project_export_task(export_run_id, start_over=False):
     run_start = timezone.now()
     export_run = MultiProjectExportRun.objects.select_related(
         'config'

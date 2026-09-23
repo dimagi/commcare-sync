@@ -147,3 +147,16 @@ class TestRunAllExportsTask:
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()
+
+
+class TestExportTask:
+    @use(export_config)
+    def test_run_export_task_defaults_start_over_to_false(self):
+        config = export_config()
+        run = ExportRun.objects.create(config=config)
+
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            mock_run.return_value = run
+            run_export_task(run.id)
+
+        mock_run.assert_called_once_with(run, False)

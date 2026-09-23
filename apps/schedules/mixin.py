@@ -50,7 +50,7 @@ class ScheduleMixin(models.Model):
     Abstract model mixin that adds scheduling fields to any config model.
 
     Concrete models must define:
-        SCHEDULED_TASK: str - dotted path to the task run on schedule
+        RUN_TASK: str - dotted path to the worker task that performs a run
         runs: reverse relation manager from the run model's ``config``
             ForeignKey
         latest_version: the config's current ``reversion`` Version
@@ -72,7 +72,7 @@ class ScheduleMixin(models.Model):
         HOURS = 'hours', _('Hours')
         DAYS = 'days', _('Days')
 
-    SCHEDULED_TASK: str
+    RUN_TASK: str
 
     schedule_type = models.CharField(
         max_length=20,
@@ -155,12 +155,6 @@ class ScheduleMixin(models.Model):
     def is_paused(self):
         """True when the config has no active schedule."""
         return not (self.has_schedule and self.schedule_enabled)
-
-    def has_queued_runs(self):
-        last_run = self.runs.order_by('-created_at').first()
-        if last_run:
-            return last_run.status == RunBaseModel.Status.QUEUED
-        return False
 
     def _prefetched_runs(self):
         """This config's runs, newest first, if a view prefetched them."""
