@@ -8,9 +8,9 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
-from django_q.tasks import async_task
 
 from apps.db.models import Database
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import require_htmx
 from apps.web.views import run_response
@@ -28,7 +28,6 @@ from commcare_sync.views import (
 from .db_utils import check_connection, get_materialized_views
 from .forms import RefreshConfigForm
 from .models import RefreshConfig, RefreshRun
-from .tasks import run_refresh_task
 
 logger = logging.getLogger(__name__)
 
@@ -214,15 +213,11 @@ def run_history_table(request, config_id):
 def run_refresh(request, config_id):
     """Manually trigger a refresh run."""
     config = get_object_or_404(RefreshConfig, id=config_id)
-
-    refresh_run = RefreshRun.objects.create(
-        config=config,
-        config_version=config.latest_version,
+    task_id = create_run_and_dispatch(
+        config,
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-
-    task_id = async_task(run_refresh_task, refresh_run.id)
     return run_response(request, task_id)
 
 
