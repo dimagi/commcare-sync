@@ -2,9 +2,10 @@
 Playwright tests for Run button functionality.
 
 Tests that verify the Run button's Alpine.js state management,
-HTMX table refresh, and integration with Celery progress tracking.
+HTMX table refresh, and integration with background task-status polling.
 """
 import json
+import re
 
 from django.test import Client
 from django.urls import reverse
@@ -264,19 +265,19 @@ class TestRunButtonWithMocks:
                 body='test-task-id-12345'
             )
 
-        def mock_celery_progress(route):
+        def mock_task_status(route):
             route.fulfill(
                 status=200,
                 content_type='application/json',
                 body=json.dumps({
-                    'state': 'PENDING',
                     'complete': False,
-                    'success': False,
+                    'success': None,
+                    'result': None,
                 })
             )
 
         page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/celery-progress/**', mock_celery_progress)
+        page.route('**/tasks/**', mock_task_status)
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -290,3 +291,104 @@ class TestRunButtonWithMocks:
 
         # Verify button becomes disabled (via Alpine @click setting running=true)
         expect(run_button).to_be_disabled(timeout=2000)
+
+    def test_run_button_shows_complete_on_success(self):
+        """Test the poll() 'complete: true, success: true' branch.
+
+        This is the finish(true) path: bg-success class, "Complete!"
+        message, and (after finish()'s setTimeout) the run-table HTMX
+        refresh and the Alpine running=false reset that re-enables the
+        button.
+        """
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='text/plain',
+                body='test-task-id-success'
+            )
+
+        def mock_task_status(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    'complete': True,
+                    'success': True,
+                    'result': {'status': 'success'},
+                })
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/tasks/**', mock_task_status)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Complete!', timeout=5000
+        )
+        expect(page.locator('#progress-bar')).to_have_class(
+            re.compile(r'\bbg-success\b')
+        )
+
+        # finish()'s setTimeout(..., 1000) fires the run-table refresh and
+        # resets Alpine's running state, which re-enables the button.
+        expect(run_button).not_to_be_disabled(timeout=3000)
+
+    def test_run_button_shows_failed_when_result_status_is_failed(self):
+        """Test the poll() mapping of a *successful* task whose payload
+        reports a failed run onto the red/"Failed!" rendering.
+
+        This is the non-obvious branch: `data.success` is True (the Q2
+        task itself completed without raising), but
+        `data.result.status === 'failed'` must still render bg-danger /
+        "Failed!" rather than the success state.
+        """
+        page = _page()
+        live_server = _live_server()
+        data = test_data()
+        export = create_export_config(data)
+
+        def mock_run_export(route):
+            route.fulfill(
+                status=200,
+                content_type='text/plain',
+                body='test-task-id-failed'
+            )
+
+        def mock_task_status(route):
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    'complete': True,
+                    'success': True,
+                    'result': {'status': 'failed'},
+                })
+            )
+
+        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        page.route('**/tasks/**', mock_task_status)
+
+        login(page, live_server, data['user'])
+        navigate_to_export_details(page, live_server, export.id)
+
+        run_button = page.locator('#run-now-button')
+        run_button.click()
+
+        expect(page.locator('#progress-bar-message')).to_have_text(
+            'Failed!', timeout=5000
+        )
+        expect(page.locator('#progress-bar')).to_have_class(
+            re.compile(r'\bbg-danger\b')
+        )
+
+        expect(run_button).not_to_be_disabled(timeout=3000)

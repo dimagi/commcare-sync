@@ -40,12 +40,12 @@ Claude, and they are stored under `.claude/` because Git ignores the directory.
 
 ### Configuration
 
-| Description                     | File                              |
-| ------------------------------- | --------------------------------- |
-| Main Django settings            | `commcare_sync/settings.py`       |
-| Git-ignored local settings      | `commcare_sync/settings_local.py` |
-| Root URL configuration          | `commcare_sync/urls.py`           |
-| Celery task queue configuration | `commcare_sync/celery.py`         |
+| Description                                 | File                              |
+| ------------------------------------------- | --------------------------------- |
+| Main Django settings                        | `commcare_sync/settings.py`       |
+| Git-ignored local settings                  | `commcare_sync/settings_local.py` |
+| Root URL configuration                      | `commcare_sync/urls.py`           |
+| Django Q2 task queue settings (`Q_CLUSTER`) | `commcare_sync/settings.py`       |
 
 ### Applications (`apps/`)
 
@@ -91,8 +91,8 @@ Claude, and they are stored under `.claude/` because Git ignores the directory.
   partial page updates
 - **Alpine.js**: Reactive state via `x-data`, `x-model`, `@change` attributes in
   templates
-- **Celery tasks**: Defined in `{app}/tasks.py`, configured in
-  `commcare_sync/celery.py`
+- **Django Q2 tasks**: Defined as plain callables in `{app}/tasks.py`,
+  dispatched with `async_task()` from `django_q.tasks`
 - **Playwright tests**: Use `page.evaluate("htmx.trigger(...)")` to trigger HTMX
   events, as `select_option()` doesn't fire Alpine `@change` handlers
 

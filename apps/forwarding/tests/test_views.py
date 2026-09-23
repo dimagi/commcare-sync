@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.messages import get_messages
 from django.test import Client
 from django.urls import reverse
@@ -6,7 +8,6 @@ from unmagic import fixture, use
 from tests.fixtures import (
     admin_client,
     database,
-    mock_celery_task_dispatch,
     regular_client,
 )
 
@@ -121,7 +122,17 @@ class TestDeleteDestinationView:
         assert '/accounts/login/' in response.url
 
 
-@use(regular_client, forwarding_config, mock_celery_task_dispatch)
+@fixture
+def mock_async_task_dispatch():
+    # Suppress dispatch so these view tests don't leave a live django-q
+    # OrmQ row queued behind them (async_task's ORM broker really does
+    # insert a row, even though nothing consumes it in tests).
+    with patch('apps.forwarding.views.async_task') as mock:
+        mock.return_value = 'test-task-id'
+        yield mock
+
+
+@use(regular_client, forwarding_config, mock_async_task_dispatch)
 class TestRunForwardingHtmxBranch:
     def test_htmx_request_returns_204(self):
         url = reverse(
