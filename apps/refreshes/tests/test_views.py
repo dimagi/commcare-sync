@@ -236,7 +236,10 @@ class TestRunRefreshConcurrencyGuard:
             response = authed_client().post(config.run_url)
 
         assert response.status_code == 409
-        assert response.json() == {'error': 'already_running'}
+        assert response.json()['error'] == 'already_running'
+        assert response.json()['message'].startswith(
+            'Not started: another run is already running.'
+        )
         mock_async.assert_not_called()
         assert config.runs.count() == 1
 

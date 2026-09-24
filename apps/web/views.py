@@ -1,8 +1,13 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django_q.tasks import fetch
+
+from apps.commcare.models import RunBaseModel
 
 
 def home(request):
@@ -12,24 +17,59 @@ def home(request):
         return render(request, 'web/landing_page.html')
 
 
-def run_response(request, run):
+def run_response(request, config, run):
     """Return the standard response for a run-trigger endpoint.
 
-    HTMX callers get 204 + an HX-Trigger that fires an immediate table
-    refresh, whether or not a run was started: the refreshed table shows
-    the active run either way.
+    When a run was started, HTMX callers get 204 + an HX-Trigger that fires
+    an immediate table refresh, and direct callers (the detail-page JS) get
+    JSON naming the run to poll.
 
-    Direct callers (the detail-page JS) get JSON naming the run to poll,
-    or 409 when ``run`` is None because one was already active.
+    When ``run`` is None because ``config`` already had an active run, both
+    get 409 and a message saying why nothing was started. HTMX callers get
+    it as an alert, swapped out of band into the page's messages, with the
+    table refresh that shows the active run. Direct callers get it as JSON.
     """
+    if run is None:
+        message = already_running_message(config)
+        if request.headers.get('HX-Request'):
+            messages.warning(request, message)
+            response = render(
+                request, 'web/components/messages_oob.html', status=409
+            )
+            response['HX-Trigger'] = 'runStarted'
+            return response
+        return JsonResponse(
+            {'error': 'already_running', 'message': message}, status=409
+        )
     if request.headers.get('HX-Request'):
         return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
-    if run is None:
-        return JsonResponse({'error': 'already_running'}, status=409)
     # The run button only reads `poll_url`. `run_id` is part of the
     # published contract for other callers -- scripts and tests that name
     # the run without parsing the URL -- so it stays.
     return JsonResponse({'run_id': run.id, 'poll_url': run.status_url})
+
+
+def already_running_message(config):
+    """Say why a manual run of ``config`` was not started."""
+    run = config.runs.filter(
+        status__in=RunBaseModel.ACTIVE_STATUSES
+    ).order_by('-created_at').first()
+    if run is None:
+        # The active run finished between the check and now.
+        return _('Not started: another run was in progress.')
+    if run.status == RunBaseModel.Status.QUEUED:
+        what = _('Not started: another run is already waiting to start.')
+    else:
+        what = _('Not started: another run is already running.')
+    when = naturaltime(run.created_at)
+    if run.triggered_by is not None:
+        who = _('%(user)s requested it %(when)s.') % {
+            'user': run.triggered_by.get_display_name(),
+            'when': when,
+        }
+    else:
+        who = _('It was requested %(when)s.') % {'when': when}
+    return f'{what} {who}'
 
 
 def run_status_response(model, run_id):

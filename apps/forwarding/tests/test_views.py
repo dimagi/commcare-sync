@@ -173,7 +173,10 @@ class TestRunForwardingConcurrencyGuard:
         response = regular_client().post(config.run_url)
 
         assert response.status_code == 409
-        assert response.json() == {'error': 'already_running'}
+        assert response.json()['error'] == 'already_running'
+        assert response.json()['message'].startswith(
+            'Not started: another run is already waiting to start.'
+        )
         mock_async_task_dispatch().assert_not_called()
         assert config.runs.count() == 1
 

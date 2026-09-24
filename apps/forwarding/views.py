@@ -301,4 +301,4 @@ def run_forwarding(request, forwarder_id):
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    return run_response(request, run)
+    return run_response(request, forwarder, run)

@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
     'bg-primary', 'bg-success', 'bg-danger', 'bg-warning', 'bg-secondary',
   ];
 
-  const ALREADY_RUNNING = '{% trans "Already running" %}';
   const RUN_GONE = '{% trans "This run no longer exists" %}';
   const SESSION_EXPIRED = '{% trans "Session expired — refresh the page" %}';
   const START_FAILED = '{% trans "Could not start the run" %}';
@@ -124,9 +123,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (response.status === 409) {
         // Not an error: the run that blocked this click is the one the
         // user needs to see, so refresh the table as a finished run does.
+        // The server says why nothing was started.
         htmx.trigger('#run-table', 'refresh');
-        release(ALREADY_RUNNING);
-        return null;
+        return response.json().then(body => {
+          release(body.message);
+          return null;
+        });
       }
       if (response.ok && !isJson(response)) {
         release(SESSION_EXPIRED);

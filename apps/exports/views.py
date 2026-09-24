@@ -408,7 +408,7 @@ def _run_export(request, export_id, export_config_class):
         triggered_by=request.user,
         task_kwargs={'start_over': start_over},
     )
-    return run_response(request, run)
+    return run_response(request, export, run)
 
 
 @login_required
