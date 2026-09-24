@@ -35,9 +35,10 @@ document.addEventListener('alpine:init', () => {
         if (response.status === 409) {
           // Not an error: the run that blocked this click is the one the
           // user needs to see, so refresh the table as a finished run
-          // does.
+          // does. The server says why nothing was started.
           htmx.trigger('#run-table', 'refresh');
-          this.releaseButton(this.$root.dataset.alreadyRunning);
+          const { message } = await response.json();
+          this.releaseButton(message);
           return;
         }
         answer = await readAnswer(response);

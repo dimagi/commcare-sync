@@ -26,7 +26,7 @@
       {% include 'web/components/top_nav.html' %}
     {% endblock %}
     {% block messages %}
-      {% include 'web/components/messages.html' %}
+      <div id="app-messages">{% include 'web/components/messages.html' %}</div>
     {% endblock %}
     {% block body %}
     {% endblock %}

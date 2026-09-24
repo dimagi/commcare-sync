@@ -277,8 +277,21 @@ class TestRunExportHtmxBranch:
         )
         url = reverse('exports:run_export', args=[config.id])
         response = authed_client().post(url, HTTP_HX_REQUEST='true')
-        assert response.status_code == 204
+        assert response.status_code == 409
         assert ExportRun.objects.filter(config=config).count() == 1
+
+    def test_htmx_refusal_says_why_and_refreshes_the_table(self):
+        config = export_config()
+        ExportRun.objects.create(
+            config=config,
+            status=ExportRun.Status.STARTED,
+        )
+        url = reverse('exports:run_export', args=[config.id])
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        content = response.content.decode()
+        assert 'id="app-messages" hx-swap-oob="beforeend"' in content
+        assert 'Not started: another run is already running.' in content
+        assert response['HX-Trigger'] == 'refreshRuns'
 
     def test_non_htmx_request_returns_the_run_to_poll(self):
         import json

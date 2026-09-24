@@ -1,7 +1,12 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET
+
+from apps.commcare.models import RunBaseModel
 
 
 def run_started_response(request, run):
@@ -19,18 +24,44 @@ def run_refused_response(request, active_run):
     """Return a run-trigger endpoint's response when ``active_run``
     prevented a new run from starting.
 
-    HTMX callers get the same response as for a started run: the
-    refreshed table shows the active run either way. Direct callers get
-    409.
+    Both HTMX and direct callers get 409 and a message saying why nothing
+    was started. HTMX callers get it as an alert, swapped out of band into
+    the page's messages, with the table refresh that shows the active run.
+    Direct callers get it as JSON.
     """
+    message = already_running_message(active_run)
     if request.headers.get('HX-Request'):
-        return htmx_run_started_response()
-    return JsonResponse({'error': 'already_running'}, status=409)
+        messages.warning(request, message)
+        response = render(
+            request, 'web/components/messages_oob.html', status=409
+        )
+        response['HX-Trigger'] = 'refreshRuns'
+        return response
+    return JsonResponse(
+        {'error': 'already_running', 'message': message}, status=409
+    )
 
 
 def htmx_run_started_response():
     """Return 204 + an HX-Trigger that fires an immediate table refresh."""
     return HttpResponse(status=204, headers={'HX-Trigger': 'refreshRuns'})
+
+
+def already_running_message(active_run):
+    """Say why a manual run was not started: ``active_run`` was active."""
+    if active_run.status == RunBaseModel.Status.QUEUED:
+        what = _('Not started: another run is already waiting to start.')
+    else:
+        what = _('Not started: another run is already running.')
+    when = naturaltime(active_run.created_at)
+    if active_run.triggered_by is not None:
+        who = _('%(user)s requested it %(when)s.') % {
+            'user': active_run.triggered_by.get_display_name(),
+            'when': when,
+        }
+    else:
+        who = _('It was requested %(when)s.') % {'when': when}
+    return f'{what} {who}'
 
 
 @login_required

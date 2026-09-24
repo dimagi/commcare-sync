@@ -4,7 +4,6 @@ Playwright tests for Run button functionality.
 Tests that verify the Run button's Alpine.js state management,
 HTMX table refresh, and polling of the run record.
 """
-import json
 import re
 from unittest.mock import patch
 
@@ -14,7 +13,7 @@ from playwright.sync_api import expect
 from unmagic import fixture, use
 
 from apps.commcare.models import RunBaseModel
-from apps.exports.models import ExportConfig
+from apps.exports.models import ExportConfig, ExportRun
 from .fixtures import test_data
 from .helpers import (
     login,
@@ -402,15 +401,9 @@ class TestRunButtonProgress:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=409,
-                content_type='application/json',
-                body=json.dumps({'error': 'already_running'}),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        ExportRun.objects.create(
+            config=export, status=ExportRun.Status.STARTED
+        )
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -420,4 +413,12 @@ class TestRunButtonProgress:
 
         expect(run_button).not_to_be_disabled(timeout=3000)
         expect(page.locator('#run-notice')).to_be_visible()
-        expect(page.locator('#run-notice')).to_have_text('Already running')
+        expect(page.locator('#run-notice')).to_contain_text(
+            'Not started: another run is already running.'
+        )
+
+        # Cleared on the next click, so it never outlives the next run.
+        export.runs.update(status=ExportRun.Status.COMPLETED)
+        with patch('apps.schedules.dispatch.async_task'):
+            run_button.click()
+            expect(page.locator('#run-notice')).not_to_be_visible()
