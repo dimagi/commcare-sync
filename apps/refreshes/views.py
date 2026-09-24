@@ -225,7 +225,7 @@ def run_refresh(request, config_id):
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    return run_response(request, run)
+    return run_response(request, config, run)
 
 
 @login_required

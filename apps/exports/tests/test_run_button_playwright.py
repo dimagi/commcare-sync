@@ -12,7 +12,7 @@ from django.urls import reverse
 from playwright.sync_api import expect
 from unmagic import fixture, use
 
-from apps.exports.models import ExportConfig
+from apps.exports.models import ExportConfig, ExportRun
 from .fixtures import test_data
 from .helpers import login, navigate_to_export_details
 
@@ -474,15 +474,9 @@ class TestRunButtonWithMocks:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=409,
-                content_type='application/json',
-                body=json.dumps({'error': 'already_running'}),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
+        ExportRun.objects.create(
+            config=export, status=ExportRun.Status.STARTED
+        )
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -492,4 +486,6 @@ class TestRunButtonWithMocks:
 
         expect(run_button).not_to_be_disabled(timeout=3000)
         expect(page.locator('#run-notice')).to_be_visible()
-        expect(page.locator('#run-notice')).to_have_text('Already running')
+        expect(page.locator('#run-notice')).to_contain_text(
+            'Not started: another run is already running.'
+        )
