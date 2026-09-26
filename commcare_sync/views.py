@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.commcare.models import RunBaseModel
+from apps.schedules.mixin import RUNS_PREFETCH_ATTR
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -106,7 +107,7 @@ def compute_configs_etag(configs_list):
     """
     parts = []
     for config in configs_list:
-        all_runs = getattr(config, '_all_runs', None)
+        all_runs = getattr(config, RUNS_PREFETCH_ATTR, None)
         run = all_runs[0] if all_runs else None
         if run:
             parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')
