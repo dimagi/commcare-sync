@@ -99,21 +99,23 @@ class TestRunDueSchedules:
         # schedule.
         assert elapsed % timedelta(minutes=30) == timedelta(0)
 
-    def test_claim_lost_to_a_concurrent_dispatcher_does_not_enqueue(self):
+    def test_reservation_lost_to_a_concurrent_dispatcher_does_not_enqueue(
+        self,
+    ):
         # Two dispatcher invocations can overlap (a slow cycle, or a
-        # second cluster). Advancing next_run_at is the claim, so the
+        # second cluster). Advancing next_run_at is the reservation, so the
         # loser - whose conditional update matches no row - must not
         # enqueue a duplicate run.
         cfg = due_forwarding_config()
 
-        def claim_it_first(*args, **kwargs):
+        def reserve_it_first(*args, **kwargs):
             ForwardingConfig.objects.filter(pk=cfg.pk).update(
                 next_run_at=timezone.now() + timedelta(minutes=30)
             )
             return timezone.now() + timedelta(minutes=25)
 
         with patch.object(
-            ForwardingConfig, 'compute_next_run', side_effect=claim_it_first
+            ForwardingConfig, 'compute_next_run', side_effect=reserve_it_first
         ):
             launched = run_due_schedules()
 
@@ -121,7 +123,7 @@ class TestRunDueSchedules:
         assert launched == []
 
     def test_a_config_that_cannot_be_advanced_is_never_enqueued(self):
-        # Claiming before enqueueing means a config whose next_run_at
+        # Reserving before enqueueing means a config whose next_run_at
         # can't be computed is skipped outright. Enqueueing first would
         # leave it due forever, dispatching a fresh run every minute.
         cfg = due_forwarding_config()
