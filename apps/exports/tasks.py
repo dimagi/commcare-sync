@@ -2,8 +2,8 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django_q.tasks import async_task
 
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
 from .models import (
@@ -32,44 +32,15 @@ def run_all_exports_task(user_id=None):
 
     # ``is_paused`` derives from schedule fields (has_schedule and
     # schedule_enabled), so the filter happens in Python for clarity.
-    for export in ExportConfig.objects.all():
-        if export.is_paused or export.has_active_run:
-            continue
-        _create_and_dispatch_export_run(
-            export,
-            ExportRun,
-            run_export_task,
-            triggered_from_ui=True,
-            triggered_by=user,
-        )
-
-    for multi_export in MultiProjectExportConfig.objects.all():
-        if multi_export.is_paused or multi_export.has_active_run:
-            continue
-        _create_and_dispatch_export_run(
-            multi_export,
-            MultiProjectExportRun,
-            run_multi_project_export_task,
-            triggered_from_ui=True,
-            triggered_by=user,
-        )
-
-
-def _create_and_dispatch_export_run(
-    export_config,
-    run_model,
-    next_task,
-    *,
-    triggered_from_ui=False,
-    triggered_by=None,
-):
-    export_record = run_model.objects.create(
-        config=export_config,
-        config_version=export_config.latest_version,
-        triggered_from_ui=triggered_from_ui,
-        triggered_by=triggered_by,
-    )
-    async_task(next_task, export_record.id, start_over=False)
+    for config_model in (ExportConfig, MultiProjectExportConfig):
+        for config in config_model.objects.all():
+            if config.is_paused:
+                continue
+            create_run_and_dispatch(
+                config,
+                triggered_from_ui=True,
+                triggered_by=user,
+            )
 
 
 def run_export_task(export_run_id, start_over=False):
