@@ -7,9 +7,10 @@ from unmagic import fixture, use
 from apps.commcare.models import (
     CommCareAccount,
     CommCareServer,
+    RunBaseModel,
 )
 from apps.db.models import Database
-from apps.exports.models import ExportConfig
+from apps.exports.models import ExportConfig, ExportRunBase
 from apps.forwarding.models import ForwardingRun
 from tests.fixtures import commcare_project, commcare_server, user
 
@@ -178,3 +179,15 @@ class TestRunBaseModelHasLog:
 
     def test_true_for_failed(self):
         assert ForwardingRun(status=ForwardingRun.Status.FAILED).has_log is True
+
+
+def test_timed_out_run_has_a_log():
+    run = ForwardingRun(status=RunBaseModel.Status.TIMEOUT)
+    assert run.has_log is True
+
+
+def test_export_run_statuses_include_every_base_status():
+    # ExportRunBase.Status restates RunBaseModel.Status to add MULTIPLE.
+    # A status added to the base but not the restatement would be
+    # rejected as an invalid choice on export runs.
+    assert set(RunBaseModel.Status.values) <= set(ExportRunBase.Status.values)

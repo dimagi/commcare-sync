@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.commcare.models import RunBaseModel
+from apps.schedules.mixin import RUNS_PREFETCH_ATTR
 from apps.web.stats import (
     _get_export_statistics,
     _get_forwarding_statistics,
@@ -79,10 +80,10 @@ def dashboard_stats_context():
     }
 
 
-# Per-run statuses available for filtering. RunBaseModel.Status is the shared base
-# enum (queued/started/completed/failed/skipped); ExportRunBase additionally
-# defines MULTIPLE — an aggregate for multi-project parent runs — which is
-# deliberately not a per-run filter state, so deriving from the base excludes it.
+# Per-run statuses available for filtering. RunBaseModel.Status is the shared
+# base enum; ExportRunBase additionally defines MULTIPLE — an aggregate for
+# multi-project parent runs — which is deliberately not a per-run filter
+# state, so deriving from the base excludes it.
 _VALID_RUN_STATUSES = set(RunBaseModel.Status.values)
 
 
@@ -106,7 +107,7 @@ def compute_configs_etag(configs_list):
     """
     parts = []
     for config in configs_list:
-        all_runs = getattr(config, '_all_runs', None)
+        all_runs = getattr(config, RUNS_PREFETCH_ATTR, None)
         run = all_runs[0] if all_runs else None
         if run:
             parts.append(f'{run.id}:{run.created_at.isoformat()}:{run.status}')

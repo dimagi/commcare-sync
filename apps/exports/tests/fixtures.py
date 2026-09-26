@@ -163,7 +163,7 @@ def multi_export_config():
 @use('db')
 def export_run():
     yield ExportRun.objects.create(
-        base_export_config=export_config(),
+        config=export_config(),
         status=ExportRun.Status.COMPLETED,
     )
 
@@ -172,6 +172,6 @@ def export_run():
 @use('db')
 def multi_export_run():
     yield MultiProjectExportRun.objects.create(
-        base_export_config=multi_export_config(),
+        config=multi_export_config(),
         status=MultiProjectExportRun.Status.COMPLETED,
     )

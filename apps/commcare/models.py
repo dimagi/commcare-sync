@@ -1,7 +1,6 @@
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
@@ -22,12 +21,24 @@ class RunBaseModel(BaseModel):
     """
     Base model for all run records (exports, forwarding, refreshes).
     """
+    # ExportRunBase.Status restates these members to add MULTIPLE. Keep
+    # the two in step.
     class Status(models.TextChoices):
         QUEUED = 'queued', _('Queued')
         STARTED = 'started', _('Started')
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
+
+    # Queued or under way. A config with an active run gets no other run.
+    ACTIVE_STATUSES = frozenset({Status.QUEUED, Status.STARTED})
+    # Finished without succeeding.
+    FAILED_STATUSES = frozenset({Status.FAILED, Status.TIMEOUT})
+    # Finished with a log to show.
+    LOGGED_STATUSES = frozenset(
+        {Status.COMPLETED, Status.FAILED, Status.TIMEOUT}
+    )
 
     status = models.CharField(
         max_length=10,
@@ -51,13 +62,24 @@ class RunBaseModel(BaseModel):
         on_delete=models.SET_NULL,
     )
     log = models.TextField(null=True, blank=True)
+    retry_of = models.OneToOneField(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='retry',
+        help_text=_('The timed-out run that this run retries.'),
+    )
 
     class Meta:
         abstract = True
+        # `reap_stale_runs` filters on these every minute, and run
+        # history is never pruned.
+        indexes = [models.Index(fields=['status', 'started_at'])]
 
     @property
     def has_log(self):
-        return self.status in {self.Status.COMPLETED, self.Status.FAILED}
+        return self.status in self.LOGGED_STATUSES
 
     @property
     def duration(self):
@@ -67,15 +89,6 @@ class RunBaseModel(BaseModel):
 
     def get_duration_display(self):
         return readable_timedelta(self.duration)
-
-    def mark_skipped(self):
-        if self.status != self.Status.QUEUED:
-            raise ValueError(
-                _('Can\'t mark a run "skipped" after it has been started.')
-            )
-        self.status = self.Status.SKIPPED
-        self.completed_at = timezone.now()
-        self.save()
 
 
 class CommCareServer(BaseModel):

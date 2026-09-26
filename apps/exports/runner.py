@@ -17,16 +17,16 @@ def run_multi_project_export(
     multi_export_run: MultiProjectExportRun,
     start_over: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
-    multi_export_config = multi_export_run.base_export_config
-    multi_export_run.status = MultiProjectExportRun.Status.STARTED
-    multi_export_run.started_at = timezone.now()
-    multi_export_run.save()
+    multi_export_config = multi_export_run.config
     runs = []
     for project in multi_export_config.projects.all():
+        # Nothing claims a partial run, so it is created STARTED.
         export_record = MultiProjectPartialExportRun.objects.create(
             parent_run=multi_export_run,
             project=project,
             triggered_from_ui=multi_export_run.triggered_from_ui,
+            status=MultiProjectPartialExportRun.Status.STARTED,
+            started_at=timezone.now(),
         )
         export_record = _run_export_for_project(
             multi_export_config, project, export_record, start_over
@@ -47,16 +47,14 @@ def run_export(
     export_run: ExportRun,
     start_over: bool = False,
 ) -> ExportRun:
-    export_config = export_run.base_export_config
+    export_config = export_run.config
     return _run_export_for_project(
         export_config, export_config.project, export_run, start_over
     )
 
 
 def _run_export_for_project(export_config, project, export_record, start_over):
-    export_record.status = ExportRun.Status.STARTED
-    export_record.started_at = timezone.now()
-    export_record.save()
+    process = None
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         process = subprocess.Popen(
@@ -73,6 +71,12 @@ def _run_export_for_project(export_config, project, export_record, start_over):
     else:
         export_record.status = _process_status_to_status_field(result)
         export_record.log = '\n'.join(log_buffer)
+    finally:
+        # Django Q2's timeout raises TimeoutException, a SystemExit, which
+        # the except above doesn't catch. Don't leave commcare-export
+        # running against the database once the worker has gone.
+        if process is not None and process.poll() is None:
+            process.kill()
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record

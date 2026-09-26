@@ -116,6 +116,10 @@ DATABASES = {
                 'PRAGMA busy_timeout=5000;'
                 'PRAGMA synchronous=NORMAL;'
             ),
+            # Take the write lock when a transaction begins, not at its
+            # first write. `create_run` (apps/schedules/dispatch.py)
+            # relies on this so two triggers can't both create an active
+            # run for one config.
             'transaction_mode': 'IMMEDIATE',
         },
     }
@@ -194,11 +198,38 @@ Q_CLUSTER = {
     'name': 'commcare_sync',
     'orm': 'default',
     'workers': 2,
-    'timeout': 6 * 60 * 60,  # kill a run after 6h
-    'retry': 8 * 60 * 60,  # retry if a worker dies without reporting back
-                           # (because OOM, SIGKILL, reboot, etc.)
-    'max_attempts': 2,  # one retry for interrupted runs, then give up
-    'ack_failures': True,  # a failed run is complete, not re-delivered
+
+    # Stop a task after 23h. Django Q2 raises `TimeoutException` in the
+    # task and records a failed result, so with `ack_failures` the task is
+    # never delivered again: a run that took too long would most likely
+    # take too long again. The run is left STARTED until `reap_stale_runs`
+    # (apps/schedules/tasks.py) marks it TIMEOUT.
+    #
+    # This is the ceiling on how long any single run may take, and it is
+    # deliberately generous. First-time exports of very large projects
+    # can take longer than this. Those are expected to be run manually
+    # using the CommCare Data Export Tool (commcare-export) instead.
+    'timeout': 23 * 60 * 60,
+
+    # Deliver a task again if it has no result 24h after the cluster took
+    # it off the queue. Only a worker that died -- OOM, SIGKILL, a reboot
+    # -- leaves a task with no result, and that is worth one more try.
+    # Django Q2 would deliver it every 24h indefinitely, so `claim_run`
+    # (apps/schedules/dispatch.py) retries its run once, after the reaper
+    # has marked it TIMEOUT, and ignores every later delivery.
+    #
+    # The reaper waits `timeout` from when the run started, and a worker
+    # only starts a task after its retry clock has started, so the retry
+    # normally arrives after reaping. If the task waited more than about
+    # an hour in the cluster's local queue, the retry arrives first, finds
+    # the run still STARTED, and is dropped. A system check
+    # (apps/schedules/checks.py) fails if `retry` isn't longer than
+    # `timeout` plus the reaper's margin.
+    'retry': 24 * 60 * 60,
+
+    # A failed run is complete, not retried. That includes a run stopped
+    # by `timeout`.
+    'ack_failures': True,
     'catch_up': False,  # don't replay every missed minute of the dispatcher
     'label': 'Task queue',
 }

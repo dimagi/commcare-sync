@@ -44,7 +44,7 @@ class ExportConfigBase(ScheduleMixin, BaseModel):
 
 @reversion.register()
 class ExportConfig(ExportConfigBase):
-    SCHEDULED_TASK = 'apps.exports.tasks.run_scheduled_export_task'
+    RUN_TASK = 'apps.exports.tasks.run_export_task'
 
     project = models.ForeignKey(
         'commcare.CommCareProject',
@@ -77,7 +77,7 @@ class ExportConfig(ExportConfigBase):
 
 @reversion.register()
 class MultiProjectExportConfig(ExportConfigBase):
-    SCHEDULED_TASK = 'apps.exports.tasks.run_scheduled_multi_export_task'
+    RUN_TASK = 'apps.exports.tasks.run_multi_project_export_task'
 
     projects = models.ManyToManyField('commcare.CommCareProject')
 
@@ -91,7 +91,7 @@ class MultiProjectExportConfig(ExportConfigBase):
     def get_last_run_for_project(self, project):
         try:
             return MultiProjectPartialExportRun.objects.filter(
-                parent_run__base_export_config=self,
+                parent_run__config=self,
                 project=project,
             ).order_by('-created_at')[0]
         except IndexError:
@@ -126,12 +126,14 @@ class MultiProjectExportConfig(ExportConfigBase):
 
 
 class ExportRunBase(RunBaseModel):
+    # Restates RunBaseModel.Status to add MULTIPLE. Keep the two in step.
     class Status(models.TextChoices):
         QUEUED = 'queued', _('Queued')
         STARTED = 'started', _('Started')
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
+        TIMEOUT = 'timeout', _('Timed out')
         MULTIPLE = 'multiple', _('Multiple statuses')
 
     status = models.CharField(
@@ -140,20 +142,20 @@ class ExportRunBase(RunBaseModel):
         choices=Status.choices,
     )
 
-    class Meta:
+    class Meta(RunBaseModel.Meta):
         abstract = True
 
     def __str__(self):
-        return f'{self.base_export_config.name} ({self.created_at})'
+        return f'{self.config.name} ({self.created_at})'
 
 
 class ExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(
+    config = models.ForeignKey(
         ExportConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    export_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version,
         on_delete=models.CASCADE,
         null=True,
@@ -161,12 +163,12 @@ class ExportRun(ExportRunBase):
 
 
 class MultiProjectExportRun(ExportRunBase):
-    base_export_config = models.ForeignKey(
+    config = models.ForeignKey(
         MultiProjectExportConfig,
         on_delete=models.CASCADE,
         related_name='runs',
     )
-    export_config_version = models.ForeignKey(
+    config_version = models.ForeignKey(
         Version,
         on_delete=models.CASCADE,
         null=True,

@@ -1,14 +1,17 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+from django.apps import apps
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from unmagic import fixture, use
 
-from apps.forwarding.models import ForwardingConfig
+from apps.forwarding.models import ForwardingConfig, ForwardingRun
 from apps.forwarding.tests.fixtures import destination
 from apps.refreshes.models import RefreshConfig
 from apps.schedules.mixin import ScheduleMixin
-from apps.schedules.tasks import run_due_schedules
+from apps.schedules.tasks import CONFIG_MODELS, run_due_schedules
 from tests.fixtures import database
 
 INTERVAL_SCHEDULE = {
@@ -20,7 +23,7 @@ INTERVAL_SCHEDULE = {
 
 @fixture
 def mock_async():
-    with patch('apps.schedules.tasks.async_task') as mock:
+    with patch('apps.schedules.dispatch.async_task') as mock:
         yield mock
 
 
@@ -62,10 +65,11 @@ class TestRunDueSchedules:
 
         launched = run_due_schedules()
 
+        run = cfg.runs.get()
+        assert run.triggered_from_ui is False
         mock_async().assert_called_once_with(
-            'apps.forwarding.tasks.run_scheduled_forwarding_task',
-            cfg.id,
-            q_options={},
+            'apps.forwarding.tasks.run_forwarding_task',
+            run.id,
         )
         assert launched == [f'ForwardingConfig:{cfg.id}']
         cfg.refresh_from_db()
@@ -100,21 +104,23 @@ class TestRunDueSchedules:
         # schedule.
         assert elapsed % timedelta(minutes=30) == timedelta(0)
 
-    def test_claim_lost_to_a_concurrent_dispatcher_does_not_enqueue(self):
+    def test_reservation_lost_to_a_concurrent_dispatcher_does_not_enqueue(
+        self,
+    ):
         # Two dispatcher invocations can overlap (a slow cycle, or a
-        # second cluster). Advancing next_run_at is the claim, so the
+        # second cluster). Advancing next_run_at is the reservation, so the
         # loser - whose conditional update matches no row - must not
         # enqueue a duplicate run.
         cfg = due_forwarding_config()
 
-        def claim_it_first(*args, **kwargs):
+        def reserve_it_first(*args, **kwargs):
             ForwardingConfig.objects.filter(pk=cfg.pk).update(
                 next_run_at=timezone.now() + timedelta(minutes=30)
             )
             return timezone.now() + timedelta(minutes=25)
 
         with patch.object(
-            ForwardingConfig, 'compute_next_run', side_effect=claim_it_first
+            ForwardingConfig, 'compute_next_run', side_effect=reserve_it_first
         ):
             launched = run_due_schedules()
 
@@ -122,7 +128,7 @@ class TestRunDueSchedules:
         assert launched == []
 
     def test_a_config_that_cannot_be_advanced_is_never_enqueued(self):
-        # Claiming before enqueueing means a config whose next_run_at
+        # Reserving before enqueueing means a config whose next_run_at
         # can't be computed is skipped outright. Enqueueing first would
         # leave it due forever, dispatching a fresh run every minute.
         cfg = due_forwarding_config()
@@ -134,6 +140,20 @@ class TestRunDueSchedules:
 
         mock_async().assert_not_called()
         assert launched == []
+
+    def test_config_with_an_active_run_is_skipped_but_advanced(self):
+        cfg = due_forwarding_config()
+        ForwardingRun.objects.create(
+            config=cfg, status=ForwardingRun.Status.STARTED
+        )
+
+        launched = run_due_schedules()
+
+        mock_async().assert_not_called()
+        assert launched == []
+        assert cfg.runs.count() == 1
+        cfg.refresh_from_db()
+        assert cfg.next_run_at > timezone.now()
 
     def test_skips_configs_that_are_not_due(self):
         due_forwarding_config()
@@ -151,6 +171,17 @@ class TestRunDueSchedules:
         run_due_schedules()
 
         mock_async().assert_not_called()
+
+    def test_a_failing_reaper_does_not_stop_scheduling(self):
+        cfg = due_forwarding_config()
+
+        with patch(
+            'apps.schedules.tasks.reap_stale_runs',
+            side_effect=RuntimeError('lock timeout'),
+        ):
+            launched = run_due_schedules()
+
+        assert launched == [f'ForwardingConfig:{cfg.id}']
 
     def test_poison_config_does_not_starve_later_configs(self):
         # A config whose schedule fields are malformed enough to make
@@ -187,27 +218,32 @@ class TestRunDueSchedules:
         poison.refresh_from_db()
         assert poison.next_run_at < timezone.now()
 
-    def test_dispatches_with_non_empty_options_and_does_not_mutate_class_attr(
-        self,
-    ):
-        # RefreshConfig has non-empty SCHEDULED_TASK_OPTIONS, so it's the
-        # one that actually exercises the dict-copy in run_due_schedules:
-        # it proves the class-level dict is passed by value, not by
-        # reference.
+    def test_dispatches_the_configured_task_for_a_refresh_config(self):
+        # test_enqueues_due_config_and_advances_next_run covers this for
+        # ForwardingConfig; this is the equivalent check for
+        # RefreshConfig, whose RUN_TASK differs.
         cfg = due_refresh_config()
 
         launched = run_due_schedules()
 
         mock_async().assert_called_once_with(
-            'apps.refreshes.tasks.run_scheduled_refresh_task',
-            cfg.id,
-            q_options={'timeout': 3660},
+            'apps.refreshes.tasks.run_refresh_task',
+            cfg.runs.get().id,
         )
         assert launched == [f'RefreshConfig:{cfg.id}']
 
-        # The dict handed to async_task must be a copy, not the shared
-        # class-level dict, so later dispatches (or mutation by a task)
-        # can't leak into or corrupt other configs' options.
-        passed_options = mock_async().call_args.kwargs['q_options']
-        assert passed_options is not RefreshConfig.SCHEDULED_TASK_OPTIONS
-        assert RefreshConfig.SCHEDULED_TASK_OPTIONS == {'timeout': 3660}
+
+def test_config_models_lists_every_scheduled_config_model():
+    # A config model missing from CONFIG_MODELS is never scheduled.
+    scheduled_config_models = {
+        model for model in apps.get_models()
+        if issubclass(model, ScheduleMixin)
+    }
+    assert set(CONFIG_MODELS) == scheduled_config_models
+
+
+@pytest.mark.parametrize('config_model', CONFIG_MODELS)
+def test_run_task_names_a_task(config_model):
+    # The dispatcher names the task by its dotted path, so a renamed task
+    # would otherwise only fail when a worker tries to import it.
+    assert callable(import_string(config_model.RUN_TASK))
