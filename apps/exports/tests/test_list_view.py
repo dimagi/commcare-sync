@@ -277,19 +277,51 @@ class TestRunExportHtmxBranch:
         )
         url = reverse('exports:run_export', args=[config.id])
         response = authed_client().post(url, HTTP_HX_REQUEST='true')
-        assert response.status_code == 204
+        assert response.status_code == 409
         assert ExportRun.objects.filter(config=config).count() == 1
 
-    def test_non_htmx_request_returns_200_with_task_id(self):
+    def test_htmx_refusal_says_why_and_refreshes_the_table(self):
+        # The list page's Run button is only enabled while its table shows
+        # no active run, so a refusal means the table was stale. Say so,
+        # rather than let the refreshed table suggest this click started
+        # the run it shows.
+        config = export_config()
+        ExportRun.objects.create(
+            config=config,
+            status=ExportRun.Status.STARTED,
+        )
+        url = reverse('exports:run_export', args=[config.id])
+        response = authed_client().post(url, HTTP_HX_REQUEST='true')
+        content = response.content.decode()
+        assert 'id="app-messages" hx-swap-oob="beforeend"' in content
+        assert 'Not started: another run is already running.' in content
+        assert response['HX-Trigger'] == 'runStarted'
+
+    def test_non_htmx_request_returns_the_run_to_poll(self):
         import json
-        url = reverse('exports:run_export', args=[export_config().id])
+        config = export_config()
+        url = reverse('exports:run_export', args=[config.id])
         response = authed_client().post(
             url,
             data=json.dumps({'startOver': False}),
             content_type='application/json',
         )
+        run = config.runs.get()
         assert response.status_code == 200
-        assert len(response.content) > 0  # task ID in body
+        assert response.json() == {
+            'run_id': run.id,
+            'poll_url': run.status_url,
+        }
+
+    def test_run_all_still_answers_htmx_with_204(self):
+        # run_all_exports has no run to name, so it answers 204 itself
+        # rather than passing run=None, which now means "already active".
+        with patch('apps.exports.views.async_task'):
+            response = authed_client().post(
+                reverse('exports:run_all_exports'), HTTP_HX_REQUEST='true'
+            )
+        assert response.status_code == 204
+        assert response.headers['HX-Trigger'] == 'runStarted'
 
     def test_non_htmx_start_over_true_passes_flag(self):
         """startOver: true in JSON body passes start_over=True to task."""
