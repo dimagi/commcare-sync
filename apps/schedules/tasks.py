@@ -176,9 +176,7 @@ def _dispatch_due_config(config_model, config, now):
         ).update(next_run_at=next_run)
         if not claimed:
             return False
-        task_id = create_run_and_dispatch(
-            config, config.RUN_TASK, triggered_from_ui=False
-        )
+        task_id = create_run_and_dispatch(config, triggered_from_ui=False)
     except Exception:
         # config.__str__ could itself raise on a malformed row, so log by
         # model name and pk rather than the instance.

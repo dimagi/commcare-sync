@@ -31,17 +31,19 @@ def create_run(config, *, triggered_from_ui=False, triggered_by=None):
 
 def create_run_and_dispatch(
     config,
-    task,
     *,
     triggered_from_ui,
     triggered_by=None,
     task_kwargs=None,
 ):
-    """Create a run for ``config`` and enqueue ``task`` to perform it.
+    """Create a run for ``config`` and enqueue its task to perform it.
+
+    The task is ``config.RUN_TASK``, the same one the scheduler uses. It
+    is called with the run's ID and ``task_kwargs`` (e.g.
+    ``{'start_over': True}``).
 
     Returns the Django Q2 task ID, or ``None`` if a run is already
-    active. ``task`` is called with the run's ID and ``task_kwargs``
-    (e.g. ``{'start_over': True}``).
+    active.
 
     The run and its queue entry are committed together, in the same
     transaction as ``create_run``'s check. Django Q2's ORM broker queues
@@ -57,4 +59,4 @@ def create_run_and_dispatch(
         )
         if run is None:
             return None
-        return async_task(task, run.id, **(task_kwargs or {}))
+        return async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
