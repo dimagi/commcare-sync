@@ -155,28 +155,38 @@ def run_due_schedules():
             next_run_at__lte=now,
         )
         for config in due_configs:
-            try:
-                next_run = _advance_past(config, config.next_run_at, now)
-                # Claim the run by advancing next_run_at, conditional on it
-                # still holding the value this dispatcher read. A concurrent
-                # dispatcher that already claimed it matches no row here.
-                claimed = config_model.objects.filter(
-                    pk=config.pk, next_run_at=config.next_run_at
-                ).update(next_run_at=next_run)
-                if not claimed:
-                    continue
-                async_task(config.SCHEDULED_TASK, config.id)
-            except Exception:
-                # config.__str__ could itself raise on a malformed row, so
-                # log by model name and pk rather than the instance.
-                logger.exception(
-                    'Failed to enqueue scheduled run for %s(pk=%s)',
-                    config_model.__name__, config.pk,
-                )
-                continue
-            launched.append(f'{config_model.__name__}:{config.pk}')
-            logger.info(
-                'Enqueued scheduled run for %s(pk=%s)',
-                config_model.__name__, config.pk,
-            )
+            if _dispatch_due_config(config_model, config, now):
+                launched.append(f'{config_model.__name__}:{config.pk}')
     return launched
+
+
+def _dispatch_due_config(config_model, config, now):
+    """Dispatch a run for ``config``, which is due. Return whether it did.
+
+    Any error is logged rather than raised, so that one malformed config
+    doesn't stop the dispatcher from handling the rest.
+    """
+    try:
+        next_run = _advance_past(config, config.next_run_at, now)
+        # Claim the run by advancing next_run_at, conditional on it
+        # still holding the value this dispatcher read. A concurrent
+        # dispatcher that already claimed it matches no row here.
+        claimed = config_model.objects.filter(
+            pk=config.pk, next_run_at=config.next_run_at
+        ).update(next_run_at=next_run)
+        if not claimed:
+            return False
+        async_task(config.SCHEDULED_TASK, config.id)
+    except Exception:
+        # config.__str__ could itself raise on a malformed row, so log by
+        # model name and pk rather than the instance.
+        logger.exception(
+            'Failed to enqueue scheduled run for %s(pk=%s)',
+            config_model.__name__, config.pk,
+        )
+        return False
+    logger.info(
+        'Enqueued scheduled run for %s(pk=%s)',
+        config_model.__name__, config.pk,
+    )
+    return True
