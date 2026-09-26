@@ -15,7 +15,7 @@ from django.test.utils import CaptureQueriesContext
 from unmagic import use
 
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
-from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.mixin import RUNS_PREFETCH_ATTR, ScheduleMixin
 from tests.fixtures import database
 
 from .fixtures import destination
@@ -327,7 +327,7 @@ class TestHasActiveRun:
             config=config,
             status=ForwardingRun.Status.QUEUED,
         )
-        config._all_runs = [run]
+        setattr(config, RUNS_PREFETCH_ATTR, [run])
         with CaptureQueriesContext(connection) as ctx:
             result = config.has_active_run
         assert len(ctx) == 0

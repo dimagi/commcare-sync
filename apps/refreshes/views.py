@@ -3,7 +3,6 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Prefetch
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -12,6 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django_q.tasks import async_task
 
 from apps.db.models import Database
+from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -42,11 +42,7 @@ def refresh_configs(request):
         RefreshConfig
         .objects
         .order_by('-updated_at')
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=RefreshRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(RefreshRun))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
 
@@ -73,11 +69,7 @@ def config_table(request):
         RefreshConfig
         .objects
         .order_by('-updated_at')
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=RefreshRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(RefreshRun))
     )
     page_obj = paginate(configs_qs, page_size, page_num)
     return render_config_table(

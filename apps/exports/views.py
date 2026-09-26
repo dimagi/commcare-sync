@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Page
-from django.db.models import Max, Prefetch
+from django.db.models import Max
 from django.http import (
     Http404,
     HttpResponse,
@@ -21,6 +21,7 @@ from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -61,20 +62,12 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
         ExportConfig.objects
         .select_related('project')
         .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=ExportRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(ExportRun))
     )
     multi = (
         MultiProjectExportConfig.objects
         .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=MultiProjectExportRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(MultiProjectExportRun))
     )
     all_configs = sorted(
         chain(single, multi),

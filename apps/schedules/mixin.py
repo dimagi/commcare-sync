@@ -19,6 +19,20 @@ logger = logging.getLogger(__name__)
 # starting on the anchor date itself once ``first_run_time`` has passed.
 MAX_SCAN_DAYS = 2922
 
+# List pages prefetch each config's runs, newest first, into this
+# attribute, so that ``last_run`` and the table's active-run check don't
+# query once per row.
+RUNS_PREFETCH_ATTR = '_all_runs'
+
+
+def prefetch_runs(run_model):
+    """Prefetch each config's runs into ``RUNS_PREFETCH_ATTR``."""
+    return models.Prefetch(
+        'runs',
+        queryset=run_model.objects.order_by('-created_at'),
+        to_attr=RUNS_PREFETCH_ATTR,
+    )
+
 
 def _validate_days_of_week(value):
     if not isinstance(value, list):
@@ -143,9 +157,13 @@ class ScheduleMixin(models.Model):
             return last_run.status == RunBaseModel.Status.QUEUED
         return False
 
+    def _prefetched_runs(self):
+        """This config's runs, newest first, if a view prefetched them."""
+        return getattr(self, RUNS_PREFETCH_ATTR, None)
+
     @property
     def last_run(self):
-        all_runs = getattr(self, '_all_runs', None)
+        all_runs = self._prefetched_runs()
         if all_runs is not None:
             # Use prefetched data: filter out QUEUED in Python
             non_queued = [
@@ -161,7 +179,7 @@ class ScheduleMixin(models.Model):
     @property
     def has_active_run(self):
         active = {RunBaseModel.Status.QUEUED, RunBaseModel.Status.STARTED}
-        all_runs = getattr(self, '_all_runs', None)
+        all_runs = self._prefetched_runs()
         if all_runs is not None:
             return any(r.status in active for r in all_runs)
         return self.runs.filter(status__in=active).exists()
