@@ -1,10 +1,8 @@
 """Background tasks for data forwarding."""
-import logging
+from apps.schedules.dispatch import claim_run
 
 from .models import ForwardingRun
 from .runner import run_forwarding
-
-logger = logging.getLogger(__name__)
 
 
 def run_forwarding_task(fwd_run_id):
@@ -13,12 +11,11 @@ def run_forwarding_task(fwd_run_id):
 
     :param fwd_run_id: The ID of the ForwardingRun to execute
 
-    :returns: The ID of the ForwardingRun instance
+    :returns: The ID of the ForwardingRun performed, or None if there was
+        nothing to do. (See ``claim_run``.)
     """
-    try:
-        fwd_run = ForwardingRun.objects.get(id=fwd_run_id)
-    except ForwardingRun.DoesNotExist:
-        logger.error(f'ForwardingRun {fwd_run_id} does not exist')
+    fwd_run = claim_run(ForwardingRun, fwd_run_id)
+    if fwd_run is None:
         return None
 
     run_forwarding(fwd_run)

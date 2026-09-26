@@ -1,12 +1,17 @@
 from unittest.mock import patch
 
 import pytest
+from django.db.models import QuerySet
 from unmagic import fixture, use
 
 from apps.commcare.models import RunBaseModel
 from apps.forwarding.models import ForwardingRun
 from apps.forwarding.tests.fixtures import destination, forwarding_config
-from apps.schedules.dispatch import create_run, create_run_and_dispatch
+from apps.schedules.dispatch import (
+    claim_run,
+    create_run,
+    create_run_and_dispatch,
+)
 from tests.fixtures import database, user
 
 
@@ -142,3 +147,56 @@ class TestCreateRunAndDispatch:
             )
 
         assert config.runs.count() == 0
+
+
+@use(database, destination, forwarding_config)
+class TestClaimRun:
+
+    def _claim(self, run):
+        return claim_run(ForwardingRun, run.id)
+
+    def test_first_delivery_claims_the_queued_run(self):
+        run = ForwardingRun.objects.create(config=forwarding_config())
+
+        claimed = self._claim(run)
+
+        assert claimed == run
+        assert claimed.status == RunBaseModel.Status.STARTED
+        run.refresh_from_db()
+        assert run.status == RunBaseModel.Status.STARTED
+        assert run.started_at == claimed.started_at is not None
+
+    def test_a_run_skipped_after_it_was_read_is_not_claimed(self):
+        # A queued run can be marked SKIPPED between claim_run reading it
+        # and starting it. The start is conditional, so it doesn't
+        # overwrite SKIPPED.
+        run = ForwardingRun.objects.create(config=forwarding_config())
+        stale = ForwardingRun.objects.get(pk=run.pk)
+        ForwardingRun.objects.filter(pk=run.pk).update(
+            status=RunBaseModel.Status.SKIPPED
+        )
+        with patch.object(QuerySet, 'get', return_value=stale):
+            claimed = claim_run(ForwardingRun, run.id)
+
+        assert claimed is None
+        run.refresh_from_db()
+        assert run.status == RunBaseModel.Status.SKIPPED
+
+    def test_missing_run_logs_and_returns_none(self, caplog):
+        assert claim_run(ForwardingRun, 999999) is None
+        assert 'ForwardingRun 999999 no longer exists' in caplog.text
+
+    @pytest.mark.parametrize('status', [
+        RunBaseModel.Status.STARTED,
+        RunBaseModel.Status.COMPLETED,
+        RunBaseModel.Status.FAILED,
+        RunBaseModel.Status.SKIPPED,
+        RunBaseModel.Status.TIMEOUT,
+    ])
+    def test_redelivery_does_not_redo_the_work(self, status):
+        run = ForwardingRun.objects.create(
+            config=forwarding_config(), status=status
+        )
+
+        assert self._claim(run) is None
+        assert ForwardingRun.objects.count() == 1

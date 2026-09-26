@@ -1,11 +1,20 @@
-"""Creating and dispatching runs.
+"""Creating, dispatching and claiming runs.
 
 Every run, manual or scheduled, in any app, is created here and handed
-to a worker task that receives the run's ID.
+to a worker task that receives the run's ID. The worker claims the run
+here too, so that the rules for what a delivery of a worker task may do
+live in one place.
 """
 
+import logging
+
 from django.db import transaction
+from django.utils import timezone
 from django_q.tasks import async_task
+
+from apps.commcare.models import RunBaseModel
+
+logger = logging.getLogger(__name__)
 
 
 def create_run(config, *, triggered_from_ui=False, triggered_by=None):
@@ -60,3 +69,52 @@ def create_run_and_dispatch(
         if run is None:
             return None
         return async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
+
+
+def claim_run(run_model, run_id):
+    """Return the run that a worker task should perform, marked STARTED.
+
+    Returns ``None`` if there is nothing to do.
+
+    Django Q2 delivers a task again if it has no result after
+    ``Q_CLUSTER['retry']`` seconds. A task records a failed result if
+    it is stopped by the timeout, so it is never delivered again. But a
+    task whose worker died (OOM, SIGKILL, a reboot) does not record a
+    result, and Django Q2 delivers it again every ``retry`` seconds,
+    indefinitely. Redoing the work each time would be worse than doing
+    nothing, so the database decides what a delivery may do:
+
+    * A QUEUED run is on its first delivery: mark it STARTED and perform
+      it. The update only applies while the run is still QUEUED, so a run
+      skipped in the meantime, or started by another delivery, is left
+      alone.
+    * Otherwise the run is under way or finished.
+
+    Starting the run here, rather than in each runner, means every
+    STARTED run has the ``started_at`` that ``reap_stale_runs`` measures
+    from.
+    """
+    try:
+        run = run_model.objects.select_related('config').get(id=run_id)
+    except run_model.DoesNotExist:
+        logger.warning(
+            '%s %s no longer exists, skipping.', run_model.__name__, run_id
+        )
+        return None
+
+    if run.status == RunBaseModel.Status.QUEUED:
+        return _start(run)
+    return None
+
+
+def _start(run):
+    """Mark ``run`` STARTED if it is still QUEUED. Return it, or ``None``."""
+    now = timezone.now()
+    started = type(run).objects.filter(
+        pk=run.pk, status=RunBaseModel.Status.QUEUED
+    ).update(status=RunBaseModel.Status.STARTED, started_at=now)
+    if not started:
+        return None
+    run.status = RunBaseModel.Status.STARTED
+    run.started_at = now
+    return run

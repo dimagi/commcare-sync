@@ -18,15 +18,15 @@ def run_multi_project_export(
     start_over: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
     multi_export_config = multi_export_run.config
-    multi_export_run.status = MultiProjectExportRun.Status.STARTED
-    multi_export_run.started_at = timezone.now()
-    multi_export_run.save()
     runs = []
     for project in multi_export_config.projects.all():
+        # Nothing claims a partial run, so it is created STARTED.
         export_record = MultiProjectPartialExportRun.objects.create(
             parent_run=multi_export_run,
             project=project,
             triggered_from_ui=multi_export_run.triggered_from_ui,
+            status=MultiProjectPartialExportRun.Status.STARTED,
+            started_at=timezone.now(),
         )
         export_record = _run_export_for_project(
             multi_export_config, project, export_record, start_over
@@ -54,9 +54,6 @@ def run_export(
 
 
 def _run_export_for_project(export_config, project, export_record, start_over):
-    export_record.status = ExportRun.Status.STARTED
-    export_record.started_at = timezone.now()
-    export_record.save()
     process = None
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207

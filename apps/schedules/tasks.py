@@ -72,8 +72,8 @@ def reap_stale_runs():
     ``TimeoutException`` is a ``SystemExit``, which the runners'
     ``except Exception`` doesn't catch. Either would otherwise block its
     config forever, because ``has_active_run`` would keep seeing it.
-    Every runner sets ``started_at`` when it sets ``STARTED``, so a
-    ``STARTED`` run older than the task timeout (plus ``REAP_MARGIN``)
+    ``claim_run`` sets ``started_at`` when it marks a run ``STARTED``, so
+    a ``STARTED`` run older than the task timeout (plus ``REAP_MARGIN``)
     cannot still be running.
 
     ``QUEUED`` runs are deliberately not reaped: they have no

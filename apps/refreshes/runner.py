@@ -21,10 +21,6 @@ def run_refresh(refresh_run):
         ),
     ]
 
-    refresh_run.status = RefreshRun.Status.STARTED
-    refresh_run.started_at = timezone.now()
-    refresh_run.save()
-
     view_results = {}
     overall_success = True
 
