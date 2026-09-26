@@ -1,20 +1,19 @@
 """Background tasks for materialized view refreshes."""
-import logging
+from apps.schedules.dispatch import claim_run
 
 from .models import RefreshRun
 from .runner import run_refresh
-
-logger = logging.getLogger(__name__)
 
 
 def run_refresh_task(refresh_run_id):
     """
     Execute a refresh run for the given RefreshRun.
+
+    Returns the ID of the RefreshRun performed, or None if there was
+    nothing to do. (See ``claim_run``.)
     """
-    try:
-        refresh_run = RefreshRun.objects.get(id=refresh_run_id)
-    except RefreshRun.DoesNotExist:
-        logger.error(f'RefreshRun {refresh_run_id} does not exist')
+    refresh_run = claim_run(RefreshRun, refresh_run_id)
+    if refresh_run is None:
         return None
 
     run_refresh(refresh_run)

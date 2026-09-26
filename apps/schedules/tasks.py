@@ -70,9 +70,10 @@ def reap_stale_runs():
     A run is left ``STARTED`` when its worker dies (OOM, SIGKILL, a
     reboot), and also when Django Q2 stops it at the timeout. Those
     would block its config forever, because ``has_active_run`` would
-    keep seeing it. Every runner sets ``started_at`` when it sets
-    ``STARTED``, so a ``STARTED`` run older than the task timeout (plus
-    ``REAP_MARGIN``) cannot still be running.
+    keep seeing it. ``apps.schedules.dispatch.claim_run`` sets
+    ``started_at`` when it sets the status of a run to ``STARTED``, so a
+    ``STARTED`` run older than the task timeout (plus ``REAP_MARGIN``)
+    cannot still be running.
 
     ``QUEUED`` runs are deliberately not reaped: they have no
     ``started_at`` to measure from, and a run can legitimately sit

@@ -1,11 +1,19 @@
-"""Creating and dispatching runs.
+"""Creating, dispatching and claiming runs.
 
 Every run, manual or scheduled, in any app, is created here and handed
-to a worker task that receives the run's ID.
+to a worker task that receives the run's ID. The worker claims the run
+here too.
 """
 
+import logging
+
 from django.db import transaction
+from django.utils import timezone
 from django_q.tasks import async_task
+
+from apps.commcare.models import RunBaseModel
+
+logger = logging.getLogger(__name__)
 
 
 def create_run(config, *, triggered_from_ui=False, triggered_by=None):
@@ -60,3 +68,43 @@ def create_run_and_dispatch(
         if run is None:
             return None
         return async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
+
+
+def claim_run(run_model, run_id):
+    """Return the run that a worker task should execute, marked STARTED.
+
+    Returns ``None`` if there is nothing to do.
+
+    If a task is stopped by a timeout, it records a failed result and is
+    never delivered again. But a task whose worker died (OOM, SIGKILL,
+    a reboot) does not record a result. Django Q2 delivers it again
+    after ``Q_CLUSTER['retry']`` seconds, indefinitely. So use the run's
+    status to determine what should happen when a task is delivered: If
+    a run's status is QUEUED, it is on its first delivery: Mark it
+    STARTED and execute it; Otherwise it is already under way or
+    finished.
+    """
+    try:
+        run = run_model.objects.select_related('config').get(id=run_id)
+    except run_model.DoesNotExist:
+        logger.warning(
+            '%s %s no longer exists, skipping.', run_model.__name__, run_id
+        )
+        return None
+
+    if run.status == RunBaseModel.Status.QUEUED:
+        return _start(run)
+    return None
+
+
+def _start(run):
+    """Mark ``run`` STARTED if it is still QUEUED. Return it, or ``None``."""
+    now = timezone.now()
+    started = type(run).objects.filter(
+        pk=run.pk, status=RunBaseModel.Status.QUEUED
+    ).update(status=RunBaseModel.Status.STARTED, started_at=now)
+    if not started:
+        return None
+    run.status = RunBaseModel.Status.STARTED
+    run.started_at = now
+    return run

@@ -16,9 +16,7 @@ class TestRunRefresh:
         result = run_refresh(_refresh_run())
 
         assert result.status == RefreshRun.Status.COMPLETED
-        assert result.started_at is not None
         assert result.completed_at is not None
-        assert result.completed_at > result.started_at
         assert 'All views refreshed successfully' in result.log
         assert len(result.view_results) == 2
         assert result.view_results['public.view1']['status'] == 'success'

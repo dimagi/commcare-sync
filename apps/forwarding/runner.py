@@ -19,10 +19,6 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
         f'{datetime.now()}: Starting forwarding for {fwd_config}',
     ]
 
-    fwd_run.status = ForwardingRun.Status.STARTED
-    fwd_run.started_at = timezone.now()
-    fwd_run.save()
-
     try:
         db_url = fwd_config.database.connection_string
         query = fwd_config.query

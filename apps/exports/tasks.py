@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from apps.schedules.dispatch import create_run_and_dispatch
+from apps.schedules.dispatch import claim_run, create_run_and_dispatch
 from apps.web.templatetags.dateformat_tags import readable_timedelta
 
 from .models import (
@@ -48,11 +48,9 @@ def run_all_exports_task(user_id=None):
 
 
 def run_export_task(export_run_id, start_over=False):
-    export_run = ExportRun.objects.select_related('config').get(
-        id=export_run_id
-    )
-    if export_run.status != ExportRun.Status.QUEUED:
-        return
+    export_run = claim_run(ExportRun, export_run_id)
+    if export_run is None:
+        return None
     export_run = run_export(export_run, start_over)
     return {
         'run_time': export_run.created_at.isoformat(),
@@ -64,9 +62,9 @@ def run_export_task(export_run_id, start_over=False):
 
 def run_multi_project_export_task(export_run_id, start_over=False):
     run_start = timezone.now()
-    export_run = MultiProjectExportRun.objects.select_related(
-        'config'
-    ).get(id=export_run_id)
+    export_run = claim_run(MultiProjectExportRun, export_run_id)
+    if export_run is None:
+        return None
     export_runs = run_multi_project_export(export_run, start_over)
     export_run = export_runs[-1] if export_runs else None
     if export_run:

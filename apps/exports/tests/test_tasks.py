@@ -20,6 +20,7 @@ from ..models import (
 from ..tasks import (
     run_all_exports_task,
     run_export_task,
+    run_multi_project_export_task,
 )
 
 
@@ -165,3 +166,39 @@ class TestExportTask:
             run_export_task(run.id)
 
         mock_run.assert_called_once_with(run, False)
+
+    @use(export_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = export_config()
+        run = ExportRun.objects.create(
+            config=config, status=ExportRun.Status.STARTED
+        )
+
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            run_export_task(run.id)
+
+        mock_run.assert_not_called()
+
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_export_task(999999) is None
+        assert 'no longer exists' in caplog.text
+
+
+class TestMultiProjectExportTask:
+    @use(multi_export_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = multi_export_config()
+        run = MultiProjectExportRun.objects.create(
+            config=config, status=MultiProjectExportRun.Status.STARTED
+        )
+
+        with patch('apps.exports.tasks.run_multi_project_export') as mock_run:
+            run_multi_project_export_task(run.id)
+
+        mock_run.assert_not_called()
+
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_multi_project_export_task(999999) is None
+        assert 'no longer exists' in caplog.text
