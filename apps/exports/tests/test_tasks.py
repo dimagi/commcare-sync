@@ -187,6 +187,24 @@ class TestExportTask:
 
         mock_run.assert_not_called()
 
+    @use(export_config)
+    def test_redelivery_after_a_dead_worker_performs_one_retry(self):
+        # The worker died, so Django Q2 delivers the same task, with the
+        # same run ID and arguments, after the reaper marked the run
+        # TIMEOUT.
+        config = export_config()
+        run = ExportRun.objects.create(
+            config=config, status=ExportRun.Status.TIMEOUT
+        )
+
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            mock_run.side_effect = lambda export_run, start_over: export_run
+            run_export_task(run.id, start_over=True)
+
+        retry = ExportRun.objects.get(retry_of=run)
+        assert retry.status == ExportRun.Status.STARTED
+        mock_run.assert_called_once_with(retry, True)
+
     @use('db')
     def test_missing_run_logs_and_returns(self, caplog):
         assert run_export_task(999999) is None
