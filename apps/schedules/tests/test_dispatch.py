@@ -81,11 +81,13 @@ class TestCreateRunAndDispatch:
         config = forwarding_config()
 
         task_id = create_run_and_dispatch(
-            config, 'some.task', triggered_from_ui=True
+            config, triggered_from_ui=True
         )
 
         assert task_id == 'task-id'
-        mock_async().assert_called_once_with('some.task', config.runs.get().id)
+        mock_async().assert_called_once_with(
+            'apps.forwarding.tasks.run_forwarding_task', config.runs.get().id
+        )
 
     def test_marks_the_run_as_ui_triggered(self):
         config = forwarding_config()
@@ -93,7 +95,6 @@ class TestCreateRunAndDispatch:
 
         create_run_and_dispatch(
             config,
-            'some.task',
             triggered_from_ui=True,
             triggered_by=triggering_user,
         )
@@ -107,13 +108,14 @@ class TestCreateRunAndDispatch:
 
         create_run_and_dispatch(
             config,
-            'some.task',
             triggered_from_ui=True,
             task_kwargs={'start_over': True},
         )
 
         mock_async().assert_called_once_with(
-            'some.task', config.runs.get().id, start_over=True
+            'apps.forwarding.tasks.run_forwarding_task',
+            config.runs.get().id,
+            start_over=True,
         )
 
     def test_enqueues_nothing_when_a_run_is_active(self):
@@ -123,7 +125,7 @@ class TestCreateRunAndDispatch:
         )
 
         task_id = create_run_and_dispatch(
-            config, 'some.task', triggered_from_ui=True
+            config, triggered_from_ui=True
         )
 
         assert task_id is None
@@ -136,7 +138,7 @@ class TestCreateRunAndDispatch:
 
         with pytest.raises(RuntimeError):
             create_run_and_dispatch(
-                config, 'some.task', triggered_from_ui=True
+                config, triggered_from_ui=True
             )
 
         assert config.runs.count() == 0
