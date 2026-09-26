@@ -21,6 +21,7 @@ from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
@@ -47,11 +48,7 @@ from .models import (
     MultiProjectExportConfig,
     MultiProjectExportRun,
 )
-from .tasks import (
-    run_all_exports_task,
-    run_export_task,
-    run_multi_project_export_task,
-)
+from .tasks import run_all_exports_task
 
 logger = logging.getLogger(__name__)
 
@@ -373,37 +370,17 @@ def multi_export_run_details(request, export_id, run_id):
 @login_required
 @require_POST
 def run_export(request, export_id):
-    return _run_export(
-        request,
-        export_id,
-        ExportConfig,
-        ExportRun,
-        run_export_task,
-    )
+    return _run_export(request, export_id, ExportConfig)
 
 
 @login_required
 @require_POST
 def run_multi_export(request, export_id):
-    return _run_export(
-        request,
-        export_id,
-        MultiProjectExportConfig,
-        MultiProjectExportRun,
-        run_multi_project_export_task,
-    )
+    return _run_export(request, export_id, MultiProjectExportConfig)
 
 
-def _run_export(
-    request,
-    export_id,
-    export_config_class,
-    export_run_class,
-    export_task,
-):
+def _run_export(request, export_id, export_config_class):
     export = get_object_or_404(export_config_class, id=export_id)
-    if export.has_active_run:
-        return run_response(request, task_id=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
@@ -411,16 +388,11 @@ def _run_export(
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    export_record = export_run_class.objects.create(
-        config=export,
-        config_version=export.latest_version,
+    task_id = create_run_and_dispatch(
+        export,
         triggered_from_ui=True,
         triggered_by=request.user,
-    )
-    task_id = async_task(
-        export_task,
-        export_record.id,
-        start_over=start_over,
+        task_kwargs={'start_over': start_over},
     )
     return run_response(request, task_id)
 

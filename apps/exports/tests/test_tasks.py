@@ -20,7 +20,6 @@ from ..models import (
 from ..tasks import (
     run_all_exports_task,
     run_export_task,
-    run_multi_project_export_task,
 )
 
 # Schedule kwargs that make a config "non-paused" — ScheduleMixin.is_paused
@@ -69,7 +68,7 @@ def multi_export_config():
 
 class TestRunAllExportsTask:
     @use(export_config, multi_export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_enqueues_one_run_per_config(self, mock_async):
         config = export_config()
         multi = multi_export_config()
@@ -82,19 +81,16 @@ class TestRunAllExportsTask:
         assert multi_runs.count() == 1
 
         mock_async.assert_any_call(
-            run_export_task,
-            runs.first().id,
-            start_over=False,
+            'apps.exports.tasks.run_export_task', runs.first().id
         )
         mock_async.assert_any_call(
-            run_multi_project_export_task,
+            'apps.exports.tasks.run_multi_project_export_task',
             multi_runs.first().id,
-            start_over=False,
         )
         assert mock_async.call_count == 2
 
     @use(export_config, regular_user)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_marks_ui_attribution(self, mock_async):
         config = export_config()
         user = regular_user()
@@ -106,7 +102,7 @@ class TestRunAllExportsTask:
         assert run.triggered_by == user
 
     @use(paused_export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_skips_paused_configs(self, mock_async):
         config = paused_export_config()
 
@@ -120,7 +116,7 @@ class TestRunAllExportsTask:
         ExportRun.Status.STARTED,
     ])
     @use(export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_skips_configs_with_active_runs(self, mock_async, status):
         config = export_config()
         # A run is already queued or in progress. "Run All" must not stack
@@ -138,7 +134,7 @@ class TestRunAllExportsTask:
         mock_async.assert_not_called()
 
     @use(export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_handles_unknown_user_id(self, mock_async):
         config = export_config()
         run_all_exports_task(user_id=999999)
