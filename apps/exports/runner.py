@@ -57,6 +57,7 @@ def _run_export_for_project(export_config, project, export_record, start_over):
     export_record.status = ExportRun.Status.STARTED
     export_record.started_at = timezone.now()
     export_record.save()
+    process = None
     try:
         # pipe both stdout and stderr to the same place https://stackoverflow.com/a/41172862/8207
         process = subprocess.Popen(
@@ -73,6 +74,12 @@ def _run_export_for_project(export_config, project, export_record, start_over):
     else:
         export_record.status = _process_status_to_status_field(result)
         export_record.log = '\n'.join(log_buffer)
+    finally:
+        # Django Q2's timeout raises TimeoutException, a SystemExit, which
+        # the except above doesn't catch. Don't leave commcare-export
+        # running against the database once the worker has gone.
+        if process is not None and process.poll() is None:
+            process.kill()
     export_record.completed_at = timezone.now()
     export_record.save()
     return export_record
