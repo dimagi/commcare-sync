@@ -16,10 +16,19 @@ from apps.commcare.models import RunBaseModel
 logger = logging.getLogger(__name__)
 
 
-def create_run(config, *, triggered_from_ui=False, triggered_by=None):
+def create_run(
+    config,
+    *,
+    triggered_from_ui=False,
+    triggered_by=None,
+    retry_of=None,
+    started=False,
+):
     """Create a run for ``config``, unless one is already active.
 
     Returns the run, or ``None`` if the config already has an active run.
+    A ``started`` run is created STARTED, for a caller that performs it
+    at once instead of dispatching it.
 
     The check and the insert share a transaction, so that two concurrent
     triggers can't both see no active run and both create one. The
@@ -30,10 +39,18 @@ def create_run(config, *, triggered_from_ui=False, triggered_by=None):
     with transaction.atomic():
         if config.has_active_run:
             return None
+        extra = {}
+        if started:
+            extra = {
+                'status': RunBaseModel.Status.STARTED,
+                'started_at': timezone.now(),
+            }
         return config.runs.create(
             config_version=config.latest_version,
             triggered_from_ui=triggered_from_ui,
             triggered_by=triggered_by,
+            retry_of=retry_of,
+            **extra,
         )
 
 
@@ -79,10 +96,17 @@ def claim_run(run_model, run_id):
     never delivered again. But a task whose worker died (OOM, SIGKILL,
     a reboot) does not record a result. Django Q2 delivers it again
     after ``Q_CLUSTER['retry']`` seconds, indefinitely. So use the run's
-    status to determine what should happen when a task is delivered: If
-    a run's status is QUEUED, it is on its first delivery: Mark it
-    STARTED and execute it; Otherwise it is already under way or
-    finished.
+    status to determine what should happen when a task is delivered:
+
+    * If a run's status is QUEUED, it is on its first delivery: Mark it
+      STARTED and execute it
+    * A run that ``reap_stale_runs`` marked TIMEOUT is retried once, as
+      a new run, created STARTED, and linked to the first attempt by
+      ``retry_of``. Only a run whose worker died gets here.
+    * Otherwise it is under way, finished, or already retried.
+
+    A re-delivery can arrive before its run has been reaped. It then
+    finds the run STARTED, and the retry is dropped.
     """
     try:
         run = run_model.objects.select_related('config').get(id=run_id)
@@ -94,6 +118,8 @@ def claim_run(run_model, run_id):
 
     if run.status == RunBaseModel.Status.QUEUED:
         return _start(run)
+    if run.status == RunBaseModel.Status.TIMEOUT and _can_retry(run):
+        return _retry(run)
     return None
 
 
@@ -108,3 +134,36 @@ def _start(run):
     run.status = RunBaseModel.Status.STARTED
     run.started_at = now
     return run
+
+
+def _retry(run):
+    """Create and return a STARTED retry of ``run``, or ``None``."""
+    run_model = type(run)
+    retry = create_run(
+        run.config,
+        triggered_from_ui=run.triggered_from_ui,
+        triggered_by=run.triggered_by,
+        retry_of=run,
+        started=True,
+    )
+    if retry is None:
+        logger.info(
+            '%s %s timed out, but its config already has an active run. '
+            'Not retrying.',
+            run_model.__name__, run.id,
+        )
+    else:
+        logger.warning(
+            '%s %s timed out. Retrying it as %s %s.',
+            run_model.__name__, run.id, run_model.__name__, retry.id,
+        )
+    return retry
+
+
+def _can_retry(run):
+    """Returns ``True`` if ``run`` is an original run that has not been
+    retried.
+    """
+    if run.retry_of_id is not None:
+        return False
+    return not type(run).objects.filter(retry_of=run).exists()

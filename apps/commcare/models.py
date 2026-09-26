@@ -63,6 +63,14 @@ class RunBaseModel(BaseModel):
         on_delete=models.SET_NULL,
     )
     log = models.TextField(null=True, blank=True)
+    retry_of = models.OneToOneField(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='retry',
+        help_text=_('The timed-out run that this run retries.'),
+    )
 
     class Meta:
         abstract = True

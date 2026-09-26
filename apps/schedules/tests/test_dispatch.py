@@ -191,7 +191,6 @@ class TestClaimRun:
         RunBaseModel.Status.COMPLETED,
         RunBaseModel.Status.FAILED,
         RunBaseModel.Status.SKIPPED,
-        RunBaseModel.Status.TIMEOUT,
     ])
     def test_redelivery_does_not_redo_the_work(self, status):
         run = ForwardingRun.objects.create(
@@ -200,3 +199,64 @@ class TestClaimRun:
 
         assert self._claim(run) is None
         assert ForwardingRun.objects.count() == 1
+
+    def test_timed_out_run_is_retried_as_a_new_run(self):
+        triggering_user = user()
+        run = ForwardingRun.objects.create(
+            config=forwarding_config(),
+            status=RunBaseModel.Status.TIMEOUT,
+            triggered_from_ui=True,
+            triggered_by=triggering_user,
+        )
+
+        retry = self._claim(run)
+
+        assert retry is not None
+        assert retry != run
+        assert retry.retry_of == run
+        # Performed at once by this delivery, so never left QUEUED.
+        assert retry.status == RunBaseModel.Status.STARTED
+        assert retry.started_at is not None
+        assert retry.config == run.config
+        assert retry.triggered_from_ui is True
+        assert retry.triggered_by == triggering_user
+
+    def test_timed_out_run_is_retried_only_once(self):
+        # Django Q2 keeps delivering a task whose worker was killed, with
+        # the same, original run ID. Only the first re-delivery retries.
+        run = ForwardingRun.objects.create(
+            config=forwarding_config(), status=RunBaseModel.Status.TIMEOUT
+        )
+        retry = self._claim(run)
+        ForwardingRun.objects.filter(pk=retry.pk).update(
+            status=RunBaseModel.Status.TIMEOUT
+        )
+
+        assert self._claim(run) is None
+        assert ForwardingRun.objects.count() == 2
+
+    def test_a_retry_is_never_retried(self):
+        config = forwarding_config()
+        original = ForwardingRun.objects.create(
+            config=config, status=RunBaseModel.Status.TIMEOUT
+        )
+        retry = ForwardingRun.objects.create(
+            config=config,
+            status=RunBaseModel.Status.TIMEOUT,
+            retry_of=original,
+        )
+
+        assert self._claim(retry) is None
+        assert ForwardingRun.objects.count() == 2
+
+    def test_timed_out_run_is_not_retried_while_another_run_is_active(self):
+        config = forwarding_config()
+        run = ForwardingRun.objects.create(
+            config=config, status=RunBaseModel.Status.TIMEOUT
+        )
+        ForwardingRun.objects.create(
+            config=config, status=RunBaseModel.Status.STARTED
+        )
+
+        assert self._claim(run) is None
+        assert ForwardingRun.objects.count() == 2
