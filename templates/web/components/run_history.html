@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load run_tags %}
 <section class="py-4 app-card" x-data="{ running: false, startOver: false }">
   <div
     class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2"
@@ -49,91 +50,26 @@
           id="status-filter-form"
           style="min-width: 160px;"
         >
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="status_filter"
-              value="queued"
-              id="filter-queued"
-              checked
-              hx-get="{{ run_history_url }}"
-              hx-target="#run-table"
-              hx-swap="outerHTML"
-              hx-include="#status-filter-form"
-            />
-            <label class="form-check-label" for="filter-queued"
-              >{% trans "Queued" %}</label
-            >
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="status_filter"
-              value="started"
-              id="filter-started"
-              checked
-              hx-get="{{ run_history_url }}"
-              hx-target="#run-table"
-              hx-swap="outerHTML"
-              hx-include="#status-filter-form"
-            />
-            <label class="form-check-label" for="filter-started"
-              >{% trans "Started" %}</label
-            >
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="status_filter"
-              value="completed"
-              id="filter-completed"
-              checked
-              hx-get="{{ run_history_url }}"
-              hx-target="#run-table"
-              hx-swap="outerHTML"
-              hx-include="#status-filter-form"
-            />
-            <label class="form-check-label" for="filter-completed"
-              >{% trans "Completed" %}</label
-            >
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="status_filter"
-              value="failed"
-              id="filter-failed"
-              checked
-              hx-get="{{ run_history_url }}"
-              hx-target="#run-table"
-              hx-swap="outerHTML"
-              hx-include="#status-filter-form"
-            />
-            <label class="form-check-label" for="filter-failed"
-              >{% trans "Failed" %}</label
-            >
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="status_filter"
-              value="skipped"
-              id="filter-skipped"
-              checked
-              hx-get="{{ run_history_url }}"
-              hx-target="#run-table"
-              hx-swap="outerHTML"
-              hx-include="#status-filter-form"
-            />
-            <label class="form-check-label" for="filter-skipped"
-              >{% trans "Skipped" %}</label
-            >
-          </div>
+          {% run_status_choices as status_choices %}
+          {% for value, label in status_choices %}
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="status_filter"
+                value="{{ value }}"
+                id="filter-{{ value }}"
+                checked
+                hx-get="{{ run_history_url }}"
+                hx-target="#run-table"
+                hx-swap="outerHTML"
+                hx-include="#status-filter-form"
+              />
+              <label class="form-check-label" for="filter-{{ value }}"
+                >{{ label }}</label
+              >
+            </div>
+          {% endfor %}
         </div>
       </div>
     </div>

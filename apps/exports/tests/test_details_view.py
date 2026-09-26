@@ -1,6 +1,7 @@
 from django.urls import reverse
 from unmagic import use
 
+from apps.commcare.models import RunBaseModel
 from apps.exports.tests.fixtures import export_config_db_fixture
 from tests.fixtures import authed_client, htmx_client
 
@@ -15,6 +16,19 @@ def test_export_details_smoke():
     content = response.content.decode()
     assert 'Schedule' in content
     assert 'Run History' in content
+
+
+@use(authed_client, export_config_db_fixture)
+def test_run_history_filters_on_every_run_status():
+    response = authed_client().get(reverse(
+        'exports:export_details',
+        args=[export_config_db_fixture().id],
+    ))
+    content = response.content.decode()
+    for status in RunBaseModel.Status.values:
+        assert f'id="filter-{status}"' in content
+    # MULTIPLE is an aggregate for multi-project parent runs, not a filter.
+    assert 'id="filter-multiple"' not in content
 
 
 class TestExportRunHistoryTableEndpoint:
