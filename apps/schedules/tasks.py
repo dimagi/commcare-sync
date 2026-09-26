@@ -6,10 +6,10 @@ enqueues a run for every config whose ``next_run_at`` has passed and
 advances the config's ``next_run_at``. This way overdue schedules catch
 up with exactly one run the next time the cluster is running.
 
-Advancing ``next_run_at`` is a *claim*: it is a conditional update
+Advancing ``next_run_at`` is a *reservation*: it is a conditional update
 guarded on the ``next_run_at`` this dispatcher observed, and only the
 dispatcher whose update actually matched a row goes on to enqueue the
-run. Claiming before enqueueing (rather than after) means a failure
+run. Reserving before enqueueing (rather than after) means a failure
 anywhere in the cycle costs at most a missed run, never a run repeated
 every minute until an operator intervenes.
 """
@@ -168,13 +168,13 @@ def _dispatch_due_config(config_model, config, now):
     """
     try:
         next_run = _advance_past(config, config.next_run_at, now)
-        # Claim the run by advancing next_run_at, conditional on it
+        # Reserve the slot by advancing next_run_at, conditional on it
         # still holding the value this dispatcher read. A concurrent
-        # dispatcher that already claimed it matches no row here.
-        claimed = config_model.objects.filter(
+        # dispatcher that already reserved it matches no row here.
+        reserved = config_model.objects.filter(
             pk=config.pk, next_run_at=config.next_run_at
         ).update(next_run_at=next_run)
-        if not claimed:
+        if not reserved:
             return False
         task_id = create_run_and_dispatch(config, triggered_from_ui=False)
     except Exception:
