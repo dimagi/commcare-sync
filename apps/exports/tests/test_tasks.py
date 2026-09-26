@@ -132,9 +132,26 @@ class TestRunAllExportsTask:
         run_all_exports_task(user_id=999999)
 
         run = ExportRun.objects.get(config=config)
+        # A user_id was supplied, so it's a UI trigger even though the user
+        # could not be resolved. triggered_by is None because the user is gone.
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()
+
+    @use(export_config)
+    @patch('apps.schedules.dispatch.async_task')
+    def test_cli_trigger_with_no_user_is_not_marked_ui_triggered(
+        self, mock_async
+    ):
+        # manage.py run_all_exports calls this with user_id=None. It must
+        # not be recorded as a UI trigger with no user behind it.
+        config = export_config()
+
+        run_all_exports_task()
+
+        run = ExportRun.objects.get(config=config)
+        assert run.triggered_from_ui is False
+        assert run.triggered_by is None
 
 
 class TestExportTask:

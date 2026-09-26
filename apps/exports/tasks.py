@@ -30,6 +30,10 @@ def run_all_exports_task(user_id=None):
                 user_id,
             )
 
+    # `user_id` is `None` when `run_all_exports_task` is called using
+    # the `run_all_exports` management command.
+    triggered_from_ui = user_id is not None
+
     # ``is_paused`` derives from schedule fields (has_schedule and
     # schedule_enabled), so the filter happens in Python for clarity.
     for config_model in (ExportConfig, MultiProjectExportConfig):
@@ -38,7 +42,7 @@ def run_all_exports_task(user_id=None):
                 continue
             create_run_and_dispatch(
                 config,
-                triggered_from_ui=True,
+                triggered_from_ui=triggered_from_ui,
                 triggered_by=user,
             )
 
