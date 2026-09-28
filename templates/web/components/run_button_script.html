@@ -15,6 +15,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!runButton) return;
 
+  function finish(success) {
+    progressBar.style.width = '100%';
+    progressBar.classList.add(success ? 'bg-success' : 'bg-danger');
+    progressMessage.textContent = success
+      ? '{% trans "Complete!" %}'
+      : '{% trans "Failed!" %}';
+    setTimeout(() => {
+      htmx.trigger('#run-table', 'refresh');
+      runButton.disabled = false;
+
+      // Reset Alpine state
+      const section = runButton.closest('section');
+      if (section && Alpine.$data(section)) {
+        Alpine.$data(section).running = false;
+      }
+    }, 1000);
+  }
+
+  function poll(taskId) {
+    const statusUrl =
+      '{% url "web:task_status" "TASK_ID" %}'.replace('TASK_ID', taskId);
+    fetch(statusUrl, { credentials: 'same-origin' })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.complete) {
+          progressMessage.textContent = '{% trans "Running..." %}';
+          setTimeout(() => poll(taskId), 2000);
+        } else {
+          const failed = !data.success
+            || (data.result && data.result.status === 'failed');
+          finish(!failed);
+        }
+      })
+      .catch(() => finish(false));
+  }
+
   runButton.addEventListener('click', function() {
     {% if include_start_over %}
     const startOver = document.getElementById('start-over-checkbox')?.checked || false;
@@ -32,40 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => response.text())
     .then(taskId => {
-      const taskUrl = '{% url "celery_progress:task_status" "TASK_ID" %}'.replace('TASK_ID', taskId);
-
       progressBar.classList.remove('bg-danger', 'bg-success');
       progressBar.style.width = '0%';
-
-      CeleryProgressBar.initProgressBar(taskUrl, {
-        onProgress: function() {
-          progressMessage.textContent = '{% trans "Running..." %}';
-        },
-        onSuccess: function() {
-          progressBar.style.width = '100%';
-          progressBar.classList.add('bg-success');
-          progressMessage.textContent = '{% trans "Complete!" %}';
-        },
-        onResult: function(resultElement, result) {
-          if (result.status === 'failed') {
-            progressBar.classList.add('bg-danger');
-            progressBar.style.width = '100%';
-            progressMessage.textContent = '{% trans "Failed!" %}';
-          }
-
-          // Trigger HTMX table refresh
-          setTimeout(() => {
-            htmx.trigger('#run-table', 'refresh');
-            runButton.disabled = false;
-
-            // Reset Alpine state
-            const section = runButton.closest('section');
-            if (section && Alpine.$data(section)) {
-              Alpine.$data(section).running = false;
-            }
-          }, 1000);
-        }
-      });
+      poll(taskId);
     })
     .catch(error => {
       console.error('Failed to start task:', error);

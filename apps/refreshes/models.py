@@ -14,8 +14,8 @@ from apps.schedules.mixin import ScheduleMixin
 class RefreshConfig(ScheduleMixin, BaseModel):
     """Configuration for scheduled materialized view refreshes."""
 
-    CELERY_TASK = 'apps.refreshes.tasks.run_scheduled_refresh_task'
-    PERIODIC_TASK_PREFIX = 'Refresh materialized views'
+    SCHEDULED_TASK = 'apps.refreshes.tasks.run_scheduled_refresh_task'
+    SCHEDULED_TASK_OPTIONS = {'timeout': 3660}
 
     name = models.CharField(max_length=100)
     database = models.ForeignKey(

@@ -65,6 +65,5 @@
   {% include 'forwarding/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
-  <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
   {% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id include_start_over=False %}
 {% endblock page_js %}

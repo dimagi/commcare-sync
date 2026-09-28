@@ -17,6 +17,9 @@ def run_multi_project_export(
     multi_export_run: MultiProjectExportRun,
     start_over: bool = False,
 ) -> list[MultiProjectPartialExportRun]:
+    """Execute a multi-project export run using commcare-export / the
+    data export tool.
+    """
     multi_export_config = multi_export_run.base_export_config
     multi_export_run.status = MultiProjectExportRun.Status.STARTED
     multi_export_run.started_at = timezone.now()
@@ -47,6 +50,7 @@ def run_export(
     export_run: ExportRun,
     start_over: bool = False,
 ) -> ExportRun:
+    """Execute an export run using commcare-export / the data export tool."""
     export_config = export_run.base_export_config
     return _run_export_for_project(
         export_config, export_config.project, export_run, start_over

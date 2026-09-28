@@ -16,6 +16,7 @@ class ExportConfigAdmin(VersionAdmin):
         'updated_at',
     ]
     list_filter = ['project', 'database', 'created_at', 'updated_at']
+    readonly_fields = ['next_run_at']
 
 
 @admin.register(models.ExportRun)
@@ -47,6 +48,7 @@ class MultiProjectExportConfigAdmin(VersionAdmin):
         'updated_at',
     ]
     list_filter = ['database', 'created_at', 'updated_at']
+    readonly_fields = ['next_run_at']
 
 
 @admin.register(models.MultiProjectExportRun)
