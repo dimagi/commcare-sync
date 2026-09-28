@@ -7,15 +7,9 @@ from unmagic import fixture, use
 from apps.forwarding.models import ForwardingConfig
 from apps.forwarding.tests.fixtures import destination
 from apps.refreshes.models import RefreshConfig
-from apps.schedules.mixin import ScheduleMixin
 from apps.schedules.tasks import run_due_schedules
+from apps.schedules.tests.consts import SCHEDULED
 from tests.fixtures import database
-
-INTERVAL_SCHEDULE = {
-    'schedule_type': ScheduleMixin.ScheduleType.INTERVAL,
-    'interval_value': 30,
-    'interval_unit': ScheduleMixin.IntervalUnit.MINUTES,
-}
 
 
 @fixture
@@ -26,7 +20,7 @@ def mock_async():
 
 def _make_due(model, overdue_by=timedelta(minutes=5), **overrides):
     """Create a config of ``model`` that came due ``overdue_by`` ago."""
-    defaults = {'name': f'Due {model.__name__}', **INTERVAL_SCHEDULE}
+    defaults = {'name': f'Due {model.__name__}', **SCHEDULED}
     defaults.update(overrides)
     cfg = model.objects.create(**defaults)
     # Back-date via the queryset so save() doesn't recompute next_run_at.

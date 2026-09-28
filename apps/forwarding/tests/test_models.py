@@ -9,7 +9,7 @@ from reversion.models import Version
 from unmagic import fixture, use
 
 from apps.db.models import Database
-from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.tests.consts import SCHEDULED
 from tests.fixtures import database
 
 from ..models import (
@@ -328,13 +328,6 @@ class TestForwardingDestination:
         assert dest.http_method == 'PUT'
 
 
-INTERVAL_SCHEDULE = {
-    'schedule_type': ScheduleMixin.ScheduleType.INTERVAL,
-    'interval_value': 30,
-    'interval_unit': ScheduleMixin.IntervalUnit.MINUTES,
-}
-
-
 @use('db', database, destination)
 class TestForwardingScheduling:
 
@@ -344,7 +337,7 @@ class TestForwardingScheduling:
             database=database(),
             destination=destination(),
             query='SELECT * FROM test',
-            **INTERVAL_SCHEDULE,
+            **SCHEDULED,
         )
         defaults.update(overrides)
         return ForwardingConfig.objects.create(**defaults)

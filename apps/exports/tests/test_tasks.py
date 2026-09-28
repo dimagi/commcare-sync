@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from unmagic import fixture, use
 
-from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.tests.consts import SCHEDULED
 from tests.fixtures import (
     commcare_account,
     commcare_project,
@@ -23,14 +23,6 @@ from ..tasks import (
     run_multi_project_export_task,
     run_scheduled_export_task,
 )
-
-# Schedule kwargs that make a config "non-paused" — ScheduleMixin.is_paused
-# is True unless the config has a schedule and schedule_enabled is True.
-SCHEDULED = {
-    'schedule_type': ScheduleMixin.ScheduleType.INTERVAL,
-    'interval_value': 30,
-    'interval_unit': ScheduleMixin.IntervalUnit.MINUTES,
-}
 
 
 @fixture
