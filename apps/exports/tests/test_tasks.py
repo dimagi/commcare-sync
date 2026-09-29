@@ -21,7 +21,6 @@ from ..tasks import (
     run_all_exports_task,
     run_export_task,
     run_multi_project_export_task,
-    run_scheduled_export_task,
 )
 
 
@@ -62,56 +61,47 @@ def multi_export_config():
 
 class TestRunAllExportsTask:
     @use(export_config, multi_export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_enqueues_one_run_per_config(self, mock_async):
         config = export_config()
         multi = multi_export_config()
 
         run_all_exports_task()
 
-        runs = ExportRun.objects.filter(base_export_config=config)
-        multi_runs = MultiProjectExportRun.objects.filter(
-            base_export_config=multi
-        )
+        runs = ExportRun.objects.filter(config=config)
+        multi_runs = MultiProjectExportRun.objects.filter(config=multi)
         assert runs.count() == 1
         assert multi_runs.count() == 1
 
         mock_async.assert_any_call(
-            run_export_task,
-            runs.first().id,
-            start_over=False,
-            q_options={},
+            'apps.exports.tasks.run_export_task', runs.first().id
         )
         mock_async.assert_any_call(
-            run_multi_project_export_task,
+            'apps.exports.tasks.run_multi_project_export_task',
             multi_runs.first().id,
-            start_over=False,
-            q_options={},
         )
         assert mock_async.call_count == 2
 
     @use(export_config, regular_user)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_marks_ui_attribution(self, mock_async):
         config = export_config()
         user = regular_user()
 
         run_all_exports_task(user_id=user.id)
 
-        run = ExportRun.objects.get(base_export_config=config)
+        run = ExportRun.objects.get(config=config)
         assert run.triggered_from_ui is True
         assert run.triggered_by == user
 
     @use(paused_export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_skips_paused_configs(self, mock_async):
         config = paused_export_config()
 
         run_all_exports_task()
 
-        assert not ExportRun.objects.filter(
-            base_export_config=config
-        ).exists()
+        assert not ExportRun.objects.filter(config=config).exists()
         mock_async.assert_not_called()
 
     @pytest.mark.parametrize('status', [
@@ -119,71 +109,114 @@ class TestRunAllExportsTask:
         ExportRun.Status.STARTED,
     ])
     @use(export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_skips_configs_with_active_runs(self, mock_async, status):
         config = export_config()
         # A run is already queued or in progress. "Run All" must not stack
         # another run on top, the same way the per-row "Run" button disables
         # itself for an active run.
         ExportRun.objects.create(
-            base_export_config=config,
+            config=config,
             triggered_from_ui=False,
             status=status,
         )
 
         run_all_exports_task()
 
-        assert ExportRun.objects.filter(
-            base_export_config=config
-        ).count() == 1
+        assert ExportRun.objects.filter(config=config).count() == 1
         mock_async.assert_not_called()
 
     @use(export_config)
-    @patch('apps.exports.tasks.async_task')
+    @patch('apps.schedules.dispatch.async_task')
     def test_handles_unknown_user_id(self, mock_async):
         config = export_config()
         run_all_exports_task(user_id=999999)
 
-        run = ExportRun.objects.get(base_export_config=config)
+        run = ExportRun.objects.get(config=config)
+        # A user_id was supplied, so it's a UI trigger even though the user
+        # could not be resolved. triggered_by is None because the user is gone.
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()
 
-
-class TestScheduledExportTask:
-
     @use(export_config)
-    @patch('apps.exports.tasks.async_task')
-    def test_forwards_scheduled_task_options_to_the_run(self, mock_async):
-        # The dispatcher applies SCHEDULED_TASK_OPTIONS to
-        # run_scheduled_export_task, which only creates a run and
-        # enqueues the work. Validate that the options are passed on to
-        # `async_task`, so that a timeout applies to the export.
+    @patch('apps.schedules.dispatch.async_task')
+    def test_cli_trigger_with_no_user_is_not_marked_ui_triggered(
+        self, mock_async
+    ):
+        # manage.py run_all_exports calls this with user_id=None. It must
+        # not be recorded as a UI trigger with no user behind it.
         config = export_config()
 
-        with patch.object(
-            ExportConfig, 'SCHEDULED_TASK_OPTIONS', {'timeout': 3660}
-        ):
-            run_scheduled_export_task(config.id)
+        run_all_exports_task()
 
-        run = ExportRun.objects.get(base_export_config=config)
-        mock_async.assert_called_once_with(
-            run_export_task,
-            run.id,
-            start_over=False,
-            q_options={'timeout': 3660},
+        run = ExportRun.objects.get(config=config)
+        assert run.triggered_from_ui is False
+        assert run.triggered_by is None
+
+
+class TestExportTask:
+    @use(export_config)
+    def test_run_export_task_defaults_start_over_to_false(self):
+        config = export_config()
+        run = ExportRun.objects.create(config=config)
+
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            mock_run.return_value = run
+            run_export_task(run.id)
+
+        mock_run.assert_called_once_with(run, False)
+
+    @use(export_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = export_config()
+        run = ExportRun.objects.create(
+            config=config, status=ExportRun.Status.STARTED
         )
 
-    @use(export_config)
-    @patch('apps.exports.tasks.async_task')
-    def test_does_not_hand_out_the_shared_options_dict(self, mock_async):
-        # A task that mutates its q_options must not corrupt the options
-        # every later run of this config is dispatched with.
-        config = export_config()
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            run_export_task(run.id)
 
-        with patch.object(
-            ExportConfig, 'SCHEDULED_TASK_OPTIONS', {'timeout': 3660}
-        ):
-            run_scheduled_export_task(config.id)
-            passed = mock_async.call_args.kwargs['q_options']
-            assert passed is not ExportConfig.SCHEDULED_TASK_OPTIONS
+        mock_run.assert_not_called()
+
+    @use(export_config)
+    def test_redelivery_after_a_dead_worker_performs_one_retry(self):
+        # The worker died, so Django Q2 delivers the same task, with the
+        # same run ID and arguments, after the reaper marked the run
+        # TIMEOUT.
+        config = export_config()
+        run = ExportRun.objects.create(
+            config=config, status=ExportRun.Status.TIMEOUT
+        )
+
+        with patch('apps.exports.tasks.run_export') as mock_run:
+            mock_run.side_effect = lambda export_run, start_over: export_run
+            run_export_task(run.id, start_over=True)
+
+        retry = ExportRun.objects.get(retry_of=run)
+        assert retry.status == ExportRun.Status.STARTED
+        mock_run.assert_called_once_with(retry, True)
+
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_export_task(999999) is None
+        assert 'no longer exists' in caplog.text
+
+
+class TestMultiProjectExportTask:
+    @use(multi_export_config)
+    def test_redelivered_task_does_not_redo_the_work(self):
+        config = multi_export_config()
+        run = MultiProjectExportRun.objects.create(
+            config=config, status=MultiProjectExportRun.Status.STARTED
+        )
+
+        with patch('apps.exports.tasks.run_multi_project_export') as mock_run:
+            run_multi_project_export_task(run.id)
+
+        mock_run.assert_not_called()
+
+    @use('db')
+    def test_missing_run_logs_and_returns(self, caplog):
+        assert run_multi_project_export_task(999999) is None
+        assert 'no longer exists' in caplog.text
