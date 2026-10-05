@@ -15,7 +15,7 @@ from django.test.utils import CaptureQueriesContext
 from unmagic import use
 
 from apps.forwarding.models import ForwardingConfig, ForwardingRun
-from apps.schedules.mixin import ScheduleMixin
+from apps.schedules.mixin import RUNS_PREFETCH_ATTR, ScheduleMixin
 from tests.fixtures import database
 
 from .fixtures import destination
@@ -316,7 +316,7 @@ class TestHasActiveRun:
     def test_has_active_run_by_status(self, status, expected):
         config = make_config(database(), destination())
         ForwardingRun.objects.create(
-            forwarding_config=config,
+            config=config,
             status=status,
         )
         assert config.has_active_run is expected
@@ -324,11 +324,38 @@ class TestHasActiveRun:
     def test_uses_prefetched_runs_without_db_query(self):
         config = make_config(database(), destination())
         run = ForwardingRun.objects.create(
-            forwarding_config=config,
+            config=config,
             status=ForwardingRun.Status.QUEUED,
         )
-        config._all_runs = [run]
+        setattr(config, RUNS_PREFETCH_ATTR, [run])
         with CaptureQueriesContext(connection) as ctx:
-            result = config.has_active_run
+            result = config.has_active_run_from_prefetch
         assert len(ctx) == 0
         assert result is True
+
+    def test_has_active_run_ignores_a_stale_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+        # A prefetch captured before the run existed must not be trusted
+        setattr(config, RUNS_PREFETCH_ATTR, [])
+
+        assert config.has_active_run is True
+
+    def test_has_active_run_from_prefetch_uses_the_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+        setattr(config, RUNS_PREFETCH_ATTR, [])
+
+        assert config.has_active_run_from_prefetch is False
+
+    def test_has_active_run_from_prefetch_falls_back_without_a_prefetch(self):
+        config = make_config(database(), destination())
+        ForwardingRun.objects.create(
+            config=config, status=ForwardingRun.Status.STARTED
+        )
+
+        assert config.has_active_run_from_prefetch is True

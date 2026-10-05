@@ -116,6 +116,10 @@ DATABASES = {
                 'PRAGMA busy_timeout=5000;'
                 'PRAGMA synchronous=NORMAL;'
             ),
+            # Take the write lock when a transaction begins, not at its
+            # first write. `create_run` (apps/schedules/dispatch.py)
+            # relies on this so two triggers can't both create an active
+            # run for one config.
             'transaction_mode': 'IMMEDIATE',
         },
     }
@@ -194,11 +198,18 @@ Q_CLUSTER = {
     'name': 'commcare_sync',
     'orm': 'default',
     'workers': 2,
-    'timeout': 6 * 60 * 60,  # kill a run after 6h
-    'retry': 8 * 60 * 60,  # retry if a worker dies without reporting back
-                           # (because OOM, SIGKILL, reboot, etc.)
-    'max_attempts': 2,  # one retry for interrupted runs, then give up
-    'ack_failures': True,  # a failed run is complete, not re-delivered
+
+    # Stop a task after 23h. Django Q2 raises `TimeoutException` in the
+    # task and records a failed result.
+    'timeout': 23 * 60 * 60,
+
+    # Deliver a task again if it has no result 24h after the cluster took
+    # it off the queue.
+    'retry': 24 * 60 * 60,
+
+    # A failed run is complete, not retried. That includes a run stopped
+    # by `timeout`.
+    'ack_failures': True,
     'catch_up': False,  # don't replay every missed minute of the dispatcher
     'label': 'Task queue',
 }

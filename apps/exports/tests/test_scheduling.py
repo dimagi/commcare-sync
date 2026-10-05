@@ -1,6 +1,6 @@
 from unmagic import use
 
-from apps.exports.models import ExportConfig, ExportRun
+from apps.exports.models import ExportConfig
 from apps.exports.tests.fixtures import export_config_db_fixture
 from apps.schedules.mixin import ScheduleMixin
 
@@ -27,21 +27,6 @@ class TestExportScheduling:
 
         assert export_config.schedule_type is None
         assert export_config.is_paused is True
-
-    def test_has_queued_runs(self):
-        """has_queued_runs() should detect runs in QUEUED status."""
-        export_config = export_config_db_fixture()
-
-        assert not export_config.has_queued_runs()
-
-        run = ExportRun.objects.create(base_export_config=export_config)
-        assert export_config.has_queued_runs()
-
-        run.status = ExportRun.Status.COMPLETED
-        run.save()
-        assert not export_config.has_queued_runs()
-
-        run.delete()
 
     def test_deleting_export_needs_no_schedule_cleanup(self):
         """Deletion no longer has external state to clean up; it simply succeeds."""

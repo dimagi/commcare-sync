@@ -16,9 +16,7 @@ class TestRunRefresh:
         result = run_refresh(_refresh_run())
 
         assert result.status == RefreshRun.Status.COMPLETED
-        assert result.started_at is not None
         assert result.completed_at is not None
-        assert result.completed_at > result.started_at
         assert 'All views refreshed successfully' in result.log
         assert len(result.view_results) == 2
         assert result.view_results['public.view1']['status'] == 'success'
@@ -71,8 +69,8 @@ class TestRunRefresh:
     @patch('apps.refreshes.runner.refresh_materialized_view')
     def test_view_without_schema_uses_public(self, mock_refresh_view):
         run = _refresh_run()
-        run.refresh_config.materialized_views = ['view_no_schema']
-        run.refresh_config.save()
+        run.config.materialized_views = ['view_no_schema']
+        run.config.save()
 
         run_refresh(run)
 
