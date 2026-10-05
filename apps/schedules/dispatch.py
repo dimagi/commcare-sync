@@ -1,8 +1,4 @@
-"""Creating, dispatching and claiming runs.
-
-Every run, manual or scheduled, in any app, is created here and handed
-to a worker task that receives the run's ID. The worker claims the run
-here too.
+"""Handles creating, dispatching and claiming runs.
 """
 
 import logging

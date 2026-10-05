@@ -57,10 +57,7 @@ RUN_MODELS = [
 ]
 
 
-# Added to the task timeout when computing the reaper's cutoff. A run's
-# started_at is only set once a worker has started its task, so by the time
-# the task timeout has passed, Django Q2 has already stopped it. The margin
-# is a safety buffer on top of that.
+# Added to the task timeout when computing the reaper's cutoff.
 REAP_MARGIN = timedelta(seconds=60)
 
 

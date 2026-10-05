@@ -134,7 +134,8 @@ class TestRunAllExportsTask:
 
         run = ExportRun.objects.get(config=config)
         # A user_id was supplied, so it's a UI trigger even though the user
-        # could not be resolved. triggered_by is None because the user is gone.
+        # could not be resolved. triggered_by is None because the user
+        # doesn't exist.
         assert run.triggered_from_ui is True
         assert run.triggered_by is None
         mock_async.assert_called_once()

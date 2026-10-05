@@ -200,30 +200,11 @@ Q_CLUSTER = {
     'workers': 2,
 
     # Stop a task after 23h. Django Q2 raises `TimeoutException` in the
-    # task and records a failed result. With the `ack_failures`
-    # setting (below) the task is never delivered again: A run that
-    # took too long would likely take too long again. The run is left
-    # STARTED until `reap_stale_runs` (apps/schedules/tasks.py) marks
-    # it TIMEOUT.
-    #
-    # This is the ceiling on how long any single run may take, and it is
-    # deliberately generous. First-time exports of very large projects
-    # can take longer than this. Those are expected to be run manually
-    # using the CommCare Data Export Tool (commcare-export) instead.
+    # task and records a failed result.
     'timeout': 23 * 60 * 60,
 
     # Deliver a task again if it has no result 24h after the cluster took
-    # it off the queue. Only a worker that died -- OOM, SIGKILL, a reboot
-    # -- leaves a task with no result, and that is given one more try.
-    # Django Q2 would deliver it every 24h indefinitely, so `claim_run`
-    # (apps/schedules/dispatch.py) retries its run once, after the reaper
-    # has marked it TIMEOUT, and ignores any deliveries after that.
-    #
-    # `retry` must stay above `timeout`, but that doesn't guarantee that
-    # a task is not redelivered while the first worker is still
-    # running: The retry clock starts when the cluster takes the task
-    # off the queue, and the timeout clock starts when a worker picks
-    # it up.
+    # it off the queue.
     'retry': 24 * 60 * 60,
 
     # A failed run is complete, not retried. That includes a run stopped

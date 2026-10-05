@@ -214,7 +214,6 @@ class TestClaimRun:
         assert retry is not None
         assert retry != run
         assert retry.retry_of == run
-        # Performed at once by this delivery, so never left QUEUED.
         assert retry.status == RunBaseModel.Status.STARTED
         assert retry.started_at is not None
         assert retry.config == run.config
