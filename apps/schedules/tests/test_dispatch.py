@@ -110,13 +110,10 @@ class TestCreateRunAndDispatch:
 @use(database, destination, forwarding_config)
 class TestClaimRun:
 
-    def _claim(self, run):
-        return claim_run(ForwardingRun, run.id)
-
     def test_first_delivery_claims_the_queued_run(self):
         run = ForwardingRun.objects.create(config=forwarding_config())
 
-        claimed = self._claim(run)
+        claimed = claim_run(ForwardingRun, run.id)
 
         assert claimed == run
         assert claimed.status == RunBaseModel.Status.STARTED
@@ -155,7 +152,7 @@ class TestClaimRun:
             config=forwarding_config(), status=status
         )
 
-        assert self._claim(run) is None
+        assert claim_run(ForwardingRun, run.id) is None
         assert ForwardingRun.objects.count() == 1
 
     def test_timed_out_run_is_retried_as_a_new_run(self):
@@ -167,7 +164,7 @@ class TestClaimRun:
             triggered_by=triggering_user,
         )
 
-        retry = self._claim(run)
+        retry = claim_run(ForwardingRun, run.id)
 
         assert retry is not None
         assert retry != run
@@ -184,12 +181,12 @@ class TestClaimRun:
         run = ForwardingRun.objects.create(
             config=forwarding_config(), status=RunBaseModel.Status.TIMEOUT
         )
-        retry = self._claim(run)
+        retry = claim_run(ForwardingRun, run.id)
         ForwardingRun.objects.filter(pk=retry.pk).update(
             status=RunBaseModel.Status.TIMEOUT
         )
 
-        assert self._claim(run) is None
+        assert claim_run(ForwardingRun, run.id) is None
         assert ForwardingRun.objects.count() == 2
 
     def test_a_retry_is_never_retried(self):
@@ -203,7 +200,7 @@ class TestClaimRun:
             retry_of=original,
         )
 
-        assert self._claim(retry) is None
+        assert claim_run(ForwardingRun, retry.id) is None
         assert ForwardingRun.objects.count() == 2
 
     def test_timed_out_run_is_not_retried_while_another_run_is_active(self):
@@ -215,5 +212,5 @@ class TestClaimRun:
             config=config, status=RunBaseModel.Status.STARTED
         )
 
-        assert self._claim(run) is None
+        assert claim_run(ForwardingRun, run.id) is None
         assert ForwardingRun.objects.count() == 2
