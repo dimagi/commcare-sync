@@ -86,6 +86,12 @@ urlpatterns = [
         views.multi_run_log,
         name='multi_run_log',
     ),
+    path(r'runs/<int:run_id>/status/', views.run_status, name='run_status'),
+    path(
+        r'runs/multi-project/<int:run_id>/status/',
+        views.multi_run_status,
+        name='multi_run_status',
+    ),
     path(
         r'download/commcare-export-log/',
         views.download_commcare_export_log,

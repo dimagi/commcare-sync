@@ -58,5 +58,5 @@
   {% include 'refreshes/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
-  {% include 'web/components/run_button_script.html' with run_url_name='refreshes:run_refresh' object_id=config.id progress_message='Running Refresh...' include_start_over=False %}
+  {% include 'web/components/run_button_script.html' with run_url_name='refreshes:run_refresh' object_id=config.id include_start_over=False %}
 {% endblock page_js %}
