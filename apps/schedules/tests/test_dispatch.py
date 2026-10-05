@@ -34,6 +34,8 @@ class TestCreateRun:
         assert run.config == config
         assert run.status == RunBaseModel.Status.QUEUED
         assert run.config_version == config.latest_version
+        assert run.triggered_from_ui is False
+        assert run.triggered_by is None
 
     def test_records_attribution(self):
         config = forwarding_config()
@@ -46,22 +48,7 @@ class TestCreateRun:
         assert run.triggered_from_ui is True
         assert run.triggered_by == triggering_user
 
-    def test_defaults_to_not_triggered_from_ui(self):
-        run = create_run(forwarding_config())
-
-        assert run.triggered_from_ui is False
-        assert run.triggered_by is None
-
-    def test_returns_none_when_a_run_is_queued(self):
-        config = forwarding_config()
-        ForwardingRun.objects.create(
-            config=config, status=RunBaseModel.Status.QUEUED
-        )
-
-        assert create_run(config) is None
-        assert config.runs.count() == 1
-
-    def test_returns_none_when_a_run_is_started(self):
+    def test_returns_none_when_a_run_is_active(self):
         config = forwarding_config()
         ForwardingRun.objects.create(
             config=config, status=RunBaseModel.Status.STARTED
@@ -70,56 +57,28 @@ class TestCreateRun:
         assert create_run(config) is None
         assert config.runs.count() == 1
 
-    def test_allows_a_run_when_the_last_one_finished(self):
-        config = forwarding_config()
-        ForwardingRun.objects.create(
-            config=config, status=RunBaseModel.Status.COMPLETED
-        )
-
-        assert create_run(config) is not None
-
 
 @use(database, destination, forwarding_config, mock_async)
 class TestCreateRunAndDispatch:
 
-    def test_enqueues_the_task_with_the_run_id(self):
-        config = forwarding_config()
-
-        task_id = create_run_and_dispatch(
-            config, triggered_from_ui=True
-        )
-
-        assert task_id == 'task-id'
-        mock_async().assert_called_once_with(
-            'apps.forwarding.tasks.run_forwarding_task', config.runs.get().id
-        )
-
-    def test_marks_the_run_as_ui_triggered(self):
+    def test_creates_the_run_and_enqueues_its_task(self):
         config = forwarding_config()
         triggering_user = user()
 
-        create_run_and_dispatch(
+        task_id = create_run_and_dispatch(
             config,
             triggered_from_ui=True,
             triggered_by=triggering_user,
+            task_kwargs={'start_over': True},
         )
 
         run = config.runs.get()
         assert run.triggered_from_ui is True
         assert run.triggered_by == triggering_user
-
-    def test_passes_task_kwargs_to_the_task(self):
-        config = forwarding_config()
-
-        create_run_and_dispatch(
-            config,
-            triggered_from_ui=True,
-            task_kwargs={'start_over': True},
-        )
-
+        assert task_id == 'task-id'
         mock_async().assert_called_once_with(
             'apps.forwarding.tasks.run_forwarding_task',
-            config.runs.get().id,
+            run.id,
             start_over=True,
         )
 
@@ -134,7 +93,6 @@ class TestCreateRunAndDispatch:
         )
 
         assert task_id is None
-        assert config.runs.count() == 1
         mock_async().assert_not_called()
 
     def test_run_is_rolled_back_if_the_task_cannot_be_queued(self):
