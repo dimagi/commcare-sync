@@ -95,9 +95,11 @@ def claim_run(run_model, run_id):
 
     * If a run's status is QUEUED, it is on its first delivery: Mark it
       STARTED and execute it
-    * A run that ``reap_stale_runs`` marked TIMEOUT is retried once, as
+    * A run that ``reap_stale_runs`` marked INTERRUPTED is retried once, as
       a new run, created STARTED, and linked to the first attempt by
-      ``retry_of``. Only a run whose worker died gets here.
+      ``retry_of``. Only a run whose worker died gets here: a run
+      stopped at the time limit records a failed result and is never
+      delivered again.
     * Otherwise it is under way, finished, or already retried.
 
     A re-delivery can arrive before its run has been reaped. It then
@@ -113,7 +115,7 @@ def claim_run(run_model, run_id):
 
     if run.status == RunBaseModel.Status.QUEUED:
         return _start(run)
-    if run.status == RunBaseModel.Status.TIMEOUT and _can_retry(run):
+    if run.status == RunBaseModel.Status.INTERRUPTED and _can_retry(run):
         return _retry(run)
     return None
 
@@ -143,13 +145,13 @@ def _retry(run):
     )
     if retry is None:
         logger.info(
-            '%s %s timed out, but its config already has an active run. '
-            'Not retrying.',
+            '%s %s was interrupted, but its config already has an active '
+            'run. Not retrying.',
             run_model.__name__, run.id,
         )
     else:
         logger.warning(
-            '%s %s timed out. Retrying it as %s %s.',
+            '%s %s was interrupted. Retrying it as %s %s.',
             run_model.__name__, run.id, run_model.__name__, retry.id,
         )
     return retry

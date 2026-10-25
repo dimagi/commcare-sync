@@ -48,11 +48,11 @@ class TestExportRunStatus:
         assert body['status'] == 'failed'
         assert body['complete'] is True
 
-    def test_timeout_and_skipped_are_complete_but_not_failures(self):
-        # Both arrive out of band -- TIMEOUT from reap_stale_runs,
+    def test_interrupted_and_skipped_are_complete_but_not_failures(self):
+        # Both arrive out of band -- INTERRUPTED from reap_stale_runs,
         # SKIPPED from clear_queued_runs -- and neither is a failure.
         for status, label in [
-            (ExportRun.Status.TIMEOUT, 'Timed out'),
+            (ExportRun.Status.INTERRUPTED, 'Interrupted'),
             (ExportRun.Status.SKIPPED, 'Skipped'),
         ]:
             body = authed_client().get(self._run(status).status_url).json()

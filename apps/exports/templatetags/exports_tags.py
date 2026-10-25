@@ -24,7 +24,7 @@ def to_status_icon(export_status):
         ExportRunBase.Status.MULTIPLE: 'text-warning',
         ExportRunBase.Status.QUEUED: 'text-muted',
         ExportRunBase.Status.SKIPPED: 'text-muted',
-        ExportRunBase.Status.TIMEOUT: 'text-warning',
+        ExportRunBase.Status.INTERRUPTED: 'text-warning',
     }
     icons = {
         ExportRunBase.Status.COMPLETED: 'fa-circle-check',
@@ -33,7 +33,7 @@ def to_status_icon(export_status):
         ExportRunBase.Status.MULTIPLE: 'fa-triangle-exclamation',
         ExportRunBase.Status.QUEUED: 'fa-ellipsis',
         ExportRunBase.Status.SKIPPED: 'fa-ban',
-        ExportRunBase.Status.TIMEOUT: 'fa-clock',
+        ExportRunBase.Status.INTERRUPTED: 'fa-circle-stop',
     }
     return mark_safe(
         '<i'

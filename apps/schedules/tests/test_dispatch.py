@@ -172,11 +172,11 @@ class TestClaimRun:
         assert claim_run(ForwardingRun, run.id) is None
         assert ForwardingRun.objects.count() == 1
 
-    def test_timed_out_run_is_retried_as_a_new_run(self):
+    def test_interrupted_run_is_retried_as_a_new_run(self):
         triggering_user = user()
         run = ForwardingRun.objects.create(
             config=forwarding_config(),
-            status=RunBaseModel.Status.TIMEOUT,
+            status=RunBaseModel.Status.INTERRUPTED,
             triggered_from_ui=True,
             triggered_by=triggering_user,
         )
@@ -192,15 +192,15 @@ class TestClaimRun:
         assert retry.triggered_from_ui is True
         assert retry.triggered_by == triggering_user
 
-    def test_timed_out_run_is_retried_only_once(self):
+    def test_interrupted_run_is_retried_only_once(self):
         # Django Q2 keeps delivering a task whose worker was killed, with
         # the same, original run ID. Only the first re-delivery retries.
         run = ForwardingRun.objects.create(
-            config=forwarding_config(), status=RunBaseModel.Status.TIMEOUT
+            config=forwarding_config(), status=RunBaseModel.Status.INTERRUPTED
         )
         retry = claim_run(ForwardingRun, run.id)
         ForwardingRun.objects.filter(pk=retry.pk).update(
-            status=RunBaseModel.Status.TIMEOUT
+            status=RunBaseModel.Status.INTERRUPTED
         )
 
         assert claim_run(ForwardingRun, run.id) is None
@@ -209,21 +209,21 @@ class TestClaimRun:
     def test_a_retry_is_never_retried(self):
         config = forwarding_config()
         original = ForwardingRun.objects.create(
-            config=config, status=RunBaseModel.Status.TIMEOUT
+            config=config, status=RunBaseModel.Status.INTERRUPTED
         )
         retry = ForwardingRun.objects.create(
             config=config,
-            status=RunBaseModel.Status.TIMEOUT,
+            status=RunBaseModel.Status.INTERRUPTED,
             retry_of=original,
         )
 
         assert claim_run(ForwardingRun, retry.id) is None
         assert ForwardingRun.objects.count() == 2
 
-    def test_timed_out_run_is_not_retried_while_another_run_is_active(self):
+    def test_interrupted_run_is_not_retried_while_another_run_is_active(self):
         config = forwarding_config()
         run = ForwardingRun.objects.create(
-            config=config, status=RunBaseModel.Status.TIMEOUT
+            config=config, status=RunBaseModel.Status.INTERRUPTED
         )
         ForwardingRun.objects.create(
             config=config, status=RunBaseModel.Status.STARTED

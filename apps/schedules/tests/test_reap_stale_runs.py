@@ -65,7 +65,7 @@ class TestReapStaleRuns:
         assert reap_stale_runs() == 1
 
         run.refresh_from_db()
-        assert run.status == RunBaseModel.Status.TIMEOUT
+        assert run.status == RunBaseModel.Status.INTERRUPTED
         assert run.completed_at is not None
         assert 'This run did not finish.' in run.log
         assert run.config.has_active_run is False
@@ -79,7 +79,7 @@ class TestReapStaleRuns:
         assert reap_stale_runs() == 1
 
         run.refresh_from_db()
-        assert run.status == RunBaseModel.Status.TIMEOUT
+        assert run.status == RunBaseModel.Status.INTERRUPTED
         assert run.completed_at is not None
         assert 'This run did not finish.' in run.log
 
@@ -126,7 +126,7 @@ class TestReapStaleRuns:
         run_due_schedules()
 
         run.refresh_from_db()
-        assert run.status == RunBaseModel.Status.TIMEOUT
+        assert run.status == RunBaseModel.Status.INTERRUPTED
 
 
 def test_run_models_lists_every_concrete_run_model():

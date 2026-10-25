@@ -35,7 +35,7 @@ class TestForwardingRunStatus:
 
     def test_timeout_and_skipped_are_complete(self):
         for status in [
-            ForwardingRun.Status.TIMEOUT,
+            ForwardingRun.Status.INTERRUPTED,
             ForwardingRun.Status.SKIPPED,
         ]:
             body = authed_client().get(self._run(status).status_url).json()

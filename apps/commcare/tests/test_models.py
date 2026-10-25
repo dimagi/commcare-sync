@@ -218,8 +218,8 @@ class TestRunBaseModelHasLog:
         assert ForwardingRun(status=ForwardingRun.Status.FAILED).has_log is True
 
 
-def test_timed_out_run_has_a_log():
-    run = ForwardingRun(status=RunBaseModel.Status.TIMEOUT)
+def test_interrupted_run_has_a_log():
+    run = ForwardingRun(status=RunBaseModel.Status.INTERRUPTED)
     assert run.has_log is True
 
 
@@ -240,7 +240,7 @@ class TestIsTerminal:
             RunBaseModel.Status.COMPLETED,
             RunBaseModel.Status.FAILED,
             RunBaseModel.Status.SKIPPED,
-            RunBaseModel.Status.TIMEOUT,
+            RunBaseModel.Status.INTERRUPTED,
         ]:
             assert ForwardingRun(status=status).is_terminal
 
@@ -253,3 +253,8 @@ class TestIsTerminal:
     def test_an_unknown_status_is_terminal(self):
         # Terminal-by-default: a status added later must not poll forever.
         assert ExportRun(status='invented-later').is_terminal
+
+
+def test_interrupted_status_label():
+    assert RunBaseModel.Status.INTERRUPTED.label == 'Interrupted'
+    assert ExportRunBase.Status.INTERRUPTED.label == 'Interrupted'

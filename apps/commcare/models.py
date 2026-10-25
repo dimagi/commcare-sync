@@ -30,19 +30,19 @@ class RunBaseModel(BaseModel):
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
-        TIMEOUT = 'timeout', _('Timed out')
+        INTERRUPTED = 'interrupted', _('Interrupted')
 
     # Queued or under way. A config with an active run gets no other run.
     ACTIVE_STATUSES = frozenset({Status.QUEUED, Status.STARTED})
     # Finished without succeeding.
-    FAILED_STATUSES = frozenset({Status.FAILED, Status.TIMEOUT})
+    FAILED_STATUSES = frozenset({Status.FAILED, Status.INTERRUPTED})
     # Finished with a log to show.
     LOGGED_STATUSES = frozenset(
-        {Status.COMPLETED, Status.FAILED, Status.TIMEOUT}
+        {Status.COMPLETED, Status.FAILED, Status.INTERRUPTED}
     )
 
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         default=Status.QUEUED,
         choices=Status.choices,
     )

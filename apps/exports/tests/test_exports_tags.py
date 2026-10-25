@@ -24,7 +24,7 @@ def test_doctests():
         ),
         (ExportRunBase.Status.QUEUED, 'fa-ellipsis', 'text-muted'),
         (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-muted'),
-        (ExportRunBase.Status.TIMEOUT, 'fa-clock', 'text-warning'),
+        (ExportRunBase.Status.INTERRUPTED, 'fa-circle-stop', 'text-warning'),
 
         # An unmapped status renders 'fa-solid None None' rather than raising.
         ('unknown_status', 'None', 'None'),

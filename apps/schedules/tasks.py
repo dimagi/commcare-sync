@@ -62,7 +62,7 @@ REAP_MARGIN = timedelta(seconds=60)
 
 
 def reap_stale_runs():
-    """Mark runs whose worker was killed or timed out as ``TIMEOUT``.
+    """Mark runs whose worker was killed or timed out as ``INTERRUPTED``.
 
     A run is left ``STARTED`` when its worker dies (OOM, SIGKILL, a
     reboot), and also when Django Q2 stops it at the timeout. Those
@@ -88,15 +88,15 @@ def reap_stale_runs():
             status=RunBaseModel.Status.STARTED,
             started_at__lt=cutoff,
         ).update(
-            status=RunBaseModel.Status.TIMEOUT,
+            status=RunBaseModel.Status.INTERRUPTED,
             completed_at=now,
             # ``log`` is nullable and Concat propagates NULL, so an
             # unlogged run would otherwise lose the note entirely.
             log=Concat(
                 Coalesce(F('log'), Value('')),
                 Value(
-                    '\n[This run did not finish. It exceeded the time '
-                    'limit, or its worker stopped unexpectedly.]\n'
+                    '\n[This run did not finish. Its worker stopped '
+                    'unexpectedly, or it exceeded the time limit.]\n'
                 ),
             ),
         )

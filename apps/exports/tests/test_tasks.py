@@ -184,10 +184,10 @@ class TestExportTask:
     def test_redelivery_after_a_dead_worker_performs_one_retry(self):
         # The worker died, so Django Q2 delivers the same task, with the
         # same run ID and arguments, after the reaper marked the run
-        # TIMEOUT.
+        # INTERRUPTED.
         config = export_config()
         run = ExportRun.objects.create(
-            config=config, status=ExportRun.Status.TIMEOUT
+            config=config, status=ExportRun.Status.INTERRUPTED
         )
 
         with patch('apps.exports.tasks.run_export') as mock_run:

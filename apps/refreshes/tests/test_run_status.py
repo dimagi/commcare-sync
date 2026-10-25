@@ -32,7 +32,7 @@ class TestRefreshRunStatus:
         }
 
     def test_timeout_and_skipped_are_complete(self):
-        for status in [RefreshRun.Status.TIMEOUT, RefreshRun.Status.SKIPPED]:
+        for status in [RefreshRun.Status.INTERRUPTED, RefreshRun.Status.SKIPPED]:
             body = authed_client().get(self._run(status).status_url).json()
             assert body['complete'] is True
 

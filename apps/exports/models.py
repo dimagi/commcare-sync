@@ -133,11 +133,11 @@ class ExportRunBase(RunBaseModel):
         COMPLETED = 'completed', _('Completed')
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
-        TIMEOUT = 'timeout', _('Timed out')
+        INTERRUPTED = 'interrupted', _('Interrupted')
         MULTIPLE = 'multiple', _('Multiple results')
 
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         default=Status.QUEUED,
         choices=Status.choices,
     )

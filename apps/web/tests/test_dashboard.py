@@ -150,7 +150,7 @@ class TestExportStatistics:
         )
         ExportRun.objects.create(
             config=export_config(),
-            status=ExportRun.Status.TIMEOUT,
+            status=ExportRun.Status.INTERRUPTED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -279,7 +279,7 @@ class TestRefreshStatistics:
         )
         RefreshRun.objects.create(
             config=refresh_config(),
-            status=RefreshRun.Status.TIMEOUT,
+            status=RefreshRun.Status.INTERRUPTED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
@@ -385,7 +385,7 @@ class TestForwardingStatistics:
         )
         ForwardingRun.objects.create(
             config=forwarding_config(),
-            status=ForwardingRun.Status.TIMEOUT,
+            status=ForwardingRun.Status.INTERRUPTED,
             created_at=timezone.now() - timedelta(hours=2),
         )
 
