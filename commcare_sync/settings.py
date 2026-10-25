@@ -4,6 +4,9 @@ Django settings for CommCare Data Pipeline
 import json
 import os
 from datetime import timedelta
+from pathlib import Path
+
+from commcare_sync.launcher.env import DATA_DIR_ENV_VAR
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -246,7 +249,15 @@ GOOGLE_ANALYTICS_ID = ''
 DASHBOARD_STATS_PERIOD = timedelta(hours=24)
 
 
-try:
-    from .settings_local import *  # noqa
-except ImportError:
-    pass
+if os.environ.get(DATA_DIR_ENV_VAR):
+    # Run from a data directory; the overlay's docstring gives the precedence.
+    from commcare_sync.launcher.settings_overlay import apply_launcher_overlay
+
+    apply_launcher_overlay(
+        Path(os.environ[DATA_DIR_ENV_VAR]), globals(), os.environ
+    )
+else:
+    try:
+        from .settings_local import *  # noqa
+    except ImportError:
+        pass
