@@ -19,3 +19,9 @@ logs/
 
 # Tools
 .playwright-mcp/
+
+# PyInstaller
+build/
+dist/
+spike-output/
+commcare_export.log

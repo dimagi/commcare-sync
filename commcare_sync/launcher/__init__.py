@@ -181,6 +181,9 @@ def spawn_qcluster() -> subprocess.Popen:
     isolates the launcher from its startup and shutdown quirks (and from
     ``spawn`` semantics on Windows and in a frozen build).
     """
+    if getattr(sys, 'frozen', False):
+        # SPIKE: the bundle has no `-m`; sys.executable is the bundle itself.
+        return subprocess.Popen([sys.executable, '--run-qcluster'])
     return subprocess.Popen(
         [sys.executable, '-m', 'commcare_sync.launcher', '--run-qcluster'],
     )
@@ -306,20 +309,43 @@ class ClusterSupervisor:
             self._thread.join(timeout=self._poll_interval * 4)
 
     def _terminate(self, process: subprocess.Popen) -> None:
-        """SIGTERM a still-running child, SIGKILLing it if it hangs."""
+        """Terminate the child and all its descendants, killing stragglers.
+
+        SPIKE: on Windows ``terminate()`` kills only the named process, so
+        the Django-Q2 workers (and any commcare-export they started) would
+        survive it. Collect the whole tree first, then terminate, wait, and
+        kill whatever is left.
+        """
         if process.poll() is not None:
             return
+        import psutil
+
         logger.info('Stopping task cluster (pid %s)', process.pid)
-        process.terminate()
         try:
-            process.wait(timeout=self._stop_timeout)
-        except subprocess.TimeoutExpired:
+            parent = psutil.Process(process.pid)
+            tree = parent.children(recursive=True) + [parent]
+        except psutil.NoSuchProcess:
+            return
+        logger.info('Process tree to stop: %s', [p.pid for p in tree])
+        for proc in tree:
+            try:
+                proc.terminate()
+            except psutil.NoSuchProcess:
+                pass
+        _gone, alive = psutil.wait_procs(tree, timeout=self._stop_timeout)
+        if alive:
             logger.warning(
-                'Task cluster did not stop within %s seconds; killing it',
+                'Processes %s did not stop within %s seconds; killing them',
+                [p.pid for p in alive],
                 self._stop_timeout,
             )
-            process.kill()
-            process.wait()
+            for proc in alive:
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            psutil.wait_procs(alive, timeout=10)
+        process.wait()
 
 
 # --- Web server -----------------------------------------------------------
@@ -448,8 +474,74 @@ def run_qcluster() -> int:
     return 0
 
 
+def run_det(det_argv: list[str]) -> int:
+    """SPIKE: ``--run-det``, the bundle acting as commcare-export."""
+    from commcare_export.cli import main as det_main
+
+    det_main(det_argv)  # calls sys.exit() itself
+    return 0
+
+
+def spike_imports() -> int:
+    """SPIKE: import every SQL driver the extras bring, report versions."""
+    import importlib
+
+    failed = 0
+    for name in (
+        'psycopg',
+        'psycopg2',
+        'pymysql',
+        'pyodbc',
+        'sqlalchemy',
+        'alembic',
+        'anymail',
+        'django_q',
+        'commcare_export',
+        'whitenoise',
+        'waitress',
+        'platformdirs',
+        'psutil',
+        'webview',
+    ):
+        try:
+            module = importlib.import_module(name)
+        except Exception as err:  # noqa: BLE001
+            failed += 1
+            print(f'IMPORT FAIL {name}: {err!r}')
+        else:
+            version = getattr(module, '__version__', getattr(module, 'version', '?'))
+            print(f'IMPORT OK   {name} {version}')
+    return 1 if failed else 0
+
+
+def watch_stop_file(data_dir: Path, shutdown: threading.Event) -> None:
+    """SPIKE: set ``shutdown`` when ``<data-dir>/STOP`` appears.
+
+    Lets the smoke test drive the launcher's own shutdown path on every
+    platform. Windows has no SIGTERM to send to a console process.
+    """
+    stop_file = data_dir / 'STOP'
+
+    def watch():
+        while not shutdown.is_set():
+            if stop_file.exists():
+                logger.info('STOP file found; shutting down')
+                shutdown.set()
+                return
+            time.sleep(0.5)
+
+    threading.Thread(target=watch, name='stop-file', daemon=True).start()
+
+
 def main(argv: list[str] | None = None) -> int:
     multiprocessing.freeze_support()
+
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv[:1] == ['--run-det']:
+        return run_det(argv[1:])
+    if argv[:1] == ['--spike-imports']:
+        return spike_imports()
 
     args = build_parser().parse_args(argv)
     if args.run_qcluster:
@@ -457,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
 
     data_dir = resolve_data_dir(args.data_dir)
     configure_logging(data_dir)
+    logger.info('sys.frozen=%s executable=%s', getattr(sys, 'frozen', False), sys.executable)
 
     live_port = read_live_instance(data_dir)
     if live_port is not None:
@@ -485,6 +578,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare_instance()
 
     shutdown = install_shutdown_handlers()
+    watch_stop_file(data_dir, shutdown)
     supervisor = ClusterSupervisor()
     supervisor.start()
     try:

@@ -1,0 +1,70 @@
+name: Spike bundle
+
+on:
+  # GitHub only dispatches by name a workflow that exists on the default
+  # branch, so this one also runs on every push to its own branch.
+  push:
+    branches: [nh/spike-bundle]
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: Python version to build with
+        default: "3.14"
+        required: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install unixODBC
+        # The pyodbc wheel links the Homebrew libodbc, which the arm
+        # runner image lacks, and PyInstaller imports pyodbc to analyse it.
+        if: runner.os == 'macOS'
+        run: brew install unixodbc
+      - name: Install dependencies
+        run: >
+          uv sync --python ${{ inputs.python-version || '3.14' }}
+          --extra postgres --extra mysql --extra odbc --group spike
+      - name: Report environment
+        shell: bash
+        run: |
+          uv run python -c "import sys, platform; print(sys.version, platform.machine())"
+          uv pip list
+      - name: Build bundle
+        run: uv run pyinstaller --noconfirm --log-level WARN spike/commcare-sync.spec
+      - name: Smoke test
+        shell: bash
+        env:
+          CORPORA_USERNAME: ${{ secrets.CORPORA_USERNAME }}
+          CORPORA_API_KEY: ${{ secrets.CORPORA_API_KEY }}
+          SPIKE_OUTPUT_DIR: spike-output
+        run: uv run python spike/smoke.py dist/commcare-sync
+      - name: Report bundle contents
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p spike-output
+          if [ "$RUNNER_OS" = macOS ]; then
+            {
+              find dist/commcare-sync -name 'libpq*' -exec ls -l {} \;
+              for ext in dist/commcare-sync/_internal/psycopg2/_psycopg*.so \
+                         dist/commcare-sync/_internal/psycopg_binary/pq*.so; do
+                otool -L "$ext"; otool -l "$ext" | grep -A2 LC_RPATH
+              done
+            } > spike-output/libpq.txt 2>&1 || true
+          fi
+          du -sh dist/* >> spike-output/bundle.txt 2>/dev/null || true
+          find dist -maxdepth 3 | sort > spike-output/bundle-files.txt
+          ls build/commcare-sync/warn-*.txt >/dev/null 2>&1 && cp build/commcare-sync/warn-*.txt spike-output/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spike-${{ matrix.os }}
+          path: spike-output/
