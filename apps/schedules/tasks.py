@@ -78,10 +78,25 @@ def reap_stale_runs():
 
     Returns the number of runs reaped.
     """
-    now = timezone.now()
     cutoff = (
-        now - timedelta(seconds=settings.Q_CLUSTER['timeout']) - REAP_MARGIN
+        timezone.now()
+        - timedelta(seconds=settings.Q_CLUSTER['timeout'])
+        - REAP_MARGIN
     )
+    return _interrupt_runs_started_before(cutoff)
+
+
+def interrupt_unfinished_runs():
+    """
+    Marks every ``STARTED`` run ``INTERRUPTED``, however recently it
+    started. Only for a caller that knows no worker is running against
+    the database. Returns the number of runs interrupted.
+    """
+    return _interrupt_runs_started_before(timezone.now())
+
+
+def _interrupt_runs_started_before(cutoff):
+    now = timezone.now()
     reaped = 0
     for run_model in RUN_MODELS:
         count = run_model.objects.filter(
@@ -102,7 +117,7 @@ def reap_stale_runs():
         )
         if count:
             logger.warning(
-                'Reaped %d stale %s run(s)', count, run_model.__name__
+                'Marked %d %s run(s) interrupted', count, run_model.__name__
             )
         reaped += count
     return reaped

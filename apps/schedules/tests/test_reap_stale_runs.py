@@ -16,6 +16,7 @@ from apps.forwarding.tests.fixtures import destination, forwarding_config
 from apps.schedules.tasks import (
     REAP_MARGIN,
     RUN_MODELS,
+    interrupt_unfinished_runs,
     reap_stale_runs,
     run_due_schedules,
 )
@@ -119,6 +120,17 @@ class TestReapStaleRuns:
         run.refresh_from_db()
         assert run.log.startswith('partial output')
         assert 'This run did not finish.' in run.log
+
+    def test_interrupt_unfinished_runs_takes_every_started_run(self):
+        just_started = _run(timedelta(seconds=1))
+        queued = _run(timedelta(days=7), status=RunBaseModel.Status.QUEUED)
+
+        assert interrupt_unfinished_runs() == 1
+
+        just_started.refresh_from_db()
+        queued.refresh_from_db()
+        assert just_started.status == RunBaseModel.Status.INTERRUPTED
+        assert queued.status == RunBaseModel.Status.QUEUED
 
     def test_run_due_schedules_reaps_first(self):
         run = _run(STALE)
