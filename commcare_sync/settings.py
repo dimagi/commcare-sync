@@ -229,6 +229,14 @@ Q_CLUSTER = {
     'ack_failures': True,
     'catch_up': False,  # don't replay every missed minute of the dispatcher
     'label': 'Task queue',
+
+    # The default 0.2s poll hammers SQLite with disk wakeups.
+    'poll': 1.0,
+
+    # Cap saved results per task function, not globally: the dispatcher's
+    # 1440 successes a day would otherwise evict real run results within
+    # hours.
+    'save_limit_per': 'func',
 }
 
 
