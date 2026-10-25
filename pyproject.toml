@@ -14,6 +14,10 @@ dependencies = [
     "pyopenssl>=20.0.1",  # here to force upgrades of commcare-export dependencies
     "db-query-fwd",
     "django-q2>=1.10.0",
+    "platformdirs>=4.13.5",
+    "whitenoise>=6.12.0",
+    "waitress>=3.0.2",
+    "psutil>=7.2.2",
 ]
 
 [project.optional-dependencies]
