@@ -34,6 +34,7 @@ def first_run_setup(request):
         access = setup_access()
         context = {
             'loopback_allowed': access == SetupAccess.LOOPBACK,
+            'token_required': access == SetupAccess.TOKEN,
             'port': request.get_port(),
             'admin_email_var': ADMIN_EMAIL_VAR,
             'admin_password_var': ADMIN_PASSWORD_VAR,

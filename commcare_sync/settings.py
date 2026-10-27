@@ -88,6 +88,8 @@ MIDDLEWARE = [
 # The setup page makes whoever reaches it the superuser, so by default
 # only a browser on this machine may use it; see apps.users.setup.
 SETUP_PAGE_ACCESS = SetupAccess.LOOPBACK
+# What a browser must present under SetupAccess.TOKEN; the launcher sets it.
+SETUP_TOKEN: str | None = None
 
 ROOT_URLCONF = 'commcare_sync.urls'
 

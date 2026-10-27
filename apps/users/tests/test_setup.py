@@ -5,7 +5,7 @@ from unmagic import fixture, use
 
 from apps.users.checks import check_setup_page_access
 from apps.users.models import CustomUser
-from apps.users.setup import provision_admin
+from apps.users.setup import first_run_setup_url, provision_admin
 from apps.users.views import first_run_setup
 from commcare_sync.consts import SetupAccess
 
@@ -45,6 +45,17 @@ def anyone():
 @use(_settings)
 def nobody():
     _settings().SETUP_PAGE_ACCESS = SetupAccess.NOBODY
+    yield
+
+
+SETUP_TOKEN = 'the-token-the-launcher-logged'
+
+
+@fixture
+@use(_settings)
+def token():
+    _settings().SETUP_PAGE_ACCESS = SetupAccess.TOKEN
+    _settings().SETUP_TOKEN = SETUP_TOKEN
     yield
 
 
@@ -246,6 +257,61 @@ class TestSetupPageNobody:
         response = submit_setup(REMOTE_ADDR='127.0.0.1')
         assert response.status_code == 403
         assert not CustomUser.objects.exists()
+
+
+@use('db', _client, token)
+class TestSetupPageToken:
+    def setup_url(self, token=SETUP_TOKEN):
+        return f'{reverse("setup")}?token={token}'
+
+    def test_the_url_the_launcher_logs_opens_the_form(self):
+        url = first_run_setup_url('http://127.0.0.1:8000/', SETUP_TOKEN)
+        assert url == f'http://127.0.0.1:8000{self.setup_url()}'
+        assert _client().get(self.setup_url()).status_code == 200
+
+    def test_a_local_client_without_the_token_is_refused(self):
+        response = _client().get(reverse('setup'))
+        assert response.status_code == 403
+        assert b'from a browser running on the server' in response.content
+        assert b'launcher.log' in response.content
+
+    def test_a_wrong_token_is_refused(self):
+        response = _client().get(self.setup_url('guessed'))
+        assert response.status_code == 403
+
+    def test_a_token_outside_ascii_is_refused_not_an_error(self):
+        response = _client().get(self.setup_url('ñ' * len(SETUP_TOKEN)))
+        assert response.status_code == 403
+
+    def test_a_remote_client_with_the_token_is_refused(self):
+        response = _client().get(self.setup_url(), REMOTE_ADDR='10.0.0.5')
+        assert response.status_code == 403
+
+    def test_the_form_posts_back_to_the_token_url(self):
+        response = _client().get(self.setup_url())
+        assert b'action=' not in response.content
+        response = _client().post(
+            self.setup_url(),
+            {
+                'email': ADMIN_EMAIL,
+                'password1': ADMIN_PASSWORD,
+                'password2': ADMIN_PASSWORD,
+            },
+        )
+        assert response.status_code == 302
+        assert CustomUser.objects.get(email=ADMIN_EMAIL).is_superuser
+
+    def test_a_submission_without_the_token_creates_nobody(self):
+        response = submit_setup()
+        assert response.status_code == 403
+        assert not CustomUser.objects.exists()
+
+    @use(_settings)
+    def test_without_a_configured_token_nobody_may_set_up(self):
+        # manage.py runserver against a data directory, say.
+        _settings().SETUP_TOKEN = None
+        response = _client().get(self.setup_url(''))
+        assert response.status_code == 403
 
 
 @use(_settings)

@@ -4,6 +4,8 @@ Creating the first admin account on a fresh install, and who may do it.
 
 import ipaddress
 import logging
+import secrets
+from urllib.parse import urlencode, urljoin
 
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
@@ -12,12 +14,14 @@ from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 from django.http import HttpRequest
 from django.http.request import split_domain_port
+from django.urls import reverse
 
 from apps.users.models import CustomUser
 from commcare_sync.consts import LOCAL_HOSTNAMES, SetupAccess
 
 ADMIN_EMAIL_VAR = 'COMMCARE_SYNC_ADMIN_EMAIL'
 ADMIN_PASSWORD_VAR = 'COMMCARE_SYNC_ADMIN_PASSWORD'
+TOKEN_PARAM = 'token'
 
 # Any of these means a forwarder sits between the browser and us.
 FORWARDING_HEADERS = (
@@ -41,7 +45,15 @@ def may_set_up(request: HttpRequest) -> bool:
         return True
     if access == SetupAccess.LOOPBACK:
         return _is_local(request)
+    if access == SetupAccess.TOKEN:
+        return _is_local(request) and _presents_token(request)
     return False  # NOBODY
+
+
+def first_run_setup_url(base_url: str, token: str) -> str:
+    """The link the launcher logs, and opens in desktop mode."""
+    query = urlencode({TOKEN_PARAM: token})
+    return urljoin(base_url, f'{reverse("setup")}?{query}')
 
 
 def _is_local(request: HttpRequest) -> bool:
@@ -57,6 +69,22 @@ def _is_local(request: HttpRequest) -> bool:
         return False
     host, _port = split_domain_port(request.get_host())
     return host in LOCAL_HOSTNAMES
+
+
+def _presents_token(request: HttpRequest) -> bool:
+    """
+    The token stays in the query string, so the form posts back to the
+    same URL and the POST is checked the same way. Without a configured
+    token, as under ``manage.py`` against a data directory with no
+    launcher running, nobody can present one.
+    """
+    expected = settings.SETUP_TOKEN
+    if not expected:
+        return False
+    presented = request.GET.get(TOKEN_PARAM, '')
+    # As bytes: the str form raises on a non-ASCII token instead of
+    # refusing it.
+    return secrets.compare_digest(presented.encode(), expected.encode())
 
 
 def _is_loopback(address: str) -> bool:

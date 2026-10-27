@@ -30,6 +30,7 @@ from commcare_sync.launcher.env import (
     MEDIA_DIRNAME,
     MODE_ENV_VAR,
     PORT_ENV_VAR,
+    SETUP_TOKEN_ENV_VAR,
     STATIC_ROOT_DIRNAME,
     Mode,
 )
@@ -55,6 +56,7 @@ def apply_launcher_overlay(
     _apply_paths(data_dir, settings)
     _apply_cookie_names(settings)
     _apply_secrets(data_dir, settings, environ)
+    settings['SETUP_TOKEN'] = environ.get(SETUP_TOKEN_ENV_VAR)
     if mode == Mode.DESKTOP:
         _apply_desktop(settings, environ)
     else:
@@ -94,6 +96,7 @@ def _apply_secrets(
 
 def _apply_desktop(settings: dict, environ: Mapping[str, str]) -> None:
     settings['ALLOWED_HOSTS'] = list(LOCAL_HOSTNAMES)
+    settings['SETUP_PAGE_ACCESS'] = SetupAccess.TOKEN
     settings['SESSION_COOKIE_AGE'] = DESKTOP_SESSION_AGE
     port = environ.get(PORT_ENV_VAR)
     if port:
@@ -111,7 +114,7 @@ def _apply_server(settings: dict, environ: Mapping[str, str]) -> None:
     # Behind a reverse proxy on the same machine every request
     # arrives from loopback, so nobody may use the setup page.
     settings['SETUP_PAGE_ACCESS'] = (
-        SetupAccess.NOBODY if behind_proxy else SetupAccess.LOOPBACK
+        SetupAccess.NOBODY if behind_proxy else SetupAccess.TOKEN
     )
     if behind_proxy:
         settings['SECURE_PROXY_SSL_HEADER'] = (

@@ -1,4 +1,5 @@
 import os
+import re
 import signal
 import sqlite3
 import stat
@@ -23,10 +24,16 @@ from commcare_sync.launcher.cli import (
     EXIT_MISCONFIGURED,
     build_parser,
     main,
+    open_in_browser,
     start_web_server,
     wait_for_shutdown,
 )
-from commcare_sync.launcher.env import DATA_DIR_ENV_VAR, Mode
+from commcare_sync.launcher.env import (
+    DATA_DIR_ENV_VAR,
+    OPEN_PAGE_FILENAME,
+    SETUP_TOKEN_ENV_VAR,
+    Mode,
+)
 from commcare_sync.launcher.instance import write_cluster_file
 from commcare_sync.launcher.listen import open_listening_socket
 from commcare_sync.launcher.supervisor import ClusterSupervisor
@@ -149,6 +156,36 @@ def test_closing_the_web_server_ends_its_thread():
         assert wait_until(lambda: not thread.is_alive())
 
 
+class IdleSupervisor(ClusterSupervisor):
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+
+def desktop_args(data_dir):
+    return ['--desktop', '--port', '0', '--data-dir', str(data_dir)]
+
+
+@use(_tmp_path, _monkeypatch)
+def test_open_in_browser_hands_over_a_private_file_not_the_url():
+    opened = []
+    _monkeypatch().setattr('webbrowser.open', opened.append)
+    url = 'http://127.0.0.1:8000/setup/?token=secret&x="y"'
+
+    open_in_browser(_tmp_path(), url)
+
+    page = _tmp_path() / OPEN_PAGE_FILENAME
+    assert opened == [page.as_uri()]
+    assert page.read_text() == (
+        '<meta http-equiv="refresh" content="0; '
+        'url=http://127.0.0.1:8000/setup/?token=secret&amp;x=&quot;y&quot;">'
+    )
+    if os.name == 'posix':
+        assert stat.S_IMODE(page.stat().st_mode) == 0o600
+
+
 @use(launcher_process_state, _tmp_path, _monkeypatch)
 class TestMainFailures:
     def test_port_in_use_exits_nonzero_without_booting(self):
@@ -235,9 +272,8 @@ class TestMainFailures:
         def crash(data_dir, port, pid):
             raise OSError('data directory vanished')
 
+        self.stub_the_boot(needs_setup=False)
         cli = 'commcare_sync.launcher.cli.'
-        _monkeypatch().setattr(cli + 'setup_django', lambda: None)
-        _monkeypatch().setattr(cli + 'prepare_instance', lambda: None)
         _monkeypatch().setattr(cli + 'ClusterSupervisor', RecordingSupervisor)
         _monkeypatch().setattr(cli + 'write_instance_file', crash)
         args = [
@@ -250,6 +286,63 @@ class TestMainFailures:
         ]
         assert main(args) == 1
         assert stopped
+
+    def stub_the_boot(self, needs_setup):
+        cli = 'commcare_sync.launcher.cli.'
+        _monkeypatch().setattr(cli + 'setup_django', lambda: None)
+        _monkeypatch().setattr(cli + 'prepare_instance', lambda: None)
+        _monkeypatch().setattr(cli + 'ClusterSupervisor', IdleSupervisor)
+        _monkeypatch().setattr(
+            cli + 'wait_for_shutdown', lambda *args, **kwargs: 0
+        )
+        _monkeypatch().setattr(
+            'apps.users.setup.needs_setup', lambda: needs_setup
+        )
+
+    def test_the_setup_token_reaches_django_but_not_the_cluster_child(
+        self,
+    ):
+        seen = {}
+
+        def setup_django():
+            seen['by_django'] = os.environ[SETUP_TOKEN_ENV_VAR]
+
+        class RecordingSupervisor(IdleSupervisor):
+            def start(self):
+                seen['by_child'] = os.environ.get(SETUP_TOKEN_ENV_VAR)
+
+        self.stub_the_boot(needs_setup=True)
+        cli = 'commcare_sync.launcher.cli.'
+        _monkeypatch().setattr(cli + 'setup_django', setup_django)
+        _monkeypatch().setattr(cli + 'ClusterSupervisor', RecordingSupervisor)
+        assert main(desktop_args(_tmp_path())) == 0
+        assert len(seen['by_django']) >= 32
+        assert seen['by_child'] is None
+        assert SETUP_TOKEN_ENV_VAR not in os.environ
+        log = (_tmp_path() / 'logs' / 'launcher.log').read_text()
+        assert f'/setup/?token={seen["by_django"]}' in log
+
+    def test_desktop_mode_opens_the_setup_page_while_no_user_exists(self):
+        opened = []
+        self.stub_the_boot(needs_setup=True)
+        _monkeypatch().setattr('webbrowser.open', opened.append)
+        assert main(desktop_args(_tmp_path())) == 0
+        page = _tmp_path() / OPEN_PAGE_FILENAME
+        assert opened == [page.as_uri()]  # the token is not in any argv
+        assert '/setup/?token=' in page.read_text()
+        log = (_tmp_path() / 'logs' / 'launcher.log').read_text()
+        assert 'No admin user yet' in log
+
+    def test_desktop_mode_opens_the_home_page_once_a_user_exists(self):
+        opened = []
+        self.stub_the_boot(needs_setup=False)
+        _monkeypatch().setattr('webbrowser.open', opened.append)
+        assert main(desktop_args(_tmp_path())) == 0
+        page = (_tmp_path() / OPEN_PAGE_FILENAME).read_text()
+        assert f'url=http://{LOOPBACK_IPV4}:' in page
+        assert 'setup' not in page
+        log = (_tmp_path() / 'logs' / 'launcher.log').read_text()
+        assert 'token' not in log
 
     def test_an_orphaned_cluster_is_stopped_before_anything_else(self):
         orphan = subprocess.Popen(SLEEPER)
@@ -351,14 +444,18 @@ def test_server_mode_boots_serves_and_stops_cleanly():
             text=True,
         )
     try:
-        assert wait_for_http(f'http://{LOOPBACK_IPV4}:{port}/', process) in (
-            200,
-            302,
-        )
+        base_url = f'http://{LOOPBACK_IPV4}:{port}/'
+        # Redirected to the setup page, which wants the logged token.
+        assert wait_for_http(base_url, process) == 403
         # DEBUG is off, so a served stylesheet proves collectstatic ran
         # into the data dir and WhiteNoise found it there.
         css_url = f'http://{LOOPBACK_IPV4}:{port}/static/css/site.css'
         assert wait_for_http(css_url, process) == 200
+        [setup_url] = re.findall(
+            rf'{re.escape(base_url)}setup/\?token=\S+',
+            output_path.read_text(),
+        )
+        assert wait_for_http(setup_url, process) == 200
         assert (data_dir / 'static_root' / 'css' / 'site.css').is_file()
         with sqlite3.connect(data_dir / 'db.sqlite3') as connection:
             schedules = connection.execute(

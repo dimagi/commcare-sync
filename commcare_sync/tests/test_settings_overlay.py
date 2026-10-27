@@ -231,8 +231,8 @@ class TestServerMode:
         assert value in str(exc_info.value)
         assert "''" not in str(exc_info.value)
 
-    def test_keeps_the_setup_page_local(self):
-        assert overlay()['SETUP_PAGE_ACCESS'] == SetupAccess.LOOPBACK
+    def test_the_setup_page_needs_the_launcher_token(self):
+        assert overlay()['SETUP_PAGE_ACCESS'] == SetupAccess.TOKEN
 
     def test_behind_a_proxy_every_client_looks_local_so_nobody_may_set_up(
         self,
@@ -243,5 +243,17 @@ class TestServerMode:
 
 @use(data_dir)
 class TestSetupPageInDesktopMode:
-    def test_keeps_the_default_policy(self):
-        assert 'SETUP_PAGE_ACCESS' not in overlay(mode=Mode.DESKTOP)
+    def test_needs_the_launcher_token_too(self):
+        settings = overlay(mode=Mode.DESKTOP)
+        assert settings['SETUP_PAGE_ACCESS'] == SetupAccess.TOKEN
+
+
+@use(data_dir)
+class TestSetupToken:
+    @pytest.mark.parametrize('mode', [Mode.SERVER, Mode.DESKTOP])
+    def test_comes_from_the_environment(self, mode):
+        settings = overlay(mode=mode, COMMCARE_SYNC_SETUP_TOKEN='abc')
+        assert settings['SETUP_TOKEN'] == 'abc'
+
+    def test_is_none_without_the_launcher(self):
+        assert overlay()['SETUP_TOKEN'] is None

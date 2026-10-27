@@ -16,5 +16,8 @@ class SetupAccess(StrEnum):
     ANYONE = 'anyone'
     # A browser on the same machine.
     LOOPBACK = 'loopback'
+    # A browser on the same machine, opened at the link the launcher
+    # logged: another account on this machine cannot read that log.
+    TOKEN = 'token'
     # Create the admin with the environment variables instead.
     NOBODY = 'nobody'

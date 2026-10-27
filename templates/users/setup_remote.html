@@ -4,7 +4,9 @@
 {% block content %}
   <h1 class="h4">{% trans "Set up from the server" %}</h1>
   <p>
-    {% if loopback_allowed %}
+    {% if token_required %}
+      {% blocktrans %}This server has no admin account yet. To keep anyone else from claiming it, the setup page can only be used from a browser running on the server, opened at the link that was logged when the server started; find it in <code>launcher.log</code> in the data directory.{% endblocktrans %}
+    {% elif loopback_allowed %}
       {% blocktrans %}This server has no admin account yet. To keep anyone on the network from claiming it, the setup page can only be used from a browser running on the server, at <code>http://localhost:{{ port }}/</code>.{% endblocktrans %}
     {% else %}
       {% blocktrans %}This server has no admin account yet, and the setup page is disabled on it.{% endblocktrans %}

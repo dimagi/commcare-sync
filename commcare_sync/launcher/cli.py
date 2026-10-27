@@ -8,9 +8,11 @@ needs configured settings is imported inside the function that uses it.
 """
 
 import argparse
+import html
 import logging
 import multiprocessing
 import os
+import secrets
 import signal
 import socket
 import sys
@@ -32,7 +34,9 @@ from commcare_sync.launcher.env import (
     LOG_FORMAT,
     LOGS_DIRNAME,
     MODE_ENV_VAR,
+    OPEN_PAGE_FILENAME,
     PORT_ENV_VAR,
+    SETUP_TOKEN_ENV_VAR,
     Mode,
 )
 from commcare_sync.launcher.instance import (
@@ -137,6 +141,22 @@ def start_web_server(sock: socket.socket) -> tuple[Any, threading.Thread]:
     thread = threading.Thread(target=server.run, name='waitress', daemon=True)
     thread.start()
     return server, thread
+
+
+def open_in_browser(data_dir: Path, url: str) -> None:
+    """
+    By way of a page in the data directory, which other accounts cannot
+    read, rather than as an argument: ``ps`` shows every account the
+    command line of the browser, and the URL may carry the setup token.
+    """
+    page = data_dir / OPEN_PAGE_FILENAME
+    fd = os.open(page, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, 'w') as file:
+        file.write(
+            '<meta http-equiv="refresh" content="0; '
+            f'url={html.escape(url, quote=True)}">'
+        )
+    webbrowser.open(page.as_uri())
 
 
 def install_shutdown_handlers() -> threading.Event:
@@ -313,6 +333,8 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
     # For Django settings, and for the cluster child to inherit.
     os.environ[MODE_ENV_VAR] = args.mode
     os.environ[PORT_ENV_VAR] = str(port)
+    # For Django settings only: see below.
+    os.environ[SETUP_TOKEN_ENV_VAR] = secrets.token_urlsafe()
 
     logger.info('Starting commcare-sync in %s mode', args.mode)
     logger.info('Using data directory %s', data_dir)
@@ -321,6 +343,9 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
         cleanup.callback(logger.info, 'Stopped')
         cleanup.callback(sock.close)
         setup_django()
+        # Only this process serves the setup page; the cluster child,
+        # and every commcare-export it starts, need not inherit it.
+        setup_token = os.environ.pop(SETUP_TOKEN_ENV_VAR)
         prepare_instance()
 
         # Before the cluster child starts, so that a signal arriving
@@ -330,11 +355,16 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
         cleanup.callback(server.close)
         url = server_url(host, port)
         logger.info('Serving at %s', url)
+        from apps.users.setup import first_run_setup_url, needs_setup
+
+        if needs_setup():
+            url = first_run_setup_url(url, setup_token)
+            logger.info('No admin user yet; create one at %s', url)
         supervisor = ClusterSupervisor()
         supervisor.start()
         cleanup.callback(supervisor.stop)
         write_instance_file(data_dir, port, os.getpid())
         cleanup.callback(remove_instance_file, data_dir)
         if args.mode == Mode.DESKTOP:
-            webbrowser.open(url)
+            open_in_browser(data_dir, url)
         return wait_for_shutdown(shutdown, supervisor, web_thread)
