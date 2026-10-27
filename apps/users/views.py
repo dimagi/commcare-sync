@@ -1,12 +1,39 @@
+import logging
 import mimetypes
 
+from django.conf import settings
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, FileResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.users.models import CustomUser
-from .forms import CustomUserChangeForm, UploadAvatarForm
+from apps.users.setup import create_first_admin, needs_setup
+from .forms import (
+    CustomUserChangeForm,
+    FirstRunSetupForm,
+    UploadAvatarForm,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def first_run_setup(request):
+    if not needs_setup():
+        return redirect(settings.LOGIN_URL)
+    form = FirstRunSetupForm(request.POST or None)
+    if form.is_valid():
+        user = create_first_admin(
+            form.cleaned_data['email'], form.cleaned_data['password1']
+        )
+        if user is None:
+            return redirect(settings.LOGIN_URL)
+        # Once per install, and worth a line in a log that keeps warnings.
+        logger.warning('Created the admin user %s from the setup page', user)
+        login(request, user)
+        return redirect(settings.LOGIN_REDIRECT_URL)
+    return render(request, 'users/setup.html', {'form': form})
 
 
 @login_required

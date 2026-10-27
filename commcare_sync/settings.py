@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.users.middleware.FirstRunSetupMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -123,7 +124,9 @@ DATABASES = {
             # Take the write lock when a transaction begins, not at its
             # first write. `create_run` (apps/schedules/dispatch.py)
             # relies on this so two triggers can't both create an active
-            # run for one config.
+            # run for one config, and `create_first_admin`
+            # (apps/users/setup.py) so two submissions can't both create
+            # the first admin.
             'transaction_mode': 'IMMEDIATE',
         },
     }

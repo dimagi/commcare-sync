@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import BaseUserCreationForm, UserChangeForm
 from .models import CustomUser
 
 
@@ -13,3 +13,9 @@ class CustomUserChangeForm(UserChangeForm):
 
 class UploadAvatarForm(forms.Form):
     avatar = forms.FileField()
+
+
+class FirstRunSetupForm(BaseUserCreationForm):
+    class Meta:
+        model = CustomUser
+        fields = ('email',)

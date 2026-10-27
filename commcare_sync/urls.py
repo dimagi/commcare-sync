@@ -16,9 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.users.views import first_run_setup
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('setup/', first_run_setup, name='setup'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('commcare/', include('apps.commcare.urls')),
     path('databases/', include('apps.db.urls')),
