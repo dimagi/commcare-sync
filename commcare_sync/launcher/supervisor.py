@@ -1,5 +1,6 @@
 """
-The Django-Q2 cluster as a supervised child process.
+The Django-Q2 cluster as a supervised child process: the launcher's
+side, and the child's watch on the launcher.
 """
 
 import logging
@@ -9,14 +10,23 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import psutil
 
+from commcare_sync.launcher.instance import (
+    read_cluster_process,
+    remove_cluster_file,
+)
 from commcare_sync.launcher.processes import (
     descendants,
     stop_process_tree,
     terminate_then_kill,
 )
+
+if TYPE_CHECKING:
+    from django_q.cluster import Cluster
 
 CLUSTER_STOP_TIMEOUT = 30.0
 CLUSTER_POLL_INTERVAL = 0.5
@@ -43,6 +53,10 @@ class SupervisorPolicy:
 DEFAULT_POLICY = SupervisorPolicy()
 
 
+class ClusterStillRunningError(Exception):
+    pass
+
+
 def spawn_qcluster() -> subprocess.Popen:
     """
     A child process rather than an in-process ``Cluster()``, which
@@ -56,6 +70,62 @@ def spawn_qcluster() -> subprocess.Popen:
     return subprocess.Popen(
         [sys.executable, '-m', 'commcare_sync.launcher', '--run-qcluster']
     )
+
+
+def stop_orphaned_cluster(data_dir: Path) -> None:
+    """
+    A cluster child outlives a launcher that was killed outright. Startup
+    maintenance assumes no cluster is running, so the survivor is stopped
+    first: left alone it would keep working on runs about to be marked
+    interrupted and retried. One that cannot be stopped is an error, for
+    the same reason.
+    """
+    process = read_cluster_process(data_dir)
+    if process is not None:
+        logger.warning(
+            'Stopping the task cluster (pid %s) left by a previous launcher',
+            process.pid,
+        )
+        survivors = terminate_then_kill(
+            [process, *descendants(process.pid)], CLUSTER_STOP_TIMEOUT
+        )
+        if survivors:
+            raise ClusterStillRunningError(
+                'Could not stop the task cluster left by a previous '
+                f'launcher (pids {[proc.pid for proc in survivors]})'
+            )
+    remove_cluster_file(data_dir)
+
+
+def run_cluster_until_stopped(
+    cluster: 'Cluster',
+    parent: psutil.Process,
+    poll_interval: float = CLUSTER_POLL_INTERVAL,
+) -> int:
+    """
+    The child side. Starts ``cluster``, a ``django_q.cluster.Cluster``,
+    which a SIGTERM or SIGINT stops through its own handlers. Watching
+    the parent stops it when the launcher died without sending one.
+    Returns 0 when the cluster stopped as asked, 1 when it died or the
+    launcher went away.
+    """
+    cluster.start()
+    try:
+        while cluster.is_running:
+            if not cluster.sentinel.is_alive():
+                logger.error('The task cluster died')
+                return 1
+            if not parent.is_running():
+                logger.warning(
+                    'The launcher has gone; stopping the task cluster'
+                )
+                cluster.stop()
+                return 1
+            time.sleep(poll_interval)
+    except BaseException:
+        cluster.stop()
+        raise
+    return 0
 
 
 class ClusterSupervisor:

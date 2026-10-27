@@ -11,6 +11,7 @@ import urllib.request
 from dataclasses import replace
 from pathlib import Path
 
+import psutil
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 from unmagic import fixture, use
@@ -26,6 +27,7 @@ from commcare_sync.launcher.cli import (
     wait_for_shutdown,
 )
 from commcare_sync.launcher.env import DATA_DIR_ENV_VAR, Mode
+from commcare_sync.launcher.instance import write_cluster_file
 from commcare_sync.launcher.listen import open_listening_socket
 from commcare_sync.launcher.supervisor import ClusterSupervisor
 from commcare_sync.tests.fixtures import launcher_process_state
@@ -36,6 +38,7 @@ from commcare_sync.tests.helpers import (
     listening_socket,
     wait_until,
 )
+from commcare_sync.tests.test_supervisor import SLEEPER
 
 DESKTOP = Mode.DESKTOP
 SERVER = Mode.SERVER
@@ -248,6 +251,22 @@ class TestMainFailures:
         assert main(args) == 1
         assert stopped
 
+    def test_an_orphaned_cluster_is_stopped_before_anything_else(self):
+        orphan = subprocess.Popen(SLEEPER)
+        try:
+            write_cluster_file(_tmp_path(), psutil.Process(orphan.pid))
+
+            def run(args, data_dir):
+                assert orphan.poll() is not None, 'the orphan is still running'
+                return 0
+
+            _monkeypatch().setattr('commcare_sync.launcher.cli._run', run)
+            assert main(['--data-dir', str(_tmp_path())]) == 0
+        finally:
+            if orphan.poll() is None:
+                orphan.kill()
+        assert not (_tmp_path() / 'cluster.json').exists()
+
     def test_a_stale_instance_file_is_removed_at_startup(self):
         (_tmp_path() / 'instance.json').write_text('{"port": 1, "pid": 1}')
         _monkeypatch().setattr(
@@ -349,6 +368,7 @@ def test_server_mode_boots_serves_and_stops_cleanly():
         assert schedules == [(DISPATCHER_FUNC,)]
         assert (data_dir / 'instance.json').is_file()
         assert (data_dir / 'instance.lock').is_file()
+        assert wait_until((data_dir / 'cluster.json').is_file)
         process.send_signal(signal.SIGTERM)
         process.wait(timeout=60)
     finally:
@@ -359,6 +379,7 @@ def test_server_mode_boots_serves_and_stops_cleanly():
     assert (data_dir / 'logs' / 'launcher.log').is_file()
     assert (data_dir / 'logs' / 'app.log').is_file()
     assert not (data_dir / 'instance.json').exists()
+    assert not (data_dir / 'cluster.json').exists()
 
 
 @fixture

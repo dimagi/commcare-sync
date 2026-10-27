@@ -5,11 +5,16 @@ import time
 from dataclasses import replace
 
 import psutil
+import pytest
 from unmagic import fixture, use
 
+from commcare_sync.launcher.instance import write_cluster_file
 from commcare_sync.launcher.supervisor import (
+    ClusterStillRunningError,
     ClusterSupervisor,
     SupervisorPolicy,
+    run_cluster_until_stopped,
+    stop_orphaned_cluster,
 )
 from commcare_sync.tests.helpers import (
     FAKE_PID,
@@ -19,6 +24,7 @@ from commcare_sync.tests.helpers import (
     wait_until,
 )
 
+_tmp_path = fixture('tmp_path')
 _monkeypatch = fixture('monkeypatch')
 _caplog = fixture('caplog')
 
@@ -240,3 +246,113 @@ class TestClusterSupervisor:
         finally:
             released.set()
         assert 'supervisor is still stopping' in _caplog().text
+
+
+SLEEPER = [sys.executable, '-c', 'import time; time.sleep(60)']
+
+
+@use(_tmp_path)
+class TestStopOrphanedCluster:
+    def test_a_recorded_survivor_is_stopped(self):
+        orphan = subprocess.Popen(SLEEPER)
+        try:
+            write_cluster_file(_tmp_path(), psutil.Process(orphan.pid))
+            stop_orphaned_cluster(_tmp_path())
+            # psutil reaps it, so the exit status is lost to Popen.
+            orphan.wait(timeout=5)
+        finally:
+            if orphan.poll() is None:
+                orphan.kill()
+        assert not (_tmp_path() / 'cluster.json').exists()
+
+    def test_a_record_of_a_dead_process_is_cleared(self):
+        orphan = subprocess.Popen(SLEEPER)
+        write_cluster_file(_tmp_path(), psutil.Process(orphan.pid))
+        orphan.kill()
+        orphan.wait()
+        stop_orphaned_cluster(_tmp_path())
+        assert not (_tmp_path() / 'cluster.json').exists()
+
+    def test_no_record_is_fine(self):
+        stop_orphaned_cluster(_tmp_path())
+
+    @use(_monkeypatch)
+    def test_a_survivor_that_cannot_be_stopped_is_an_error(self):
+        # Startup maintenance would otherwise repair a database that the
+        # survivor is still working on.
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.supervisor.terminate_then_kill',
+            lambda processes, timeout: processes,
+        )
+        orphan = subprocess.Popen(SLEEPER)
+        try:
+            write_cluster_file(_tmp_path(), psutil.Process(orphan.pid))
+            with pytest.raises(ClusterStillRunningError) as exc_info:
+                stop_orphaned_cluster(_tmp_path())
+        finally:
+            orphan.kill()
+            orphan.wait()
+        assert str(orphan.pid) in str(exc_info.value)
+        assert (_tmp_path() / 'cluster.json').exists()
+
+
+class FakeSentinel:
+    alive = True
+
+    def is_alive(self):
+        return self.alive
+
+
+class FakeCluster:
+    def __init__(self):
+        self.is_running = False
+        self.sentinel = FakeSentinel()
+        self.stopped = False
+
+    def start(self):
+        self.is_running = True
+
+    def stop(self):
+        self.stopped = True
+        self.is_running = False
+
+
+class FakeParent:
+    def __init__(self, running=True):
+        self.running = running
+
+    def is_running(self):
+        return self.running
+
+
+class TestRunClusterUntilStopped:
+    def test_exits_zero_once_the_cluster_stops_itself(self):
+        cluster = FakeCluster()
+        parent = FakeParent()
+
+        def stop_soon():
+            time.sleep(0.05)
+            cluster.stop()  # as the SIGTERM handler would
+
+        threading.Thread(target=stop_soon).start()
+        assert run_cluster_until_stopped(cluster, parent, 0.01) == 0
+
+    def test_stops_the_cluster_when_the_launcher_is_gone(self):
+        cluster = FakeCluster()
+        assert run_cluster_until_stopped(cluster, FakeParent(False), 0.01) == 1
+        assert cluster.stopped
+
+    def test_exits_nonzero_when_the_sentinel_dies(self):
+        cluster = FakeCluster()
+        cluster.sentinel.alive = False
+        assert run_cluster_until_stopped(cluster, FakeParent(), 0.01) == 1
+
+    def test_stops_the_cluster_when_the_watch_itself_fails(self):
+        class BrokenParent:
+            def is_running(self):
+                raise RuntimeError('psutil exploded')
+
+        cluster = FakeCluster()
+        with pytest.raises(RuntimeError):
+            run_cluster_until_stopped(cluster, BrokenParent(), 0.01)
+        assert cluster.stopped

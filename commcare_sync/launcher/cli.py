@@ -20,6 +20,7 @@ from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
+import psutil
 from django.core.exceptions import ImproperlyConfigured
 
 from commcare_sync.consts import LOCAL_BIND_ADDRESSES, LOOPBACK_IPV4
@@ -37,7 +38,9 @@ from commcare_sync.launcher.env import (
 from commcare_sync.launcher.instance import (
     acquire_instance_lock,
     read_instance_port,
+    remove_cluster_file,
     remove_instance_file,
+    write_cluster_file,
     write_instance_file,
 )
 from commcare_sync.launcher.listen import (
@@ -52,6 +55,8 @@ from commcare_sync.launcher.secrets import bootstrap_secrets
 from commcare_sync.launcher.supervisor import (
     CLUSTER_POLL_INTERVAL,
     ClusterSupervisor,
+    run_cluster_until_stopped,
+    stop_orphaned_cluster,
 )
 
 # Nothing in the data directory is for other users to read.
@@ -212,14 +217,21 @@ def prepare_instance() -> None:
 
 
 def run_qcluster(data_dir_arg: str | None) -> int:
-    from django.core.management import call_command
-
     data_dir = resolve_data_dir(data_dir_arg)
     os.environ[DATA_DIR_ENV_VAR] = str(data_dir)
     configure_logging(data_dir)
     try:
         setup_django()
-        call_command('qcluster')
+        from django_q.cluster import Cluster
+
+        parent = psutil.Process(os.getppid())
+        # Recorded before the cluster starts, so that it never runs
+        # unrecorded; see stop_orphaned_cluster().
+        write_cluster_file(data_dir, psutil.Process())
+        try:
+            return run_cluster_until_stopped(Cluster(), parent)
+        finally:
+            remove_cluster_file(data_dir)
     except ImproperlyConfigured as err:
         logger.error('%s', err)
         return EXIT_MISCONFIGURED
@@ -227,7 +239,6 @@ def run_qcluster(data_dir_arg: str | None) -> int:
         # The child's stdio may go nowhere; see main().
         logger.exception('The task cluster stopped with an error')
         return EXIT_FAILURE
-    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -262,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
             return _defer_to_running_instance(data_dir, args.mode)
         # Left behind by a previous instance that was killed outright.
         remove_instance_file(data_dir)
+        stop_orphaned_cluster(data_dir)
         try:
             return _run(args, data_dir)
         finally:
