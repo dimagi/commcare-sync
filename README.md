@@ -114,9 +114,11 @@ uv run commcare-sync
 ```
 
 It listens on every address on port 8000; open <http://localhost:8000/>.
-Pass `--port` to listen elsewhere, and `--bind` to listen on one address
-only. Pass `--desktop` to run for one user on this computer: it listens
-on a free port on `127.0.0.1` and opens your browser.
+On first run, open the setup link that the launcher prints instead, to
+create the admin user. Pass `--port` to listen elsewhere, and `--bind`
+to listen on one address only. Pass `--desktop` to run for one user on
+this computer: it listens on a free port on `127.0.0.1` and opens your
+browser.
 
 The launcher keeps the database, encryption keys, logs and uploaded
 files in a data directory, separate from this checkout's `db.sqlite3`:
@@ -128,20 +130,27 @@ files in a data directory, separate from this checkout's `db.sqlite3`:
 commands run against the same data directory when
 `COMMCARE_SYNC_DATA_DIR` is set.
 
-The launcher creates no users. Once it has run, create the first one
-with a management command:
-
-```shell
-COMMCARE_SYNC_DATA_DIR=~/.local/share/commcare-sync uv run python manage.py createsuperuser
-```
+The setup page only works from a browser running on the server, opened
+at the link the launcher printed, so that nobody else on the network,
+or on the server, can claim the admin account. The link is also in
+`logs/launcher.log`, and changes on every start. Requests that carry a
+forwarding header, or that ask for any other host name, are refused. A
+plain TCP forwarder (`ssh -R`, `socat`) adds no header, so do not expose
+the port through one before the admin user exists. To create the admin
+user without the page, set `COMMCARE_SYNC_ADMIN_EMAIL` and
+`COMMCARE_SYNC_ADMIN_PASSWORD` before the first run; the password must
+pass the same checks as the setup form. Both variables are forgotten
+once read, so they can be dropped after that run.
 
 Behind an HTTPS reverse proxy, set `COMMCARE_SYNC_BEHIND_PROXY=1` so
 that the server trusts the proxy's `X-Forwarded-Proto` header, and pass
-`--bind 127.0.0.1` so that the proxy is the only way in. In server
-mode the launcher answers to any host name by default, which is safe
-here because password-reset links are built from the configured site
-domain, not from the request; set `COMMCARE_SYNC_ALLOWED_HOSTS` to a
-comma-separated list to restrict it anyway.
+`--bind 127.0.0.1` so that the proxy is the only way in. The setup
+page is then disabled and the admin user must come from the
+environment variables above. In server mode the launcher answers to
+any host name by default, which is safe here because password-reset
+links are built from the configured site domain, not from the request;
+set `COMMCARE_SYNC_ALLOWED_HOSTS` to a comma-separated list to restrict
+it anyway.
 
 Any other Django setting can be overridden in a `settings.py` in the
 data directory, which is run as code and so must be yours and not
