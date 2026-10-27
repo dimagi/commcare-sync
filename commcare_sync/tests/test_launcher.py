@@ -15,6 +15,7 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 from unmagic import fixture, use
 
+from apps.schedules.maintenance import DISPATCHER_FUNC
 from commcare_sync.consts import LOOPBACK_IPV4
 from commcare_sync.launcher.cli import (
     EXIT_FAILURE,
@@ -42,7 +43,6 @@ _tmp_path = fixture('tmp_path')
 _monkeypatch = fixture('monkeypatch')
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DISPATCHER_FUNC = 'apps.schedules.tasks.run_due_schedules'
 
 
 class TestArgumentParsing:

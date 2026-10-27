@@ -202,6 +202,14 @@ def prepare_instance() -> None:
     # else populates it. ``clear`` drops files left by an older version.
     call_command('collectstatic', interactive=False, verbosity=0, clear=True)
 
+    from commcare_sync.launcher.maintenance import (
+        create_admin_from_environment,
+        repair_task_queue,
+    )
+
+    repair_task_queue()
+    create_admin_from_environment()
+
 
 def run_qcluster(data_dir_arg: str | None) -> int:
     from django.core.management import call_command
