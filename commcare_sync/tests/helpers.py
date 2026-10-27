@@ -4,37 +4,28 @@ Helpers for tests of the launcher.
 
 import signal
 import socket
-import subprocess
 import time
 
 from commcare_sync.consts import LOOPBACK_IPV4
 from commcare_sync.launcher.supervisor import SupervisorPolicy
 
+# Above any real pid, so that psutil never finds a process behind a fake.
+FAKE_PID = 2**22 + 1
+
 
 class FakeProcess:
-    def __init__(self, pid=4242, exits_with=None, hangs_on_terminate=False):
+    def __init__(self, pid=FAKE_PID, exits_with=None):
         self.pid = pid
         self.returncode = exits_with
-        self.hangs_on_terminate = hangs_on_terminate
-        self.terminated = False
-        self.killed = False
+        self.stopped = False
 
     def poll(self):
         return self.returncode
 
-    def terminate(self):
-        self.terminated = True
-        if not self.hangs_on_terminate:
-            self.returncode = -signal.SIGTERM
 
-    def kill(self):
-        self.killed = True
-        self.returncode = -signal.SIGKILL
-
-    def wait(self, timeout=None):
-        if self.returncode is None:
-            raise subprocess.TimeoutExpired(cmd='qcluster', timeout=timeout)
-        return self.returncode
+def fake_stop(process, timeout):
+    process.stopped = True
+    process.returncode = -signal.SIGTERM
 
 
 def wait_until(predicate, timeout=5.0):
@@ -46,7 +37,7 @@ def wait_until(predicate, timeout=5.0):
     return predicate()
 
 
-# Fast timings for tests.
+# Fast timings for tests; fake_stop keeps psutil away from fake pids.
 FAST = SupervisorPolicy(backoff=0, poll_interval=0.01, stop_timeout=0.05)
 
 

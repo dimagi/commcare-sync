@@ -31,6 +31,7 @@ from commcare_sync.tests.fixtures import launcher_process_state
 from commcare_sync.tests.helpers import (
     FAST,
     FakeProcess,
+    fake_stop,
     listening_socket,
     wait_until,
 )
@@ -112,6 +113,7 @@ class TestWaitForShutdown:
     def test_exits_nonzero_when_the_cluster_cannot_be_kept_running(self):
         supervisor = ClusterSupervisor(
             popen_factory=lambda: FakeProcess(exits_with=1),
+            stop_tree=fake_stop,
             policy=replace(FAST, max_restarts=0),
         )
         supervisor.start()

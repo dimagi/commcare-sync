@@ -1,8 +1,26 @@
+import subprocess
+import sys
+import threading
 import time
 from dataclasses import replace
 
-from commcare_sync.launcher.supervisor import ClusterSupervisor
-from commcare_sync.tests.helpers import FAST, FakeProcess, wait_until
+import psutil
+from unmagic import fixture, use
+
+from commcare_sync.launcher.supervisor import (
+    ClusterSupervisor,
+    SupervisorPolicy,
+)
+from commcare_sync.tests.helpers import (
+    FAKE_PID,
+    FAST,
+    FakeProcess,
+    fake_stop,
+    wait_until,
+)
+
+_monkeypatch = fixture('monkeypatch')
+_caplog = fixture('caplog')
 
 
 def make_supervisor(processes, **policy):
@@ -14,15 +32,33 @@ def make_supervisor(processes, **policy):
         return process
 
     supervisor = ClusterSupervisor(
-        popen_factory=popen_factory, policy=replace(FAST, **policy)
+        popen_factory=popen_factory,
+        stop_tree=fake_stop,
+        policy=replace(FAST, **policy),
     )
     return supervisor, spawned
 
 
+STUBBORN_PARENT = """
+import signal, subprocess, sys, time
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+print(child.pid, flush=True)
+time.sleep(60)
+"""
+
+ABSCONDING_PARENT = """
+import subprocess, sys, time
+child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+print(child.pid, flush=True)
+time.sleep(0.5)
+"""
+
+
 class TestClusterSupervisor:
     def test_restarts_an_unexpected_exit(self):
-        crashed = FakeProcess(pid=1, exits_with=1)
-        healthy = FakeProcess(pid=2)
+        crashed = FakeProcess(exits_with=1)
+        healthy = FakeProcess(pid=FAKE_PID + 1)
         supervisor, spawned = make_supervisor([crashed, healthy])
         supervisor.start()
         try:
@@ -60,13 +96,12 @@ class TestClusterSupervisor:
         supervisor, spawned = make_supervisor([healthy])
         supervisor.start()
         supervisor.stop()
-        assert healthy.terminated
-        assert not healthy.killed
+        assert healthy.stopped
         assert len(spawned) == 1
 
     def test_a_stop_during_a_restart_does_not_orphan_the_new_child(self):
-        crashed = FakeProcess(pid=1, exits_with=1)
-        replacement = FakeProcess(pid=2)
+        crashed = FakeProcess(exits_with=1)
+        replacement = FakeProcess(pid=FAKE_PID + 1)
         spawned = []
 
         def popen_factory():
@@ -77,10 +112,12 @@ class TestClusterSupervisor:
             spawned.append(replacement)
             return replacement
 
-        supervisor = ClusterSupervisor(popen_factory=popen_factory, policy=FAST)
+        supervisor = ClusterSupervisor(
+            popen_factory=popen_factory, stop_tree=fake_stop, policy=FAST
+        )
         supervisor.start()
         try:
-            assert wait_until(lambda: replacement.terminated)
+            assert wait_until(lambda: replacement.stopped)
             assert spawned == [crashed, replacement]
         finally:
             supervisor.stop()
@@ -101,10 +138,105 @@ class TestClusterSupervisor:
         supervisor.stop()
         assert spawned == []
 
-    def test_stop_kills_a_child_that_ignores_sigterm(self):
-        stubborn = FakeProcess(hangs_on_terminate=True)
-        supervisor, _spawned = make_supervisor([stubborn])
+    def test_a_failed_respawn_counts_as_giving_up(self):
+        crashed = FakeProcess(exits_with=1)
+        spawned = []
+
+        def popen_factory():
+            if spawned:
+                raise OSError('cannot start the cluster')
+            spawned.append(crashed)
+            return crashed
+
+        supervisor = ClusterSupervisor(
+            popen_factory=popen_factory,
+            stop_tree=fake_stop,
+            policy=replace(FAST, max_restarts=3),
+        )
+        supervisor.start()
+        try:
+            assert wait_until(supervisor.gave_up.is_set)
+        finally:
+            supervisor.stop()
+
+    def test_stop_leaves_no_descendant_processes(self):
+        process = subprocess.Popen(
+            [sys.executable, '-c', STUBBORN_PARENT],
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        grandchild_pid = int(process.stdout.readline())
+        supervisor = ClusterSupervisor(
+            popen_factory=lambda: process,
+            policy=SupervisorPolicy(stop_timeout=0.5),
+        )
         supervisor.start()
         supervisor.stop()
-        assert stubborn.terminated
-        assert stubborn.killed
+        assert wait_until(lambda: not psutil.pid_exists(grandchild_pid))
+        assert process.poll() is not None
+
+    def test_descendants_of_a_crashed_cluster_are_stopped(self):
+        spawned = []
+
+        def popen_factory():
+            spawned.append(
+                subprocess.Popen(
+                    [sys.executable, '-c', ABSCONDING_PARENT],
+                    stdout=subprocess.PIPE,
+                    text=True,
+                )
+            )
+            return spawned[-1]
+
+        supervisor = ClusterSupervisor(
+            popen_factory=popen_factory,
+            policy=SupervisorPolicy(
+                max_restarts=0, backoff=0, poll_interval=0.01, stop_timeout=1
+            ),
+        )
+        supervisor.start()
+        try:
+            grandchild_pid = int(spawned[0].stdout.readline())
+            assert wait_until(supervisor.gave_up.is_set)
+            assert wait_until(lambda: not psutil.pid_exists(grandchild_pid))
+        finally:
+            supervisor.stop()
+
+    @use(_monkeypatch, _caplog)
+    def test_stop_warns_when_the_supervisor_thread_outlives_the_join(self):
+        # The thread is still stopping the survivors of a crash.
+        blocked = threading.Event()
+        released = threading.Event()
+
+        def block(processes, timeout):
+            blocked.set()
+            released.wait()
+            return []
+
+        class Survivor:
+            def is_running(self):
+                return True
+
+        class CrashesAfterAFewPolls(FakeProcess):
+            polls = 0
+
+            def poll(self):
+                self.polls += 1
+                return 1 if self.polls > 2 else None
+
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.supervisor.descendants',
+            lambda pid: [Survivor()],
+        )
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.supervisor.terminate_then_kill', block
+        )
+        supervisor, _spawned = make_supervisor([CrashesAfterAFewPolls()])
+        supervisor.start()
+        try:
+            assert blocked.wait(timeout=5)
+            with _caplog().at_level('WARNING'):
+                supervisor.stop()
+        finally:
+            released.set()
+        assert 'supervisor is still stopping' in _caplog().text

@@ -10,6 +10,14 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
+import psutil
+
+from commcare_sync.launcher.processes import (
+    descendants,
+    stop_process_tree,
+    terminate_then_kill,
+)
+
 CLUSTER_STOP_TIMEOUT = 30.0
 CLUSTER_POLL_INTERVAL = 0.5
 
@@ -61,16 +69,24 @@ class ClusterSupervisor:
     def __init__(
         self,
         popen_factory: Callable[[], subprocess.Popen] = spawn_qcluster,
+        stop_tree: Callable[
+            [subprocess.Popen, float], None
+        ] = stop_process_tree,
         policy: SupervisorPolicy = DEFAULT_POLICY,
     ):
         self._popen_factory = popen_factory
+        self._stop_tree = stop_tree
         self._policy = policy
         self._process: subprocess.Popen | None = None
+        # Refreshed while the child runs: if the child itself dies, its
+        # workers are reparented and are no longer its descendants.
+        self._descendants: list[psutil.Process] = []
         self._restarts: list[float] = []
         self._stopping = threading.Event()
         self._thread: threading.Thread | None = None
-        # Serializes spawning against stopping, so that a stop can never
-        # miss a child that is being spawned at that moment.
+        # Guards the child and its descendants, so that a stop can never
+        # miss a child that is being spawned at that moment, nor read a
+        # descendant list that is being replaced.
         self._lock = threading.Lock()
         self.gave_up = threading.Event()
 
@@ -109,6 +125,12 @@ class ClusterSupervisor:
             logger.warning(
                 'Task cluster exited unexpectedly with code %s', returncode
             )
+            self._stop_survivors()
+            if not self._restart():
+                return
+
+    def _restart(self) -> bool:
+        while not self._stopping.is_set():
             if not self._record_restart():
                 logger.error(
                     'Task cluster exited %s times within %s seconds; giving '
@@ -117,26 +139,38 @@ class ClusterSupervisor:
                     self._policy.restart_window,
                 )
                 self.gave_up.set()
-                return
+                return False
             if self._stopping.wait(self._policy.backoff):
-                return
-            process = self._spawn()
+                return False
+            try:
+                process = self._spawn()
+            except Exception:
+                logger.exception('Could not start the task cluster')
+                continue
             if process is None:
-                return
+                return False
             logger.info('Restarted task cluster (pid %s)', process.pid)
+            return True
+        return False
 
     def _poll_until_exit(self) -> int | None:
         """
         Returns None when there is nothing to restart: no child, or a
-        stop was requested.
+        stop was requested. Keeps ``_descendants`` fresh meanwhile, for
+        ``_stop_survivors()``.
         """
         process = self._process
         if process is None:
             return None
         while not self._stopping.is_set():
+            # Collected before polling: an exited child has no children
+            # left to list, so the list from its last moments is kept.
+            found = descendants(process.pid)
             returncode = process.poll()
             if returncode is not None:
                 return returncode
+            with self._lock:
+                self._descendants = found
             self._stopping.wait(self._policy.poll_interval)
         return None
 
@@ -159,19 +193,33 @@ class ClusterSupervisor:
             if process is not None:
                 self._stop_child(process)
         if self._thread is not None:
-            self._thread.join(timeout=self._policy.poll_interval * 4)
+            # The longest the thread can take to see the stop: it may be
+            # terminating, then killing, the survivors of a crash, waiting
+            # ``stop_timeout`` after each, before it checks again.
+            policy = self._policy
+            timeout = 2 * policy.stop_timeout + policy.poll_interval
+            self._thread.join(timeout=timeout)
+            if self._thread.is_alive():
+                logger.warning(
+                    'The task cluster supervisor is still stopping '
+                    'processes after %s seconds; some may be left running',
+                    timeout,
+                )
+        self._stop_survivors()
+
+    def _stop_survivors(self) -> None:
+        with self._lock:
+            found, self._descendants = self._descendants, []
+        survivors = [proc for proc in found if proc.is_running()]
+        if survivors:
+            logger.warning(
+                'Stopping %s process(es) left by the task cluster',
+                len(survivors),
+            )
+            terminate_then_kill(survivors, self._policy.stop_timeout)
 
     def _stop_child(self, process: subprocess.Popen) -> None:
         if process.poll() is not None:
             return
         logger.info('Stopping task cluster (pid %s)', process.pid)
-        process.terminate()
-        try:
-            process.wait(timeout=self._policy.stop_timeout)
-        except subprocess.TimeoutExpired:
-            logger.warning(
-                'Task cluster did not stop within %s seconds; killing it',
-                self._policy.stop_timeout,
-            )
-            process.kill()
-            process.wait()
+        self._stop_tree(process, self._policy.stop_timeout)
