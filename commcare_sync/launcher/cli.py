@@ -34,6 +34,12 @@ from commcare_sync.launcher.env import (
     PORT_ENV_VAR,
     Mode,
 )
+from commcare_sync.launcher.instance import (
+    acquire_instance_lock,
+    read_instance_port,
+    remove_instance_file,
+    write_instance_file,
+)
 from commcare_sync.launcher.listen import (
     DEFAULT_PORT,
     DEFAULT_SERVER_BIND,
@@ -241,8 +247,17 @@ def main(argv: list[str] | None = None) -> int:
     # commcare-export writes its log file to the working directory.
     os.chdir(data_dir)
     configure_logging(data_dir)
+
     try:
-        return _run(args, data_dir)
+        lock = acquire_instance_lock(data_dir)
+        if lock is None:
+            return _defer_to_running_instance(data_dir, args.mode)
+        # Left behind by a previous instance that was killed outright.
+        remove_instance_file(data_dir)
+        try:
+            return _run(args, data_dir)
+        finally:
+            lock.close()
     except (PortUnavailableError, ImproperlyConfigured) as err:
         # For the operator; a traceback would add nothing.
         logger.error('%s', err)
@@ -252,6 +267,20 @@ def main(argv: list[str] | None = None) -> int:
         # place a startup failure can be read.
         logger.exception('commcare-sync stopped with an error')
         return EXIT_FAILURE
+
+
+def _defer_to_running_instance(data_dir: Path, mode: Mode) -> int:
+    if mode != Mode.DESKTOP:
+        logger.error('Already running (data dir %s)', data_dir)
+        return EXIT_FAILURE
+    port = read_instance_port(data_dir)
+    if port is None:
+        logger.info('Already starting up; nothing to do')
+        return 0
+    url = server_url(LOOPBACK_IPV4, port)
+    logger.info('Already running at %s; opening browser', url)
+    webbrowser.open(url)
+    return 0
 
 
 def _run(args: argparse.Namespace, data_dir: Path) -> int:
@@ -284,6 +313,8 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
         supervisor = ClusterSupervisor()
         supervisor.start()
         cleanup.callback(supervisor.stop)
+        write_instance_file(data_dir, port, os.getpid())
+        cleanup.callback(remove_instance_file, data_dir)
         if args.mode == Mode.DESKTOP:
             webbrowser.open(url)
         return wait_for_shutdown(shutdown, supervisor, web_thread)

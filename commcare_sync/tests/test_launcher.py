@@ -217,6 +217,54 @@ class TestMainFailures:
         mode = stat.S_IMODE((_tmp_path() / 'something').stat().st_mode)
         assert mode == 0o600
 
+    def test_a_failure_after_the_cluster_starts_stops_it(self):
+        stopped = []
+
+        class RecordingSupervisor(ClusterSupervisor):
+            def start(self):
+                pass
+
+            def stop(self):
+                stopped.append(self)
+
+        def crash(data_dir, port, pid):
+            raise OSError('data directory vanished')
+
+        cli = 'commcare_sync.launcher.cli.'
+        _monkeypatch().setattr(cli + 'setup_django', lambda: None)
+        _monkeypatch().setattr(cli + 'prepare_instance', lambda: None)
+        _monkeypatch().setattr(cli + 'ClusterSupervisor', RecordingSupervisor)
+        _monkeypatch().setattr(cli + 'write_instance_file', crash)
+        args = [
+            '--bind',
+            LOOPBACK_IPV4,
+            '--port',
+            '0',
+            '--data-dir',
+            str(_tmp_path()),
+        ]
+        assert main(args) == 1
+        assert stopped
+
+    def test_a_stale_instance_file_is_removed_at_startup(self):
+        (_tmp_path() / 'instance.json').write_text('{"port": 1, "pid": 1}')
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.cli._run', lambda args, data_dir: 0
+        )
+        assert main(['--data-dir', str(_tmp_path())]) == 0
+        assert not (_tmp_path() / 'instance.json').exists()
+
+    def test_a_failure_to_lock_is_logged_before_exiting(self):
+        def crash(data_dir):
+            raise PermissionError('instance.lock is read-only')
+
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.cli.acquire_instance_lock', crash
+        )
+        assert main(['--data-dir', str(_tmp_path())]) == 1
+        log = (_tmp_path() / 'logs' / 'launcher.log').read_text()
+        assert 'instance.lock is read-only' in log
+
     def test_a_crash_is_logged_before_exiting(self):
         def crash(args, data_dir):
             raise RuntimeError('migrations exploded')
@@ -297,6 +345,8 @@ def test_server_mode_boots_serves_and_stops_cleanly():
                 (DISPATCHER_FUNC,),
             ).fetchall()
         assert schedules == [(DISPATCHER_FUNC,)]
+        assert (data_dir / 'instance.json').is_file()
+        assert (data_dir / 'instance.lock').is_file()
         process.send_signal(signal.SIGTERM)
         process.wait(timeout=60)
     finally:
@@ -306,4 +356,40 @@ def test_server_mode_boots_serves_and_stops_cleanly():
     assert process.returncode == 0, output_path.read_text()
     assert (data_dir / 'logs' / 'launcher.log').is_file()
     assert (data_dir / 'logs' / 'app.log').is_file()
+    assert not (data_dir / 'instance.json').exists()
 
+
+@fixture
+@use(_monkeypatch)
+def another_instance_holds_the_lock():
+    _monkeypatch().setattr(
+        'commcare_sync.launcher.cli.acquire_instance_lock',
+        lambda data_dir: None,
+    )
+    _monkeypatch().setattr(
+        'commcare_sync.launcher.cli.read_instance_port', lambda data_dir: 4242
+    )
+    opened = []
+    _monkeypatch().setattr(
+        'commcare_sync.launcher.cli.webbrowser.open', opened.append
+    )
+    yield opened
+
+
+@use(launcher_process_state, another_instance_holds_the_lock, _tmp_path)
+class TestAlreadyRunning:
+    def test_desktop_mode_opens_the_running_instance(self):
+        assert main(['--desktop', '--data-dir', str(_tmp_path())]) == 0
+        assert another_instance_holds_the_lock() == ['http://127.0.0.1:4242/']
+
+    def test_desktop_mode_leaves_a_starting_instance_alone(self):
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.cli.read_instance_port',
+            lambda data_dir: None,
+        )
+        assert main(['--desktop', '--data-dir', str(_tmp_path())]) == 0
+        assert another_instance_holds_the_lock() == []
+
+    def test_server_mode_refuses_to_start_twice(self):
+        assert main(['--server', '--data-dir', str(_tmp_path())]) == 1
+        assert another_instance_holds_the_lock() == []
