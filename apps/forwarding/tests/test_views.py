@@ -9,6 +9,7 @@ from tests.fixtures import (
     admin_client,
     database,
     regular_client,
+    setup_complete,
 )
 
 from ..models import ForwardingConfig, ForwardingDestination, ForwardingRun
@@ -53,6 +54,7 @@ class TestDestinationsView:
         response = admin_client().get(url)
         assert response.status_code == 200
 
+    @use(setup_complete)
     def test_anonymous_redirects(self):
         url = reverse('forwarding:destinations')
         response = Client().get(url)
@@ -114,7 +116,7 @@ class TestDeleteDestinationView:
         assert response.status_code == 403
         assert ForwardingDestination.objects.filter(pk=dest.pk).exists()
 
-    @use(destination)
+    @use(setup_complete, destination)
     def test_anonymous_get_redirects(self):
         url = reverse('forwarding:delete_destination', args=[destination().id])
         response = Client().get(url)

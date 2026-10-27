@@ -21,7 +21,13 @@ from apps.refreshes.models import (
     RefreshRun,
 )
 from apps.web.stats import _get_export_statistics, _get_forwarding_statistics, _get_refresh_statistics
-from tests.fixtures import authed_client, commcare_account, commcare_project, database
+from tests.fixtures import (
+    authed_client,
+    commcare_account,
+    commcare_project,
+    database,
+    setup_complete,
+)
 
 
 @fixture
@@ -79,6 +85,7 @@ class TestHomeView:
         assert response.status_code == 302
         assert response.url == reverse('exports:home')
 
+    @use(setup_complete)
     def test_home_shows_landing_page_when_unauthenticated(self):
         response = Client().get(reverse('web:home'))
         assert response.status_code == 200

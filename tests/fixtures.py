@@ -32,6 +32,14 @@ def user():
 
 @fixture
 @use('db')
+def setup_complete():
+    # Until a user exists, every request is sent to the first-run setup
+    # page, so tests of anonymous requests need one in the database.
+    yield user()
+
+
+@fixture
+@use('db')
 def regular_user():
     User = get_user_model()
     yield User.objects.create_user(

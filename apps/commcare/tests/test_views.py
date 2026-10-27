@@ -11,6 +11,7 @@ from tests.fixtures import (
     commcare_account,
     commcare_project,
     commcare_server,
+    setup_complete,
     user,
 )
 
@@ -36,6 +37,7 @@ def other_user():
 
 
 class TestProjectsView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('commcare:projects')
         response = Client().get(url)
@@ -50,6 +52,7 @@ class TestProjectsView:
 
 
 class TestAccountsView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('commcare:accounts')
         response = Client().get(url)
@@ -113,6 +116,7 @@ def test_edit_account_redirect():
 
 @use(regular_client, commcare_project, commcare_account)
 class TestDeleteProjectView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('commcare:delete_project', args=[commcare_project().id])
         response = Client().get(url)
@@ -173,7 +177,7 @@ class TestDeleteProjectView:
 
 
 class TestDeleteAccountView:
-    @use(commcare_account)
+    @use(setup_complete, commcare_account)
     def test_anonymous_redirects_to_login(self):
         url = reverse('commcare:delete_account', args=[commcare_account().id])
         response = Client().get(url)

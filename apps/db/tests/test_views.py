@@ -14,12 +14,14 @@ from tests.fixtures import (
     admin_user,
     database,
     regular_client,
+    setup_complete,
 )
 
 from ..models import Database
 
 
 class TestCreateDatabaseView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:create_database')
         response = Client().get(url)
@@ -54,6 +56,7 @@ class TestCreateDatabaseView:
 
 @use(database)
 class TestEditDatabaseView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:edit_database', args=[database().id])
         response = Client().get(url)
@@ -84,6 +87,7 @@ class TestEditDatabaseView:
 
 @use(database)
 class TestDeleteDatabaseView:
+    @use(setup_complete)
     def test_anonymous_redirects_to_login(self):
         url = reverse('db:delete_database', args=[database().id])
         response = Client().get(url)

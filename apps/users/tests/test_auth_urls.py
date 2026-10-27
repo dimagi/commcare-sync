@@ -3,10 +3,12 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from unmagic import fixture, use
 
+from tests.fixtures import setup_complete
+
 _client = fixture('client')
 
 
-@use('db', _client)
+@use(setup_complete, _client)
 class TestDjangoAuthURLs:
 
     @pytest.mark.parametrize('url,expected_code', [
