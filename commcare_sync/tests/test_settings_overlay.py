@@ -7,6 +7,7 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 from unmagic import fixture, use
 
+from commcare_sync.consts import SetupAccess
 from commcare_sync.launcher.env import MODE_ENV_VAR, PORT_ENV_VAR, Mode
 from commcare_sync.launcher.secrets import bootstrap_secrets, load_secrets
 from commcare_sync.launcher.settings_overlay import apply_launcher_overlay
@@ -229,3 +230,18 @@ class TestServerMode:
             overlay(COMMCARE_SYNC_BEHIND_PROXY=value)
         assert value in str(exc_info.value)
         assert "''" not in str(exc_info.value)
+
+    def test_keeps_the_setup_page_local(self):
+        assert overlay()['SETUP_PAGE_ACCESS'] == SetupAccess.LOOPBACK
+
+    def test_behind_a_proxy_every_client_looks_local_so_nobody_may_set_up(
+        self,
+    ):
+        settings = overlay(COMMCARE_SYNC_BEHIND_PROXY='true')
+        assert settings['SETUP_PAGE_ACCESS'] == SetupAccess.NOBODY
+
+
+@use(data_dir)
+class TestSetupPageInDesktopMode:
+    def test_keeps_the_default_policy(self):
+        assert 'SETUP_PAGE_ACCESS' not in overlay(mode=Mode.DESKTOP)

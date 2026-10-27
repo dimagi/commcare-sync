@@ -1,11 +1,15 @@
 import pytest
-from django.test import Client
+from django.test import Client, RequestFactory
 from django.urls import reverse
 from unmagic import fixture, use
 
+from apps.users.checks import check_setup_page_access
 from apps.users.models import CustomUser
 from apps.users.setup import provision_admin
+from apps.users.views import first_run_setup
+from commcare_sync.consts import SetupAccess
 
+_settings = fixture('settings')
 _monkeypatch = fixture('monkeypatch')
 _caplog = fixture('caplog')
 
@@ -14,8 +18,12 @@ ADMIN_PASSWORD = 'S3curePass!23'
 
 
 @fixture
+@use(_settings)
 def _client():
-    yield Client()
+    # Requests arrive from loopback, for the host name a local browser
+    # would use. The default access policy is 'loopback'.
+    _settings().ALLOWED_HOSTS = ['localhost', '[::1]', 'sync.example.com']
+    yield Client(HTTP_HOST='localhost')
 
 
 def submit_setup(email=ADMIN_EMAIL, confirm=ADMIN_PASSWORD, **extra):
@@ -24,6 +32,20 @@ def submit_setup(email=ADMIN_EMAIL, confirm=ADMIN_PASSWORD, **extra):
         {'email': email, 'password1': ADMIN_PASSWORD, 'password2': confirm},
         **extra,
     )
+
+
+@fixture
+@use(_settings)
+def anyone():
+    _settings().SETUP_PAGE_ACCESS = SetupAccess.ANYONE
+    yield
+
+
+@fixture
+@use(_settings)
+def nobody():
+    _settings().SETUP_PAGE_ACCESS = SetupAccess.NOBODY
+    yield
 
 
 @use('db')
@@ -148,3 +170,91 @@ class TestFirstRunSetupView:
         assert response.status_code == 302
         assert response.url == reverse('login')
         assert not CustomUser.objects.filter(is_superuser=True).exists()
+
+
+@use('db', _client)
+class TestSetupPageLoopbackByDefault:
+    def test_a_remote_client_is_refused(self):
+        response = _client().get(reverse('setup'), REMOTE_ADDR='10.0.0.5')
+        assert response.status_code == 403
+        assert b'COMMCARE_SYNC_ADMIN_EMAIL' in response.content
+        assert b'from a browser running on the server' in response.content
+
+    def test_a_remote_submission_creates_nobody(self):
+        response = submit_setup(REMOTE_ADDR='10.0.0.5')
+        assert response.status_code == 403
+        assert not CustomUser.objects.exists()
+
+    @pytest.mark.parametrize(
+        'header',
+        [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED_HOST',
+            'HTTP_X_FORWARDED_PROTO',
+            'HTTP_FORWARDED',
+            'HTTP_X_REAL_IP',
+        ],
+    )
+    def test_a_forwarded_request_is_refused(self, header):
+        # A proxy on this machine makes every visitor arrive from loopback.
+        response = _client().get(reverse('setup'), **{header: '10.0.0.5'})
+        assert response.status_code == 403
+
+    def test_a_request_for_another_host_name_is_refused(self):
+        # A page that rebinds its host name to 127.0.0.1 is not local.
+        response = _client().get(
+            reverse('setup'), HTTP_HOST='sync.example.com'
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.parametrize('address', ['127.0.0.1', '127.0.0.2', '::1'])
+    def test_a_local_client_is_served(self, address):
+        response = _client().get(reverse('setup'), REMOTE_ADDR=address)
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize(
+        'host', ['localhost', 'localhost:8000', '[::1]', '[::1]:8000']
+    )
+    def test_every_local_host_name_is_served(self, host):
+        response = _client().get(reverse('setup'), HTTP_HOST=host)
+        assert response.status_code == 200
+
+    def test_the_view_refuses_a_remote_client_on_its_own(self):
+        # Without the middleware: the view does not rely on it.
+        request = RequestFactory().get(
+            reverse('setup'), REMOTE_ADDR='10.0.0.5'
+        )
+        assert first_run_setup(request).status_code == 403
+
+
+@use('db', _client, anyone)
+class TestSetupPageAnyone:
+    def test_a_remote_client_is_served(self):
+        response = _client().get(reverse('setup'), REMOTE_ADDR='10.0.0.5')
+        assert response.status_code == 200
+
+
+@use('db', _client, nobody)
+class TestSetupPageNobody:
+    def test_a_local_client_is_refused(self):
+        response = _client().get(reverse('setup'), REMOTE_ADDR='127.0.0.1')
+        assert response.status_code == 403
+        assert b'COMMCARE_SYNC_ADMIN_EMAIL' in response.content
+        assert b'from a browser running on the server' not in response.content
+
+    def test_a_local_submission_creates_nobody(self):
+        response = submit_setup(REMOTE_ADDR='127.0.0.1')
+        assert response.status_code == 403
+        assert not CustomUser.objects.exists()
+
+
+@use(_settings)
+class TestSetupPageAccessCheck:
+    def test_a_valid_value_passes(self):
+        _settings().SETUP_PAGE_ACCESS = 'nobody'
+        assert check_setup_page_access(None) == []
+
+    def test_an_unknown_value_is_an_error(self):
+        _settings().SETUP_PAGE_ACCESS = 'lopback'
+        [error] = check_setup_page_access(None)
+        assert 'lopback' in error.msg

@@ -9,7 +9,15 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.users.models import CustomUser
-from apps.users.setup import create_first_admin, needs_setup
+from apps.users.setup import (
+    ADMIN_EMAIL_VAR,
+    ADMIN_PASSWORD_VAR,
+    create_first_admin,
+    may_set_up,
+    needs_setup,
+    setup_access,
+)
+from commcare_sync.consts import SetupAccess
 from .forms import (
     CustomUserChangeForm,
     FirstRunSetupForm,
@@ -22,6 +30,15 @@ logger = logging.getLogger(__name__)
 def first_run_setup(request):
     if not needs_setup():
         return redirect(settings.LOGIN_URL)
+    if not may_set_up(request):
+        access = setup_access()
+        context = {
+            'loopback_allowed': access == SetupAccess.LOOPBACK,
+            'port': request.get_port(),
+            'admin_email_var': ADMIN_EMAIL_VAR,
+            'admin_password_var': ADMIN_PASSWORD_VAR,
+        }
+        return render(request, 'users/setup_remote.html', context, status=403)
     form = FirstRunSetupForm(request.POST or None)
     if form.is_valid():
         user = create_first_admin(

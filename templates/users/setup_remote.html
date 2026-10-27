@@ -1,0 +1,16 @@
+{% extends "registration/base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1 class="h4">{% trans "Set up from the server" %}</h1>
+  <p>
+    {% if loopback_allowed %}
+      {% blocktrans %}This server has no admin account yet. To keep anyone on the network from claiming it, the setup page can only be used from a browser running on the server, at <code>http://localhost:{{ port }}/</code>.{% endblocktrans %}
+    {% else %}
+      {% blocktrans %}This server has no admin account yet, and the setup page is disabled on it.{% endblocktrans %}
+    {% endif %}
+  </p>
+  <p>
+    {% blocktrans %}Whoever runs the server can create the admin account by setting the <code>{{ admin_email_var }}</code> and <code>{{ admin_password_var }}</code> environment variables and restarting it.{% endblocktrans %}
+  </p>
+{% endblock %}

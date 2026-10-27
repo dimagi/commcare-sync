@@ -11,6 +11,8 @@ class FirstRunSetupMiddleware:
     but static and media files goes to the setup page until a user
     exists. After that the setup page redirects to login, so it cannot
     create a second admin.
+
+    Who may use the page is the view's concern; see ``SETUP_PAGE_ACCESS``.
     """
 
     def __init__(self, get_response):

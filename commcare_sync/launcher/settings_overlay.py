@@ -19,7 +19,7 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
-from commcare_sync.consts import LOCAL_HOSTNAMES
+from commcare_sync.consts import LOCAL_HOSTNAMES, SetupAccess
 from commcare_sync.launcher.env import (
     ALLOWED_HOSTS_ENV_VAR,
     APP_LOG_FILENAME,
@@ -107,7 +107,13 @@ def _apply_server(settings: dict, environ: Mapping[str, str]) -> None:
     settings['ALLOWED_HOSTS'] = [
         host.strip() for host in hosts.split(',') if host.strip()
     ]
-    if _flag(environ, BEHIND_PROXY_ENV_VAR):
+    behind_proxy = _flag(environ, BEHIND_PROXY_ENV_VAR)
+    # Behind a reverse proxy on the same machine every request
+    # arrives from loopback, so nobody may use the setup page.
+    settings['SETUP_PAGE_ACCESS'] = (
+        SetupAccess.NOBODY if behind_proxy else SetupAccess.LOOPBACK
+    )
+    if behind_proxy:
         settings['SECURE_PROXY_SSL_HEADER'] = (
             'HTTP_X_FORWARDED_PROTO',
             'https',
