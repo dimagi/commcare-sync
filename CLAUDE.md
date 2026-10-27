@@ -40,12 +40,13 @@ Claude, and they are stored under `.claude/` because Git ignores the directory.
 
 ### Configuration
 
-| Description                                 | File                              |
-| ------------------------------------------- | --------------------------------- |
-| Main Django settings                        | `commcare_sync/settings.py`       |
-| Git-ignored local settings                  | `commcare_sync/settings_local.py` |
-| Root URL configuration                      | `commcare_sync/urls.py`           |
-| Django Q2 task queue settings (`Q_CLUSTER`) | `commcare_sync/settings.py`       |
+| Description                                                               | File                              |
+| ------------------------------------------------------------------------- | --------------------------------- |
+| Main Django settings                                                      | `commcare_sync/settings.py`       |
+| Git-ignored local settings; not read when `COMMCARE_SYNC_DATA_DIR` is set | `commcare_sync/settings_local.py` |
+| Launcher: console script, data directory, settings overlay                | `commcare_sync/launcher/`         |
+| Root URL configuration                                                    | `commcare_sync/urls.py`           |
+| Django Q2 task queue settings (`Q_CLUSTER`)                               | `commcare_sync/settings.py`       |
 
 ### Applications (`apps/`)
 
