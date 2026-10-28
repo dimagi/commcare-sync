@@ -26,7 +26,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from commcare_sync.consts import LOCAL_BIND_ADDRESSES, LOOPBACK_IPV4
 from commcare_sync.launcher.datadir import resolve_data_dir
-from commcare_sync.launcher.desktop import open_in_browser
+from commcare_sync.launcher.desktop import run_desktop_ui
 from commcare_sync.launcher.env import (
     APP_NAME,
     DATA_DIR_ENV_VAR,
@@ -349,5 +349,10 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
         write_instance_file(data_dir, port, os.getpid())
         cleanup.callback(remove_instance_file, data_dir)
         if args.mode == Mode.DESKTOP:
-            open_in_browser(data_dir, url)
+            return run_desktop_ui(
+                data_dir,
+                url,
+                shutdown,
+                lambda: wait_for_shutdown(shutdown, supervisor, web_thread),
+            )
         return wait_for_shutdown(shutdown, supervisor, web_thread)
