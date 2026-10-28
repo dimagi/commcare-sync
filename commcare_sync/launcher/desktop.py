@@ -1,13 +1,90 @@
 """
-The desktop UI.
+The desktop UI: a native window on Windows and macOS, by way of
+pywebview, and the default browser elsewhere.
+
+Imported before ``django.setup()``, like ``cli``. ``webview`` is a
+Windows and macOS dependency only, so it is imported where it is used.
 """
 
 import html
+import logging
 import os
+import sys
+import threading
 import webbrowser
+from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 
 from commcare_sync.launcher.env import OPEN_PAGE_FILENAME
+
+WINDOW_TITLE = 'CommCare Data Pipeline'
+WEBVIEW_PLATFORMS = ('win32', 'darwin')
+
+logger = logging.getLogger(__name__)
+
+
+def run_desktop_ui(
+    data_dir: Path,
+    url: str,
+    shutdown: threading.Event,
+    wait_for_shutdown: Callable[[], int],
+) -> int:
+    """
+    Shows the app and blocks until it is time to stop, returning the
+    exit code. Closing the window requests shutdown, as a signal would.
+    Shutdown requested another way, or ``wait_for_shutdown`` returning
+    because the cluster or the web server failed, closes the window. A
+    browser tab cannot be closed from here, so with the browser this
+    waits as server mode does.
+    """
+    # One wait, however the app is shown: its result is the exit code,
+    # and an exception in it reaches main() rather than a thread hook.
+    with ThreadPoolExecutor(1, thread_name_prefix='window-watcher') as pool:
+        waiting = pool.submit(wait_for_shutdown)
+        if sys.platform in WEBVIEW_PLATFORMS:
+            try:
+                _show_window(url, shutdown, waiting)
+            except Exception:
+                logger.warning(
+                    'Could not open a desktop window; '
+                    'opening the browser instead',
+                    exc_info=True,
+                )
+            else:
+                return waiting.result()
+        open_in_browser(data_dir, url)
+        return waiting.result()
+
+
+def _show_window(
+    url: str, shutdown: threading.Event, waiting: Future[int]
+) -> None:
+    import webview  # type: ignore[import-not-found]
+
+    window = webview.create_window(WINDOW_TITLE, url)
+
+    def close_window(_: Future[int]) -> None:
+        # Not yet set if the cluster or the web server failed.
+        shutdown.set()
+        _destroy_quietly(window)
+
+    waiting.add_done_callback(close_window)
+    logger.info('Opening the desktop window')
+    # Returns when the window is closed, by the user or by close_window().
+    webview.start()
+    if not waiting.done():
+        logger.info('The desktop window was closed; shutting down')
+    shutdown.set()
+
+
+def _destroy_quietly(window: Any) -> None:
+    # A window the user has already closed cannot be destroyed again.
+    try:
+        window.destroy()
+    except Exception:
+        logger.debug('Could not close the desktop window', exc_info=True)
 
 
 def open_in_browser(data_dir: Path, url: str) -> None:
