@@ -1,11 +1,14 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
 
 from apps.commcare.models import RunBaseModel
+from apps.web.failed_runs import dismiss
 
 
 def home(request):
@@ -13,6 +16,14 @@ def home(request):
         return HttpResponseRedirect(reverse('exports:home'))
     else:
         return render(request, 'web/landing_page.html')
+
+
+@login_required
+@require_POST
+def dismiss_failed_runs_banner(request):
+    # Per browser and disposable, so the session rather than the database.
+    dismiss(request.session)
+    return HttpResponse(status=204)
 
 
 def run_response(request, config, run):
