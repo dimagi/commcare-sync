@@ -203,8 +203,9 @@ It is done when we know:
    and the dispatcher's first scheduled tick succeeds. That proves the
    migrations, including `0001_create_dispatcher_schedule`, are bundled.
 2. A rough `--run-det` mode runs `commcare_export.cli.entry_point()`, with
-   `--help` and with an export of a query file to SQLite output. The export
-   uses the test project `corpora` on `www.commcarehq.org`
+   `--help` and with an export of a query file to an Excel file (the Data
+   Export Tool's SQL writer does not know SQLite). The export uses the test
+   project `corpora` on `www.commcarehq.org`
    (https://www.commcarehq.org/a/corpora/), with an API key stored as a
    repository secret.
 3. Each SQL driver from the `postgres`, `mysql` and `odbc` extras imports. On
