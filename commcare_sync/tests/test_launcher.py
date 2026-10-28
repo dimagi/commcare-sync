@@ -24,7 +24,6 @@ from commcare_sync.launcher.cli import (
     EXIT_MISCONFIGURED,
     build_parser,
     main,
-    open_in_browser,
     start_web_server,
     wait_for_shutdown,
 )
@@ -166,24 +165,6 @@ class IdleSupervisor(ClusterSupervisor):
 
 def desktop_args(data_dir):
     return ['--desktop', '--port', '0', '--data-dir', str(data_dir)]
-
-
-@use(_tmp_path, _monkeypatch)
-def test_open_in_browser_hands_over_a_private_file_not_the_url():
-    opened = []
-    _monkeypatch().setattr('webbrowser.open', opened.append)
-    url = 'http://127.0.0.1:8000/setup/?token=secret&x="y"'
-
-    open_in_browser(_tmp_path(), url)
-
-    page = _tmp_path() / OPEN_PAGE_FILENAME
-    assert opened == [page.as_uri()]
-    assert page.read_text() == (
-        '<meta http-equiv="refresh" content="0; '
-        'url=http://127.0.0.1:8000/setup/?token=secret&amp;x=&quot;y&quot;">'
-    )
-    if os.name == 'posix':
-        assert stat.S_IMODE(page.stat().st_mode) == 0o600
 
 
 @use(launcher_process_state, _tmp_path, _monkeypatch)

@@ -8,7 +8,6 @@ needs configured settings is imported inside the function that uses it.
 """
 
 import argparse
-import html
 import logging
 import multiprocessing
 import os
@@ -27,6 +26,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from commcare_sync.consts import LOCAL_BIND_ADDRESSES, LOOPBACK_IPV4
 from commcare_sync.launcher.datadir import resolve_data_dir
+from commcare_sync.launcher.desktop import open_in_browser
 from commcare_sync.launcher.env import (
     APP_NAME,
     DATA_DIR_ENV_VAR,
@@ -34,7 +34,6 @@ from commcare_sync.launcher.env import (
     LOG_FORMAT,
     LOGS_DIRNAME,
     MODE_ENV_VAR,
-    OPEN_PAGE_FILENAME,
     PORT_ENV_VAR,
     SETUP_TOKEN_ENV_VAR,
     Mode,
@@ -141,22 +140,6 @@ def start_web_server(sock: socket.socket) -> tuple[Any, threading.Thread]:
     thread = threading.Thread(target=server.run, name='waitress', daemon=True)
     thread.start()
     return server, thread
-
-
-def open_in_browser(data_dir: Path, url: str) -> None:
-    """
-    By way of a page in the data directory, which other accounts cannot
-    read, rather than as an argument: ``ps`` shows every account the
-    command line of the browser, and the URL may carry the setup token.
-    """
-    page = data_dir / OPEN_PAGE_FILENAME
-    fd = os.open(page, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w') as file:
-        file.write(
-            '<meta http-equiv="refresh" content="0; '
-            f'url={html.escape(url, quote=True)}">'
-        )
-    webbrowser.open(page.as_uri())
 
 
 def install_shutdown_handlers() -> threading.Event:
