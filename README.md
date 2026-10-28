@@ -117,8 +117,11 @@ It listens on every address on port 8000; open <http://localhost:8000/>.
 On first run, open the setup link that the launcher prints instead, to
 create the admin user. Pass `--port` to listen elsewhere, and `--bind`
 to listen on one address only. Pass `--desktop` to run for one user on
-this computer: it listens on a free port on `127.0.0.1` and opens your
-browser.
+this computer: it listens on a free port on `127.0.0.1` and shows the
+app in a window on Windows and macOS, or in your browser on Linux.
+Closing the window stops the app, and asks first while a run is in
+progress; the run is marked interrupted and runs again on the next
+start.
 
 The launcher keeps the database, encryption keys, logs and uploaded
 files in a data directory, separate from this checkout's `db.sqlite3`:
