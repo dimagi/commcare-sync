@@ -1,0 +1,128 @@
+name: Pilot build
+
+on:
+  workflow_dispatch:
+  push:
+    # Every push to staging publishes a prerelease for the pilots.
+    branches: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Name the build
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.name.outputs.tag }}
+      version: ${{ steps.name.outputs.version }}
+    steps:
+      - id: name
+        # One date, so that the tag, the version and the installer's
+        # name agree even across midnight.
+        run: |
+          day=$(date -u +%Y%m%d)
+          echo "tag=pilot-$day-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "version=0.1.0.$day" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.os }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: CommCare-Data-Pipeline-Setup-${{ needs.prepare.outputs.version }}.exe
+          - os: macos-latest
+            asset: CommCare-Data-Pipeline-macos-arm64.zip
+          - os: macos-15-intel
+            asset: CommCare-Data-Pipeline-macos-x86_64.zip
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install unixODBC
+        # The pyodbc wheel links the Homebrew libodbc, which the arm
+        # runner image lacks, and PyInstaller imports pyodbc to analyse it.
+        if: runner.os == 'macOS'
+        run: brew install unixodbc
+      - name: Install dependencies
+        run: >
+          uv sync --python 3.14
+          --extra postgres --extra mysql --extra odbc --group packaging
+      - name: Build bundle
+        run: uv run pyinstaller --noconfirm --log-level WARN packaging/commcare-sync.spec
+      - name: Smoke test
+        shell: bash
+        env:
+          CORPORA_USERNAME: ${{ secrets.CORPORA_USERNAME }}
+          CORPORA_API_KEY: ${{ secrets.CORPORA_API_KEY }}
+          SMOKE_TEST_LOGS: smoke-test-logs
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            exe="dist/CommCare Data Pipeline.app/Contents/MacOS/commcare-sync"
+          else
+            exe=dist/commcare-sync/commcare-sync.exe
+          fi
+          uv run python packaging/smoke_test.py "$exe"
+      - name: Package installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          /DAppVersion=${{ needs.prepare.outputs.version }}
+          packaging\windows\setup.iss
+      - name: Install silently and check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Start-Process -Wait -FilePath "dist\${{ matrix.asset }}" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
+          $exe = "$env:LOCALAPPDATA\Programs\CommCare Data Pipeline\commcare-sync.exe"
+          if (-not (Test-Path $exe)) { throw "Not installed: $exe" }
+      - name: Package app
+        if: runner.os == 'macOS'
+        # ditto keeps the symbolic links and the ad-hoc signatures inside
+        # the bundle, which a plain zip would break.
+        run: ditto -c -k --keepParent "dist/CommCare Data Pipeline.app" "dist/${{ matrix.asset }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-${{ matrix.os }}
+          path: |
+            smoke-test-logs/
+            build/commcare-sync/warn-*.txt
+          if-no-files-found: ignore
+
+  release:
+    name: Publish prerelease
+    # A push to staging, or a run asked for by hand. Pushes to the
+    # development branch only build.
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/staging'
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: CommCare-Data-Pipeline-*
+          path: assets
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          gh release create "$TAG" assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Pilot build $TAG" \
+            --notes "Unsigned pilot builds of commit $GITHUB_SHA. See docs/pilot_guide.md for installing past SmartScreen and Gatekeeper."
