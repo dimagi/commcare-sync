@@ -20,6 +20,7 @@ MEDIA_DIRNAME = 'media'
 STATIC_ROOT_DIRNAME = 'static_root'
 DATABASE_FILENAME = 'db.sqlite3'
 APP_LOG_FILENAME = 'app.log'
+LAUNCHER_LOG_FILENAME = 'launcher.log'
 
 LOG_FORMAT = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
