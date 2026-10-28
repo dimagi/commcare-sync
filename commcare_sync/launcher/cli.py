@@ -43,6 +43,8 @@ from commcare_sync.launcher.instance import (
     read_instance_port,
     remove_cluster_file,
     remove_instance_file,
+    remove_stop_request,
+    watch_for_stop_request,
     write_cluster_file,
     write_instance_file,
 )
@@ -302,8 +304,10 @@ def main(argv: list[str] | None = None) -> int:
         lock = acquire_instance_lock(data_dir)
         if lock is None:
             return _defer_to_running_instance(data_dir, args.mode)
-        # Left behind by a previous instance that was killed outright.
+        # Left behind by a previous instance that was killed outright, or
+        # asked to stop as it exited.
         remove_instance_file(data_dir)
+        remove_stop_request(data_dir)
         stop_orphaned_cluster(data_dir)
         try:
             return _run(args, data_dir)
@@ -362,6 +366,7 @@ def _run(args: argparse.Namespace, data_dir: Path) -> int:
         # Before the cluster child starts, so that a signal arriving
         # during startup stops the child instead of orphaning it.
         shutdown = install_shutdown_handlers()
+        watch_for_stop_request(data_dir, shutdown)
         server, web_thread = start_web_server(sock)
         cleanup.callback(server.close)
         url = server_url(host, port)

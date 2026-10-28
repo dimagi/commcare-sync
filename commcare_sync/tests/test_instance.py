@@ -1,4 +1,5 @@
 import json
+import threading
 
 import psutil
 import pytest
@@ -11,6 +12,8 @@ from commcare_sync.launcher.instance import (
     read_instance_port,
     remove_cluster_file,
     remove_instance_file,
+    remove_stop_request,
+    watch_for_stop_request,
     write_cluster_file,
     write_instance_file,
 )
@@ -118,3 +121,35 @@ class TestClusterFile:
         with _caplog().at_level('WARNING'):
             assert read_cluster_process(_tmp_path()) is None
         assert str(_tmp_path() / 'cluster.json') in _caplog().text
+
+
+@use(_tmp_path)
+class TestStopRequest:
+    def test_a_stop_request_is_noticed_and_consumed(self):
+        shutdown = threading.Event()
+        watcher = watch_for_stop_request(
+            _tmp_path(), shutdown, poll_interval=0.01
+        )
+
+        (_tmp_path() / 'stop').touch()
+
+        assert shutdown.wait(timeout=5)
+        watcher.join(timeout=5)
+        assert not (_tmp_path() / 'stop').exists()
+
+    def test_the_watcher_ends_with_the_shutdown(self):
+        shutdown = threading.Event()
+        watcher = watch_for_stop_request(
+            _tmp_path(), shutdown, poll_interval=0.01
+        )
+
+        shutdown.set()
+
+        watcher.join(timeout=5)
+        assert not watcher.is_alive()
+
+    def test_a_stale_request_is_removed(self):
+        (_tmp_path() / 'stop').touch()
+        remove_stop_request(_tmp_path())
+        remove_stop_request(_tmp_path())
+        assert not (_tmp_path() / 'stop').exists()
