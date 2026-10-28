@@ -7,6 +7,9 @@ node_modules/
 media/
 docs/_build
 _dist/
+# PyInstaller
+build/
+dist/
 commcare_sync/settings_local.py
 static_root/
 logs/

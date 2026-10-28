@@ -46,6 +46,9 @@ dev = [
     "pip-tools",
     "kaapstorm-parsimony",
 ]
+packaging = [
+    "pyinstaller>=6.22.3",
+]
 test = [
     "django-stubs",
     "mypy",
