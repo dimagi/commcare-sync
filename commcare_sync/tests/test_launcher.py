@@ -168,6 +168,28 @@ def desktop_args(data_dir):
 
 
 @use(launcher_process_state, _tmp_path, _monkeypatch)
+def test_run_det_hands_its_arguments_to_the_export_tool():
+    handed = []
+
+    def export_tool_main(argv):
+        handed.append(argv)
+        return 3
+
+    _monkeypatch().setattr('commcare_export.cli.main', export_tool_main)
+    _monkeypatch().setattr(
+        'commcare_sync.launcher.cli.resolve_data_dir',
+        lambda arg: pytest.fail('the data directory was resolved'),
+    )
+
+    exit_code = main(['--run-det', '--query', 'q.xlsx', '--version'])
+
+    assert exit_code == 3
+    # Everything after --run-det is the export tool's, including options
+    # the launcher's own parser would reject.
+    assert handed == [['--query', 'q.xlsx', '--version']]
+
+
+@use(launcher_process_state, _tmp_path, _monkeypatch)
 class TestMainFailures:
     def test_port_in_use_exits_nonzero_without_booting(self):
         _monkeypatch().setattr(

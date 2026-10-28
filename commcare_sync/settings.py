@@ -253,6 +253,7 @@ Q_CLUSTER = {
 # CommCare Config
 
 COMMCARE_DEFAULT_SERVER = 'https://www.commcarehq.org'
+# The Data Export Tool, when not frozen; see apps.exports.runner.
 COMMCARE_EXPORT = 'commcare-export'  # replace with absolute path if you need
 
 # Run everything every 12 hours by default

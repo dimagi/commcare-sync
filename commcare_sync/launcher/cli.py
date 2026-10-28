@@ -244,9 +244,26 @@ def run_qcluster(data_dir_arg: str | None) -> int:
         return EXIT_FAILURE
 
 
+def run_det(argv: list[str]) -> int:
+    """
+    The launcher as the Data Export Tool: a bundle has no
+    ``commcare-export`` script, so the export runner starts the bundle
+    itself with ``--run-det``; see ``apps.exports.runner``.
+    """
+    from commcare_export.cli import main as export_tool_main
+
+    return export_tool_main(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     multiprocessing.freeze_support()
 
+    if argv is None:
+        argv = sys.argv[1:]
+    # Before the parser, which would reject the export tool's options,
+    # and before the data directory, which the export tool does not use.
+    if argv[:1] == ['--run-det']:
+        return run_det(argv[1:])
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.run_qcluster:

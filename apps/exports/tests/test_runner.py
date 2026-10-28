@@ -1,6 +1,8 @@
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
+from django.conf import settings
 from django_q.exceptions import TimeoutException
 from unmagic import use
 
@@ -37,6 +39,29 @@ def test_custom_server_url():
     command = _compile_export_command(config, project, start_over=False)
 
     assert server.url in command
+
+
+@export_config_db_fixture
+@project_db_fixture
+def test_the_export_tool_is_the_configured_command():
+    command = _compile_export_command(
+        export_config_db_fixture(), project_db_fixture(), start_over=False
+    )
+
+    assert command[:1] == [settings.COMMCARE_EXPORT]
+
+
+@export_config_db_fixture
+@project_db_fixture
+def test_a_frozen_build_runs_the_export_tool_as_itself(monkeypatch):
+    # A bundle has no commcare-export script and no system Python.
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+
+    command = _compile_export_command(
+        export_config_db_fixture(), project_db_fixture(), start_over=False
+    )
+
+    assert command[:2] == [sys.executable, '--run-det']
 
 
 @export_config_db_fixture

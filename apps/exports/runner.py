@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -107,9 +108,16 @@ def _stream_log(process, export_record):
     return log_buffer
 
 
+def _export_tool_command():
+    if getattr(sys, 'frozen', False):
+        # A bundle has neither the commcare-export script nor a system
+        # Python; the bundle runs the export tool itself.
+        return [sys.executable, '--run-det']
+    return [settings.COMMCARE_EXPORT]
+
+
 def _compile_export_command(export_config, project, start_over):
-    command = [
-        settings.COMMCARE_EXPORT,
+    command = _export_tool_command() + [
         '--project',
         project.domain,
         '--username',
