@@ -35,6 +35,7 @@ from commcare_sync.launcher.env import (
     LOGS_DIRNAME,
     MODE_ENV_VAR,
     PORT_ENV_VAR,
+    RUN_DET_FLAG,
     SETUP_TOKEN_ENV_VAR,
     Mode,
 )
@@ -244,9 +245,22 @@ def run_qcluster(data_dir_arg: str | None) -> int:
         return EXIT_FAILURE
 
 
+def run_det(argv: list[str]) -> int:
+    """The launcher as the Data Export Tool; see ``RUN_DET_FLAG``."""
+    from commcare_export.cli import main as export_tool_main
+
+    return export_tool_main(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     multiprocessing.freeze_support()
 
+    if argv is None:
+        argv = sys.argv[1:]
+    # Before the parser, which would reject the export tool's options,
+    # and before the data directory, which the export tool does not use.
+    if argv[:1] == [RUN_DET_FLAG]:
+        return run_det(argv[1:])
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.run_qcluster:

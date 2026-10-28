@@ -1,8 +1,11 @@
 import subprocess
+import sys
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.utils import timezone
+
+from commcare_sync.launcher.env import RUN_DET_FLAG, is_frozen
 
 from .models import (
     ExportRun,
@@ -107,9 +110,14 @@ def _stream_log(process, export_record):
     return log_buffer
 
 
+def _export_tool_command():
+    if is_frozen():
+        return [sys.executable, RUN_DET_FLAG]
+    return [settings.COMMCARE_EXPORT]
+
+
 def _compile_export_command(export_config, project, start_over):
-    command = [
-        settings.COMMCARE_EXPORT,
+    command = _export_tool_command() + [
         '--project',
         project.domain,
         '--username',

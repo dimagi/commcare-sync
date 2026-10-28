@@ -4,6 +4,7 @@ Names shared between the launcher and the settings module.
 Free of Django imports: both sides read this before ``django.setup()``.
 """
 
+import sys
 from enum import StrEnum
 
 APP_NAME = 'commcare-sync'
@@ -30,3 +31,14 @@ LOG_FORMAT = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 class Mode(StrEnum):
     DESKTOP = 'desktop'
     SERVER = 'server'
+
+
+# A PyInstaller bundle has no commcare-export script and no system
+# Python, so it runs the export tool itself: apps.exports.runner starts
+# sys.executable with RUN_DET_FLAG, and launcher.cli hands the rest of
+# the arguments to the tool.
+RUN_DET_FLAG = '--run-det'
+
+
+def is_frozen() -> bool:
+    return getattr(sys, 'frozen', False)
