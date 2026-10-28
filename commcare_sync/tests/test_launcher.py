@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import signal
@@ -23,6 +24,7 @@ from commcare_sync.launcher.cli import (
     EXIT_FAILURE,
     EXIT_MISCONFIGURED,
     build_parser,
+    configure_logging,
     main,
     start_web_server,
     wait_for_shutdown,
@@ -187,6 +189,44 @@ def test_run_det_hands_its_arguments_to_the_export_tool():
     # Everything after --run-det is the export tool's, including options
     # the launcher's own parser would reject.
     assert handed == [['--query', 'q.xlsx', '--version']]
+
+
+@fixture
+@use(_monkeypatch)
+def frozen():
+    _monkeypatch().setattr(sys, 'frozen', True, raising=False)
+    yield
+
+
+@use(launcher_process_state, _tmp_path, _monkeypatch, frozen)
+class TestFrozenDefaults:
+    def record_mode(self):
+        modes = []
+
+        def run(args, data_dir):
+            modes.append(args.mode)
+            return 0
+
+        _monkeypatch().setattr('commcare_sync.launcher.cli._run', run)
+        return modes
+
+    def test_no_arguments_means_desktop_mode(self):
+        # Double-clicked, there are no arguments and no terminal.
+        _monkeypatch().setenv(DATA_DIR_ENV_VAR, str(_tmp_path()))
+        modes = self.record_mode()
+        assert main([]) == 0
+        assert modes == [DESKTOP]
+
+    def test_server_mode_is_still_available(self):
+        modes = self.record_mode()
+        assert main(['--server', '--data-dir', str(_tmp_path())]) == 0
+        assert modes == [SERVER]
+
+    def test_logs_go_to_the_data_directory_only(self):
+        (_tmp_path() / 'logs').mkdir()
+        configure_logging(_tmp_path())
+        handlers = logging.getLogger('commcare_sync.launcher').handlers
+        assert [type(handler) for handler in handlers] == [logging.FileHandler]
 
 
 @use(launcher_process_state, _tmp_path, _monkeypatch)

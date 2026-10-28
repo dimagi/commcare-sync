@@ -182,11 +182,14 @@ def configure_logging(data_dir: Path) -> None:
     for handler in list(launcher_logger.handlers):
         launcher_logger.removeHandler(handler)
     handlers: list[logging.Handler] = [
-        logging.StreamHandler(sys.stdout),
         logging.FileHandler(
             data_dir / LOGS_DIRNAME / LAUNCHER_LOG_FILENAME, encoding='utf-8'
         ),
     ]
+    if not is_frozen():
+        # A windowed build has no stdout (None on Windows); the log file
+        # is the only place its output can be read.
+        handlers.append(logging.StreamHandler(sys.stdout))
     formatter = logging.Formatter(LOG_FORMAT)
     for handler in handlers:
         handler.setFormatter(formatter)
@@ -244,6 +247,11 @@ def run_qcluster(data_dir_arg: str | None) -> int:
         return EXIT_FAILURE
 
 
+def is_frozen() -> bool:
+    # Running as a PyInstaller bundle.
+    return getattr(sys, 'frozen', False)
+
+
 def run_det(argv: list[str]) -> int:
     """
     The launcher as the Data Export Tool: a bundle has no
@@ -264,6 +272,9 @@ def main(argv: list[str] | None = None) -> int:
     # and before the data directory, which the export tool does not use.
     if argv[:1] == ['--run-det']:
         return run_det(argv[1:])
+    if is_frozen() and not argv:
+        # Double-clicked: a desktop user, with no terminal to add --desktop.
+        argv = ['--desktop']
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.run_qcluster:
