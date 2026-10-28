@@ -11,4 +11,9 @@ urlpatterns = [
         TemplateView.as_view(template_name="web/terms.html"),
         name='terms',
     ),
+    path(
+        'banners/failed-runs/dismiss/',
+        views.dismiss_failed_runs_banner,
+        name='dismiss_failed_runs_banner',
+    ),
 ]

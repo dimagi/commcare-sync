@@ -1,0 +1,39 @@
+{% load i18n humanize %}
+{% if failed_runs %}
+  <div class="container">
+    <div
+      class="alert alert-warning alert-dismissible fade show"
+      role="alert"
+      id="failed-runs-banner"
+    >
+      <strong>
+        {% blocktrans count counter=failed_runs.total_count trimmed %}
+          A run did not finish
+        {% plural %}
+          {{ counter }} runs did not finish
+        {% endblocktrans %}
+      </strong>
+      <ul class="mb-0">
+        {% for entry in failed_runs.entries %}
+          <li>
+            {{ entry.label }} ({{ entry.kind }}): {{ entry.status }}
+            {{ entry.completed_at|naturaltime }}
+          </li>
+        {% endfor %}
+        {% if failed_runs.more %}
+          <li>
+            {% blocktrans with n=failed_runs.more %}and {{ n }} more{% endblocktrans %}
+          </li>
+        {% endif %}
+      </ul>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="{% trans 'Close' %}"
+        hx-post="{% url 'web:dismiss_failed_runs_banner' %}"
+        hx-swap="none"
+      ></button>
+    </div>
+  </div>
+{% endif %}

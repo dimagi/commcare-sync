@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% load static %}
+{% load static failed_runs_tags %}
 {% block page_js %}
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -11,6 +11,7 @@
 {% endblock %}
 {% block body %}
   {% block notifications %}
+    {% failed_runs_banner %}
   {% endblock %}
   <section class="py-4">
     <div class="container app-two-column" id="app-main">
