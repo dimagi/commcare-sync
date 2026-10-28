@@ -9,13 +9,17 @@ import pytest
 from unmagic import fixture, use
 
 from commcare_sync.launcher.cli import EXIT_FAILURE
+from apps.refreshes.models import RefreshConfig, RefreshRun
 from commcare_sync.launcher.desktop import (
+    CLOSE_CONFIRMATION,
     WINDOW_TITLE,
+    confirm_close_while_runs_are_active,
     open_in_browser,
     run_desktop_ui,
 )
 from commcare_sync.launcher.env import OPEN_PAGE_FILENAME
 from commcare_sync.tests.helpers import wait_until
+from tests.fixtures import database
 
 _tmp_path = fixture('tmp_path')
 _monkeypatch = fixture('monkeypatch')
@@ -183,6 +187,34 @@ class TestWindow:
         assert result == [0]
         assert browser() == []
 
+    def test_the_window_asks_before_closing_in_our_words(self):
+        shutdown = threading.Event()
+        thread, _ = run_in_thread(_tmp_path(), shutdown, waits_for(shutdown))
+        try:
+            assert wait_until(lambda: webview().started_with is not None)
+        finally:
+            webview().window.destroy()
+            thread.join(timeout=5)
+
+        localization = webview().started_with['localization']
+        assert localization['global.quitConfirmation'] == CLOSE_CONFIRMATION
+        [handler] = webview().window.events.closing.handlers
+        assert handler.func is confirm_close_while_runs_are_active
+
+    @use(_monkeypatch)
+    def test_macos_also_opens_a_window(self):
+        _monkeypatch().setattr(sys, 'platform', 'darwin')
+        shutdown = threading.Event()
+        thread, result = run_in_thread(
+            _tmp_path(), shutdown, waits_for(shutdown)
+        )
+        try:
+            assert wait_until(lambda: webview().created_with is not None)
+            webview().window.destroy()
+        finally:
+            thread.join(timeout=5)
+        assert result == [0]
+
     def test_a_cluster_that_gives_up_closes_the_window(self):
         gave_up = threading.Event()
         shutdown = threading.Event()
@@ -308,3 +340,50 @@ class TestWindowFallback:
         assert exit_code == 0
         assert browser() == [(_tmp_path() / OPEN_PAGE_FILENAME).as_uri()]
         assert 'Could not open a desktop window' in _caplog().text
+
+
+@fixture
+@use('db')
+def refresh_run():
+    config = RefreshConfig.objects.create(
+        name='Nightly', database=database(), materialized_views=['v']
+    )
+    yield RefreshRun.objects.create(config=config)
+
+
+@use(refresh_run)
+class TestConfirmClose:
+    def closing(self, status, shutdown=None):
+        refresh_run().status = status
+        refresh_run().save()
+        window = FakeWindow()
+        confirm_close_while_runs_are_active(
+            window, shutdown or threading.Event()
+        )
+        return window.confirm_close
+
+    def test_asks_while_a_run_is_queued(self):
+        assert self.closing(RefreshRun.Status.QUEUED) is True
+
+    def test_asks_while_a_run_is_started(self):
+        assert self.closing(RefreshRun.Status.STARTED) is True
+
+    def test_does_not_ask_when_no_run_is_active(self):
+        assert self.closing(RefreshRun.Status.COMPLETED) is False
+
+    def test_does_not_ask_once_shutdown_is_requested(self):
+        # The watcher is closing the window; there is nothing to decide.
+        shutdown = threading.Event()
+        shutdown.set()
+        assert self.closing(RefreshRun.Status.STARTED, shutdown) is False
+
+    @use(_monkeypatch, _caplog)
+    def test_asks_when_the_check_itself_fails(self):
+        def fail():
+            raise RuntimeError('database is locked')
+
+        _monkeypatch().setattr('apps.schedules.tasks.runs_are_active', fail)
+        with _caplog().at_level(logging.ERROR, 'commcare_sync.launcher'):
+            assert self.closing(RefreshRun.Status.COMPLETED) is True
+        assert 'Could not check for active runs' in _caplog().text
+        assert 'database is locked' in _caplog().text
