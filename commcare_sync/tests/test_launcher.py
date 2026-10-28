@@ -403,6 +403,15 @@ class TestMainFailures:
                 orphan.kill()
         assert not (_tmp_path() / 'cluster.json').exists()
 
+    def test_a_stale_stop_request_is_removed_at_startup(self):
+        # Left by a request that arrived as the last launcher exited.
+        (_tmp_path() / 'stop').touch()
+        _monkeypatch().setattr(
+            'commcare_sync.launcher.cli._run', lambda args, data_dir: 0
+        )
+        assert main(['--data-dir', str(_tmp_path())]) == 0
+        assert not (_tmp_path() / 'stop').exists()
+
     def test_a_stale_instance_file_is_removed_at_startup(self):
         (_tmp_path() / 'instance.json').write_text('{"port": 1, "pid": 1}')
         _monkeypatch().setattr(

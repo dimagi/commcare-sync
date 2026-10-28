@@ -131,7 +131,8 @@ files in a data directory, separate from this checkout's `db.sqlite3`:
 `COMMCARE_SYNC_DATA_DIR` to use another. The launcher writes to
 `logs/launcher.log` there, and the app to `logs/app.log`. Management
 commands run against the same data directory when
-`COMMCARE_SYNC_DATA_DIR` is set.
+`COMMCARE_SYNC_DATA_DIR` is set. To stop the launcher without a
+terminal, create a file named `stop` in the data directory.
 
 The setup page only works from a browser running on the server, opened
 at the link the launcher printed, so that nobody else on the network,

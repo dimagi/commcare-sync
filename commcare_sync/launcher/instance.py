@@ -9,6 +9,9 @@ The cluster child holds no lock and outlives a launcher that is killed
 outright, so it records itself in a third file, for the next launcher to
 stop it before touching the database.
 
+A fourth file, ``stop``, is a request from outside: creating it stops the
+running launcher, for anyone without a signal to send.
+
 Runs before ``django.setup()``.
 """
 
@@ -16,6 +19,7 @@ import json
 import logging
 import os
 import sys
+import threading
 from pathlib import Path
 from typing import IO
 
@@ -24,6 +28,7 @@ import psutil
 INSTANCE_FILENAME = 'instance.json'
 LOCK_FILENAME = 'instance.lock'
 CLUSTER_FILENAME = 'cluster.json'
+STOP_FILENAME = 'stop'
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +111,41 @@ def read_cluster_process(data_dir: Path) -> psutil.Process | None:
     except psutil.Error as err:
         logger.warning('Ignoring the process recorded in %s: %s', path, err)
     return None
+
+
+def remove_stop_request(data_dir: Path) -> None:
+    (data_dir / STOP_FILENAME).unlink(missing_ok=True)
+
+
+def watch_for_stop_request(
+    data_dir: Path, shutdown: threading.Event, poll_interval: float = 0.5
+) -> threading.Thread:
+    """
+    Sets ``shutdown`` when the stop file appears, and removes the file so
+    that it does not stop the next launch too. A windowed build on
+    Windows has no console for a Ctrl-C and no SIGTERM to receive, so
+    this is how a script, or the smoke test, stops it cleanly.
+    """
+    path = data_dir / STOP_FILENAME
+
+    def watch() -> None:
+        while not shutdown.wait(poll_interval):
+            requested = False
+            try:
+                requested = path.exists()
+                if requested:
+                    logger.info('Stop requested by %s', path)
+                    path.unlink(missing_ok=True)
+            except OSError as err:
+                # An indexer or antivirus holding the file, say. Seen is
+                # seen: a request must not go unanswered.
+                logger.warning('Could not check or remove %s: %s', path, err)
+            if requested:
+                shutdown.set()
+
+    thread = threading.Thread(target=watch, name='stop-request', daemon=True)
+    thread.start()
+    return thread
 
 
 def _write_json(path: Path, record: dict) -> None:
