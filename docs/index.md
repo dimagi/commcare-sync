@@ -1,6 +1,7 @@
 CommCare Data Pipeline
 ======================
 
+* [Pilot builds for Windows and macOS](pilot_guide.md)
 * [Configuring CommCare Data Pipeline](config.md)
 * [Setting up a test data pipeline](test_pipeline.md)
 * [Installing a development environment with Docker](install_docker.md)
