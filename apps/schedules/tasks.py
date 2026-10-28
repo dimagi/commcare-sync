@@ -86,6 +86,16 @@ def reap_stale_runs():
     return _interrupt_runs_started_before(cutoff)
 
 
+def runs_are_active():
+    """Returns ``True`` while any run is queued or started."""
+    return any(
+        run_model.objects.filter(
+            status__in=RunBaseModel.ACTIVE_STATUSES
+        ).exists()
+        for run_model in RUN_MODELS
+    )
+
+
 def interrupt_unfinished_runs():
     """
     Marks every ``STARTED`` run ``INTERRUPTED``, however recently it

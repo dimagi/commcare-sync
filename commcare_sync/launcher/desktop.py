@@ -14,6 +14,7 @@ import threading
 import webbrowser
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,10 @@ from commcare_sync.launcher.env import OPEN_PAGE_FILENAME
 
 WINDOW_TITLE = 'CommCare Data Pipeline'
 WEBVIEW_PLATFORMS = ('win32', 'darwin')
+CLOSE_CONFIRMATION = (
+    'A run is in progress. Closing CommCare Data Pipeline will stop it. '
+    'It will start again when you next open the app.'
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +69,9 @@ def _show_window(
     import webview  # type: ignore[import-not-found]
 
     window = webview.create_window(WINDOW_TITLE, url)
+    window.events.closing += partial(
+        confirm_close_while_runs_are_active, shutdown=shutdown
+    )
 
     def close_window(_: Future[int]) -> None:
         # Not yet set if the cluster or the web server failed.
@@ -73,10 +81,46 @@ def _show_window(
     waiting.add_done_callback(close_window)
     logger.info('Opening the desktop window')
     # Returns when the window is closed, by the user or by close_window().
-    webview.start()
+    webview.start(localization={'global.quitConfirmation': CLOSE_CONFIRMATION})
     if not waiting.done():
         logger.info('The desktop window was closed; shutting down')
     shutdown.set()
+
+
+def confirm_close_while_runs_are_active(
+    window: Any, shutdown: threading.Event
+) -> None:
+    """
+    Handles the window's ``closing`` event by turning pywebview's close
+    confirmation on or off. pywebview reads ``confirm_close`` once the
+    handlers have run; set, it asks in the words of
+    ``CLOSE_CONFIRMATION``, and Cancel keeps the window open. The dialog
+    is pywebview's rather than ours because on macOS this runs on the
+    main thread, and ``create_confirmation_dialog`` blocks until the
+    main thread shows it.
+    """
+    if shutdown.is_set():
+        # Closed by close_window(), which fires this event too; there is
+        # nothing left to decide.
+        window.confirm_close = False
+        return
+    # Imported here: this module loads before django.setup().
+    from django.db import connection
+
+    from apps.schedules.tasks import runs_are_active
+
+    try:
+        active = runs_are_active()
+    except Exception:
+        # Better to ask needlessly than to stop a run without warning.
+        logger.exception('Could not check for active runs before closing')
+        active = True
+    finally:
+        # This thread's connection, which nothing else would close.
+        connection.close()
+    if active:
+        logger.info('Asked before closing: a run is in progress')
+    window.confirm_close = active
 
 
 def _destroy_quietly(window: Any) -> None:
