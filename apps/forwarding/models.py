@@ -144,3 +144,7 @@ class ForwardingRun(RunBaseModel):
 
     def __str__(self):
         return f'{self.config.name} ({self.created_at})'
+
+    @property
+    def status_url(self):
+        return reverse('forwarding:run_status', args=[self.id])

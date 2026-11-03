@@ -61,24 +61,42 @@ class TestCreateRun:
 @use(database, destination, forwarding_config, mock_async)
 class TestCreateRunAndDispatch:
 
-    def test_creates_the_run_and_enqueues_its_task(self):
+    def test_enqueues_the_task_with_the_run_id(self):
+        config = forwarding_config()
+
+        run = create_run_and_dispatch(config, triggered_from_ui=True)
+
+        assert run == config.runs.get()
+        mock_async().assert_called_once_with(
+            'apps.forwarding.tasks.run_forwarding_task', run.id
+        )
+
+    def test_marks_the_run_as_ui_triggered(self):
         config = forwarding_config()
         triggering_user = user()
 
-        task_id = create_run_and_dispatch(
+        create_run_and_dispatch(
             config,
             triggered_from_ui=True,
             triggered_by=triggering_user,
-            task_kwargs={'start_over': True},
         )
 
         run = config.runs.get()
         assert run.triggered_from_ui is True
         assert run.triggered_by == triggering_user
-        assert task_id == 'task-id'
+
+    def test_passes_task_kwargs_to_the_task(self):
+        config = forwarding_config()
+
+        create_run_and_dispatch(
+            config,
+            triggered_from_ui=True,
+            task_kwargs={'start_over': True},
+        )
+
         mock_async().assert_called_once_with(
             'apps.forwarding.tasks.run_forwarding_task',
-            run.id,
+            config.runs.get().id,
             start_over=True,
         )
 
@@ -88,11 +106,10 @@ class TestCreateRunAndDispatch:
             config=config, status=RunBaseModel.Status.STARTED
         )
 
-        task_id = create_run_and_dispatch(
-            config, triggered_from_ui=True
-        )
+        run = create_run_and_dispatch(config, triggered_from_ui=True)
 
-        assert task_id is None
+        assert run is None
+        assert config.runs.count() == 1
         mock_async().assert_not_called()
 
     def test_run_is_rolled_back_if_the_task_cannot_be_queued(self):
