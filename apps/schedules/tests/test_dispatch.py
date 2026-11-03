@@ -199,6 +199,9 @@ class TestClaimRun:
             retry_of=original,
         )
 
+        # Unlike test_timed_out_run_is_retried_only_once, this claims the
+        # retry, not the original. Nothing has retried the retry, so its
+        # `retry_of=original` value is what stops it from being retried.
         assert claim_run(ForwardingRun, retry.id) is None
         assert ForwardingRun.objects.count() == 2
 
