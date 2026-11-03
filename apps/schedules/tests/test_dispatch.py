@@ -125,11 +125,10 @@ class TestClaimRun:
         # and starting it. The start is conditional, so it doesn't
         # overwrite SKIPPED.
         run = ForwardingRun.objects.create(config=forwarding_config())
-        stale = ForwardingRun.objects.get(pk=run.pk)
         ForwardingRun.objects.filter(pk=run.pk).update(
             status=RunBaseModel.Status.SKIPPED
         )
-        with patch.object(QuerySet, 'get', return_value=stale):
+        with patch.object(QuerySet, 'get', return_value=run):
             claimed = claim_run(ForwardingRun, run.id)
 
         assert claimed is None
