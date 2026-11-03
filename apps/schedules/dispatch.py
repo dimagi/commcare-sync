@@ -157,9 +157,6 @@ def _retry(run):
 
 
 def _can_retry(run):
-    """Returns ``True`` if ``run`` is an original run that has not been
-    retried.
-    """
     if run.retry_of_id is not None:
         return False
     return not type(run).objects.filter(retry_of=run).exists()
