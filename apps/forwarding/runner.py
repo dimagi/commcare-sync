@@ -14,14 +14,10 @@ def run_forwarding(fwd_run: ForwardingRun) -> ForwardingRun:
 
     :returns: The updated ForwardingRun instance
     """
-    fwd_config = fwd_run.forwarding_config
+    fwd_config = fwd_run.config
     log_lines = [
         f'{datetime.now()}: Starting forwarding for {fwd_config}',
     ]
-
-    fwd_run.status = ForwardingRun.Status.STARTED
-    fwd_run.started_at = timezone.now()
-    fwd_run.save()
 
     try:
         db_url = fwd_config.database.connection_string

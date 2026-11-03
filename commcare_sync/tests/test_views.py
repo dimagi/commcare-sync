@@ -14,7 +14,7 @@ from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 
 
 class _FakeConfig:
-    """Stand-in for a config object: has an id but no prefetched ``_all_runs``."""
+    """Stand-in for a config object: has an id but no prefetched runs."""
 
     def __init__(self, id):
         self.id = id

@@ -46,6 +46,12 @@ sake of readability.
 Use type aliases where it would clarify the type or purpose of a
 variable, e.g. `type CredentialsType = tuple[UsernameType, PasswordType]`.
 
+### Local/lazy imports
+
+Local/lazy imports are often a smell of poorly structured code. If a
+module-level import causes a circular import, investigate whether the
+code can be restructured, rather than importing locally.
+
 ### Tests
 
 Tests can be an excellent reference for the behavior of a codebase when

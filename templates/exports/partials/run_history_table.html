@@ -78,10 +78,10 @@
                     {% trans "Log" %}
                   </button>
                 {% endif %}
-                {% if run.export_config_version and run.export_config_version.field_dict.config_file %}
+                {% if run.config_version and run.config_version.field_dict.config_file %}
                   <a
                     class="btn btn-outline-secondary btn-sm icon-link"
-                    href="{% url 'exports:download_export_file_version' run.export_config_version.id %}"
+                    href="{% url 'exports:download_export_file_version' run.config_version.id %}"
                   >
                     <i class="fa-solid fa-download"></i>
                     {% trans "Config" %}
