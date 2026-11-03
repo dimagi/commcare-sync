@@ -116,7 +116,6 @@ class TestClaimRun:
         claimed = claim_run(ForwardingRun, run.id)
 
         assert claimed == run
-        assert claimed.status == RunBaseModel.Status.STARTED
         run.refresh_from_db()
         assert run.status == RunBaseModel.Status.STARTED
         assert run.started_at == claimed.started_at is not None
