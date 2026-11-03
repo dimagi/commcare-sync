@@ -22,9 +22,10 @@ def create_run(
 ):
     """Create a run for ``config``, unless one is already active.
 
-    Returns the run, or ``None`` if the config already has an active run.
-    A ``started`` run is created STARTED, for a caller that performs it
-    at once instead of dispatching it.
+    Returns ``(run, created)``, like ``get_or_create``: the new run and
+    ``True``, or the config's active run and ``False``. A ``started`` run
+    is created STARTED, for a caller that performs it at once instead of
+    dispatching it.
 
     The check and the insert share a transaction, so that two concurrent
     triggers can't both see no active run and both create one. The
@@ -33,21 +34,23 @@ def create_run(
     when the transaction begins, so triggers are serialised.
     """
     with transaction.atomic():
-        if config.has_active_run:
-            return None
+        active_run = config.active_run
+        if active_run is not None:
+            return active_run, False
         extra = {}
         if started:
             extra = {
                 'status': RunBaseModel.Status.STARTED,
                 'started_at': timezone.now(),
             }
-        return config.runs.create(
+        run = config.runs.create(
             config_version=config.latest_version,
             triggered_from_ui=triggered_from_ui,
             triggered_by=triggered_by,
             retry_of=retry_of,
             **extra,
         )
+        return run, True
 
 
 def create_run_and_dispatch(
@@ -73,12 +76,12 @@ def create_run_and_dispatch(
     blocking its config.
     """
     with transaction.atomic():
-        run = create_run(
+        run, created = create_run(
             config,
             triggered_from_ui=triggered_from_ui,
             triggered_by=triggered_by,
         )
-        if run is None:
+        if not created:
             return None
         return async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
 
@@ -135,24 +138,25 @@ def _start(run):
 def _retry(run):
     """Create and return a STARTED retry of ``run``, or ``None``."""
     run_model = type(run)
-    retry = create_run(
+    retry, created = create_run(
         run.config,
         triggered_from_ui=run.triggered_from_ui,
         triggered_by=run.triggered_by,
         retry_of=run,
         started=True,
     )
-    if retry is None:
+    if not created:
+        active_run = retry
         logger.info(
-            '%s %s timed out, but its config already has an active run. '
-            'Not retrying.',
-            run_model.__name__, run.id,
+            '%s %s timed out, but its config already has an active run, '
+            '%s %s. Not retrying.',
+            run_model.__name__, run.id, run_model.__name__, active_run.id,
         )
-    else:
-        logger.warning(
-            '%s %s timed out. Retrying it as %s %s.',
-            run_model.__name__, run.id, run_model.__name__, retry.id,
-        )
+        return None
+    logger.warning(
+        '%s %s timed out. Retrying it as %s %s.',
+        run_model.__name__, run.id, run_model.__name__, retry.id,
+    )
     return retry
 
 
