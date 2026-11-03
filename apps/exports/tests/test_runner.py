@@ -83,17 +83,13 @@ def test_partial_runs_are_created_started():
     parent = MultiProjectExportRun.objects.create(
         config=multi_config, status=MultiProjectExportRun.Status.STARTED
     )
-    seen = []
 
-    def record_state(export_config, project, export_record, start_over):
-        seen.append((export_record.status, export_record.started_at))
-        return export_record
-
-    with patch(
-        'apps.exports.runner._run_export_for_project', side_effect=record_state
-    ):
+    with patch('apps.exports.runner._run_export_for_project') as mock_run:
+        mock_run.return_value.status = (
+            MultiProjectPartialExportRun.Status.COMPLETED
+        )
         run_multi_project_export(parent)
 
-    [(status, started_at)] = seen
-    assert status == MultiProjectPartialExportRun.Status.STARTED
-    assert started_at is not None
+    export_record = mock_run.call_args.args[2]
+    assert export_record.status == MultiProjectPartialExportRun.Status.STARTED
+    assert export_record.started_at is not None
