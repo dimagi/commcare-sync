@@ -1,11 +1,14 @@
+import pytest
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.test import override_settings
 from unmagic import fixture, use
 
 from apps.commcare.models import (
     CommCareAccount,
+    CommCareProject,
     CommCareServer,
     RunBaseModel,
 )
@@ -92,6 +95,40 @@ def account():
         a.api_key = 'dummy-key'
         a.save()
     yield a
+
+
+class TestCommCareProjectDomainValidation:
+    @pytest.mark.parametrize('domain', [
+        'test-domain',
+        'demo',
+        'demo123',
+        '123',
+        'a-b-c-d',
+        '0d0d558e07a44e1a9a1b5e0e07a3f2b1',
+    ])
+    def test_valid_domains(self, domain):
+        self._clean_domain(domain)  # does not raise
+
+    @pytest.mark.parametrize('domain', [
+        '',
+        'Test-Domain',  # uppercase
+        'test_domain',  # underscore
+        'test domain',  # space
+        'test.domain',  # dot
+        'test--domain',  # consecutive hyphens
+        '-test-domain',  # leading hyphen
+        'test-domain-',  # trailing hyphen
+        'tëst-domain',  # non-ASCII
+        'test-domain/exports',  # slash
+    ])
+    def test_invalid_domains(self, domain):
+        with pytest.raises(ValidationError):
+            self._clean_domain(domain)
+
+    @staticmethod
+    def _clean_domain(domain):
+        project = CommCareProject(domain=domain)
+        project.clean_fields(exclude={'server'})
 
 
 @use('db')
