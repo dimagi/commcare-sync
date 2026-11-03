@@ -95,7 +95,7 @@ def claim_run(run_model, run_id):
     status to determine what should happen when a task is delivered:
 
     * If a run's status is QUEUED, it is on its first delivery: Mark it
-      STARTED and execute it
+      STARTED and execute it.
     * A run that ``reap_stale_runs`` marked TIMEOUT is retried once, as
       a new run, created STARTED, and linked to the first attempt by
       ``retry_of``. Only a run whose worker died gets here.
