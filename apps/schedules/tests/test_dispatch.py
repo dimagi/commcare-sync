@@ -28,8 +28,9 @@ class TestCreateRun:
     def test_creates_a_run_for_the_config(self):
         config = forwarding_config()
 
-        run = create_run(config)
+        run, created = create_run(config)
 
+        assert created is True
         assert isinstance(run, ForwardingRun)
         assert run.config == config
         assert run.status == RunBaseModel.Status.QUEUED
@@ -41,20 +42,20 @@ class TestCreateRun:
         config = forwarding_config()
         triggering_user = user()
 
-        run = create_run(
+        run, _ = create_run(
             config, triggered_from_ui=True, triggered_by=triggering_user
         )
 
         assert run.triggered_from_ui is True
         assert run.triggered_by == triggering_user
 
-    def test_returns_none_when_a_run_is_active(self):
+    def test_returns_the_active_run_when_one_is_active(self):
         config = forwarding_config()
-        ForwardingRun.objects.create(
+        active_run = ForwardingRun.objects.create(
             config=config, status=RunBaseModel.Status.STARTED
         )
 
-        assert create_run(config) is None
+        assert create_run(config) == (active_run, False)
         assert config.runs.count() == 1
 
 
