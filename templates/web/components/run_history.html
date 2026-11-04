@@ -4,11 +4,12 @@
   class="py-4 app-card"
   x-data="runButton"
   data-run-url="{{ run_url }}"
-  data-task-status-url="{% url 'web:task_status' 'TASK_ID' %}"
-  data-waiting="{% trans 'Waiting for task to start...' %}"
-  data-running="{% trans 'Running...' %}"
-  data-complete="{% trans 'Complete!' %}"
-  data-failed="{% trans 'Failed!' %}"
+  data-waiting="{% trans 'Waiting for the run to start...' %}"
+  data-already-running="{% trans 'Already running' %}"
+  data-run-gone="{% trans 'This run no longer exists' %}"
+  data-session-expired="{% trans 'Session expired — refresh the page' %}"
+  data-start-failed="{% trans 'Could not start the run' %}"
+  data-poll-failed="{% trans 'Lost track of this run — refresh the page' %}"
 >
   <div
     class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2"
@@ -83,6 +84,14 @@
       </div>
     </div>
   </div>
+  <div
+    id="run-notice"
+    class="alert alert-warning py-2 px-3 my-2"
+    role="status"
+    x-show="notice"
+    x-text="notice"
+    x-cloak
+  ></div>
   <div id="run-status-progress" class="my-2" x-show="running" x-cloak>
     <div class="progress" style="height: 20px;">
       <div
