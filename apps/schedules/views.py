@@ -4,16 +4,33 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET
 
 
-def run_response(request, task_id=None):
-    """Return the standard response for a run-trigger endpoint.
+def run_started_response(request, run):
+    """Return a run-trigger endpoint's response for a started ``run``.
 
-    HTMX callers get 204 + an HX-Trigger that fires an immediate table
-    refresh. Direct callers (e.g. the detail-page JS) get the Django-Q task
-    ID.
+    HTMX callers get ``htmx_run_started_response()``. Direct callers (the
+    detail-page JS) get JSON naming the run to poll.
     """
     if request.headers.get('HX-Request'):
-        return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
-    return HttpResponse(task_id)
+        return htmx_run_started_response()
+    return JsonResponse({'poll_url': run.status_url})
+
+
+def run_refused_response(request, active_run):
+    """Return a run-trigger endpoint's response when ``active_run``
+    prevented a new run from starting.
+
+    HTMX callers get the same response as for a started run: the
+    refreshed table shows the active run either way. Direct callers get
+    409.
+    """
+    if request.headers.get('HX-Request'):
+        return htmx_run_started_response()
+    return JsonResponse({'error': 'already_running'}, status=409)
+
+
+def htmx_run_started_response():
+    """Return 204 + an HX-Trigger that fires an immediate table refresh."""
+    return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
 
 
 @login_required
