@@ -9,8 +9,8 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
+from apps.schedules.views import run_response
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
