@@ -217,3 +217,14 @@ class TestIsTerminal:
     def test_an_unknown_status_is_terminal(self):
         # Terminal-by-default: a status added later must not poll forever.
         assert ExportRun(status='invented-later').is_terminal
+
+
+class TestTone:
+    def test_a_status_has_its_tone(self):
+        assert ForwardingRun(status=RunBaseModel.Status.FAILED).tone == 'danger'
+
+    def test_multiple_has_a_tone_on_export_runs(self):
+        assert ExportRun(status=ExportRun.Status.MULTIPLE).tone == 'warning'
+
+    def test_an_unknown_status_is_secondary(self):
+        assert ExportRun(status='invented-later').tone == 'secondary'

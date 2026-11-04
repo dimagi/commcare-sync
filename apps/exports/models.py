@@ -136,6 +136,11 @@ class ExportRunBase(RunBaseModel):
         TIMEOUT = 'timeout', _('Timed out')
         MULTIPLE = 'multiple', _('Multiple statuses')
 
+    STATUS_TONES = {
+        **RunBaseModel.STATUS_TONES,
+        Status.MULTIPLE: 'warning',
+    }
+
     status = models.CharField(
         max_length=10,
         default=Status.QUEUED,

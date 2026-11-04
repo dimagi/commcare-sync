@@ -39,6 +39,16 @@ class RunBaseModel(BaseModel):
     LOGGED_STATUSES = frozenset(
         {Status.COMPLETED, Status.FAILED, Status.TIMEOUT}
     )
+    # The Bootstrap theme colour that shows each status, wherever it is
+    # shown. ExportRunBase adds MULTIPLE.
+    STATUS_TONES: dict[str, str] = {
+        Status.QUEUED: 'secondary',
+        Status.STARTED: 'primary',
+        Status.COMPLETED: 'success',
+        Status.FAILED: 'danger',
+        Status.SKIPPED: 'secondary',
+        Status.TIMEOUT: 'warning',
+    }
 
     status = models.CharField(
         max_length=10,
@@ -85,6 +95,11 @@ class RunBaseModel(BaseModel):
     def is_terminal(self):
         """True when the run is over, whatever its outcome."""
         return self.status not in self.ACTIVE_STATUSES
+
+    @property
+    def tone(self):
+        """The Bootstrap theme colour for the run's status."""
+        return self.STATUS_TONES.get(self.status, 'secondary')
 
     @property
     def duration(self):
