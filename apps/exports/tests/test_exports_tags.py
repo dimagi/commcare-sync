@@ -22,12 +22,12 @@ def test_doctests():
             'fa-triangle-exclamation',
             'text-warning',
         ),
-        (ExportRunBase.Status.QUEUED, 'fa-ellipsis', 'text-muted'),
-        (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-muted'),
+        (ExportRunBase.Status.QUEUED, 'fa-ellipsis', 'text-secondary'),
+        (ExportRunBase.Status.SKIPPED, 'fa-ban', 'text-secondary'),
         (ExportRunBase.Status.TIMEOUT, 'fa-clock', 'text-warning'),
 
-        # An unmapped status renders 'fa-solid None None' rather than raising.
-        ('unknown_status', 'None', 'None'),
+        # An unmapped status renders without an icon rather than raising.
+        ('unknown_status', 'None', 'text-secondary'),
     ],
 )
 def test_to_status_icon(status, expected_icon, expected_class):
