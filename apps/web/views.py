@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django_q.tasks import fetch
@@ -10,18 +10,6 @@ def home(request):
         return HttpResponseRedirect(reverse('exports:home'))
     else:
         return render(request, 'web/landing_page.html')
-
-
-def run_response(request, task_id=None):
-    """Return the standard response for a run-trigger endpoint.
-
-    HTMX callers get 204 + an HX-Trigger that fires an immediate table
-    refresh. Direct callers (e.g. the detail-page JS) get the Django-Q task
-    ID.
-    """
-    if request.headers.get('HX-Request'):
-        return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
-    return HttpResponse(task_id)
 
 
 @login_required
