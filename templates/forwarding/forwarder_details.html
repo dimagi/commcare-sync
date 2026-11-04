@@ -65,5 +65,5 @@
   {% include 'forwarding/partials/run_history.html' %}
 {% endblock app %}
 {% block page_js %}
-  {% include 'web/components/run_button_script.html' with run_url_name='forwarding:run_forwarding' object_id=forwarder.id include_start_over=False %}
+  <script src="{% static 'js/run_button.js' %}"></script>
 {% endblock page_js %}
