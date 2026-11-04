@@ -66,8 +66,8 @@ def create_run_and_dispatch(
     is called with the run's ID and ``task_kwargs`` (e.g.
     ``{'start_over': True}``).
 
-    Returns the Django Q2 task ID, or ``None`` if a run is already
-    active.
+    Returns ``(run, created)``, as ``create_run`` does. The task is only
+    enqueued for a created run.
 
     The run and its queue entry are committed together, in the same
     transaction as ``create_run``'s check. Django Q2's ORM broker queues
@@ -81,9 +81,9 @@ def create_run_and_dispatch(
             triggered_from_ui=triggered_from_ui,
             triggered_by=triggered_by,
         )
-        if not created:
-            return None
-        return async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
+        if created:
+            async_task(config.RUN_TASK, run.id, **(task_kwargs or {}))
+        return run, created
 
 
 def claim_run(run_model, run_id):
