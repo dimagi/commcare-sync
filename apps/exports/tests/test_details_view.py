@@ -2,7 +2,7 @@ from django.urls import reverse
 from unmagic import use
 
 from apps.commcare.models import RunBaseModel
-from apps.exports.tests.fixtures import export_config_db_fixture
+from apps.exports.tests.fixtures import export_config, export_config_db_fixture
 from tests.fixtures import authed_client, htmx_client
 
 
@@ -29,6 +29,14 @@ def test_run_history_filters_on_every_run_status():
         assert f'id="filter-{status}"' in content
     # MULTIPLE is an aggregate for multi-project parent runs, not a filter.
     assert 'id="filter-multiple"' not in content
+
+
+@use(authed_client, export_config)
+def test_run_history_renders_a_notice_element():
+    response = authed_client().get(export_config().details_url)
+    content = response.content.decode()
+    assert 'id="run-notice"' in content
+    assert 'x-text="notice"' in content
 
 
 class TestExportRunHistoryTableEndpoint:
