@@ -6,7 +6,7 @@
 <div
   id="{{ table_id }}"
   hx-get="{{ config_table_url }}"
-  hx-trigger="every 60s, runStarted from:body"
+  hx-trigger="every 60s, refreshRuns from:body"
   hx-swap="outerHTML"
   hx-vals='{"page": "{{ page_obj.number }}", "page_size": "{{ page_size }}", "etag": "{{ etag }}"}'
 >

@@ -255,7 +255,7 @@ class TestRunExportHtmxBranch:
         # new run's real status right away.
         url = reverse('exports:run_export', args=[export_config().id])
         response = authed_client().post(url, HTTP_HX_REQUEST='true')
-        assert response['HX-Trigger'] == 'runStarted'
+        assert response['HX-Trigger'] == 'refreshRuns'
 
     def test_htmx_request_creates_export_run(self):
         config = export_config()
@@ -299,7 +299,7 @@ class TestRunExportHtmxBranch:
                 reverse('exports:run_all_exports'), HTTP_HX_REQUEST='true'
             )
         assert response.status_code == 204
-        assert response.headers['HX-Trigger'] == 'runStarted'
+        assert response.headers['HX-Trigger'] == 'refreshRuns'
 
     def test_non_htmx_start_over_true_passes_flag(self):
         """startOver: true in JSON body passes start_over=True to task."""
@@ -331,7 +331,7 @@ class TestRunMultiExportHtmxBranch:
             'exports:run_multi_export', args=[multi_export_config().id]
         )
         response = authed_client().post(url, HTTP_HX_REQUEST='true')
-        assert response['HX-Trigger'] == 'runStarted'
+        assert response['HX-Trigger'] == 'refreshRuns'
 
     def test_htmx_request_creates_multi_export_run(self):
         config = multi_export_config()

@@ -30,7 +30,7 @@ def run_refused_response(request, active_run):
 
 def htmx_run_started_response():
     """Return 204 + an HX-Trigger that fires an immediate table refresh."""
-    return HttpResponse(status=204, headers={'HX-Trigger': 'runStarted'})
+    return HttpResponse(status=204, headers={'HX-Trigger': 'refreshRuns'})
 
 
 @login_required
