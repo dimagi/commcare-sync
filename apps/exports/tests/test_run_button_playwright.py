@@ -95,39 +95,6 @@ class TestRunButtonStructure:
         expect(start_over).to_be_visible()
         expect(start_over).to_have_attribute('x-model', 'startOver')
 
-
-@use('db')
-class TestRunHistoryTableEndpoint:
-    """Test run history table HTMX endpoint configuration."""
-
-    def test_run_table_htmx_attributes(self):
-        """Verify the run history table renders with correct HTMX attributes.
-
-        The hx-get URL and hx-trigger string must be exact — a wrong URL means
-        the table never refreshes after a run, and a wrong trigger string means
-        the refresh event fired by static/js/run_button.js is never caught.
-        """
-        data = test_data()
-        export = create_export_config(data)
-
-        client = Client(headers={'HX-Request': 'true'})
-        client.force_login(data['user'])
-        response = client.get(
-            reverse('exports:run_history_table', args=[export.id])
-        )
-        assert response.status_code == 200
-
-        content = response.content.decode()
-        expected_url = reverse('exports:run_history_table', args=[export.id])
-        assert f'hx-get="{expected_url}"' in content
-        assert 'hx-trigger="refresh from:body"' in content
-        assert 'hx-swap="outerHTML"' in content
-
-
-@use('db', 'transactional_db', _live_server, _page)
-class TestRunButtonWithMocks:
-    """Test Run button functionality with mocked API responses."""
-
     def test_run_button_javascript_handler_attached(self):
         """Test that Run button has JavaScript click handler attached."""
         page = _page()
@@ -246,6 +213,40 @@ class TestRunButtonWithMocks:
         expect(page.locator('#run-status-progress')).to_be_attached()
         expect(page.locator('#progress-bar')).to_be_attached()
         expect(page.locator('#progress-bar-message')).to_be_attached()
+
+
+@use('db')
+class TestRunHistoryTableEndpoint:
+    """Test run history table HTMX endpoint configuration."""
+
+    def test_run_table_htmx_attributes(self):
+        """Verify the run history table renders with correct HTMX attributes.
+
+        The hx-get URL and hx-trigger string must be exact — a wrong URL means
+        the table never refreshes after a run, and a wrong trigger string means
+        the refresh event fired by static/js/run_button.js is never caught.
+        """
+        data = test_data()
+        export = create_export_config(data)
+
+        client = Client(headers={'HX-Request': 'true'})
+        client.force_login(data['user'])
+        response = client.get(
+            reverse('exports:run_history_table', args=[export.id])
+        )
+        assert response.status_code == 200
+
+        content = response.content.decode()
+        expected_url = reverse('exports:run_history_table', args=[export.id])
+        assert f'hx-get="{expected_url}"' in content
+        assert 'hx-trigger="refresh from:body"' in content
+        assert 'hx-swap="outerHTML"' in content
+
+
+@use('db', 'transactional_db', _live_server, _page)
+class TestRunButtonProgress:
+    """What the Run button shows as a run progresses, against faked
+    trigger and status responses."""
 
     def test_run_button_disabled_state(self):
         """Test that Run button is disabled when clicked via Alpine state."""
