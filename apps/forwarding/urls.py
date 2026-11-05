@@ -1,6 +1,9 @@
 from django.urls import path
 
+from apps.schedules.views import run_status
+
 from . import views
+from .models import ForwardingRun
 
 app_name = 'forwarding'
 
@@ -69,5 +72,11 @@ urlpatterns = [
         'runs/<int:run_id>/log/',
         views.run_log,
         name='run_log',
+    ),
+    path(
+        'runs/<int:run_id>/status/',
+        run_status,
+        {'model': ForwardingRun},
+        name='run_status',
     ),
 ]

@@ -9,8 +9,11 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
+from apps.schedules.views import (
+    run_refused_response,
+    run_started_response,
+)
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -289,9 +292,11 @@ def run_history_table(request, forwarder_id):
 def run_forwarding(request, forwarder_id):
     """Manually trigger a forwarding run."""
     forwarder = get_object_or_404(ForwardingConfig, id=forwarder_id)
-    task_id = create_run_and_dispatch(
+    run, created = create_run_and_dispatch(
         forwarder,
         triggered_from_ui=True,
         triggered_by=request.user,
     )
-    return run_response(request, task_id)
+    if created:
+        return run_started_response(request, run)
+    return run_refused_response(request, run)

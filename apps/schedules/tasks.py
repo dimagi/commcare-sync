@@ -172,7 +172,9 @@ def _dispatch_due_config(config_model, config, now):
         ).update(next_run_at=next_run)
         if not reserved:
             return False
-        task_id = create_run_and_dispatch(config, triggered_from_ui=False)
+        run, created = create_run_and_dispatch(
+            config, triggered_from_ui=False
+        )
     except Exception:
         # config.__str__ could itself raise on a malformed row, so log by
         # model name and pk rather than the instance.
@@ -181,13 +183,13 @@ def _dispatch_due_config(config_model, config, now):
             config_model.__name__, config.pk,
         )
         return False
-    if task_id is None:
+    if not created:
         # The slot is lost, not deferred: next_run_at has already moved
         # on.
         logger.info(
             'Skipped scheduled run for %s(pk=%s): it already has an active '
-            'run',
-            config_model.__name__, config.pk,
+            'run, %s',
+            config_model.__name__, config.pk, run.pk,
         )
         return False
     logger.info(

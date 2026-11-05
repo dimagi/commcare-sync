@@ -1,6 +1,7 @@
 from cryptography.fernet import Fernet, MultiFernet
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.web.templatetags.dateformat_tags import readable_timedelta
@@ -39,6 +40,20 @@ class RunBaseModel(BaseModel):
     LOGGED_STATUSES = frozenset(
         {Status.COMPLETED, Status.FAILED, Status.TIMEOUT}
     )
+    # URL name of the endpoint that reports a run's status to the Run
+    # button. Set by each run model _that the button can watch_.
+    STATUS_URL_NAME: str
+
+    # The Bootstrap theme colour that shows each status, wherever it is
+    # shown. ExportRunBase adds MULTIPLE.
+    STATUS_TONES: dict[str, str] = {
+        Status.QUEUED: 'secondary',
+        Status.STARTED: 'primary',
+        Status.COMPLETED: 'success',
+        Status.FAILED: 'danger',
+        Status.SKIPPED: 'secondary',
+        Status.TIMEOUT: 'warning',
+    }
 
     status = models.CharField(
         max_length=10,
@@ -80,6 +95,20 @@ class RunBaseModel(BaseModel):
     @property
     def has_log(self):
         return self.status in self.LOGGED_STATUSES
+
+    @property
+    def is_terminal(self):
+        """True when the run is over, whatever its outcome."""
+        return self.status not in self.ACTIVE_STATUSES
+
+    @property
+    def status_url(self):
+        return reverse(self.STATUS_URL_NAME, args=[self.id])
+
+    @property
+    def tone(self):
+        """The Bootstrap theme colour for the run's status."""
+        return self.STATUS_TONES.get(self.status, 'secondary')
 
     @property
     def duration(self):

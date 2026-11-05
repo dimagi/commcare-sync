@@ -1,3 +1,4 @@
+import pytest
 from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -10,7 +11,7 @@ from apps.commcare.models import (
     RunBaseModel,
 )
 from apps.db.models import Database
-from apps.exports.models import ExportConfig, ExportRunBase
+from apps.exports.models import ExportConfig, ExportRun, ExportRunBase
 from apps.forwarding.models import ForwardingRun
 from tests.fixtures import commcare_project, commcare_server, user
 
@@ -191,3 +192,39 @@ def test_export_run_statuses_include_every_base_status():
     # A status added to the base but not the restatement would be
     # rejected as an invalid choice on export runs.
     assert set(RunBaseModel.Status.values) <= set(ExportRunBase.Status.values)
+
+
+class TestIsTerminal:
+    @pytest.mark.parametrize('status', [
+        RunBaseModel.Status.QUEUED,
+        RunBaseModel.Status.STARTED,
+    ])
+    def test_active_statuses_are_not_terminal(self, status):
+        assert not ForwardingRun(status=status).is_terminal
+
+    @pytest.mark.parametrize('status', [
+        RunBaseModel.Status.COMPLETED,
+        RunBaseModel.Status.FAILED,
+        RunBaseModel.Status.SKIPPED,
+        RunBaseModel.Status.TIMEOUT,
+    ])
+    def test_every_other_base_status_is_terminal(self, status):
+        assert ForwardingRun(status=status).is_terminal
+
+    def test_multiple_is_terminal_without_being_restated(self):
+        assert ExportRun(status=ExportRun.Status.MULTIPLE).is_terminal
+
+    def test_an_unknown_status_is_terminal(self):
+        # Terminal-by-default: a status added later must not poll forever.
+        assert ExportRun(status='invented-later').is_terminal
+
+
+class TestTone:
+    def test_a_status_has_its_tone(self):
+        assert ForwardingRun(status=RunBaseModel.Status.FAILED).tone == 'danger'
+
+    def test_multiple_has_a_tone_on_export_runs(self):
+        assert ExportRun(status=ExportRun.Status.MULTIPLE).tone == 'warning'
+
+    def test_an_unknown_status_is_secondary(self):
+        assert ExportRun(status='invented-later').tone == 'secondary'

@@ -11,9 +11,4 @@ urlpatterns = [
         TemplateView.as_view(template_name="web/terms.html"),
         name='terms',
     ),
-    path(
-        'tasks/<str:task_id>/status/',
-        views.task_status,
-        name='task_status',
-    ),
 ]
