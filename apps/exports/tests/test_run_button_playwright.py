@@ -16,7 +16,12 @@ from unmagic import fixture, use
 from apps.commcare.models import RunBaseModel
 from apps.exports.models import ExportConfig
 from .fixtures import test_data
-from .helpers import login, navigate_to_export_details
+from .helpers import (
+    login,
+    navigate_to_export_details,
+    route_run_status,
+    route_run_trigger,
+)
 
 _page = fixture('page')
 _live_server = fixture('live_server')
@@ -292,32 +297,9 @@ class TestRunButtonProgress:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({'poll_url': '/exports/runs/1/status/'}),
-            )
-
-        polls = []
-
-        def mock_run_status(route):
-            # Never complete, so the button stays disabled.
-            polls.append(route.request.url)
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({
-                    'status': 'started',
-                    'label': 'Started',
-                    'tone': 'primary',
-                    'complete': False,
-                }),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/runs/**/status/', mock_run_status)
+        route_run_trigger(page, export)
+        # Never complete, so the button stays disabled.
+        polls = route_run_status(page, 'started')
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -348,31 +330,8 @@ class TestRunButtonProgress:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({'poll_url': '/exports/runs/1/status/'}),
-            )
-
-        polls = []
-
-        def mock_run_status(route):
-            polls.append(route.request.url)
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({
-                    'status': 'completed',
-                    'label': 'Completed',
-                    'tone': 'success',
-                    'complete': True,
-                }),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/runs/**/status/', mock_run_status)
+        route_run_trigger(page, export)
+        polls = route_run_status(page, 'completed')
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -397,31 +356,8 @@ class TestRunButtonProgress:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({'poll_url': '/exports/runs/1/status/'}),
-            )
-
-        polls = []
-
-        def mock_run_status(route):
-            polls.append(route.request.url)
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({
-                    'status': 'failed',
-                    'label': 'Failed',
-                    'tone': 'danger',
-                    'complete': True,
-                }),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/runs/**/status/', mock_run_status)
+        route_run_trigger(page, export)
+        polls = route_run_status(page, 'failed')
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
@@ -444,45 +380,8 @@ class TestRunButtonProgress:
         live_server = _live_server()
         data = test_data()
         export = create_export_config(data)
-
-        payloads = [
-            {
-                'status': 'queued',
-                'label': 'Queued',
-                'tone': 'secondary',
-                'complete': False,
-            },
-            {
-                'status': 'started',
-                'label': 'Started',
-                'tone': 'primary',
-                'complete': False,
-            },
-            {
-                'status': 'completed',
-                'label': 'Completed',
-                'tone': 'success',
-                'complete': True,
-            },
-        ]
-
-        def mock_run_export(route):
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps({'poll_url': '/exports/runs/1/status/'}),
-            )
-
-        def mock_run_status(route):
-            payload = payloads[0] if len(payloads) == 1 else payloads.pop(0)
-            route.fulfill(
-                status=200,
-                content_type='application/json',
-                body=json.dumps(payload),
-            )
-
-        page.route(f'**/exports/api/run/{export.id}/**', mock_run_export)
-        page.route('**/runs/**/status/', mock_run_status)
+        route_run_trigger(page, export)
+        route_run_status(page, 'queued', 'started', 'completed')
 
         login(page, live_server, data['user'])
         navigate_to_export_details(page, live_server, export.id)
