@@ -23,8 +23,12 @@ from reversion.models import Version
 from apps.commcare.models import CommCareAccount, CommCareProject
 from apps.schedules.dispatch import create_run_and_dispatch
 from apps.schedules.mixin import prefetch_runs
+from apps.schedules.views import (
+    htmx_run_started_response,
+    run_refused_response,
+    run_started_response,
+)
 from apps.web.decorators import admin_required, require_htmx
-from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
 from commcare_sync.views import (
     compute_configs_etag,
@@ -388,21 +392,23 @@ def _run_export(request, export_id, export_config_class):
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    task_id = create_run_and_dispatch(
+    run, created = create_run_and_dispatch(
         export,
         triggered_from_ui=True,
         triggered_by=request.user,
         task_kwargs={'start_over': start_over},
     )
-    return run_response(request, task_id)
+    if created:
+        return run_started_response(request, run)
+    return run_refused_response(request, run)
 
 
 @login_required
 @require_POST
 def run_all_exports(request):
     """Kick off the "Run All" background task for every non-paused export."""
-    task_id = async_task(run_all_exports_task, user_id=request.user.id)
-    return run_response(request, task_id)
+    async_task(run_all_exports_task, user_id=request.user.id)
+    return htmx_run_started_response()
 
 
 @login_required

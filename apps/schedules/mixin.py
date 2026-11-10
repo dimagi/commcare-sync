@@ -176,16 +176,23 @@ class ScheduleMixin(models.Model):
         )
 
     @property
-    def has_active_run(self):
-        """True if a run is queued or started.
+    def active_run(self):
+        """The newest queued or started run, or ``None``.
 
         Always queries. This guards against simultaneous runs, so it
         must not be answered from a prefetch captured for rendering,
         which may predate the run it is being asked about.
         """
-        return self.runs.filter(
-            status__in=RunBaseModel.ACTIVE_STATUSES
-        ).exists()
+        return (
+            self.runs.filter(status__in=RunBaseModel.ACTIVE_STATUSES)
+            .order_by('-created_at')
+            .first()
+        )
+
+    @property
+    def has_active_run(self):
+        """True if a run is queued or started. See ``active_run``."""
+        return self.active_run is not None
 
     @property
     def has_active_run_from_prefetch(self):

@@ -134,7 +134,12 @@ class ExportRunBase(RunBaseModel):
         FAILED = 'failed', _('Failed')
         SKIPPED = 'skipped', _('Skipped')
         TIMEOUT = 'timeout', _('Timed out')
-        MULTIPLE = 'multiple', _('Multiple statuses')
+        MULTIPLE = 'multiple', _('Multiple results')
+
+    STATUS_TONES = {
+        **RunBaseModel.STATUS_TONES,
+        Status.MULTIPLE: 'warning',
+    }
 
     status = models.CharField(
         max_length=10,
@@ -150,6 +155,8 @@ class ExportRunBase(RunBaseModel):
 
 
 class ExportRun(ExportRunBase):
+    STATUS_URL_NAME = 'exports:run_status'
+
     config = models.ForeignKey(
         ExportConfig,
         on_delete=models.CASCADE,
@@ -163,6 +170,8 @@ class ExportRun(ExportRunBase):
 
 
 class MultiProjectExportRun(ExportRunBase):
+    STATUS_URL_NAME = 'exports:multi_run_status'
+
     config = models.ForeignKey(
         MultiProjectExportConfig,
         on_delete=models.CASCADE,

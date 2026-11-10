@@ -17,15 +17,7 @@ def to_status_icon(export_status):
     >>> 'text-success' in to_status_icon('completed')
     True
     """
-    text_modifiers = {
-        ExportRunBase.Status.COMPLETED: 'text-success',
-        ExportRunBase.Status.FAILED: 'text-danger',
-        ExportRunBase.Status.STARTED: 'text-primary',
-        ExportRunBase.Status.MULTIPLE: 'text-warning',
-        ExportRunBase.Status.QUEUED: 'text-muted',
-        ExportRunBase.Status.SKIPPED: 'text-muted',
-        ExportRunBase.Status.TIMEOUT: 'text-warning',
-    }
+    tone = ExportRunBase.STATUS_TONES.get(export_status, 'secondary')
     icons = {
         ExportRunBase.Status.COMPLETED: 'fa-circle-check',
         ExportRunBase.Status.FAILED: 'fa-circle-exclamation',
@@ -38,6 +30,6 @@ def to_status_icon(export_status):
     return mark_safe(
         '<i'
         f'  title="{export_status}"'
-        f'  class="fa-solid {icons.get(export_status)} {text_modifiers.get(export_status)}"'
+        f'  class="fa-solid {icons.get(export_status)} text-{tone}"'
         '></i>'
     )
