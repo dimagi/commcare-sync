@@ -23,7 +23,7 @@ class TestRunForwarding:
             destination=dest,
             query="SELECT '{\"rows\": []}'",
         )
-        fwd_run = ForwardingRun.objects.create(forwarding_config=cfg)
+        fwd_run = ForwardingRun.objects.create(config=cfg)
         with (
             patch('apps.forwarding.runner.execute_query') as exec_q,
             patch('apps.forwarding.runner.forward_to_api') as fwd
@@ -49,7 +49,7 @@ class TestRunForwarding:
             destination=dest,
             query="SELECT '{}'",
         )
-        fwd_run = ForwardingRun.objects.create(forwarding_config=cfg)
+        fwd_run = ForwardingRun.objects.create(config=cfg)
         with (
             patch('apps.forwarding.runner.execute_query') as exec_q,
             patch('apps.forwarding.runner.forward_to_api') as fwd

@@ -22,14 +22,14 @@ class ExportConfigAdmin(VersionAdmin):
 @admin.register(models.ExportRun)
 class ExportRunAdmin(admin.ModelAdmin):
     list_display = [
-        'base_export_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
         'status',
     ]
     list_filter = [
-        'base_export_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
@@ -54,14 +54,14 @@ class MultiProjectExportConfigAdmin(VersionAdmin):
 @admin.register(models.MultiProjectExportRun)
 class MultiProjectExportRunAdmin(admin.ModelAdmin):
     list_display = [
-        'base_export_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
         'status',
     ]
     list_filter = [
-        'base_export_config',
+        'config',
         'created_at',
         'started_at',
         'completed_at',
@@ -79,7 +79,7 @@ class MultiProjectPartialExportRunAdmin(admin.ModelAdmin):
         'status',
     ]
     list_filter = [
-        'parent_run__base_export_config',
+        'parent_run__config',
         'created_at',
         'completed_at',
         'status',

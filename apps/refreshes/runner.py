@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def run_refresh(refresh_run):
     """Execute a refresh run for multiple materialized views."""
-    refresh_config = refresh_run.refresh_config
+    refresh_config = refresh_run.config
     log_lines = [
         f'{timezone.now()}: Starting refresh for {refresh_config}',
         (
@@ -20,10 +20,6 @@ def run_refresh(refresh_run):
             f'{len(refresh_config.materialized_views)} materialized view(s)'
         ),
     ]
-
-    refresh_run.status = RefreshRun.Status.STARTED
-    refresh_run.started_at = timezone.now()
-    refresh_run.save()
 
     view_results = {}
     overall_success = True

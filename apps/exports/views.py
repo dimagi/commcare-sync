@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Page
-from django.db.models import Max, Prefetch
+from django.db.models import Max
 from django.http import (
     Http404,
     HttpResponse,
@@ -21,6 +21,8 @@ from django_q.tasks import async_task
 from reversion.models import Version
 
 from apps.commcare.models import CommCareAccount, CommCareProject
+from apps.schedules.dispatch import create_run_and_dispatch
+from apps.schedules.mixin import prefetch_runs
 from apps.web.decorators import admin_required, require_htmx
 from apps.web.views import run_response
 from commcare_sync.consts import VALID_CONFIG_PAGE_SIZES
@@ -46,11 +48,7 @@ from .models import (
     MultiProjectExportConfig,
     MultiProjectExportRun,
 )
-from .tasks import (
-    run_all_exports_task,
-    run_export_task,
-    run_multi_project_export_task,
-)
+from .tasks import run_all_exports_task
 
 logger = logging.getLogger(__name__)
 
@@ -61,20 +59,12 @@ def _merged_export_configs(page_size: int, page_num: int) -> Page:
         ExportConfig.objects
         .select_related('project')
         .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=ExportRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(ExportRun))
     )
     multi = (
         MultiProjectExportConfig.objects
         .annotate(last_run_at=Max('runs__created_at'))
-        .prefetch_related(Prefetch(
-            'runs',
-            queryset=MultiProjectExportRun.objects.order_by('-created_at'),
-            to_attr='_all_runs',
-        ))
+        .prefetch_related(prefetch_runs(MultiProjectExportRun))
     )
     all_configs = sorted(
         chain(single, multi),
@@ -364,15 +354,15 @@ def multi_export_details(request, export_id):
 @login_required
 def multi_export_run_details(request, export_id, run_id):
     export_run = get_object_or_404(MultiProjectExportRun, id=run_id)
-    if export_run.base_export_config.id != export_id:
+    if export_run.config.id != export_id:
         raise Http404(
             f'Export id {export_id} did not match run value of '
-            f'{export_run.base_export_config.id}!'
+            f'{export_run.config.id}!'
         )
     return render(request, 'exports/multi_project_export_run_details.html', {
         'active_tab': 'exports',
         'export_run': export_run,
-        'export': export_run.base_export_config,
+        'export': export_run.config,
         'runs': export_run.partial_runs.order_by('-created_at')[: get_ui_page_size(request)],
     })
 
@@ -380,37 +370,17 @@ def multi_export_run_details(request, export_id, run_id):
 @login_required
 @require_POST
 def run_export(request, export_id):
-    return _run_export(
-        request,
-        export_id,
-        ExportConfig,
-        ExportRun,
-        run_export_task,
-    )
+    return _run_export(request, export_id, ExportConfig)
 
 
 @login_required
 @require_POST
 def run_multi_export(request, export_id):
-    return _run_export(
-        request,
-        export_id,
-        MultiProjectExportConfig,
-        MultiProjectExportRun,
-        run_multi_project_export_task,
-    )
+    return _run_export(request, export_id, MultiProjectExportConfig)
 
 
-def _run_export(
-    request,
-    export_id,
-    export_config_class,
-    export_run_class,
-    export_task,
-):
+def _run_export(request, export_id, export_config_class):
     export = get_object_or_404(export_config_class, id=export_id)
-    if export.has_active_run:
-        return run_response(request, task_id=None)
 
     start_over = False
     if not bool(request.headers.get('HX-Request')):
@@ -418,16 +388,11 @@ def _run_export(
         # posts a startOver flag.
         start_over = json.loads(request.body).get('startOver', False)
 
-    export_record = export_run_class.objects.create(
-        base_export_config=export,
-        export_config_version=export.latest_version,
+    task_id = create_run_and_dispatch(
+        export,
         triggered_from_ui=True,
         triggered_by=request.user,
-    )
-    task_id = async_task(
-        export_task,
-        export_record.id,
-        start_over=start_over,
+        task_kwargs={'start_over': start_over},
     )
     return run_response(request, task_id)
 
